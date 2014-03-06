@@ -1,0 +1,15 @@
+#
+# compile script for meas_meta_setup.c
+# - creates both RSS and CSU versions
+#
+# written by DGL at BYU  4 Mar 2014
+#
+
+# RSS version (does not require netcdf)
+echo "compling RSS version"
+gcc -O3 -m64 -D'RSS=1' -Isir/c/include meas_meta_setup.c -L/auto/share/lib64 -lcsir  -lm -o meas_meta_setup_RSS
+
+# CSU version (requires linking with netcdf libraries)
+echo "compling CSU version"
+gcc -O3 -m64 -D'CSU=1'  -I/auto/users/long/src/linux/netcdf/netcdf-4.0.1/include -I/auto/share/include meas_meta_setup.c -L/auto/share/lib64 -lcsir -L/auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib -lnetcdf -L/auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib -lhdf5_hl -lhdf5 -L/auto/users/long/src/linux/netcdf/zlib-1.2.3/lib -lz -lm -o meas_meta_setup_CSU
+

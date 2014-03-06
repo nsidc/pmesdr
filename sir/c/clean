@@ -1,0 +1,4 @@
+rm csir_dump csir_dump_small csir_locmap csirexample sir2bmp sir2byte
+rm sir2gif sir2gif_ez sir_ez_example viewsirhead
+rm tools/sir_extractregion tools/sir_modhead tools/sir_remapper
+rm tools/sir_remapper2 tools/sirdiff tools/sirmask

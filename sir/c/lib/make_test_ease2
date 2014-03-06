@@ -1,0 +1,1 @@
+gcc -m64 -I./ test_ease2.c sir_geom2.c -o test_ease2 -lm

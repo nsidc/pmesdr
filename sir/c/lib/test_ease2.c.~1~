@@ -1,0 +1,48 @@
+/* program to test the forward/reverse EASE2 grid transformation */
+
+/* (c) copyright 2014 David G. Long, Brigham Young University */
+/*****************************************************************
+  Filename:  meas_meta_make.c
+
+  generates SIR meta file for the MEaSUREs project
+
+  translated to C by DGL at BYU 03/01/2014 from ssmi_meta_make3.f 
+   note: while fortran was well-tested, not all C program options
+   have been fully tested   
+
+******************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
+
+#include <sir3.h>
+
+#define min(a,b) ((a) <= (b) ? (a) : (b))
+#define max(a,b) ((a) >= (b) ? (a) : (b))
+#define mod(a,b) ((a) % (b))
+#define abs(x) ((x) >= 0 ? (x) : -(x))
+
+int nint(float r)
+{
+  int ret_val = r;
+  if (ret_val - r > 0.5) ret_val--;
+  if (r - ret_val > 0.5) ret_val++;
+  return(ret_val);
+}
+
+
+/****************************************************************************/
+
+int main(int argc,char *argv[])
+{
+ 
+  printf("begin\n");
+
+
+
+}
+
+
