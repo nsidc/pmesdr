@@ -1,0 +1,2 @@
+rm fsir_dump fsir_locmap fsir_locmap_EZ sir_extractregion viewsirhead fsir_dump_small fsirexample_EZ sir2byte
+rm sirdiff sirmask fsirexample *.a *.o
