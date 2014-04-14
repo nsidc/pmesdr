@@ -1,0 +1,42 @@
+Liens against this version of the MEASURES BYU Software
+
+v1: 14 Mar 2014
+
+Key changes from v0:
+  - stand alone compile for everything
+  - EASE2 added to projection code
+  - sir2gifs added to package
+  - sirtool added to package
+
+Issues and limitations:
+
+General
+ Local time-of-day boundaries not defined -- different for each platform
+
+ SSM/I Antenna pattern model not implemented -- variations between platforms not implemented
+
+ Optimum image resolutions for each channel not configured
+
+ Optimum BG parameters not chosen
+
+ Ability to write product files directly to netcdf w/o using sir intermediate file not 
+  implemented yet
+
+src/prod/
+ sir2netcdf format not yet finalized
+   - proj4 and gdaltranslate strings not implemented
+ meas_meta_sir and meas_meta_bgi exihibit memory faults during program closure, but work fine
+
+src/sirlib/
+  - proj4 and gdaltranslate strings not implemented
+  - matlab, idl, fortran implementations of EASE2 not fully tested
+
+ref/ 
+  Sectioning of images/channels not full configured
+   - all .s2g and .def files not setup
+
+scripts/
+  no control scripts
+
+testing/
+  no formal regression test analysis

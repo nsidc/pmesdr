@@ -1,0 +1,185 @@
+#!/bin/bash
+#
+# regression testing using just a single orbit
+#
+# written by D.G. Long at BYU 14 Mar 2014
+
+# set environment variables that are required for meas_meta_setup
+meas_home="/auto/users/long/src/linux/measures/v1"  # localization specific
+SIR_areas="$meas_home/ref/locs/"           # path to location of location files
+SIR_region="$meas_home/ref/regiondef1.dat" # path to regiondef1.dat
+export meas_home SIR_areas SIR_region
+
+#####################
+#
+# generate product files using RSS data as input
+## caution, the setup files made from RSS and CSU data have the name!
+#
+########################
+
+# create a working directory
+mkdir work2_RSS
+
+# identify all the RSS files that cover a single day (in this case JD061, 1997)
+# and create a listing file.  
+# On BYU MERS system this means using /auto/data/ssmi/RSS/RSSv07_database.dat 
+# to select the files for process for a single day -- need to include the last 
+# file of the previous day
+# e.g., ls -1 /auto/data/ssmi/RSS/r10001_20000/f13_r100[01]*_tb_v7.dat.gz 
+ls -1 ../sample_data/RSS_JD061_1997/f13*.dat > work2_RSS/F1.lis
+
+# create test meta file for polar stererographic (7 channels)
+../src/prod/meas_meta_make work2_RSS/ptest_RSS.meta 13 ../ref/s2g/ssmi_mN.s2g 61 61 1997 ../ref/arctic.def work2_RSS/F1.lis
+
+# create test meta file for EASE2N (1 channel)
+../src/prod/meas_meta_make work2_RSS/test_RSS.meta 13 ../ref/s2g/ssmi_mN.s2g 61 61 1997 ../ref/EASE2N_test1ch.def work2_RSS/F1.lis
+
+# Make setup files for polarstereographic case
+## caution, the setup files made from RSS and CSU data have the name!
+# create setup file (RSS)
+../src/prod/meas_meta_setup_RSS work2_RSS/ptest_RSS.meta work2_RSS 0
+
+# Make setup files for EASE2N case
+## caution, the setup files have the name for both cases
+# create setup file (RSS)
+../src/prod/meas_meta_setup_RSS work2_RSS/test_RSS.meta work2_RSS 0
+
+# create sir files from polar stereographic setup files
+../src/prod/meas_meta_sir work2_RSS/F131-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_sir work2_RSS/F132-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_sir work2_RSS/F133-Arc97-061-061.setup work2_RSS
+../src/prod/meas_meta_sir work2_RSS/F134-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_sir work2_RSS/F135-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_sir work2_RSS/F136-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_sir work2_RSS/F137-Arc97-061-061.setup work2_RSS
+
+# create bgi files
+../src/prod/meas_meta_bgi work2_RSS/F134-Arc97-061-061.setup work2_RSS
+
+# view selected results (manual)
+../src/sirtool/sirtool work2_RSS/F134-a-Arc97-061-061.sir
+../src/sirtool/sirtool work2_RSS/F134-a-Arc97-061-061.ave
+../src/sirtool/sirtool work2_RSS/F134-a-Arc97-061-061.grd
+../src/sirtool/sirtool work2_RSS/F134-a-Arc97-061-061.bgi
+
+# create netcdf files from sir or bgi files
+# (grd images not supported yet)
+#../src/prod/sir2netcdf work2_RSS/F134-a-Arc97-061-061.sir work2_RSS
+../src/prod/sir2netcdf work2_RSS/F134-a-Arc97-061-061.ave work2_RSS
+#../src/prod/sir2netcdf work2_RSS/F134-a-Arc97-061-061.bgi work2_RSS
+
+# create sir files from EASE2N setup files
+../src/prod/meas_meta_sir work2_RSS/F131-E2N97-061-061.setup work2_RSS
+
+# create bgi files
+../src/prod/meas_meta_bgi work2_RSS/F131-E2N97-061-061.setup work2_RSS
+
+# view selected results (manual)
+../src/sirtool/sirtool work2_RSS/F131-a-E2N97-061-061.sir
+../src/sirtool/sirtool work2_RSS/F131-a-E2N97-061-061.ave
+../src/sirtool/sirtool work2_RSS/F131-a-E2N97-061-061.grd
+../src/sirtool/sirtool work2_RSS/F131-a-E2N97-061-061.bgi
+
+# create netcdf files from sir or bgi files
+# (not supported yet)
+#../src/prod/sir2netcdf work2_RSS/F131-a-E2N97-061-061.ave work2_RSS
+
+# generate (selected) browse .gif images
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-Arc97-061-061.sir work2_RSS/F131-a-Arc97-061-061.sir.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-Arc97-061-061.ave work2_RSS/F131-a-Arc97-061-061.ave.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-Arc97-061-061.grd work2_RSS/F131-a-Arc97-061-061.grd.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-Arc97-061-061.bgi work2_RSS/F131-a-Arc97-061-061.bgi.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F134-a-Arc97-061-061.sir work2_RSS/F134-a-Arc97-061-061.sir.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F134-a-Arc97-061-061.ave work2_RSS/F134-a-Arc97-061-061.ave.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F134-a-Arc97-061-061.grd work2_RSS/F134-a-Arc97-061-061.grd.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-E2N97-061-061.sir work2_RSS/F131-a-E2N97-061-061.sir.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-E2N97-061-061.ave work2_RSS/F131-a-E2N97-061-061.ave.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-E2N97-061-061.grd work2_RSS/F131-a-E2N97-061-061.grd.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-E2N97-061-061.bgi work2_RSS/F131-a-E2N97-061-061.bgi.gif
+
+# and view them
+eog work2_RSS/*.gif
+
+#####################
+#
+# generate product files using CSU data as input
+## caution, the setup files made from RSS and CSU data have the name!
+#
+########################
+
+# create a working directory
+mkdir work2_CSU
+
+# identify all the RSS files that cover a single day (in this case JD061, 1997)
+# and create a listing file.  
+# On BYU MERS system 
+# ls -1 /auto/data/ssmi/CSU/F13/9702/970228/CSU_SSMI_FCDR_V01R00_F13_D19970228_S2258_E0040_R09989.nc /auto/data/ssmi/CSU/F15/9703/970301/CSU*.nc > work2/F2.lis
+# Note: need to include the last file of the previous day
+ls -1 ../sample_data/CSU_JD061_1997/CSU_SSMI_FCDR_*.nc > work2_CSU/F2.lis
+
+# create test meta file    
+../src/prod/meas_meta_make work2_CSU/ptest_CSU.meta 13 ../ref/s2g/ssmi_mN.s2g 61 61 1997 ../ref/arctic.def work2_CSU/F2.lis
+
+# create test meta file for EASE2N (1 channel)
+../src/prod/meas_meta_make work2_CSU/test_CSU.meta 13 ../ref/s2g/ssmi_mN.s2g 61 61 1997 ../ref/EASE2N_test1ch.def work2_CSU/F2.lis
+
+# create setup file (CSU) polar stereographic
+../src/prod/meas_meta_setup_CSU work2_CSU/ptest_CSU.meta work2_CSU 0
+# create setup file (CSU) EASE2N
+../src/prod/meas_meta_setup_CSU work2_CSU/test_CSU.meta work2_CSU 0
+
+# create sir files from polar stereographic setup files
+../src/prod/meas_meta_sir work2_CSU/F131-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir work2_CSU/F132-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir work2_CSU/F133-Arc97-061-061.setup work2_CSU
+../src/prod/meas_meta_sir work2_CSU/F134-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir work2_CSU/F135-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir work2_CSU/F136-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir work2_CSU/F137-Arc97-061-061.setup work2_CSU
+
+# create bgi files
+../src/prod/meas_meta_bgi work2_CSU/F134-Arc97-061-061.setup work2_CSU
+
+# view selected results (manual)
+../src/sirtool/sirtool work2_CSU/F134-a-Arc97-061-061.sir
+../src/sirtool/sirtool work2_CSU/F134-a-Arc97-061-061.ave
+../src/sirtool/sirtool work2_CSU/F134-a-Arc97-061-061.grd
+../src/sirtool/sirtool work2_CSU/F134-a-Arc97-061-061.bgi
+
+# create netcdf files from sir or bgi files
+# (grd images not supported yet)
+#../src/prod/sir2netcdf work2_CSU/F134-a-Arc97-061-061.sir work2_CSU
+../src/prod/sir2netcdf work2_CSU/F134-a-Arc97-061-061.ave work2_CSU
+#../src/prod/sir2netcdf work2_CSU/F134-a-Arc97-061-061.bgi work2_CSU
+
+# create sir files from EASE2N setup files
+../src/prod/meas_meta_sir work2_CSU/F131-E2N97-061-061.setup work2_CSU
+
+# create bgi files
+../src/prod/meas_meta_bgi work2_CSU/F131-E2N97-061-061.setup work2_CSU
+
+# view selected results (manual)
+../src/sirtool/sirtool work2_CSU/F131-a-E2N97-061-061.sir
+../src/sirtool/sirtool work2_CSU/F131-a-E2N97-061-061.ave
+../src/sirtool/sirtool work2_CSU/F131-a-E2N97-061-061.grd
+../src/sirtool/sirtool work2_CSU/F131-a-E2N97-061-061.bgi
+
+# create netcdf files from sir or bgi files
+# (not supported yet)
+#../src/prod/sir2netcdf work2_CSU/F131-a-E2N97-061-061.ave work2_CSU
+
+# generate browse .gif images
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-Arc97-061-061.sir work2_CSU/F131-a-Arc97-061-061.sir.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-Arc97-061-061.ave work2_CSU/F131-a-Arc97-061-061.ave.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-Arc97-061-061.grd work2_CSU/F131-a-Arc97-061-061.grd.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F134-a-Arc97-061-061.sir work2_CSU/F134-a-Arc97-061-061.sir.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F134-a-Arc97-061-061.ave work2_CSU/F134-a-Arc97-061-061.ave.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F134-a-Arc97-061-061.grd work2_CSU/F134-a-Arc97-061-061.grd.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F134-a-Arc97-061-061.bgi work2_CSU/F134-a-Arc97-061-061.bgi.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-E2N97-061-061.sir work2_CSU/F131-a-E2N97-061-061.sir.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-E2N97-061-061.ave work2_CSU/F131-a-E2N97-061-061.ave.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-E2N97-061-061.grd work2_CSU/F131-a-E2N97-061-061.grd.gif
+../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-E2N97-061-061.bgi work2_CSU/F131-a-E2N97-061-061.bgi.gif
+
+# and view them
+eog work2_CSU/*.gif

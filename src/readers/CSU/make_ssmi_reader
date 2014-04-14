@@ -1,0 +1,1 @@
+gcc -O3 -m64 -I/auto/share/include/ -I/auto/users/long/src/linux/netcdf/netcdf-4.0.1/include ssmi_reader.c -o ssmi_reader  -L/auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib -lnetcdf -L/auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib -lhdf5_hl -lhdf5 -L/auto/users/long/src/linux/netcdf/zlib-1.2.3/lib -lz -lm

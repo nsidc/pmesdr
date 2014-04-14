@@ -1,0 +1,97 @@
+# regression testing
+
+# set environment variables
+SIR_areas="ref/locs/"                # path to location of location files
+SIR_region="ref/regiondef1.dat"      # path to regiondef1.dat
+export SIR_areas SIR_region
+
+# compile everything
+make_meas_meta_make
+make_meas_meta_setup
+make_meas_meta_sir
+make_meas_meta_bgi
+
+# create input file listing (RSS)
+ls -1 input/f13_r09999_tb_v7.dat > work/F.lis
+# create test meta file    
+meas_meta_make work/test.meta 13 ref/s2g/ssmi_mN.s2g 60 60 1997 ref/arctic.def work/F.lis
+
+# create input file listing (CSU)
+ls -1 input/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc > work/F_CSU.lis
+# create test meta file    
+meas_meta_make work/test_CSU.meta 13 ref/s2g/ssmi_mN.s2g 60 60 1997 ref/arctic.def work/F3_CSU.lis
+
+# create setup file (RSS)
+meas_meta_setup_RSS work/test.meta work 0
+# create setup file (CSU)
+meas_meta_setup_CSU test_CSU.meta work 0
+
+# create (some) sir files
+#meas_meta_sir F131-Arc97-060-060.setup work
+#meas_meta_sir F132-Arc97-060-060.setup work
+#meas_meta_sir F133-Arc97-060-060.setup work
+meas_meta_sir work/F134-Arc97-060-060.setup work
+#meas_meta_sir F135-Arc97-060-060.setup work
+#meas_meta_sir F136-Arc97-060-060.setup work
+#meas_meta_sir F137-Arc97-060-060.setup work
+
+# view selected results
+sirtool work/F134-a-Arc97-060-060.sir
+sirtool work/F134-a-Arc97-060-060.ave
+sirtool work/F134-a-Arc97-060-060.grd
+
+# create (some) bgi files
+meas_meta_bgi work/F134-Arc97-060-060.setup work
+
+# view selected results
+sirtool work/F134-a-Arc97-060-060.bgi
+
+# create netcdf files from sir or bgi files
+# (grd images not supported yet)
+sir2netcdf work/F134-a-Arc97-060-060.sir work
+sir2netcdf work/F134-a-Arc97-060-060.ave work
+sir2netcdf work/F134-a-Arc97-060-060.bgi work
+
+# create netcdf files from sir or bgi files
+# (grd images not supported yet)
+sir2netcdf work/F134-a-Arc97-061-061.sir work
+sir2netcdf work/F134-a-Arc97-061-061.ave work
+sir2netcdf work/F134-a-Arc97-061-061.bgi work
+
+#######################################################################
+# one day of data
+
+# use /auto/data/ssmi/RSS/RSSv07_database.dat to select the files
+# for process for a single day -- need to include the last file of the
+# previous day
+# (here, JD 61, 1977)
+ls -1 /auto/data/ssmi/RSS/r10001_20000/f13_r100[01]*_tb_v7.dat.gz > tmplist.lis
+#
+# unzip files to a temporary directory for uzipped data files
+# and for workgin files
+mkdir /tmp/ssmizip
+mkdir ./work2/
+/auto/share/bin/gunzipper tmplist.lis /tmp/ssmizip
+# generate list file of unzipped files
+ls -1 /tmp/ssmizip/f13_r100*.dat > ./work2/F.lis
+#
+# Now process data into images
+# first generate meta file for the arctic region
+meas_meta_make work2/test.meta 13 ref/s2g/ssmi_mN.s2g 61 61 1997 ref/arctic.def work2/F.lis
+# then run setup
+meas_meta_setup_RSS work2/test.meta work2 0
+# and sirf
+#meas_meta_sir work2/F131-Arc97-061-061.setup work2
+meas_meta_sir work2/F134-Arc97-061-061.setup work2
+
+# view result
+sirtool work2/F134-a-Arc97-061-061.sir
+
+# generte a browse image
+sir2gif -fref/s2g/ssmi_mN.s2g work2/F134-a-Arc97-060-060.sir  work2/F134-a-Arc97-060-060.sir.gif
+
+# create netcdf files from sir or bgi files
+# (grd images not supported yet)
+sir2netcdf work/F134-a-Arc97-061-061.sir work
+sir2netcdf work/F134-a-Arc97-061-061.ave work
+sir2netcdf work/F134-a-Arc97-061-061.bgi work
