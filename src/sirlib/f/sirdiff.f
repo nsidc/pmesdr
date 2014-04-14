@@ -1,0 +1,623 @@
+	PROGRAM SIRDIFF
+C
+C	THIS PROGRAM COMPUTES THE DIFFERENCE IN PIXEL VALUES BETWEEN TWO IMAGES
+C	THE RESULTING IMAGE IS OPTIONALLY STORED IN A NEW SIR FILE
+C
+C	WRITTEN BY: DGL Feb 2002
+C	REVISED BY: DGL Jul 2005 + updated ease1 grid offset
+C	REVISED BY: DGL Mar 2014 + added ease2
+C
+C       This simple program reads two BYU sir-format input files.
+C       The difference between the two images (where both are greater than 
+C       the no-data value) is determined and statistics computed.  
+C       The difference image is optionally written to a file.
+C
+C       Uses command line arguments to a fortran program via IARGC and GETARG
+C       Not all compilers/operating systems support this.  If not supported
+C       Comment out the CALL GETARG lines and the NARG=IARGC() line
+C
+C       READVAL1 and IREADVAL1 are I/O routines to simplify input.
+C       They can be replaced with READ (*,*) statements
+C
+       	CHARACTER*180	FNAME,FNAME2
+	CHARACTER*190	NAME,LINE
+        LOGICAL LATLON,NOTALL
+C
+C	IMAGE DISPLAY VARIABLES
+C
+	PARAMETER (MAXSIZE=16000000)
+	REAL 		STVAL(MAXSIZE)
+	REAL 		STVAL2(MAXSIZE)
+C
+C	IMAGE FILE HEADER INFORMATION
+C
+	CHARACTER SENSOR*40,TITLE*80
+        CHARACTER TAG*40,TYPE*138,CRPROC*100,CRTIME*28
+        INTEGER   NSX,NSY,IOPT,IDATATYPE,IOFF,ISCALE
+        INTEGER   NHEAD,NDES,NHTYPE,LDES,NIA,IPOL,IFREQHM,ISPARE1
+        INTEGER   IREGION,ITYPE,IYEAR,ISDAY,ISMIN,IEDAY,IEMIN
+        REAL      XDEG,YDEG,ASCALE,BSCALE,A0,B0,ANODATA,VMIN,VMAX
+C
+C	IMAGE2 FILE HEADER INFORMATION
+C
+	CHARACTER SENSOR2*40,TITLE2*80
+        CHARACTER TAG2*40,TYPE2*138,CRPROC2*100,CRTIME2*28
+        INTEGER   NSX2,NSY2,IOPT2,IDATATYPE2,IOFF2,ISCALE2
+        INTEGER   NHEAD2,NDES2,NHTYPE2,LDES2,NIA2,IPOL2,IFREQHM2,ISPARE12
+        INTEGER   IREGION2,ITYPE2,IYEAR2,ISDAY2,ISMIN2,IEDAY2,IEMIN2
+        REAL      XDEG2,YDEG2,ASCALE2,BSCALE2,A02,B02,ANODATA2,VMIN2,VMAX2
+C
+C     OPTIONAL HEADER INFO
+C
+        PARAMETER (MAXI=256)
+        CHARACTER DESCRIP*1024,DESCRIP2*1024
+	DIMENSION IAOPT(MAXI),IAOPT2(MAXI)
+C
+C	BEGIN PROGRAM
+C
+	PRINT 5
+ 5	FORMAT(/'SIRDIFF -- BYU SIR difference program'/)
+	NARG=0
+C
+C       compiler dependent number of arguments routine
+        NARG=IARGC()  ! GET NUMBER OF COMMAND LINE ARGUMENTS
+C
+        IF (NARG.LT.1) THEN
+           PRINT *,'Cmd line: sirdiff in1 in2 min max P/L LLx LLy URx URy out_file'
+           PRINT *,'           in1:  input sir file'
+           PRINT *,'           in2:  input sir file (out=in1-in2)'
+           PRINT *,'           min,max: min, max range for statistics and difference'
+	   PRINT *,'           P/L/A: pixel (P) or lat/lon (L) coordinates (A=all image)'
+	   PRINT *,'           LLx,LLy: lower-left corner (L=lon,lat) (ignored for A)'
+	   PRINT *,'           URx,URy: upper-right corner (L=lon,lat) (ignored for A)'
+           PRINT *,'           out_file: output sir file (use NONE to suppress output)'
+        ENDIF
+C
+        IF (NARG.GT.0) THEN
+C       compiler dependent routine to fill FNAME with first run argument
+           CALL GETARG(1,FNAME)
+        ELSE
+           PRINT *,'First source file to read from?'
+           READ(*,15) FNAME
+ 15        FORMAT(A80)
+        ENDIF
+C
+C	READ INPUT IMAGE FILE
+C
+        WRITE(*,16) FNAME(1:LENGTH1(FNAME))
+16      FORMAT(' Reading file "',A,'"')
+	MAXDES=LEN(DESCRIP)
+        IU=1
+	CALL READSIRHEAD3(FNAME,IU,IERR,NHEAD,NDES,NHTYPE,IDATATYPE,
+     *     NSX,NSY,XDEG,YDEG,ASCALE,BSCALE,A0,B0,IOPT,IOFF,ISCALE,
+     *     IXDEG_OFF,IYDEG_OFF,IDEG_SC,ISCALE_SC,IA0_OFF,IB0_OFF,IO_SC,
+     *     IYEAR,ISDAY,ISMIN,IEDAY,IEMIN,IREGION,ITYPE,
+     *     IPOL,IFREQHM,ISPARE1,ANODATA,VMIN,VMAX,
+     *     SENSOR,TITLE,TYPE,TAG,CRPROC,CRTIME,
+     *     MAXDES,DESCRIP,LDES,MAXI,IAOPT,NIA)
+C
+C     READ IMAGE CONTENTS
+C
+	IF (IERR.GE.0) THEN
+	   CALL READSIRF(IU,IERR,NHEAD,NHTYPE,IDATATYPE,STVAL,NSX,NSY,
+     *	         IOFF,ISCALE,SMIN,SMAX,NCNT,ANODATA,VMIN,VMAX)
+	ELSE
+	   WRITE (*,*) '*** ERROR OPENING FILE',IERR
+	ENDIF
+	IF (IERR.LT.0) STOP
+C
+C	ECHO INPUT FILE HEADER TO USER
+C
+	PRINT *,'Input file header information:'
+	CALL PRINTHEAD3(NHEAD,NDES,NHTYPE,IDATATYPE,
+     *     NSX,NSY,XDEG,YDEG,ASCALE,BSCALE,A0,B0,IOPT,IOFF,ISCALE,
+     *     IXDEG_OFF,IYDEG_OFF,IDEG_SC,ISCALE_SC,IA0_OFF,IB0_OFF,IO_SC,
+     *     IYEAR,ISDAY,ISMIN,IEDAY,IEMIN,IREGION,ITYPE,
+     *     IPOL,IFREQHM,ISPARE1,ANODATA,VMIN,VMAX,
+     *     SENSOR,TITLE,TYPE,TAG,CRPROC,CRTIME,
+     *     DESCRIP,LDES,IAOPT,NIA)
+	PRINT *
+C
+	IF (NHTYPE.EQ.1) THEN   ! OLD STYLE HEADER
+C
+C	DETERMINE MAX/MIN OF DATA ARRAY
+C
+           SMIN=1.E25
+           SMAX=-1.E25
+           DO NN1=0,NSY-1
+              DO NN2=1,NSX
+                 INDEX = NN1*NSX + NN2
+                 SMIN=MIN(SMIN,STVAL(INDEX))
+                 SMAX=MAX(SMAX,STVAL(INDEX))
+              END DO
+           END DO
+	   ANODATA=SMIN
+	   VMIN=SMIN
+	   VMAX=SMAX
+	   IF (ABS(SMIN+32.0).LT.2) THEN
+	      ANODATA=-32.0
+	      VMIN=-32.0
+	   ELSE IF (ABS(SMIN+3.2).LT.2) THEN
+	      ANODATA=-3.2
+	      VMIN=-3.0
+	   ENDIF
+	   IF (ABS(SMAX).LT.2) THEN
+	      VMAX=0.0
+	   ENDIF
+	ENDIF
+C
+        IF (NARG.GT.1) THEN
+C       compiler dependent routine to fill FNAME with first run argument
+           CALL GETARG(2,FNAME2)
+        ELSE
+           PRINT *,'Second source file?'
+           READ(*,15) FNAME2
+        ENDIF
+C
+C	READ SECOND INPUT IMAGE FILE
+C
+        WRITE(*,16) FNAME2(1:LENGTH1(FNAME2))
+	MAXDES=LEN(DESCRIP2)
+        IU=1
+	CALL READSIRHEAD3(FNAME2,IU,IERR,NHEAD2,NDES2,NHTYPE2,IDATATYPE2,
+     *     NSX2,NSY2,XDEG2,YDEG2,ASCALE2,BSCALE2,A02,B02,IOPT2,IOFF2,ISCALE2,
+     *     IXDEG_OFF2,IYDEG_OFF2,IDEG_SC2,ISCALE_SC2,IA0_OFF2,IB0_OFF2,IO_SC2,
+     *     IYEAR2,ISDAY2,ISMIN2,IEDAY2,IEMIN2,IREGION2,ITYPE2,
+     *     IPOL2,IFREQHM2,ISPARE12,ANODATA2,VMIN2,VMAX2,
+     *     SENSOR2,TITLE2,TYPE2,TAG2,CRPROC2,CRTIME2,
+     *     MAXDES,DESCRIP2,LDES2,MAXI,IAOPT2,NIA2)
+C
+C     READ IMAGE CONTENTS
+C
+	IF (IERR.GE.0) THEN
+	   CALL READSIRF(IU,IERR,NHEAD2,NHTYPE2,IDATATYPE2,STVAL2,NSX2,NSY2,
+     *	         IOFF2,ISCALE2,SMIN2,SMAX2,NCNT2,ANODATA2,VMIN2,VMAX2)
+	ELSE
+	   WRITE (*,*) '*** ERROR OPENING FILE',IERR
+	ENDIF
+	IF (IERR.LT.0) STOP
+C
+C	ECHO INPUT FILE HEADER TO USER
+C
+	PRINT *,'Input file header information:'
+	CALL PRINTHEAD3(NHEAD2,NDES2,NHTYPE2,IDATATYPE2,
+     *     NSX2,NSY2,XDEG2,YDEG2,ASCALE2,BSCALE2,A02,B02,IOPT2,IOFF2,ISCALE2,
+     *     IXDEG_OFF2,IYDEG_OFF2,IDEG_SC2,ISCALE_SC2,IA0_OFF2,IB0_OFF2,IO_SC2,
+     *     IYEAR2,ISDAY2,ISMIN2,IEDAY2,IEMIN2,IREGION2,ITYPE2,
+     *     IPOL2,IFREQHM2,ISPARE12,ANODATA2,VMIN2,VMAX2,
+     *     SENSOR2,TITLE2,TYPE2,TAG2,CRPROC2,CRTIME2,
+     *     DESCRIP2,LDES2,IAOPT2,NIA2)
+	PRINT *
+C
+	IF (NHTYPE2.EQ.1) THEN   ! OLD STYLE HEADER
+C
+C	DETERMINE MAX/MIN OF DATA ARRAY
+C
+           SMIN=1.E25
+           SMAX=-1.E25
+           DO NN1=0,NSY2-1
+              DO NN2=1,NSX2
+                 INDEX = NN1*NSX2 + NN2
+                 SMIN=MIN(SMIN,STVAL2(INDEX))
+                 SMAX=MAX(SMAX,STVAL2(INDEX))
+              END DO
+           END DO
+	   ANODATA2=SMIN
+	   VMIN2=SMIN
+	   VMAX2=SMAX
+	   IF (ABS(SMIN+32.0).LT.2) THEN
+	      ANODATA2=-32.0
+	      VMIN=-32.0
+	   ELSE IF (ABS(SMIN+3.2).LT.2) THEN
+	      ANODATA2=-3.2
+	      VMIN2=-3.0
+	   ENDIF
+	   IF (ABS(SMAX).LT.2) THEN
+	      VMAX2=0.0
+	   ENDIF
+	ENDIF
+C
+C       CHECK COMPATIBLITY OF IMAGES
+C
+       IF (NSX.NE.NSX2.OR.NSY.NE.NSY2.OR.A0.NE.A02.OR.B0.NE.B02.OR.
+     *	   IOPT.NE.IOPT2.OR.XDEG.NE.XDEG2.OR.YDEG.NE.YDEG2.OR.
+     *     ASCALE.NE.ASCALE2.OR.BSCALE.NE.BSCALE2) THEN  
+           PRINT *,'*** Incompatible images ***'
+           STOP
+        ENDIF
+C
+	IX1=1
+	IX2=NSX
+	IY1=1
+	IY2=NSY
+	RMIN=-1.E25
+	RMAX=1.E25
+C
+C       GET SEARCH RANGE
+C
+	IF (NARG.GT.2) THEN
+	   CALL GETARG(3,LINE)
+	   READ(LINE,*) RMIN
+	ELSE
+	   PRINT 414
+ 414	   FORMAT('Minimum range value: ',$)
+	   RMIN=READVAL1(RMIN,IERR)
+	ENDIF
+	IF (NARG.GT.3) THEN
+	   CALL GETARG(4,LINE)
+	   READ(LINE,*) RMAX
+	ELSE
+	   PRINT 415
+ 415	   FORMAT('Maximum range value: ',$)
+	   RMAX=READVAL1(RMAX,IERR)
+	ENDIF
+	PRINT *,'Pixel range: ',RMIN,RMAX,'  NoData: ',ANODATA,ANODATA2
+C
+C       GET SUBREGION AREA
+C
+        LATLON=.TRUE.
+	NOTALL=.TRUE.
+	IF (NARG.GT.4) THEN
+	   CALL GETARG(5,LINE)
+           IF (LINE(1:1).EQ.'P'.OR.LINE(1:1).EQ.'p') LATLON=.FALSE.
+           IF (LINE(1:1).EQ.'A'.OR.LINE(1:1).EQ.'a') NOTALL=.FALSE.
+	ELSE
+	   PRINT 514
+ 514	   FORMAT('Subregion: (A)ll, (P)ixel, or (L)at/Lon coordinates: ',$)
+           READ(*,15) LINE
+           IF (LINE(1:1).EQ.'P'.OR.LINE(1:1).EQ.'p') LATLON=.FALSE.
+           IF (LINE(1:1).EQ.'A'.OR.LINE(1:1).EQ.'a') NOTALL=.FALSE.
+	ENDIF
+C
+        IF (LATLON) THEN
+C     
+           IF (NARG.GT.5) THEN
+              CALL GETARG(6,LINE)
+              READ(LINE,*) ALON1
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 516
+ 516		 FORMAT('Lower-left corner longitude (X) ',$)
+C following can be replaced with READ(*,*) ALON1
+		 ALON1=READVAL1(ALON1,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+C     
+           IF (NARG.GT.6) THEN
+              CALL GETARG(7,LINE)
+              READ(LINE,*) ALAT1
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 515
+ 515		 FORMAT('Lower-left corner latitude (Y) ',$)
+C following can be replaced with READ(*,*) ALA1
+		 ALAT1=READVAL1(ALAT1,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+C     
+           IF (NARG.GT.7) THEN
+              CALL GETARG(8,LINE)
+              READ(LINE,*) ALON2
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 518
+ 518		 FORMAT('Upper-right corner longitude (X) ',$)
+C following can be replaced with READ(*,*) ALON2
+		 ALON2=READVAL1(ALON2,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+C
+           IF (NARG.GT.8) THEN
+              CALL GETARG(9,LINE)
+              READ(LINE,*) ALAT2
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 517
+ 517		 FORMAT('Upper-right corner latitude (Y) ',$)
+C following can be replaced with READ(*,*) ALAT2
+		 ALAT2=READVAL1(ALAT2,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+C
+	   IF (NOTALL) THEN
+C
+C	CONVERT LAT, LON CORNERS TO IMAGE PIXELS
+C
+	      CALL LATLON2PIX(ALON1,ALAT1,X1,Y1,THELON,THELAT,
+     $		   IOPT,XDEG,YDEG,ASCALE,BSCALE,A0,B0)
+	      CALL F2IPIX(X1,Y1,IX1,IY1,NSX,NSY)
+	      PRINT *,'Input lon,lat: ',ALON1,ALAT1,' -> ',IX1,IY1
+	      IF (IX1.EQ.0.OR.IY1.EQ.0) THEN
+		 PRINT *,'** POINT OUTSIDE OF IMAGE ***'
+		 IX1=MIN(1,IX1)
+		 IY1=MIN(1,IY1)
+	      ENDIF
+C       
+	      CALL LATLON2PIX(ALON2,ALAT2,X2,Y2,THELON,THELAT,
+     $             IOPT,XDEG,YDEG,ASCALE,BSCALE,A0,B0)
+	      CALL F2IPIX(X2,Y2,IX2,IY2,NSX,NSY)
+	      PRINT *,'Input lon,lat: ',ALON2,ALAT2,' -> ',IX2,IY2
+	      IF (IX2.EQ.0.OR.IY2.EQ.0) THEN
+		 PRINT *,'** POINT OUTSIDE OF IMAGE ***'
+		 IX2=MIN(1,IX2)
+		 IY2=MIN(1,IY2)
+	      ENDIF
+	   ENDIF
+C
+        ELSE
+C     
+           IF (NARG.GT.5) THEN
+              CALL GETARG(6,LINE)
+              READ(LINE,*) IX1
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 1516
+ 1516		 FORMAT('Lower-left corner pixel (X) ',$)
+C following can be replaced with READ(*,*) IX1
+		 IX1=IREADVAL1(1,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+C
+           IF (NARG.GT.6) THEN
+              CALL GETARG(7,LINE)
+              READ(LINE,*) IY1
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 1515
+ 1515		 FORMAT('Lower-left corner pixel (Y) ',$)
+C following can be replaced with READ(*,*) IY1
+		 IY1=IREADVAL1(1,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+C     
+           IF (NARG.GT.7) THEN
+              CALL GETARG(8,LINE)
+              READ(LINE,*) IX2
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 1518
+ 1518		 FORMAT('Upper-right corner pixel (X) ',$)
+C following can be replaced with READ(*,*) IX2
+		 IX2=IREADVAL1(NSX,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+C     
+           IF (NARG.GT.8) THEN
+              CALL GETARG(9,LINE)
+              READ(LINE,*) IY2
+           ELSE
+	      IF (NOTALL) THEN
+		 PRINT 1517
+ 1517		 FORMAT('Upper-right corner pixel (Y) ',$)
+C following can be replaced with READ(*,*) IY2
+		 IY2=IREADVAL1(NSY,IEND)
+		 IF (IEND.LT.0) STOP
+	      ENDIF
+           ENDIF
+        ENDIF
+C
+C       CLIP SUBREGION TO BE WITHIN IMAGE AND SORT CORNERS
+C
+	IF (IX1.LT.1) IX1=1
+	IF (IY1.LT.1) IY1=1
+	IF (IX2.LT.1) IX2=1
+	IF (IY2.LT.1) IY2=1
+C
+	IF (IX1.GT.NSX) IX1=NSX
+	IF (IY1.GT.NSY) IY1=NSY
+	IF (IX2.GT.NSX) IX2=NSX
+	IF (IY2.GT.NSY) IY2=NSY
+C
+	IX=MIN(IX1,IX2)
+	IX2=MAX(IX1,IX2)
+	IX1=IX
+	IY=MIN(IY1,IY2)
+	IY2=MAX(IY1,IY2)
+	IY1=IY
+	NSX2=IX2-IX1+1  ! REUSE NSX2, NSY2
+	NSY2=IY2-IY1+1
+C
+	PRINT *,'Image sizes:	    (in)  ',NSX,NSY,'  (out) ',NSX2,NSY2
+C
+	IF (NOTALL) THEN
+	   X=IX1
+	   Y=IY1
+	   CALL PIX2LATLON(X,Y,THELON,THELAT,ALON,ALAT,
+     $          IOPT,XDEG,YDEG,ASCALE,BSCALE,A0,B0)
+C
+	   X=IX2
+	   Y=IY2
+	   CALL PIX2LATLON(X,Y,THELON,THELAT,ALON2,ALAT2,
+     $          IOPT,XDEG,YDEG,ASCALE,BSCALE,A0,B0)
+
+	   PRINT *,'Processing subregion'
+	   PRINT *,' Lower-Left pixel location: ',IX1,IY1,' Lon, Lat: ',ALON,ALAT
+	   PRINT *,' Upper-Right pixel location:',IX2,IY2,' Lon, Lat: ',ALON2,ALAT2
+	ELSE
+	   PRINT *,'Processing full-sized image'
+	ENDIF
+C
+	IF (NSX2.LT.1.OR.NSY2.LT.1) THEN
+	   PRINT*,'*** Error Subregion: ZERO SIZE ',NSX2,NSY2
+	   STOP
+	ENDIF
+C
+C	COMPUTE IMAGE PROJECTION HEADER INFORMATION FOR SUB IMAGE
+C
+        XDEG2=XDEG
+        YDEG2=YDEG
+	IF (IOPT.EQ.1.OR.IOPT.EQ.2) THEN ! LAMBERT
+	   A02=(IX1-1)/ASCALE+A0
+	   B02=(IY1-1)/BSCALE+B0
+	ELSE IF (IOPT.EQ.8.OR.IOPT.EQ.9.OR.IOPT.EQ.10) THEN ! EASE2 GRID
+	   A02=A0+(IX1-1)
+	   B02=B0+(IY1-1)
+	ELSE IF (IOPT.EQ.11.OR.IOPT.EQ.12.OR.IOPT.EQ.13) THEN ! EASE1 GRID
+	   A02=A0+(IX1-1)
+	   B02=B0+(IY1-1)
+	ELSE IF (IOPT.EQ.5) THEN ! POLAR STEREOGRAPHIC
+	   A02=(IX1-1)*ASCALE+A0
+	   B02=(IY1-1)*BSCALE+B0
+	ELSE			! IMAGE ONLY, LAT/LON, UNKNOWN
+           A02=(IX1-1)*XDEG/FLOAT(NSX)+A0
+           B02=(IY1-1)*YDEG/FLOAT(NSY)+B0
+           XDEG2=FLOAT(NSX2)*XDEG/FLOAT(NSX)
+           YDEG2=FLOAT(NSY2)*YDEG/FLOAT(NSY)
+	ENDIF
+	TITLE2='SubReg: '//TITLE(1:LENGTH1(TITLE))
+	TITLE=TITLE2
+C
+C       INITIALIZE STATISTICS
+C
+	NCNT=0
+	NCNT2=0
+	DMIN1=1.E25
+	DMAX1=-1.E25
+	DMIN2=1.E25
+	DMAX2=-1.E25
+	DMIN=1.E25
+	DMAX=-1.E25
+C
+C	CALCULATED IMAGES STATISTICS
+C       BY CAREFULLY CHOOSING ORDER PIXELS ARE SEQUENCED THRU,
+C       WE CAN REUSE THE STVAL2 ARRAY
+C
+	DO IY=1,NSY2
+	   DO IX=1,NSX2
+	      I1=(IY-1)*NSX2+IX
+	      I=(IY-1+IY1-1)*NSX+(IX+IX1-1)
+	      DIFF=STVAL(I)-STVAL2(I)
+	      IF (STVAL(I).GT.ANODATA+0.0001.AND.
+     *            STVAL2(I).GT.ANODATA2+0.0001.AND.
+     *            STVAL(I).GE.RMIN.AND.STVAL(I).LE.RMAX.AND.
+     *            STVAL2(I).GE.RMIN.AND.STVAL2(I).LE.RMAX) THEN
+C
+		 NCNT=NCNT+1
+		 AVE1=STVAL(I)/FLOAT(NCNT)+AVE1*FLOAT(NCNT-1)/FLOAT(NCNT)
+		 AVE2=STVAL2(I)/FLOAT(NCNT)+AVE2*FLOAT(NCNT-1)/FLOAT(NCNT)
+		 AVE=DIFF/FLOAT(NCNT)+AVE*FLOAT(NCNT-1)/FLOAT(NCNT)
+		 RMS1=STVAL(I)*STVAL(I)/FLOAT(NCNT)+RMS1*FLOAT(NCNT-1)/FLOAT(NCNT)
+		 RMS2=STVAL2(I)*STVAL2(I)/FLOAT(NCNT)+RMS2*FLOAT(NCNT-1)/FLOAT(NCNT)
+		 RMS=DIFF*DIFF/FLOAT(NCNT)+RMS*FLOAT(NCNT-1)/FLOAT(NCNT)
+		 COVAR=STVAL(I)*STVAL2(I)/FLOAT(NCNT)+COVAR*FLOAT(NCNT-1)/FLOAT(NCNT)
+		 IF (DIFF.GT.DMAX) DMAX=DIFF
+		 IF (DIFF.LT.DMIN) DMIN=DIFF
+		 IF (STVAL(I).GT.DMAX1) DMAX1=STVAL(I)
+		 IF (STVAL(I).LT.DMIN1) DMIN1=STVAL(I)
+		 IF (STVAL2(I).GT.DMAX2) DMAX2=STVAL2(I)
+		 IF (STVAL2(I).LT.DMIN2) DMIN2=STVAL2(I)
+C
+		 STVAL2(I1)=DIFF
+	      ELSE
+		 NCNT2=0
+		 STVAL2(I1)=-1.E25
+	      ENDIF
+	   END DO
+	END DO
+C
+C       SUMMARIZE STATS
+C
+	IF (NCNT.EQ.0) THEN
+	   PRINT *,'*** No pixels meeting selection criteria'
+	   STOP
+	ENDIF
+	IF (RMS.GT.0.0) THEN
+	   STD=RMS-AVE*AVE
+	   IF (STD.GT.0.0) STD=SQRT(STD)
+	   RMS=SQRT(RMS)
+	ENDIF
+	IF (RMS1.GT.0.0) THEN
+	   STD1=RMS1-AVE1*AVE1
+	   IF (STD1.GT.0.0) STD1=SQRT(STD1)
+	   RMS1=SQRT(RMS1)
+	ENDIF
+	IF (RMS2.GT.0.0) THEN
+	   STD2=RMS2-AVE2*AVE2
+	   IF (STD2.GT.0.0) STD2=SQRT(STD2)
+	   RMS2=SQRT(RMS2)
+	ENDIF
+	COVAR=COVAR-AVE1*AVE2
+	CORCOEF=0.0
+	IF (STD1.GT.0.0.AND.STD2.GT.0.0) CORCOEF=COVAR/(STD1*STD2)
+C
+	PRINT *
+	PRINT *,'Reference',FNAME(1:LENGTH1(FNAME))
+	PRINT *,' Ave, std: ',AVE1,STD1
+	PRINT *,' Min, Max: ',DMIN1,DMAX1
+	PRINT *
+	PRINT *,'Subtracted',FNAME2(1:LENGTH1(FNAME2))
+	PRINT *,' Ave, std: ',AVE2,STD2
+	PRINT *,' Min, Max: ',DMIN2,DMAX2
+	PRINT *
+	PRINT *,'Difference  cnt=',NCNT,NSX2*NSY2
+	PRINT *,' Ave, std: ',AVE,STD
+	PRINT *,' Min, Max: ',DMIN,DMAX
+	PRINT *,' Correlation coef, covariance: ',CORCOEF,COVAR
+C
+C	OUTPUT FILE NAME
+C
+	IF (NARG.GT.9) THEN
+	   CALL GETARG(10,NAME)
+	ELSE
+ 533       PRINT 255,FNAME(1:LENGTH1(FNAME))
+ 255       FORMAT(' Output File Name: [def=',A,'.SUB] ',$)
+           READ(*,260) NAME
+        ENDIF
+        IF (NAME.EQ.' ') NAME=FNAME(1:LENGTH1(FNAME))//'.SUB'
+260	FORMAT(A80)
+C
+	IF (NAME(1:4).EQ.'NONE') STOP
+C
+C       NEW HEADER
+C
+	IDATATYPE=2
+	DELTA=DMAX-DMIN
+	IF (DELTA.LT.1.0) DELTA=1.0
+	IF (DELTA.GT.1.E5) THEN
+	   PRINT *,'*Advisory* Large difference range may result in poor scaling'
+	ENDIF
+	I=0.1*32700/DELTA
+	IF (I.GT.10) I=10
+	IF (I.LT.1) I=1
+	DELTA=IFIX(DELTA+I*3.0)
+	VMIN=DMIN
+	VMAX=DMAX
+	ANODATA=FLOAT(IFIX(DMIN)-I)
+	IOFF=IFIX(DMIN)-I*2
+	ISCALE=IFIX(32700.0/DELTA)
+C
+	NSX=NSX2
+	NSY=NSY2
+	A0=A02
+	B0=B02
+	XDEG=XDEG2
+	YDEG=YDEG2
+C
+	DO I=1,NSX*NSY
+	   IF (STVAL2(I).LT.ANODATA) STVAL2(I)=ANODATA
+	END DO
+C
+C     WRITE OUT SIR FILE
+C
+	PRINT *
+        PRINT *,'Writing difference to ',NAME(1:LENGTH1(NAME))
+	CALL WRITESIR3(NAME,40,IERR,NHEAD,NDES,NHTYPE,IDATATYPE,
+     *     NSX,NSY,XDEG,YDEG,ASCALE,BSCALE,A0,B0,IOPT,IOFF,ISCALE,
+     *     IXDEG_OFF,IYDEG_OFF,IDEG_SC,ISCALE_SC,IA0_OFF,IB0_OFF,IO_SC,
+     *     IYEAR,ISDAY,ISMIN,IEDAY,IEMIN,IREGION,ITYPE,
+     *     IPOL,IFREQHM,ISPARE1,ANODATA,VMIN,VMAX,
+     *     SENSOR,TITLE,TYPE,TAG,CRPROC,CRTIME,
+     *     STVAL2,DESCRIP,LDES,IAOPT,NIA)
+C
+	IF (IERR.LT.0) THEN
+	   PRINT *,'*** ERROR WRITING OUTPUT FILE ***'
+	ENDIF
+	STOP
+	END

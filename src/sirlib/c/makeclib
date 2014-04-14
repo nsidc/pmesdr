@@ -1,0 +1,10 @@
+#
+# c compile script for BYU sir library
+#
+rm *.o
+rm libcsir.a
+cc -Aa -c lib/sir_io.c -Iinclude/
+cc -Aa -c lib/sir_ez.c -Iinclude/
+cc -Aa -c lib/sir_geom.c -Iinclude/
+ar cr libcsir.a *.o
+rm *.o
