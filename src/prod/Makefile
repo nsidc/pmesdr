@@ -53,7 +53,7 @@ endif
 
 SUBDIRS = ../sirlib/c meas_meta_make \
 	meas_meta_setup/meas_meta_setup_RSS meas_meta_setup/meas_meta_setup_CSU \
-	meas_meta_sir meas_meta_bgi
+	meas_meta_sir meas_meta_bgi sir2netcdf
 
 all install clean:
 	for i in $(SUBDIRS); do			\

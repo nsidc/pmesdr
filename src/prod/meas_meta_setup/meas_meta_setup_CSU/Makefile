@@ -35,14 +35,22 @@ SYSLIBS = -lm
 
 #
 #	system libraries and include directories
-#       We need to talk with David and Jake about this decision
-#       this is the default location for stuff at BYU
-#       at NSIDC, we will control this with make command-line switches
-NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
-HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
-ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
+#
+ifeq ($(LOCALE),NSIDCsnow)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_INCDIR = /usr/include
+  HDF5_LIBDIR = /usr/lib64
+  ZLIB_LIBDIR = /usr/lib64
+else
+  $(warning Assuming default LOCALE=BYU)
+  NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+  NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
+  HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+  HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
+  ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
+endif
 
 #
 # end configuration section
