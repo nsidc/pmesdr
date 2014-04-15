@@ -16,3 +16,9 @@ export PMESDR_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # The Project's Top Level Directory is two directories up from this file:
 export PMESDR_TOP_DIR=$(dirname $(dirname "$PMESDR_SCRIPT_DIR"))
 
+# PMESDR environment variables for running the system
+export meas_home=$PMESDR_TOP_DIR
+export SIR_areas=$PMESDR_TOP_DIR/ref/locs
+export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
+export RSS_path=$PMESDR_TOP_DIR/ref
+
