@@ -33,6 +33,9 @@
 
 #include "sir_ez.h"  /* get easy sir routine interface */
 
+extern void ease2sf(int iopt, float ascale, float bscale, float *fmap_scale, 
+		    int *bcols, int *brows, float *fr0, float *fs0);
+
 /* menu function definitions */
 void print_menu(FILE *out);
 void single_pixel_value(float *stval, sir_head *head);
@@ -258,85 +261,38 @@ void corners(sir_head *head){
   int x,y;  
   float alon,alat;
   double Erad=6378.135, F=298.26, era=(1.-1./F), dtr=0.01745329252, E2=0.006693883;  
-    
+  
+  print_sir_head(stdout,head);
+  
+  /* add Earth radius used for special cases*/
   switch(head->iopt) {
-   case 0:
-     fprintf(stdout,"\nRectangular Lat/Lon projection:\n");
-     fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
-     fprintf(stdout,"  Span:                x=%f ,   y=%f (deg)\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  Scale:               x=%f ,   y=%f (pix/deg)\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Lower-left Corner: lon=%f , lat=%f (deg)\n",head->a0,head->b0);
-     break;
+
+  case 0:
+    break;
 
   case 2:
      Erad=Erad*era/sqrt(pow(era*cos((double) head->ydeg * dtr),2.0)+pow(sin(dtr * (double) head->ydeg),2.0));
   case 1:
      if (head->iopt==1) Erad=6378.0;     
-     fprintf(stdout,"\nLambert Equal Area Azimuth projection:\n");
-     fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
      fprintf(stdout,"  Spherical Earth radius used=%f (km)\n",Erad);
-     fprintf(stdout,"  Center point:      lon=%f , lat=%f (deg)\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  Scale factor:      lon=%f , lat=%f (km/pix)\n",1./head->ascale,1./head->bscale);
-     fprintf(stdout,"  Lower-Left Corner:   x=%f ,   y=%f (km)\n",head->a0,head->b0);
      break;
 
-   case 5:
-     Erad=6378.273;     
-     fprintf(stdout,"\nPolar sterographic projection: \n");
-     fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
-     fprintf(stdout,"  Elliptical Earth radius=%f (km) e2=%11.9f\n",Erad,E2);
-     fprintf(stdout,"  Reference point: lon=%f , lat=%f (deg)\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  X,Y scales:      lon=%f , lat=%f (km/pix)\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Lower-Left Corner: x=%f ,   y=%f (km/pix)\n",head->a0,head->b0);
-     break;
+  case 5:
+    Erad=6378.273;     
+    fprintf(stdout,"  Elliptical Earth radius=%f (km) e2=%11.9f\n",Erad,E2);
+    break;
+    
+  case 8:  /* EASE1 and 2 grids */
+  case 9:
+  case 10:
+  case 11:
+  case 12:
+  case 13:
+    break;
 
-   case 8:
-   case 9:
-     fprintf(stdout,"\nEASE2 polar azimuthal projection: \n");
-     fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
-     if (head->iopt==8)
-       fprintf(stdout,"  Reference Latitude:   %f (deg)\n",90.0);
-     else
-       fprintf(stdout,"  Reference Latitude:   %f (deg)\n",-90.0);
-     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  A,B scales:           %f , %f\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Map origin (col,row): %f , %f\n",head->a0,head->b0);
-     break;
-
-   case 10:
-     fprintf(stdout,"\nEASE2 cylindrical projection: \n");
-     fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
-     fprintf(stdout,"  Reference Latitude:   %f (deg)\n",30.0);
-     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  A,B scales:           %f , %f\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Map origin (col,row): %f , %f\n",head->a0,head->b0);
-     break;
-
-   case 11:
-   case 12:
-     fprintf(stdout,"\nEASE1 polar azimuthal projection: \n");
-     fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
-     if (head->iopt==11)
-       fprintf(stdout,"  Reference Latitude:   %f (deg)\n",45.0);
-     else
-       fprintf(stdout,"  Reference Latitude:   %f (deg)\n",-45.0);
-     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  A,B scales:           %f , %f\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Map origin (col,row): %f , %f\n",head->a0,head->b0);
-     break;
-
-   case 13:
-     fprintf(stdout,"\nEASE1 cylindrical projection: \n");
-     fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
-     fprintf(stdout,"  Reference Latitude:   %f (deg)\n",30.0);
-     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  A,B scales:           %f , %f\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Map origin (col,row): %f , %f\n",head->a0,head->b0);
-     break;
-
-   default:
-     fprintf(stdout,"\nImage size: (%d X %d)\n",head->nsx,head->nsy);
-     break;
+  default:
+    fprintf(stdout,"\nImage size: (%d X %d)\n",head->nsx,head->nsy);
+    break;
   }
 
   fprintf(stdout,"\nImage corner locations (location at lower-left of pixel)\n");
@@ -384,6 +340,8 @@ void projection_info(sir_head *head){
   float alon,alat;
   double Erad=6378.135, F=298.26, era=(1.-1./F), dtr=0.01745329252, E2=0.006693883;
   float x0,y0,x1,y1;  
+  float fmap_scale, fr0, fs0;
+  int bcols, brows;  
   
   fprintf(stdout,"\nBinary SIR file has a %d byte header\n",head->nhead*512);
   if (head->nhead>1)
@@ -461,7 +419,6 @@ void projection_info(sir_head *head){
      fprintf(stdout,"  Reference point: lon=%f , lat=%f (deg)\n",head->xdeg,head->ydeg);
      fprintf(stdout,"  X,Y scales:      lon=%f , lat=%f (km/pix)\n",head->ascale,head->bscale);
      fprintf(stdout,"  Lower-Left Corner: x=%f ,   y=%f (km/pix)\n",head->a0,head->b0);
-
      fprintf(stdout,"\nRecommended proj4 src string:\n '+a=wgs84 +proj=stere +lat_0=%f +lon_0=%f'\n",head->ydeg,head->xdeg);
      /* technically, should use +wgs72 but this is 
 	not supported by gdal_translate and so is not recommended.  Error is relatively small for
@@ -472,31 +429,54 @@ void projection_info(sir_head *head){
 
    case 8:
    case 9:
+     ease2sf(head->iopt, head->ascale, head->bscale, 
+	     &fmap_scale, &bcols, &brows, &fr0, &fs0);
+     x0=-fmap_scale*fs0;     
+     x1=x0+bcols*fmap_scale;
+     y0=-fmap_scale*fr0;     
+     y1=y0+brows*fmap_scale;
+
      fprintf(stdout,"\nEASE2 Polar Azimuthal projection:\n");
      fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
      if (head->iopt==8)
        fprintf(stdout,"  Reference Latitude:   %f (deg)\n",90.0);
      else
        fprintf(stdout,"  Reference Latitude:   %f (deg)\n",-90.0);
-     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  A,B scales:           %f , %f\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Map origin (col,row): %f , %f\n",head->a0,head->b0);
+     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->nsy*0.5,head->nsx*0.5);
+     fprintf(stdout,"  Map base scale, index: %f, %.1f, %.1f\n",fmap_scale,head->ascale,head->bscale);
+     fprintf(stdout,"  Map origin (col,row): %f , %f\n",x0,y0);     
 
-     fprintf(stdout,"\n*** proj and gdal_translate not worked out for this projection\n");
-     //fprintf(stdout,"\nRecommended proj4 src string:\n '+a=wgs84 +proj=stere +lat_0=%f +lon_0=%f'\n",head->ydeg,head->xdeg);
-     //fprintf(stdout,"\nRecommended Geotiff conversion method: make a .bmp or .gif image, use gdal_translate\n");
-     //fprintf(stdout,"gdal_translate -a_srs \"+datum=wgs84 +proj=stere +lat_0=%f +lon_0=%f\" -a_ullr %f %f %f %f -of Gtiff (input gif or bmp file name) (output geotiff file name)\n",head->ydeg,head->xdeg,x0*1000,y1*1000,x1*1000,y0*1000);
+     if (head->iopt == 8) {	 
+       fprintf(stdout,"\nRecommended proj4 src string:\n '+proj=laea +lat_0=90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m'\n");
+       fprintf(stdout,"\nRecommended Geotiff conversion method: make a .bmp or .gif image, use gdal_translate\n");
+       fprintf(stdout,"gdal_translate -a_srs \"+datum=wgs84 +proj=laea +lat_0=90 +lon_0=0\" -a_ullr %f %f %f %f -of Gtiff (input gif or bmp file name) (output geotiff file name)\n",x0*1000,y1*1000,x1*1000,y0*1000);
+     } else {
+       fprintf(stdout,"\nRecommended proj4 src string:\n '+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m'\n");
+       fprintf(stdout,"\nRecommended Geotiff conversion method: make a .bmp or .gif image, use gdal_translate\n");
+       fprintf(stdout,"gdal_translate -a_srs \"+datum=wgs84 +proj=laea +lat_0=-90 +lon_0=0\" -a_ullr %f %f %f %f -of Gtiff (input gif or bmp file name) (output geotiff file name)\n",x0*1000,y1*1000,x1*1000,y0*1000);
+     }
+     
      return;
 
    case 10:
+     ease2sf(head->iopt, head->ascale, head->bscale, 
+	     &fmap_scale, &bcols, &brows, &fr0, &fs0);
+     x0=-fmap_scale*fs0;     
+     x1=x0+bcols*fmap_scale;
+     y0=-fmap_scale*fr0;     
+     y1=y0+brows*fmap_scale;
+
      fprintf(stdout,"\nEASE2 Cylindrical projection:\n");
      fprintf(stdout,"  Image size: (%d X %d)\n",head->nsx,head->nsy);
      fprintf(stdout,"  Reference Latitude:   %f (deg)\n",30.0);
-     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->xdeg,head->ydeg);
-     fprintf(stdout,"  A,B scales:           %f , %f\n",head->ascale,head->bscale);
-     fprintf(stdout,"  Map origin (col,row): %f , %f\n",head->a0,head->b0);
+     fprintf(stdout,"  Map center (col,row): %f , %f\n",head->nsy*0.5,head->nsx*0.5);
+     fprintf(stdout,"  Map base scale, index: %f, %.1f, %.1f\n",fmap_scale,head->ascale,head->bscale);
+     fprintf(stdout,"  Map origin (col,row): %f , %f\n",x0,y0);     
 
-     fprintf(stdout,"\n*** proj and gdal_translate not worked out for this projection\n");
+     fprintf(stdout,"\nRecommended proj4 src string:\n '+proj=cea +lat_0=0 +lon_0=0 +lat_1=30 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m'\n");
+     fprintf(stdout,"\nRecommended Geotiff conversion method: make a .bmp or .gif image, use gdal_translate\n");
+     fprintf(stdout,"gdal_translate -a_srs \"+datum=wgs84 +proj=cea +lat_0=0 +lon_0=0 +lat_1=30\" -a_ullr %f %f %f %f -of Gtiff (input gif or bmp file name) (output geotiff file name)\n",x0*1000,y1*1000,x1*1000,y0*1000);
+
      return;
 
    case 11:

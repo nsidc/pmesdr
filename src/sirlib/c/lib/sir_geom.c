@@ -6,6 +6,7 @@
    DGL Sept. 24, 1999 + fixed polster, latlon2pix, changed args to pixtolatlon
    DGL July 29, 2005 + modified and corrected EASE projection code
    DGL Feb 4, 2014 + added EASE2 grid projection
+   DGL Feb 4, 2014 + added ease2sf
    
 */
 
@@ -711,6 +712,61 @@ double easeconv_normalize_degrees(double b)
   while (b > 180.0)
     b = b - 360.0;
   return(b);
+}
+
+void ease2sf(int iopt, float ascale, float bscale, float *fmap_scale, 
+	     int *bcols, int *brows, float *fr0, float *fs0)
+{
+  /* return selected EASE2 grid information (external interface)
+
+  inputs
+    iopt: projection type 8=EASE2 N, 9-EASE2 S, 10=EASE2 T/M
+    (ascale and bscale should be integer valued)
+    ascale: grid scale factor (0..5)  pixel size is (bscale/2^ascale)
+    bscale: base grid scale index (ind=int(bscale))
+ 
+          NSIDC .grd file for isc=0
+           project type    ind=0     ind=1         ind=3
+	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
+              S         EASE2_S25km EASE2_S30km EASE2_S36km 
+              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
+
+          cell size (m) for isc=0 (scale is reduced by 2^isc)
+           project type    ind=0     ind=1            ind=3
+	      N          25000.0     30000.0         36000.0
+              S          25000.0     30000.0         36000.0
+              T/M       T25025.26   M25025.2600081  M36032.220840584
+	      
+	  for a given base cell size isc is related to NSIDC .grd file names
+	     isc        N .grd name   S .grd name   T .grd name
+	      0	      EASE2_N25km     EASE2_S25km     EASE2_T25km  
+	      1	      EASE2_N12.5km   EASE2_S12.5km   EASE2_T12.5km  
+	      2	      EASE2_N6.25km   EASE2_S6.25km   EASE2_T6.25km  
+	      3	      EASE2_N3.125km  EASE2_S3.125km  EASE2_T3.125km  
+	      4	      EASE2_N1.5625km EASE2_S1.5625km EASE2_T1.5625km  
+
+  outputs
+    fmap_scale               EASE2 map projection pixel size (km)
+    bcols, brows,            EASE2 grid size in pixels
+    fr0, fs0                 EASE2 base projection size in pixels
+  */
+
+   double map_equatorial_radius_m,map_eccentricity, e2,
+     map_reference_latitude, map_reference_longitude, 
+     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
+     map_scale, r0, s0, epsilon;
+
+   int ind = intfix(bscale);
+   int isc = intfix(ascale);
+    
+   /* get base EASE2 map projection parameters */
+   ease2_map_info(iopt, isc, ind, &map_equatorial_radius_m, &map_eccentricity, 
+		  &e2, &map_reference_latitude, &map_reference_longitude, 
+		  &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
+		  &map_scale, bcols, brows, &r0, &s0, &epsilon);
+   *fmap_scale=map_scale;
+   *fr0=r0;
+   *fs0=s0;   
 }
 
 void ease2grid(int iopt, float alon, float alat, 

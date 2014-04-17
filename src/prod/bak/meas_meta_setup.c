@@ -56,14 +56,14 @@
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 #define mod(a,b) ((a) % (b))
+#define dmod(a,b) ((a)-floor((a)/(b))*(b))
 #define abs(x) ((x) >= 0 ? (x) : -(x))
 
 /****************************************************************************/
 
 int nint(float r)
 {
-  int ret_val = r;
-  if (ret_val - r > 0.5) ret_val--;
+  int ret_val = r;  if (ret_val - r > 0.5) ret_val--;
   if (r - ret_val > 0.5) ret_val++;
   return(ret_val);
 }
@@ -352,7 +352,7 @@ int main(int argc,char *argv[])
   int irec = 0; /* input cells counter */
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
-
+  int mcnt=0;
 
 #ifdef RSS
   char fcdr_input[]="SSM/I RSS V7 binary";  
@@ -434,7 +434,8 @@ int main(int argc,char *argv[])
   /* set some sensor-specific constants */
   nbeams=7;          /* number of beams */     
   scan_ang=102.0;    /* azimuth angle of the scan from left measurement to right measurement at subsat point */
-#define BOX_SIZE 10  /* defines the gain computation box (30 for lo scan SSMI) */
+  //#define BOX_SIZE 10  /* defines the gain computation box (30 for lo scan SSMI) */
+#define BOX_SIZE 80  /* defines the gain computation box (30 for lo scan SSMI) */
 
   /* set sensor specific quality control flag mask */
   set_mask(&quality_mask, 1);  /* sensor=SSM/I=1 */
@@ -757,7 +758,7 @@ int main(int argc,char *argv[])
 	  
 	  /* compute angle between satellite nadir track and true north at the measurement position */
 	  
-	  /* first, determine if measueremnt is in the longitude range for ascending or descending */
+	  /* first, determine if measurement is in the longitude range for ascending or descending */
 	  inlonrange=0;
 	  if (xhigh_lon > 0.0 && xlow_lon < 0.0) {
 	    if (cen_lon <= xhigh_lon && cen_lon >= xlow_lon) inlonrange=1;
@@ -789,6 +790,9 @@ int main(int argc,char *argv[])
 	     on the earth's surface with respect to north */
 	  theta=ang2+theta_orb;
 
+#ifdef RSS
+	  //	  printf(" Azimuth angle comparison: %f %f %f\n",theta,azang,dmod(theta-azang+720.0,360.0));
+#endif
 	  /* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc) */
 	  iasc=save_area.sav_ascdes[iregion];
 	  if (iasc != 0)
@@ -877,6 +881,12 @@ int main(int argc,char *argv[])
 	  if (iadd < 0) goto label_3400;
 	  if (iadd >= nsx*nsy) goto label_3400;
 
+#ifdef RSS
+	  mcnt++;
+	  if (mod(mcnt,7) != 1 || mcnt > 535 || mcnt < 500) goto label_3400;	  
+	  printf(" Az comp: %d %d %f %f %f %f\n",ix2,iy2,theta,azang,dmod(theta-azang+720.0,360.0),dscale);
+	  theta=azang; // +90;
+#endif
 	  //printf("retain center %6.2f %6.2f %6.2f  %6.2f %6.2f %6.2f\n",cx,lonl,lonh,cy,latl,lath);
 
 	  /* assign the center of the pixel containing the measurement location to
@@ -913,7 +923,7 @@ int main(int argc,char *argv[])
 	  if (iy2+iysize1<0) iysize1=1-iy2; 
 	  if (iy2+iysize2>=nsy) iysize2=nsy-iy2;
 
-	  if (ii==1444) printf("at %d %d %d %d %d %d %d\n",ii,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,ix2,iy2);
+	  //if (ii==1444) printf("at %d %d %d %d %d %d %d\n",ii,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,ix2,iy2);
 
 	  /* for each pixel in the search box compute the normalized 
 	     footprint gain response function
@@ -954,6 +964,9 @@ int main(int argc,char *argv[])
 		  if (flatten) sum=1.0;    /* optionally flatten response */
 		  fill_array[count]=iadd1; /* address of pixel */
 		  response_array[count]=(short int) nint(sum*RESPONSEMULT); /* quantized response */
+
+		  printf("%d %d %f %d %d\n",ix1,iy1,x_rel,y_rel,response_array[count]);
+		  
 		  count++;
 		  if (count >= MAXFILL) {
 		    fprintf(stderr,"*** count overflow has occurred\n");		  
@@ -989,7 +1002,7 @@ int main(int argc,char *argv[])
 	      tbmin=min(tbmin,tb);
 	    }	    
 
-	    printf("Write %f %f %d %d %d  %d %d %d %d\n",tb,thetai,count,ktime,iadd,iregion,ibeam,iscan,ii);	    
+	    //printf("Write %f %f %d %d %d  %d %d %d %d\n",tb,thetai,count,ktime,iadd,iregion,ibeam,iscan,ii);	    
 
 	    /* write measurement information record to output .setup file */
 	    cnt=4*5;
@@ -1986,7 +1999,9 @@ void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat)
 { /* read fine with min and max latitudes for each scan position from file 
      the location of this file is specified in the environment variable 'RSS_path' */
 
-  char *p, line[260], RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char *p, line[260];
+  //char RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char RSS_path[]="../../ref/"; /* default location */
   int i;
   FILE *f;
   
@@ -2242,7 +2257,9 @@ void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat)
 { /* read fine with min and max latitudes for each scan position from file 
      the location of this file is specified in the environment variable 'RSS_path' */
 
-  char *p, line[260], RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char *p, line[260];
+  //char RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char RSS_path[]="../../ref/"; /* default location */
   int i;
   FILE *f;
   
@@ -2335,8 +2352,8 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
       using a locally-tangent plane approximation
       x is aligned East while y is aligned North
 
-      a fancier map projection could be used, but hight precision is 
-      not required for this calculation
+      a fancier map projection could be used, but high precision is 
+      not really required for this calculation
 
       written: DGL  1/12/99
   */

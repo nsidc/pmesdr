@@ -5,7 +5,7 @@
 /* revised to eliminate printer and ramtek calls 
    terminal specific routines also eliminated */
 
-
+#include <stdlib.h>
 #include <stdio.h>
 
 typedef int integer;  /* long int */
@@ -175,7 +175,7 @@ real *vpx, *vpy, *zom;
 L99:
 
 /* 	DO IMMEDIATE EXIT FROM PROGRAM */
-    exit(-1);
+    (void) exit(-1);
     return 0;
 } /* frame_ */
 

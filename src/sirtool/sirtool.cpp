@@ -1235,7 +1235,7 @@ private:
   void _cbHelp()
   {
     printf("\nsirtool: BYU X-windows .SIR file viewer\n");
-    printUsage("sirtool");
+    printUsage((char *) "sirtool");
     printf("\nClicking left mouse button outputs cursor position and pixel value at bottom of\nthe window.  The cursor positions is given in SIR pixels (counting from lower-\nleft corner) and lat/lon.  The right mouse button moves the image within\nthe window if the image is larger than the window.\n");
 		
     printf("Exporting dumps the pixel values to a specified file as either the floating\npoint ASCII (one ASCII value/pixel) or as scaled bytes (one byte/pixel).\nThe exported pixel order is left-to-right, bottom-to-top (standard SIR order).\n");
@@ -1520,7 +1520,7 @@ void parseOptions(int &argc, char **argv, SirWindow *wnd)
     "-cta", "-ctb",
     "-smallmem", "-mem",
     "-nomini",
-    0, 0
+   0, 0
   };
   char *cfg_fname = NULL;
 	

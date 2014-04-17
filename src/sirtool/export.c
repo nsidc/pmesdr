@@ -13,6 +13,7 @@
 
 */
 
+extern void *memset(void *str, int c, size_t n);
 
 static void putshortword(w, fp)
 short w;

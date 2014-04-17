@@ -7,7 +7,7 @@
 
 EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
 	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp libcsir.a \
-	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util \
+	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
 	tools/sirdiff tools/sir_extractregion tools/sirmask tools/sir_stats
 
 CC = gcc
@@ -15,6 +15,8 @@ CFLAGS = -Iinclude
 LDFLAGS = -L. -lcsir -lm
 
 all : $(EXES)
+
+.PHONY: all clean
 
 csirexample : csirexample.c libcsir.a
 	$(CC) $(CFLAGS) -ocsirexample csirexample.c $(LDFLAGS)
@@ -40,13 +42,16 @@ sir2gif : sir2gif.c libcsir.a
 sir2gif_ez : sir2gif_ez.c libcsir.a
 	$(CC) $(CFLAGS) -osir2gif_ez sir2gif_ez.c $(LDFLAGS)
 
+sir2tiff_ez : sir2tiff_ez.c libcsir.a
+	$(CC) $(CFLAGS) -osir2tiff_ez sir2tiff_ez.c $(LDFLAGS)
+
 sir2bmp : sir2bmp.c libcsir.a
 	$(CC) $(CFLAGS) -osir2bmp sir2bmp.c $(LDFLAGS)
 
 sir_ez_example : sir_ez_example.c libcsir.a
 	$(CC) $(CFLAGS) -osir_ez_example sir_ez_example.c $(LDFLAGS)
 
-# create c routines library
+# create static c routines library
 libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	rm -f *.o
 	rm -f libcsir.a
@@ -54,6 +59,15 @@ libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(CC) $(CFLAGS) -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -c lib/sir_geom.c
 	ar cr libcsir.a *.o
+	rm -f *.o
+
+# create dynamic c routines library
+libcsir.so : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
+	rm -f *.o
+	$(CC) $(CFLAGS) -fPIC -c lib/sir_io.c
+	$(CC) $(CFLAGS) -fPIC -c lib/sir_ez.c
+	$(CC) $(CFLAGS) -fPIC -c lib/sir_geom.c
+	$(CC) -shared -Wl,-soname,libsir.so.1 -o libsir.so.1.0.1 sir_io.o sir_ez.o sir_geom.o -lc
 	rm -f *.o
 
 clean :
@@ -67,6 +81,9 @@ tools/sir_remapper3 : tools/sir_remapper3.c libcsir.a
 
 tools/sir_util : tools/sir_util.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sir_util tools/sir_util.c $(LDFLAGS)
+
+tools/sir_util2 : tools/sir_util2b.c libcsir.a
+	$(CC) $(CFLAGS) -otools/sir_util2 tools/sir_util2b.c $(LDFLAGS)
 
 tools/sirdiff : tools/sirdiff.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sirdiff tools/sirdiff.c $(LDFLAGS)
