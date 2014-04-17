@@ -1734,7 +1734,8 @@ void print_head(FILE *omf, int nhead, int ndes, int nhtype, int idatatype, int n
 {
   int i;
   char stmp[150];
-
+  float x0,y0,fmap_scale, fr0, fs0;
+  int bcols, brows;  
 
   if (nhtype < 20) fprintf(omf," (Old style header) %d\n",nhtype);
   fprintf(omf,"  Title:   '%s'\n",strnc(title,stmp,150));
@@ -1799,17 +1800,34 @@ void print_head(FILE *omf, int nhead, int ndes, int nhtype, int idatatype, int n
 
    case 8:
    case 9:
+     ease2sf(iopt, ascale, bscale, 
+	     &fmap_scale, &bcols, &brows, &fr0, &fs0);
+     x0=-fmap_scale*fs0;     
+     y0=-fmap_scale*fr0;     
      fprintf(omf,"  EASE2 polar azimuthal form: \n");
      fprintf(omf,"   Map center (col,row): %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   A,B scales:           %f , %f\n",ascale,bscale);
-     fprintf(omf,"   Map origin (col,row): %f , %f\n",a0,b0);
+     fprintf(omf,"   head A,B scales:           %f , %f\n",ascale,bscale);
+     /* fprintf(omf,"   head origin (col,row): %f , %f\n",a0,b0); */
+     if (iopt==8)
+       fprintf(omf,"   Reference Latitude:   %f (deg)\n",90.0);
+     else
+       fprintf(omf,"   Reference Latitude:   %f (deg)\n",-90.0);
+     fprintf(omf,"   Map base, scale, index: %f %.1f , %.1f\n",fmap_scale,ascale,bscale);
+     fprintf(stdout,"   Map origin (col,row): %f , %f\n",x0,y0);          
      break;
 
    case 10:
+     ease2sf(iopt, ascale, bscale, 
+	     &fmap_scale, &bcols, &brows, &fr0, &fs0);
+     x0=-fmap_scale*fs0;     
+     y0=-fmap_scale*fr0;     
      fprintf(omf,"  EASE2 cylindrical form: \n");
      fprintf(omf,"   Map center (col,row): %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   A,B scales:           %f , %f\n",ascale,bscale);
-     fprintf(omf,"   Map origin (col,row): %f , %f\n",a0,b0);
+     fprintf(omf,"   head A,B scales:           %f , %f\n",ascale,bscale);
+     /* fprintf(omf,"   head origin (col,row): %f , %f\n",a0,b0); */
+     fprintf(omf,"   Reference Latitude:   %f (deg)\n",30.0);
+     fprintf(omf,"   Map base, scale, index: %f %.1f , %.1f\n",fmap_scale,ascale,bscale);
+     fprintf(stdout,"   Map origin (col,row): %f , %f\n",x0,y0);          
      break;
 
    case 11:
@@ -1872,7 +1890,7 @@ void print_head3(FILE *omf, int nhead, int ndes, int nhtype, int idatatype, int 
   fprintf(omf,"  Year: %d  JD range: %d-%d",iyear,isday,ieday);
   fprintf(omf,"  Region Number: %d  Type: %d  Form: %d\n",iregion,itype,iopt);
   if (nhtype > 16) {
-     fprintf(omf,"  Polarization: %d  Frequency: %f MHz\n",ipol,ifreqhm*0.1);
+     fprintf(omf,"  Polarization: %d  Frequency: %f GHz\n",ipol,ifreqhm*0.1);
      fprintf(omf,"  Datatype: %d  Headers: %d  Ver:%d\n",idatatype,nhead,nhtype);
      fprintf(omf,"  Nodata: %f   Vmin: %f  Vmax: %f\n",anodata,v_min,v_max);
      if (ldes > 0)

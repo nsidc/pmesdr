@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# Compile everything (requires gcc and g+)
+# Compile everything (requires gcc and g+ compiles and the netcdf libraries)
 curr=`pwd`
 
-# make C library
+# make C library (you can make other language libraries if desired)
 cd src/sirlib/c
 make -f Makefile
 cd $curr
@@ -30,6 +30,7 @@ make_sir2gifs6b
 cd $curr
 
 # note: sirtool requires prior installation of the fltk library
+# and is an optional inclusion
 cd src/sirtool
 make -f Makefile
 make -f Makefile clean

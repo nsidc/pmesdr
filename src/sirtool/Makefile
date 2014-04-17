@@ -16,13 +16,16 @@ CC = gcc
 CXX = g++
 CFLAGS =
 CXXFLAGS =
+FLTK_INC = 
 
 # location of fltk_config script from fltk installation
 FLTK_CONFIG = /auto/users/long/src/linux/fltk/bin/fltk-config
-
 FLTK_LDFLAGS  = -L/usr/X11R6/lib64 `$(FLTK_CONFIG) --ldflags`
 FLTK_CFLAGS   = `$(FLTK_CONFIG) --cflags`
 FLTK_CXXFLAGS = `$(FLTK_CONFIG) --cxxflags`
+
+#FLTK_CONFIG = /auto/users/long/src/linux/fltk-1.3.2/bin/fltk-config
+#FLTK_INC      = `$(FLTK_CONFIG) --includedir`
 
 INC   = -I./
 
