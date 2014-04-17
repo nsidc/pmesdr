@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# debug response function
+#
+# written by D.G. Long at BYU 11 Apr 2014
+
+# set environment variables that are required for meas_meta_setup
+#meas_home="/auto/cers1/users/long/src/linux/measures/v1"  # localization specific
+meas_home="/auto/users/long/src/linux/measures/v1"  # localization specific
+SIR_areas="$meas_home/ref/locs/"           # path to location of location files
+SIR_region="$meas_home/ref/regiondef1.dat" # path to regiondef1.dat
+export meas_home SIR_areas SIR_region
+
+#####################
+#
+# generate product files using RSS data as input
+## note: the setup and product files made from RSS and CSU data have the name!
+#
+########################
+
+# recompile meas_meta_setup with DEBUG_RESPONSE flag defined
+
+# create a working directory
+mkdir debug_RSS
+
+# create input file listing (RSS)
+ls -1 ../sample_data/f13_r09999_tb_v7.dat > debug_RSS/F1.lis
+
+# create test meta file for EASE2N projection (1 channel, segmented image)
+../src/prod/meas_meta_make debug_RSS/test_RSS.meta 13 ../ref/s2g/ssmi_mN.s2g 60 60 1997 ../ref/EASE2N_testlarge1ch.def debug_RSS/F1.lis
+
+# Make setup files for EASE2N case
+# create setup file (RSS)
+../src/prod/meas_meta_setup_RSS debug_RSS/test_RSS.meta debug_RSS 0
+
+# create sir file from EASE2N projection setup file
+../src/prod/meas_meta_sir debug_RSS/F131-E2N97-060-060-s202-01.setup debug_RSS
+
+# view selected result (manual)
+../src/sirtool/sirtool debug_RSS/F131-a-E2N97-060-060-s202-01.ave
