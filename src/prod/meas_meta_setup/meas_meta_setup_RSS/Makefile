@@ -1,6 +1,8 @@
 #========================================================================
 # Makefile for meas_meta_setup_RSS utility
 #
+
+
 # 2014-04-14 M. J. Brodzik 303-492-8263 brodzik@nsidc.org
 # National Snow & Ice Data Center, University of Colorado, Boulder
 # Copyright (C) 2014 Regents of University of Colorado and Brigham-Young University
@@ -13,14 +15,16 @@
 #
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
+TESTDIR = $(TOPDIR)/test
 
 #
 #	commands
 #
 CC = gcc
 INSTALL = cp -f -p
+LS = ls -1
 MKDIR = mkdir -p
-RM = rm -f
+RM = rm -fr
 
 #
 #       debug or optimization settings
@@ -61,5 +65,15 @@ install :
 
 clean :
 	$(RM) $(BIN) $(OBJS)
+
+test_nps :
+	$(RM) $(TESTDIR)/setupRSS/nps
+	$(MKDIR) $(TESTDIR)/setupRSS/nps
+	$(BINDIR)/$(BIN)  $(TESTDIR)/nps/npstest_RSS.meta  $(TESTDIR)/setupRSS/nps 0
+
+test_e2n :
+	$(RM) $(TESTDIR)/setupRSS/e2n
+	$(MKDIR) $(TESTDIR)/setupRSS/e2n
+	$(BINDIR)/$(BIN)  $(TESTDIR)/e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 0
 
 

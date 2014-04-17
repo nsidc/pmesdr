@@ -13,14 +13,15 @@
 #
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
-
+TESTDIR = $(TOPDIR)/test
 #
 #	commands
 #
 CC = gcc
 INSTALL = cp -f -p
+LS = ls -1
 MKDIR = mkdir -p
-RM = rm -f
+RM = rm -fr
 
 #
 #       debug or optimization settings
@@ -58,5 +59,33 @@ install :
 
 clean :
 	$(RM) $(BIN) $(OBJS)
+
+test_nps :
+	$(RM) $(TESTDIR)/nps
+	$(MKDIR) $(TESTDIR)/nps
+	$(LS)  $(TOPDIR)/sample_data/f13_r09999_tb_v7.dat > $(TESTDIR)/nps/F1RSS.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/nps/npstest_RSS.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/arctic.def $(TESTDIR)/nps/F1RSS.lis
+
+test_e2n :
+	$(RM) $(TESTDIR)/e2n
+	$(MKDIR) $(TESTDIR)/e2n
+	$(LS)  $(TOPDIR)/sample_data/f13_r09999_tb_v7.dat > $(TESTDIR)/e2n/F1RSS.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/e2n/e2ntest_RSS.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TESTDIR)/e2n/F1RSS.lis
+
+csu_nps :
+	$(RM) $(TESTDIR)/csu_nps
+	$(MKDIR) $(TESTDIR)/csu_nps
+	$(LS)  $(TOPDIR)/sample_data/CSU_SSMI* > $(TESTDIR)/csu_nps/F1CSU.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_nps/npstest_CSU.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/arctic.def $(TESTDIR)/csu_nps/F1CSU.lis
+
+csu_e2n :
+	$(RM) $(TESTDIR)/csu_e2n
+	$(MKDIR) $(TESTDIR)/csu_e2n
+	$(LS)  $(TOPDIR)/sample_data/CSU_SSMI* > $(TESTDIR)/csu_e2n/F1CSU.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TESTDIR)/csu_e2n/F1CSU.lis
 
 

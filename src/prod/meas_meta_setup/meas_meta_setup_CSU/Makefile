@@ -13,6 +13,7 @@
 #
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
+TESTDIR = $(TOPDIR)/test
 
 #
 #	commands
@@ -20,7 +21,7 @@ BINDIR = $(TOPDIR)/bin
 CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
-RM = rm -f
+RM = rm -fr
 
 #
 #       debug or optimization settings
@@ -81,5 +82,15 @@ install :
 
 clean :
 	$(RM) $(BIN) $(OBJS)
+
+test_nps :
+	$(RM) $(TESTDIR)/setupCSU/nps
+	$(MKDIR) $(TESTDIR)/setupCSU/nps
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_nps/npstest_CSU.meta  $(TESTDIR)/setupCSU/nps 0
+
+test_e2n :
+	$(RM) $(TESTDIR)/setupCSU/e2n
+	$(MKDIR) $(TESTDIR)/setupCSU/e2n
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 0
 
 

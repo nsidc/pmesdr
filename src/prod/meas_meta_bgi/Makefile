@@ -13,6 +13,7 @@
 #
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
+TESTDIR = $(TOPDIR)/test
 
 #
 #	commands
@@ -20,7 +21,7 @@ BINDIR = $(TOPDIR)/bin
 CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
-RM = rm -f
+RM = rm -fr
 
 #
 #       debug or optimization settings
@@ -47,6 +48,9 @@ OBJS = meas_meta_bgi.o
 HDRS = nr.h nrutil.h $(MEAS_INCDIR)/sir3.h 
 BIN = meas_meta_bgi
 
+NPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
+E2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
+
 all : $(BIN)
 
 $(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS)
@@ -58,5 +62,21 @@ install :
 
 clean :
 	$(RM) $(BIN) $(OBJS)
+
+test_nps :
+	$(RM) $(TESTDIR)/bgiRSS/nps
+	$(MKDIR) $(TESTDIR)/bgiRSS/nps
+	for file in $(NPSFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/nps; \
+	done
+
+test_e2n :
+	$(RM) $(TESTDIR)/bgiRSS/e2n
+	$(MKDIR) $(TESTDIR)/bgiRSS/e2n
+	for file in $(E2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2n; \
+	done
 
 
