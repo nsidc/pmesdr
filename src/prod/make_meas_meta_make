@@ -1,0 +1,7 @@
+#
+# compile script for meas_meta_make.c
+#
+# written by DGL at BYU  4 Mar 2014
+
+# with sir libraries 
+gcc -m64 -I../sirlib/c/include meas_meta_make.c -o meas_meta_make -L../sirlib/c -lcsir -lm
