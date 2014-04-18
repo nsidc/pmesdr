@@ -16,8 +16,6 @@ LDFLAGS = -L. -lcsir -lm
 
 all : $(EXES)
 
-.PHONY: all clean
-
 csirexample : csirexample.c libcsir.a
 	$(CC) $(CFLAGS) -ocsirexample csirexample.c $(LDFLAGS)
 
