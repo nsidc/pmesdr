@@ -1,1 +1,0 @@
-gcc -m64  -I/auto/users/long/src/linux/netcdf/netcdf-4.0.1/include -I/auto/share/include sir2netcdf.c -L/auto/share/lib64 -lcsir -L/auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib -lnetcdf -L/auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib -lhdf5_hl -lhdf5 -L/auto/users/long/src/linux/netcdf/zlib-1.2.3/lib -lz -lm -o sir2netcdf
