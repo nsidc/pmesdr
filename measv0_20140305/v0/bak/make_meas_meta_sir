@@ -1,8 +1,0 @@
-#
-# compile script for meas_meta_sir.c
-#
-# written by DGL at BYU  4 Mar 2014
-
-
-# without libraries 
-gcc -O3 -m64 -Isir/c/include meas_meta_sir.c sir/c/lib/sir_geom.c sir/c/lib/sir_io.c -o meas_meta_sir -lm
