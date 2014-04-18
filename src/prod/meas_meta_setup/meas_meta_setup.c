@@ -9,6 +9,7 @@
 
   written by DGL at BYU  02/22/2014 + based on oscat_meta_setup_slice.c and ssmi_meta_setup_v7RSS.f
   revised by DGL at BYU  03/07/2014 + added EASE2 capability
+  revised by DGL at BYU  04/11/2014 + added response debug output
 
 ******************************************************************/
 
@@ -19,7 +20,7 @@
 
 #include <sir3.h>
 
-#define prog_version 0.1 /* program version */
+#define prog_version 0.2 /* program version */
 #define prog_name "meas_meta_setup"
 
 /* This code can read and process several different data sets.  To change data sets
@@ -35,6 +36,8 @@
 //#define CSU
 //#endif
 
+#define DEBUG_RESPONSE   /* if defined, outputs response debug info to file */
+#undef DEBUG_RESPONSE   /* if not defined (normal case) do not output response debug info to file */
 
 #define NSAVE 50            /* maximum number of regions to output */
 #define MAXFILL 2000        /* maximum number of pixels in response function */
@@ -56,14 +59,14 @@
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 #define mod(a,b) ((a) % (b))
+#define dmod(a,b) ((a)-floor((a)/(b))*(b))
 #define abs(x) ((x) >= 0 ? (x) : -(x))
 
 /****************************************************************************/
 
 int nint(float r)
 {
-  int ret_val = r;
-  if (ret_val - r > 0.5) ret_val--;
+  int ret_val = r;  if (ret_val - r > 0.5) ret_val--;
   if (r - ret_val > 0.5) ret_val++;
   return(ret_val);
 }
@@ -337,7 +340,7 @@ int main(int argc,char *argv[])
 
   int ix1,ix2,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,iy1,iy2,ix,iy,cnt;
   float clat,clon,dlat,dlon,sum;
-  float eqlon, xhigh_lon, xlow_lon, sc_last_lat;
+  float eqlon, xhigh_lon, xlow_lon, sc_last_lat, sc_last_lon;
   float minlat[HI_SCAN], maxlat[HI_SCAN]; 
   float dscale, tsplit1, tsplit2, alat1, alon1,x_rel, y_rel;
 
@@ -352,7 +355,13 @@ int main(int argc,char *argv[])
   int irec = 0; /* input cells counter */
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
+  int mcnt=0;
 
+#ifdef DEBUG_RESPONSE
+  FILE *resp_debug;
+  char debug_response_out_name[]="debug_response.out";  
+  float plat, plon;
+#endif
 
 #ifdef RSS
   char fcdr_input[]="SSM/I RSS V7 binary";  
@@ -430,11 +439,22 @@ int main(int argc,char *argv[])
   
   /* convert response threshold from dB to normal space */
   response_threshold=pow(10.,0.1*response_threshold);  
+ 
+#ifdef DEBUG_RESPONSE
+  resp_debug=fopen(debug_response_out_name,"w");
+  if (resp_debug == NULL) {
+    fprintf(stderr,"*** could not open debug output file for response\n");
+    exit(-1);
+  }
+  printf("\n** Opened debug output response file %s\n\n",debug_response_out_name);
+  fprintf(resp_debug,"%f\n",response_threshold);  
+#endif
 
   /* set some sensor-specific constants */
   nbeams=7;          /* number of beams */     
   scan_ang=102.0;    /* azimuth angle of the scan from left measurement to right measurement at subsat point */
-#define BOX_SIZE 10  /* defines the gain computation box (30 for lo scan SSMI) */
+  //#define BOX_SIZE 10  /* defines the gain computation box (30 for lo scan SSMI) */
+#define BOX_SIZE 80  /* defines the gain computation box (30 for lo scan SSMI) */
 
   /* set sensor specific quality control flag mask */
   set_mask(&quality_mask, 1);  /* sensor=SSM/I=1 */
@@ -513,8 +533,9 @@ int main(int argc,char *argv[])
     if (nfile_select>0 && nfile_select != nfile) /* if single file select */
       goto label_330;  /* skip all files that are not one selected */
 
-    /* initialize last spacecraft latitude */
+    /* initialize last spacecraft position */
     sc_last_lat=-1.e25;
+    sc_last_lon=-1.e25;
 
     /* open and read new input TB file */
     printf("Opening input TB file %d '%s'\n",nfile,fname);
@@ -550,8 +571,8 @@ int main(int argc,char *argv[])
     timedecode(d->SCAN_TIME[0],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
     timedecode(d->SCAN_TIME[nscans-1],&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
 #endif    
-    printf("*** start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);    
-    printf("*** stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
+    printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);    
+    printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
 
     printf("first scan:%lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);
     printf("last scan: %lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);
@@ -674,6 +695,7 @@ int main(int argc,char *argv[])
       else
 	ascend=1;
       sc_last_lat=d->SC_LAT[iscan];
+      sc_last_lon=d->SC_LON[iscan];
 
       /* extract TB measurements for each scan.  the logic here works through
 	 both hi and lo (A and B) scans with a single loop */
@@ -757,7 +779,7 @@ int main(int argc,char *argv[])
 	  
 	  /* compute angle between satellite nadir track and true north at the measurement position */
 	  
-	  /* first, determine if measueremnt is in the longitude range for ascending or descending */
+	  /* first, determine if measurement is in the longitude range for ascending or descending */
 	  inlonrange=0;
 	  if (xhigh_lon > 0.0 && xlow_lon < 0.0) {
 	    if (cen_lon <= xhigh_lon && cen_lon >= xlow_lon) inlonrange=1;
@@ -785,7 +807,7 @@ int main(int argc,char *argv[])
 	     through the measurement point and the satellite path at the measurement */
 	  ang2=scan_ang/2.0-(nmeas-i)*esep_ang;
 	         
-	  /* compute the orientation of the antenna illumination ellipse
+	  /* compute the estimated orientation of the antenna illumination ellipse
 	     on the earth's surface with respect to north */
 	  theta=ang2+theta_orb;
 
@@ -877,13 +899,14 @@ int main(int argc,char *argv[])
 	  if (iadd < 0) goto label_3400;
 	  if (iadd >= nsx*nsy) goto label_3400;
 
+	  mcnt++;  /* count measurements with centers in area */
 	  //printf("retain center %6.2f %6.2f %6.2f  %6.2f %6.2f %6.2f\n",cx,lonl,lonh,cy,latl,lath);
 
 	  /* assign the center of the pixel containing the measurement location to
 	     be the "new" measurement center lat/lon.  this "quantizes" the measurement
 	     centers to the center of the output pixel */
 	  x=ix2+0.5;
-	  y=iy2+0.5;	  
+	  y=iy2+0.5;
 	  pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
 
 	  //printf(" Check: %6d %4d,%4d %6.2f,%6.2f %6.2f,%6.2f %6.2f,%6.2f\n",iadd,ix2,iy2,x,y,cx,cy,clon,clat);			
@@ -913,7 +936,21 @@ int main(int argc,char *argv[])
 	  if (iy2+iysize1<0) iysize1=1-iy2; 
 	  if (iy2+iysize2>=nsy) iysize2=nsy-iy2;
 
-	  if (ii==1444) printf("at %d %d %d %d %d %d %d\n",ii,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,ix2,iy2);
+#ifdef DEBUG_RESPONSE
+	  if (mod(mcnt,7) != 1 || mcnt > 535 || mcnt < 500) goto label_3400;  /* reduce count */
+	  printf(" Az comp: %d %d %f %f %f %f\n",ix2,iy2,theta,azang,
+		 dmod(theta-azang+720.0,360.0),dscale);
+	  fprintf(resp_debug,"%d %d %d %d %f %f %f %f\n", iscan, iregion, ibeam, i, clat, clon, sc_last_lat, sc_last_lon);	  
+	  fprintf(resp_debug,"%d %d %f %f %f %f %d %d %d\n",
+		  ix2,iy2,theta,azang,dmod(theta-azang+720.0,360.0),dscale,nsx,nsy,iadd);
+	  fprintf(resp_debug,"%f %d %d %d %d %d %d %d\n",
+		  dscale,BOX_SIZE,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2);
+#endif
+
+#ifdef RSS
+	  //  printf(" Azimuth angle comparison: %f %f %f\n",theta,azang,dmod(theta-azang+720.0,360.0));
+	  theta=azang;   /* use azimuth angle from file */
+#endif
 
 	  /* for each pixel in the search box compute the normalized 
 	     footprint gain response function
@@ -940,14 +977,11 @@ int main(int argc,char *argv[])
 		//clat=nint(clat*200.0)/200.0; clon=nint(clon*175.0)/175.0;
 		//printf("Loc check: %d %f %f  %f %f\n",iadd1,alat1,clat,alon1,clon);
 
-		/* compute antenna pattern response at each pixel based on beam number, location, and
-		   projection rotation and scaling */
-
+		/* compute antenna pattern response at each pixel based on beam number, 
+		   location, and projection rotation and scaling */
 		rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
+		//x_rel=ix1*2.5; y_rel=iy1*5;
 		sum=ssmi_response(x_rel,y_rel,theta,thetai,ibeam);
-
-		//if (ix1==0 && iy1==0) /* center pixel of response */
-		//azang=atan2(y_rel,x_rel)*RTD;
 
 		if (sum > response_threshold) {
 		  sum=powf(10.0,0.1*sum);  /* convert gain to normal space */
@@ -958,8 +992,21 @@ int main(int argc,char *argv[])
 		  if (count >= MAXFILL) {
 		    fprintf(stderr,"*** count overflow has occurred\n");		  
 		    count=MAXFILL;
-		  }		
+		  }
+		
+#ifdef DEBUG_RESPONSE
+		} else
+		  sum=-sum;
+
+		x=ix+0.5;  /* compute exact lat/lon of each pixel in response array */
+		y=iy+0.5;
+		pixtolatlon(x, y, &plon, &plat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+		fprintf(resp_debug,"%d %d %f %f %f %d %f %f %f %f\n",
+			ix,iy,x_rel,y_rel,sum,iadd1,alon1,alat1,plon,plat);
+#else
 		}
+#endif
+
 	      }
 	    }
 	  }
@@ -1051,6 +1098,10 @@ int main(int argc,char *argv[])
   label_1050:;               /* input file loop */
     printf("Done with setup records %d %d\n",irec,krec);
   }
+
+#ifdef DEBUG_RESPONSE
+  fclose(resp_debug);
+#endif
   
   /* close output setup files */
   for (j=0; j<save_area.nregions; j++) {
@@ -1986,7 +2037,9 @@ void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat)
 { /* read fine with min and max latitudes for each scan position from file 
      the location of this file is specified in the environment variable 'RSS_path' */
 
-  char *p, line[260], RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char *p, line[260];
+  //char RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char RSS_path[]="../../ref/"; /* default location */
   int i;
   FILE *f;
   
@@ -2242,7 +2295,9 @@ void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat)
 { /* read fine with min and max latitudes for each scan position from file 
      the location of this file is specified in the environment variable 'RSS_path' */
 
-  char *p, line[260], RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char *p, line[260];
+  //char RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
+  char RSS_path[]="../../ref/"; /* default location */
   int i;
   FILE *f;
   
@@ -2335,8 +2390,8 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
       using a locally-tangent plane approximation
       x is aligned East while y is aligned North
 
-      a fancier map projection could be used, but hight precision is 
-      not required for this calculation
+      a fancier map projection could be used, but high precision is 
+      not really required for this calculation
 
       written: DGL  1/12/99
   */
