@@ -5,16 +5,29 @@
 #
 # be sure to edit include/sir3.h to reflect machine/compiler type
 
+TOPDIR = $(PMESDR_TOP_DIR)
+BINDIR = $(TOPDIR)/bin
+
 EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
-	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp libcsir.a \
+	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp \
 	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
 	tools/sirdiff tools/sir_extractregion tools/sirmask tools/sir_stats
+LIB = libcsir.a
 
+AR = ar
 CC = gcc
+INSTALL = cp -f -p
+MKDIR = mkdir -p
+RM = rm -fr
+
 CFLAGS = -Iinclude
 LDFLAGS = -L. -lcsir -lm
 
-all : $(EXES)
+all : $(EXES) $(LIB)
+
+install :
+	$(MKDIR) $(BINDIR)
+	$(INSTALL) $(BIN) $(BINDIR)
 
 csirexample : csirexample.c libcsir.a
 	$(CC) $(CFLAGS) -ocsirexample csirexample.c $(LDFLAGS)
@@ -56,8 +69,8 @@ libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(CC) $(CFLAGS) -c lib/sir_io.c
 	$(CC) $(CFLAGS) -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -c lib/sir_geom.c
-	ar cr libcsir.a *.o
-	rm -f *.o
+	$(AR)  ruv libcsir.a *.o
+	$(RM) *.o
 
 # create dynamic c routines library
 libcsir.so : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
@@ -65,11 +78,11 @@ libcsir.so : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(CC) $(CFLAGS) -fPIC -c lib/sir_io.c
 	$(CC) $(CFLAGS) -fPIC -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -fPIC -c lib/sir_geom.c
-	$(CC) -shared -Wl,-soname,libsir.so.1 -o libsir.so.1.0.1 sir_io.o sir_ez.o sir_geom.o -lc
-	rm -f *.o
+	$(CC) -shared -Wl,-soname,libcsir.so.1 -o libcsir.so.1.0.1 sir_io.o sir_ez.o sir_geom.o -lc
+	$(RM) *.o
 
 clean :
-	rm -f $(EXES) *.o
+	$(RM) $(EXES) $(LIB) *.o
 
 tools/sir_modhead3 : tools/sir_modhead3.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sir_modhead3 tools/sir_modhead3.c $(LDFLAGS)
