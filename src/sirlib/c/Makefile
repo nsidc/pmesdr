@@ -11,7 +11,7 @@ BINDIR = $(TOPDIR)/bin
 EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
 	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp \
 	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
-	tools/sirdiff tools/sir_extractregion tools/sirmask tools/sir_stats
+	tools/sirdiff tools/sirdiff_mask tools/sir_extractregion tools/sirmask tools/sir_stats
 LIB = libcsir.a
 
 AR = ar
@@ -20,14 +20,15 @@ INSTALL = cp -f -p
 MKDIR = mkdir -p
 RM = rm -fr
 
-CFLAGS = -Iinclude
+CONFIG_CFLAGS = 
+CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
 LDFLAGS = -L. -lcsir -lm
 
 all : $(EXES) $(LIB)
 
 install :
 	$(MKDIR) $(BINDIR)
-	$(INSTALL) $(BIN) $(BINDIR)
+	$(INSTALL) $(EXES) $(BINDIR)
 
 csirexample : csirexample.c libcsir.a
 	$(CC) $(CFLAGS) -ocsirexample csirexample.c $(LDFLAGS)
@@ -98,6 +99,9 @@ tools/sir_util2 : tools/sir_util2b.c libcsir.a
 
 tools/sirdiff : tools/sirdiff.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sirdiff tools/sirdiff.c $(LDFLAGS)
+
+tools/sirdiff_mask : tools/sirdiff_mask.c libcsir.a
+	$(CC) $(CFLAGS) -otools/sirdiff_mask tools/sirdiff_mask.c $(LDFLAGS)
 
 tools/sirmask : tools/sirmask.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sirmask tools/sirmask.c $(LDFLAGS)
