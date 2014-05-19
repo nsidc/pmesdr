@@ -83,12 +83,12 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS)
 
-test_nps :
+csu_nps :
 	$(RM) $(TESTDIR)/setupCSU/nps
 	$(MKDIR) $(TESTDIR)/setupCSU/nps
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_nps/npstest_CSU.meta  $(TESTDIR)/setupCSU/nps 0
 
-test_e2n :
+csu_e2n :
 	$(RM) $(TESTDIR)/setupCSU/e2n
 	$(MKDIR) $(TESTDIR)/setupCSU/e2n
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 0
