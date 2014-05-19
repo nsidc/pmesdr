@@ -48,8 +48,10 @@ OBJS = meas_meta_bgi.o
 HDRS = nr.h nrutil.h $(MEAS_INCDIR)/sir3.h 
 BIN = meas_meta_bgi
 
-NPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
-E2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
+RSSNPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
+RSSE2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
+CSUNPSFILES = $(shell find $(TESTDIR)/setupCSU/nps -type f -name "F*Arc*.setup")
+CSUE2NFILES = $(shell find $(TESTDIR)/setupCSU/e2n -type f -name "F*E2N*.setup")
 
 all : $(BIN)
 
@@ -63,20 +65,36 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS)
 
-test_nps :
+rss_nps :
 	$(RM) $(TESTDIR)/bgiRSS/nps
 	$(MKDIR) $(TESTDIR)/bgiRSS/nps
-	for file in $(NPSFILES); do \
+	for file in $(RSSNPSFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/nps; \
 	done
 
-test_e2n :
+rss_e2n :
 	$(RM) $(TESTDIR)/bgiRSS/e2n
 	$(MKDIR) $(TESTDIR)/bgiRSS/e2n
-	for file in $(E2NFILES); do \
+	for file in $(RSSE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2n; \
+	done
+
+csu_nps :
+	$(RM) $(TESTDIR)/bgiCSU/nps
+	$(MKDIR) $(TESTDIR)/bgiCSU/nps
+	for file in $(CSUNPSFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/nps; \
+	done
+
+csu_e2n :
+	$(RM) $(TESTDIR)/bgiCSU/e2n
+	$(MKDIR) $(TESTDIR)/bgiCSU/e2n
+	for file in $(CSUE2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/e2n; \
 	done
 
 

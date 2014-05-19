@@ -1,3 +1,4 @@
+
 #========================================================================
 # Makefile for meas_meta_sir utility
 #
@@ -47,8 +48,10 @@ OBJS = meas_meta_sir.o
 HDRS = $(MEAS_INCDIR)/sir3.h
 BIN = meas_meta_sir
 
-NPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
-E2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
+RSSNPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
+RSSE2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
+CSUNPSFILES = $(shell find $(TESTDIR)/setupCSU/nps -type f -name "F*Arc*.setup")
+CSUE2NFILES = $(shell find $(TESTDIR)/setupCSU/e2n -type f -name "F*E2N*.setup")
 
 all : $(BIN)
 
@@ -62,19 +65,35 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS)
 
-test_nps :
+rss_nps :
 	$(RM) $(TESTDIR)/sirRSS/nps
 	$(MKDIR) $(TESTDIR)/sirRSS/nps
-	for file in $(NPSFILES); do \
+	for file in $(RSSNPSFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/nps; \
 	done
 
-test_e2n :
+rss_e2n :
 	$(RM) $(TESTDIR)/sirRSS/e2n
 	$(MKDIR) $(TESTDIR)/sirRSS/e2n
-	for file in $(E2NFILES); do \
+	for file in $(RSSE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2n; \
+	done
+
+csu_nps :
+	$(RM) $(TESTDIR)/sirCSU/nps
+	$(MKDIR) $(TESTDIR)/sirCSU/nps
+	for file in $(CSUNPSFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/nps; \
+	done
+
+csu_e2n :
+	$(RM) $(TESTDIR)/sirCSU/e2n
+	$(MKDIR) $(TESTDIR)/sirCSU/e2n
+	for file in $(CSUE2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2n; \
 	done
 
