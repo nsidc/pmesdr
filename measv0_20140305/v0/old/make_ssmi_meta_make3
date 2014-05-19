@@ -1,1 +1,0 @@
-g77 -m64 -O3 -ffixed-line-length-none -fno-automatic -I/auto/share/include/ ssmi_meta_make3.f  -L/auto/share/lib64/ -lfsirf -o ssmi_meta_make3
