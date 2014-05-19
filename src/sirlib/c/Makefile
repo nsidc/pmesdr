@@ -5,18 +5,30 @@
 #
 # be sure to edit include/sir3.h to reflect machine/compiler type
 
-EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
-	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp libcsir.a \
-	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
-	tools/sirdiff tools/sir_extractregion tools/sirmask tools/sir_stats
+TOPDIR = $(PMESDR_TOP_DIR)
+BINDIR = $(TOPDIR)/bin
 
+EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
+	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp \
+	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
+	tools/sirdiff tools/sirdiff_mask tools/sir_extractregion tools/sirmask tools/sir_stats
+LIB = libcsir.a
+
+AR = ar
 CC = gcc
-CFLAGS = -Iinclude
+INSTALL = cp -f -p
+MKDIR = mkdir -p
+RM = rm -fr
+
+CONFIG_CFLAGS = 
+CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
 LDFLAGS = -L. -lcsir -lm
 
-all : $(EXES)
+all : $(EXES) $(LIB)
 
-.PHONY: all clean
+install :
+	$(MKDIR) $(BINDIR)
+	$(INSTALL) $(EXES) $(BINDIR)
 
 csirexample : csirexample.c libcsir.a
 	$(CC) $(CFLAGS) -ocsirexample csirexample.c $(LDFLAGS)
@@ -58,8 +70,8 @@ libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(CC) $(CFLAGS) -c lib/sir_io.c
 	$(CC) $(CFLAGS) -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -c lib/sir_geom.c
-	ar cr libcsir.a *.o
-	rm -f *.o
+	$(AR)  ruv libcsir.a *.o
+	$(RM) *.o
 
 # create dynamic c routines library
 libcsir.so : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
@@ -67,11 +79,11 @@ libcsir.so : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(CC) $(CFLAGS) -fPIC -c lib/sir_io.c
 	$(CC) $(CFLAGS) -fPIC -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -fPIC -c lib/sir_geom.c
-	$(CC) -shared -Wl,-soname,libsir.so.1 -o libsir.so.1.0.1 sir_io.o sir_ez.o sir_geom.o -lc
-	rm -f *.o
+	$(CC) -shared -Wl,-soname,libcsir.so.1 -o libcsir.so.1.0.1 sir_io.o sir_ez.o sir_geom.o -lc
+	$(RM) *.o
 
 clean :
-	rm -f $(EXES) *.o
+	$(RM) $(EXES) $(LIB) *.o
 
 tools/sir_modhead3 : tools/sir_modhead3.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sir_modhead3 tools/sir_modhead3.c $(LDFLAGS)
@@ -87,6 +99,9 @@ tools/sir_util2 : tools/sir_util2b.c libcsir.a
 
 tools/sirdiff : tools/sirdiff.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sirdiff tools/sirdiff.c $(LDFLAGS)
+
+tools/sirdiff_mask : tools/sirdiff_mask.c libcsir.a
+	$(CC) $(CFLAGS) -otools/sirdiff_mask tools/sirdiff_mask.c $(LDFLAGS)
 
 tools/sirmask : tools/sirmask.c libcsir.a
 	$(CC) $(CFLAGS) -otools/sirmask tools/sirmask.c $(LDFLAGS)

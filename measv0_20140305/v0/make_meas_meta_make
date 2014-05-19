@@ -1,8 +1,0 @@
-#
-# compile script for meas_meta_make.c
-#
-# written by DGL at BYU  4 Mar 2014
-
-
-# without libraries 
-gcc -m64 -Isir/c/include meas_meta_make.c -o meas_meta_make -lm
