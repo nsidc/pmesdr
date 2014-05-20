@@ -59,7 +59,7 @@ endif
 MEAS_INCDIR = ../../../sirlib/c/include
 MEAS_LIBDIR = ../../../sirlib/c
 LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
-	-lcsir $(NETCDF4_LIBDIR)/libnetcdf.so.7 -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
+	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
 CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS)
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
