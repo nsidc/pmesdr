@@ -3,9 +3,10 @@
 # regression testing using just a single orbit
 #
 # written by D.G. Long at BYU 14 Mar 2014
+# updated by D.G. Long at BYU 20 May 2014 + use meas_undump
 
 # set environment variables that are required for meas_meta_setup
-meas_home="/auto/users/long/src/linux/measures/v1"  # localization specific
+meas_home="/auto/users/long/src/linux/measures"  # localization specific
 SIR_areas="$meas_home/ref/locs/"           # path to location of location files
 SIR_region="$meas_home/ref/regiondef1.dat" # path to regiondef1.dat
 export meas_home SIR_areas SIR_region
@@ -44,7 +45,7 @@ ls -1 ../sample_data/RSS_JD061_1997/f13*.dat > work2_RSS/F1.lis
 # create setup file (RSS)
 ../src/prod/meas_meta_setup_RSS work2_RSS/test_RSS.meta work2_RSS 0
 
-# create sir files from polar stereographic setup files
+# create intermediate dump files from polar stereographic setup files
 ../src/prod/meas_meta_sir work2_RSS/F131-Arc97-061-061.setup work2_RSS
 #../src/prod/meas_meta_sir work2_RSS/F132-Arc97-061-061.setup work2_RSS
 #../src/prod/meas_meta_sir work2_RSS/F133-Arc97-061-061.setup work2_RSS
@@ -53,8 +54,32 @@ ls -1 ../sample_data/RSS_JD061_1997/f13*.dat > work2_RSS/F1.lis
 #../src/prod/meas_meta_sir work2_RSS/F136-Arc97-061-061.setup work2_RSS
 #../src/prod/meas_meta_sir work2_RSS/F137-Arc97-061-061.setup work2_RSS
 
-# create bgi files
+# create bgi intermediate dump files
+#../src/prod/meas_meta_bgi work2_RSS/F131-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_bgi work2_RSS/F132-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_bgi work2_RSS/F133-Arc97-061-061.setup work2_RSS
 ../src/prod/meas_meta_bgi work2_RSS/F134-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_bgi work2_RSS/F135-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_bgi work2_RSS/F136-Arc97-061-061.setup work2_RSS
+#../src/prod/meas_meta_bgi work2_RSS/F137-Arc97-061-061.setup work2_RSS
+
+# create BYU .SIR-format product files from dump files
+../src/prod/meas_undump work_RSS/F131-Arc97-061-061.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F132-Arc97-061-061.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F133-Arc97-061-061.lis_dump.nc work_RSS 0 1
+../src/prod/meas_undump work_RSS/F134-Arc97-061-061.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F135-Arc97-061-061.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F136-Arc97-061-061.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F137-Arc97-061-061.lis_dump.nc work_RSS 0 1
+
+# create BYU .SIR-format bgi product files from dump files
+#../src/prod/meas_undump work_RSS/F131-Arc97-061-061.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F132-Arc97-061-061.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F133-Arc97-061-061.lis_dump1.nc work_RSS 0 1
+../src/prod/meas_undump work_RSS/F134-Arc97-061-061.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F135-Arc97-061-061.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F136-Arc97-061-061.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump work_RSS/F137-Arc97-061-061.lis_dump1.nc work_RSS 0 1
 
 # view selected results (manual)
 ../src/sirtool/sirtool work2_RSS/F134-a-Arc97-061-061.sir
@@ -62,17 +87,33 @@ ls -1 ../sample_data/RSS_JD061_1997/f13*.dat > work2_RSS/F1.lis
 ../src/sirtool/sirtool work2_RSS/F134-a-Arc97-061-061.grd
 ../src/sirtool/sirtool work2_RSS/F134-a-Arc97-061-061.bgi
 
-# create netcdf files from sir or bgi files
+# create netcdf files from dump files
 # (grd images not supported yet)
-#../src/prod/sir2netcdf work2_RSS/F134-a-Arc97-061-061.sir work2_RSS
-../src/prod/sir2netcdf work2_RSS/F134-a-Arc97-061-061.ave work2_RSS
-#../src/prod/sir2netcdf work2_RSS/F134-a-Arc97-061-061.bgi work2_RSS
+../src/prod/meas_undump work_RSS/F131-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F132-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F133-Arc97-061-061.lis_dump.nc work_RSS 1 1
+../src/prod/meas_undump work_RSS/F134-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F135-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F136-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F137-Arc97-061-061.lis_dump.nc work_RSS 1 1
 
-# create sir files from EASE2N setup files
-../src/prod/meas_meta_sir work2_RSS/F131-E2N97-061-061.setup work2_RSS
+# create BYU .SIR-format bgi product files from dump files
+#../src/prod/meas_undump work_RSS/F131-Arc97-061-061.lis_dump1.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F132-Arc97-061-061.lis_dump1.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F133-Arc97-061-061.lis_dump1.nc work_RSS 1 1
+../src/prod/meas_undump work_RSS/F134-Arc97-061-061.lis_dump1.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F135-Arc97-061-061.lis_dump1.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F136-Arc97-061-061.lis_dump1.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F137-Arc97-061-061.lis_dump1.nc work_RSS 1 1
 
-# create bgi files
-../src/prod/meas_meta_bgi work2_RSS/F131-E2N97-061-061.setup work2_RSS
+# create intermediate dump files from EASE2N setup files
+../src/prod/meas_meta_sir1 work2_RSS/F131-E2N97-061-061.setup work2_RSS
+
+# create intermediate bgi files
+../src/prod/meas_meta_bgi1 work2_RSS/F131-E2N97-061-061.setup work2_RSS
+
+# create BYU .SIR-format product files from dump files
+../src/prod/meas_undump work_RSS/F131-E2N97-061-061.lis_dump.nc work_RSS 1 1
 
 # view selected results (manual)
 ../src/sirtool/sirtool work2_RSS/F131-a-E2N97-061-061.sir
@@ -82,7 +123,8 @@ ls -1 ../sample_data/RSS_JD061_1997/f13*.dat > work2_RSS/F1.lis
 
 # create netcdf files from sir or bgi files
 # (not supported yet)
-#../src/prod/sir2netcdf work2_RSS/F131-a-E2N97-061-061.ave work2_RSS
+# create BYU .SIR-format product files from dump files
+../src/prod/meas_undump work_RSS/F131-E2N97-061-061.lis_dump.nc work_RSS 1 1
 
 # generate (selected) browse .gif images
 ../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_RSS/F131-a-Arc97-061-061.sir work2_RSS/F131-a-Arc97-061-061.sir.gif
@@ -128,17 +170,35 @@ ls -1 ../sample_data/CSU_JD061_1997/CSU_SSMI_FCDR_*.nc > work2_CSU/F2.lis
 # create setup file (CSU) EASE2N
 ../src/prod/meas_meta_setup_CSU work2_CSU/test_CSU.meta work2_CSU 0
 
-# create sir files from polar stereographic setup files
-../src/prod/meas_meta_sir work2_CSU/F131-Arc97-061-061.setup work2_CSU
-#../src/prod/meas_meta_sir work2_CSU/F132-Arc97-061-061.setup work2_CSU
-#../src/prod/meas_meta_sir work2_CSU/F133-Arc97-061-061.setup work2_CSU
-../src/prod/meas_meta_sir work2_CSU/F134-Arc97-061-061.setup work2_CSU
-#../src/prod/meas_meta_sir work2_CSU/F135-Arc97-061-061.setup work2_CSU
-#../src/prod/meas_meta_sir work2_CSU/F136-Arc97-061-061.setup work2_CSU
-#../src/prod/meas_meta_sir work2_CSU/F137-Arc97-061-061.setup work2_CSU
+# create intermediate dump files from polar stereographic setup files
+../src/prod/meas_meta_sir1 work2_CSU/F131-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir1 work2_CSU/F132-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir1 work2_CSU/F133-Arc97-061-061.setup work2_CSU
+../src/prod/meas_meta_sir1 work2_CSU/F134-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir1 work2_CSU/F135-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir1 work2_CSU/F136-Arc97-061-061.setup work2_CSU
+#../src/prod/meas_meta_sir1 work2_CSU/F137-Arc97-061-061.setup work2_CSU
 
-# create bgi files
-../src/prod/meas_meta_bgi work2_CSU/F134-Arc97-061-061.setup work2_CSU
+# create intermediate dumb bgi files
+../src/prod/meas_meta_bgi1 work2_CSU/F134-Arc97-061-061.setup work2_CSU
+
+# create BYU .SIR-format product files from dump files
+../src/prod/meas_undump work_CSU/F131-Arc97-061-061.lis_dump.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F132-Arc97-061-061.lis_dump.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F133-Arc97-061-061.lis_dump.nc work_CSU 0 1
+../src/prod/meas_undump work_CSU/F134-Arc97-061-061.lis_dump.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F135-Arc97-061-061.lis_dump.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F136-Arc97-061-061.lis_dump.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F137-Arc97-061-061.lis_dump.nc work_CSU 0 1
+
+# create BYU .SIR-format bgi product files from dump files
+#../src/prod/meas_undump work_CSU/F131-Arc97-061-061.lis_dump1.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F132-Arc97-061-061.lis_dump1.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F133-Arc97-061-061.lis_dump1.nc work_CSU 0 1
+../src/prod/meas_undump work_CSU/F134-Arc97-061-061.lis_dump1.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F135-Arc97-061-061.lis_dump1.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F136-Arc97-061-061.lis_dump1.nc work_CSU 0 1
+#../src/prod/meas_undump work_CSU/F137-Arc97-061-061.lis_dump1.nc work_CSU 0 1
 
 # view selected results (manual)
 ../src/sirtool/sirtool work2_CSU/F134-a-Arc97-061-061.sir
@@ -146,17 +206,24 @@ ls -1 ../sample_data/CSU_JD061_1997/CSU_SSMI_FCDR_*.nc > work2_CSU/F2.lis
 ../src/sirtool/sirtool work2_CSU/F134-a-Arc97-061-061.grd
 ../src/sirtool/sirtool work2_CSU/F134-a-Arc97-061-061.bgi
 
-# create netcdf files from sir or bgi files
+# create netcdf files from dump files
 # (grd images not supported yet)
-#../src/prod/sir2netcdf work2_CSU/F134-a-Arc97-061-061.sir work2_CSU
-../src/prod/sir2netcdf work2_CSU/F134-a-Arc97-061-061.ave work2_CSU
-#../src/prod/sir2netcdf work2_CSU/F134-a-Arc97-061-061.bgi work2_CSU
+../src/prod/meas_undump work_RSS/F131-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F132-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F133-Arc97-061-061.lis_dump.nc work_RSS 1 1
+../src/prod/meas_undump work_RSS/F134-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F135-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F136-Arc97-061-061.lis_dump.nc work_RSS 1 1
+#../src/prod/meas_undump work_RSS/F137-Arc97-061-061.lis_dump.nc work_RSS 1 1
 
 # create sir files from EASE2N setup files
-../src/prod/meas_meta_sir work2_CSU/F131-E2N97-061-061.setup work2_CSU
+../src/prod/meas_meta_sir1 work2_CSU/F131-E2N97-061-061.setup work2_CSU
 
 # create bgi files
-../src/prod/meas_meta_bgi work2_CSU/F131-E2N97-061-061.setup work2_CSU
+../src/prod/meas_meta_bgi1 work2_CSU/F131-E2N97-061-061.setup work2_CSU
+
+# create BYU .SIR-format bgi product files from dump files
+../src/prod/meas_undump work_RSS/F131-E2N7-061-061.lis_dump1.nc work_RSS 0 1
 
 # view selected results (manual)
 ../src/sirtool/sirtool work2_CSU/F131-a-E2N97-061-061.sir
@@ -166,7 +233,7 @@ ls -1 ../sample_data/CSU_JD061_1997/CSU_SSMI_FCDR_*.nc > work2_CSU/F2.lis
 
 # create netcdf files from sir or bgi files
 # (not supported yet)
-#../src/prod/sir2netcdf work2_CSU/F131-a-E2N97-061-061.ave work2_CSU
+#../src/prod/meas_undump work_RSS/F131-E2N7-061-061.lis_dump1.nc work_RSS 0 1
 
 # generate browse .gif images
 ../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g work2_CSU/F131-a-Arc97-061-061.sir work2_CSU/F131-a-Arc97-061-061.sir.gif
