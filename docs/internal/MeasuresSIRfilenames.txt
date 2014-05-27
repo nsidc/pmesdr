@@ -1,0 +1,93 @@
+A long, but human-readable, standard file naming scheme is used for BYU .SIR 
+files produced by BYU. This scheme can be expressed as
+
+SENS-T-REGYR-DY1-DY2.RCN (24 characters + possible additional extensions)
+
+where SENS = Sensor* and polarization name (4 chars): 
+
+(partial list)
+# AmYh = AMSRE midnight local time-of-day (h-pol) Y=AMSRE frequency index
+# AmYv = AMSRE midhight local time-of-day (v-pol) Y=AMSRE frequency index
+# AnYh = AMSRE noon local time-of-day (h-pol) Y=AMSRE frequency index
+# AnYv = AMSRE noon local time-of-day (v-pol) Y=AMSRE frequency index
+
+    *  6 GHz (AMSRE frequency index Y=1)
+    * 10 GHz (AMSRE frequency index Y=2)
+    * 18 GHz (AMSRE frequency index Y=3)
+    * 23 GHz (AMSRE frequency index Y=4)
+    * 36 GHz (AMSRE frequency index Y=5)
+    * 89 GHz (AMSRE frequency index Y=6) 
+
+# FXXY = SSM/I where XX=SSM/I number (e.g., 13, 14), Y=channel index (daily)
+# FmXY = SSM/I midhight local time-of-day where X=last digit SSM/I 
+           number (e.g., 3, 4), Y=channel index
+# FnXY = SSM/I  noon local time-of-day where X=last SSM/I number 
+          (e.g., 3, 4), Y=channel index
+
+    * 19V (channel index Y=1)
+    * 19H (channel index Y=2)
+    * 22V (channel index Y=3)
+    * 37V (channel index Y=4)
+    * 37H (channel index Y=5)
+    * 85V (channel index Y=6)
+    * 85H (channel index Y=7)
+
+and T = image type code (1 char) (the file header itype code value in 
+shown in the parenthesis)
+
+(partial list)
+    * A (1) = Tb brightness temperature (in K)
+    * C (8) = counts or hits (measurements) per pixel
+    * E (21) = TB error image (dB)
+    * I (7) = incidence angle standard deviation (in deg)
+    * J (9) = average incidence angle (in deg)
+    * p (11) = pixel time estimate (in min from start of image interval)
+    * V (22) = standard deviation image
+    * x (30) = longitude image (deg)
+    * y (31) = latitude image (deg)
+    * Z (44) = area of image grid element (pixel) (km**2) 
+
+and REG = Region Id code (3 chars). The following is a partial list of the 
+regions and their corresponding numerical codes:
+
+(partial list)
+    * E2N = (311) EASE2 grid Northern Hemisphere
+    * E2S = (312) EASE2 grid Southern Hemisphere
+    * E2G = (313) EASE2 grid global view
+    * Cus = (?) custom region
+
+and YR = last two digitas of year (2 chars) eg. - 78, ..., 99, 00, 01, ..., 14, 
+
+and DY1 = 1st day of data used to make image (3 chars) (Julian Day of year) 
+ eg. - 001, 034, 267, 354
+
+and DY2 = End day of data used in image (3 chars) (Julian Day of year) if 
+imaging time crosses year boundary, DY2 < DY1
+
+and RCN = Reconstruction technique (3 chars):
+
+    * sir = sir or sirf algorithm
+    * bgi = Backus-Gilbert image algorithm
+    * ave = ave image algorithm
+    * non = nonenhanced enlarged grd image
+    * grd = gridded data image
+    * lis = list information file (not distributed) 
+
+
+Special file Extensions:
+
+The following common file extensions may be optionally added to the end of 
+the filename to identify specially processed and/or stored images:
+
+    * lmsk = Land masked data image (ocean set to no data value)
+    * lmask = Land mask image (0=ocean, 1=land)
+    * mask = general mask image
+    * imsk = Ice masked image (non-ice covered ocean set to no data value)
+    * omsk = Ocean masked image (land set to no data value)
+    * dif = Difference image
+    * diff = Difference image
+    * gz = gzipped file
+    * sr = Subregion extracted image
+    * ie = ASCII sea ice extent file
+    * ed = Manually edited image 
+    * nc = netCDF file
