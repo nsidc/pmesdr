@@ -38,6 +38,13 @@ ifeq ($(LOCALE),NSIDCsnow)
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
+else ifeq ($(LOCALE),NSIDCdev)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_INCDIR = /usr/include
+  HDF5_LIBDIR = /usr/lib64
+  ZLIB_LIBDIR = /usr/lib64
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
