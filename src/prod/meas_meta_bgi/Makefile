@@ -13,7 +13,7 @@
 #
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
-TESTDIR = $(TOPDIR)/test
+TESTDIR = $(TOPDIR)/NSIDCtest
 
 #
 #	commands

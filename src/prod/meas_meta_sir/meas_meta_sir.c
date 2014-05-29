@@ -5,6 +5,7 @@
   program to generate standard SIR products from .setup file
 
   Written by DGL at BYU 02/22/2014 + modified from ssmi_meta_sir3.c
+  Revised by DGL at BYU 05/15/2015 + use intermediate dump file output
 
 ******************************************************************/
 
@@ -16,22 +17,20 @@
 
 #include "sir3.h"
 
-#define VERSION 0.4
-
-//#define M_PI 3.14159265358979323846264338327  //already in math.h
-#define DTR M_PI/180.0  /* degree to radian multiple */
-#define RTD 180.0/M_PI  /* radian to degree multiple */
+#define VERSION 1.0
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
+#define REL_BEGIN 0           /* fseek relative to end of file */
+
+#define CREATE_NON 1          /* set to 1 to create NON images, 0 to not create */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
-#define rnd(a) ((a) >= 0 ? floor((a)+0.5L) : ceil((a)-0.5L))
 
 /****************************************************************************/
 
-/* some variables and their default values */
+/* some global variables and their default values */
 
 float a_init=180.0;           /* initial A (TB) value */
 int   nits=30;                /* number of SIR iterations */
@@ -41,6 +40,9 @@ int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
 
 /****************************************************************************/
+
+
+/* some error print out shortcuts */
 
 void eprintf(char *s)
 { /* print to both stdout and stderr to catch errors */
@@ -57,6 +59,7 @@ void eprintfi(char *s, int a)
   fprintf(stderr,s,a);
   fflush(stderr);
 }
+
 void eprintfc(char *s, char *a)
 { /* print to both stdout and stderr to catch errors */
   fprintf(stdout,s,a);
@@ -65,10 +68,17 @@ void eprintfc(char *s, char *a)
   fflush(stderr);
 }
 
+void Ferror(int i)
+{
+  fprintf(stdout,"*** Error reading input file at %d ***\n",i);
+  fprintf(stderr,"*** Error reading input file at %d ***\n",i);
+  fflush(stdout);
+  fflush(stderr);
+  return;
+}
+
 
 /* function prototypes */
-
-void Ferror(int i);
 
 int get_measurements(char *store, char *store2, float *tbval, float *ang, int *count,
 		     int *ktime, int *iadd, int *nrec);
@@ -76,7 +86,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
 void get_updates(float tbval, float ang, int count, int *fill_array,
 		 short int *response_array, int rec);
 
-void compute_ave(float tbval, int count, int *fill_array, short int *response_array);
+void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
 
 void time_updates(float tbval, float ktime, float ant, int count,
 		  int *fill_array, short int *response_array);
@@ -90,6 +100,21 @@ void filter(float *val, int size, int opt, int nsx, int nsy, float
 void no_trailing_blanks(char *s);
 
 char *addpath(char *outpath, char *name, char *temp);
+
+int nc_open_file_write_head(char *inter_name, int *ncid, int nsx, int nsy, int iopt, 
+		 float ascale, float bscale, float a0, float b0, float xdeg, float ydeg, 
+		 int isday, int ieday, int ismin, int iemin, int iyear, int iregion, int ipol, 
+		 int nsx2, int nsy2, int non_size_x, int non_size_y, float ascale2, float bscale2, 
+		 float a02, float b02, float xdeg2, float ydeg2,
+			    float a_init, int ibeam, int nits, int median_flag, int nout); 
+   
+int add_string_nc(int ncid, char *name, char *str, int maxc);
+
+int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float anodata_A);
+
+int nc_close_file(int ncid);
+
+void check_err(const int stat, const int line, const char *file);
 
 /****************************************************************************/
 
@@ -116,7 +141,7 @@ int main(int argc, char **argv)
   char regname[11], *s;
   int dumb, nrec, ncnt, i, j, n, ii, iii, nsize;
   long int nls, nbyte;
-  float ratio;
+  float ratio, fn, ninv;
   char *space, *store, *store2;
   float tbval, ang, azang=0.0;
   int count, ktime, iadd, end_flag;
@@ -125,44 +150,38 @@ int main(int argc, char **argv)
   int non_size_x, non_size_y, nsx2, nsy2, ix, iy, nsize2;
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
-  /* SIR file header information */
+  /* define no-data values */
+  float anodata_A=100.0;
+  float anodata_C=-1.0;  
+  float anodata_I=-1.0;
+  float anodata_Ia=0.0;
+  float anodata_P=-1.0;
+  float anodata_V=-1.0;
+  float anodata_E=-15.0;
 
-  float v_min_A, v_max_A, anodata_A, anodata_B, v_min_B, v_max_B, 
-    anodata_C, v_min_C, v_max_C, anodata_I, v_min_I, v_max_I, 
-    anodata_Ia, v_min_Ia, v_max_Ia;
-  int nsx, nsy, ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin;
-  int ioff_B, iscale_B, itype_B, ioff_I, iscale_I, itype_I, 
-    ioff_Ia, iscale_Ia, itype_Ia, ioff_C, iscale_C, itype_C;
-  int ioff_P, iscale_P, itype_P, ioff_V, iscale_V, itype_V, ioff_E, iscale_E, itype_E;
-  float anodata_P, v_min_P, v_max_P, anodata_V, v_min_V, v_max_V,
-    anodata_E, v_min_E, v_max_E;
-  int iregion, itype_A, nhead, ndes, nhtype, idatatype, ldes, nia;
-  int ipol, ifreqhm, ispare1;
-  char title[101], sensor[41], crproc[101], type_A[139], tag[101], crtime[29];
-  char type_B[139], type_I[139], type_Ia[139], type_C[139], type_P[139],
-    type_V[139], type_E[139];
+  int Nfiles_out;  
+  
+  int nsx, nsy, iyear, isday, ismin, ieday, iemin;
+  int iregion, ipol, iopt;
+  char pol, sensor[41], crproc[101], crtime[29];
   float xdeg, ydeg, ascale, bscale, a0, b0;
-  int iopt;
-  int ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc;
-#define MAXDES 1024
-  char descrip[MAXDES+1];
-#define MAXI 128
-  short iaopt[MAXI];
-
-  int its, irec, ierr, rcode, year, keep, tmax;
-  float total;
-  char pol;
-  float amin, amax, bmin, bmax, weight, temp, old_amin, old_amax,
-    old_bmin, old_bmax, denom;
 
   time_t tod;
 
-  char a_name[100], b_name[100], 
-    c_name[100], p_name[100], v_name[100], e_name[100],
-    a_name_ave[100], b_name_ave[100], non_aname[100], 
+  int its, irec, ierr, year, keep;  
+  float total, tmax;
+  float amin, amax, bmin, bmax, weight, temp, old_amin, old_amax;
+  float old_bmin, old_bmax, denom;
+
+  char a_name[100], b_name[100], c_name[100], p_name[100], 
+    v_name[100], e_name[100], i_name[100], j_name[100],
+    a_name_ave[100], b_name_ave[100], non_aname[100], grd_iname[100], grd_jname[100],
     non_vname[100], grd_aname[100], grd_bname[100], grd_vname[100], 
     grd_pname[100], grd_cname[100], 
     info_name[100], line[100];
+
+  char inter_name[250];
+  int ncid, ncerr;
 
   int storage = 0;
   long head_len;
@@ -284,7 +303,6 @@ int main(int argc, char **argv)
    printf("  Grid Origin: %f,%f  Grid Span: %f,%f\n",a02,b02,xdeg2,ydeg2);
    printf("  Grid Scales: %f,%f\n",ascale2,bscale2);
    printf("\n");
-   fflush(stdout);
 
    /* read output file names and misc variables
 
@@ -368,7 +386,6 @@ int main(int argc, char **argv)
        strncpy(c_name,++x,100);
        no_trailing_blanks(c_name);
      }
-     /* scatterometer-specific file names
      if (strstr(line,"SIRF_I_file") != NULL) {
        x = strchr(line,'=');
        strncpy(i_name,++x,100);
@@ -378,7 +395,7 @@ int main(int argc, char **argv)
        x = strchr(line,'=');
        strncpy(j_name,++x,100);
        no_trailing_blanks(j_name);
-       }*/
+       }
      if (strstr(line,"SIRF_E_file") != NULL) {
        x = strchr(line,'=');
        strncpy(e_name,++x,100);
@@ -419,7 +436,7 @@ int main(int argc, char **argv)
        strncpy(grd_vname,++x,100);
        no_trailing_blanks(grd_vname);
      }
-     /*if (strstr(line,"GRD_I_file") != NULL) {
+     if (strstr(line,"GRD_I_file") != NULL) {
        x = strchr(line,'=');
        strncpy(grd_iname,++x,100);
        no_trailing_blanks(grd_iname);
@@ -428,7 +445,7 @@ int main(int argc, char **argv)
        x = strchr(line,'=');
        strncpy(grd_jname,++x,100);
        no_trailing_blanks(grd_jname);
-       }*/
+     }
      if (strstr(line,"GRD_P_file") != NULL) {
        x = strchr(line,'=');
        strncpy(grd_pname,++x,100);
@@ -453,29 +470,71 @@ int main(int argc, char **argv)
 
    printf("\n");
    printf("A output file: '%s'\n",a_name);
-   /* printf("I output file: '%s'\n",i_name);
-      printf("J output file: '%s'\n",j_name);*/
+   printf("I output file: '%s'\n",i_name);
+   printf("J output file: '%s'\n",j_name);
    printf("C output file: '%s'\n",c_name);
    printf("P output file: '%s'\n",p_name);
    printf("E output file: '%s'\n",e_name);
    printf("SIR V output file: '%s'\n",v_name);
    printf("AVE A output file: '%s'\n",a_name_ave);
-   printf("NON A output file: '%s'\n",non_aname);
-   printf("NON V output file: '%s'\n",non_vname);
+   if (CREATE_NON) {
+     printf("NON A output file: '%s'\n",non_aname);
+     printf("NON V output file: '%s'\n",non_vname);
+     Nfiles_out=16;
+   } else {
+     Nfiles_out=14;
+   }
    printf("GRD A output file: '%s'\n",grd_aname);
    printf("GRD V output file: '%s'\n",grd_vname);
-   /* printf("GRD I output file: '%s'\n",grd_iname);
-      printf("GRD J output file: '%s'\n",grd_jname);*/
+   printf("GRD I output file: '%s'\n",grd_iname);
+   printf("GRD J output file: '%s'\n",grd_jname);
    printf("GRD P output file: '%s'\n",grd_pname);
    printf("GRD C output file: '%s'\n",grd_cname);
    printf("Info file: '%s'\n",info_name);
    printf("\n");
 
+   /* generate output intermediate dump file name, open file, and dump info */
+   sprintf(inter_name,"%s/%s_dump.nc",outpath,info_name);
+   ncerr=nc_open_file_write_head(inter_name, &ncid, nsx, nsy, iopt, 
+				 ascale, bscale, a0, b0, xdeg, ydeg, 
+				 isday, ieday, ismin, iemin, iyear, iregion, ipol, 
+				 nsx2, nsy2, non_size_x, non_size_y, 
+				 ascale2, bscale2, a02, b02, xdeg2, ydeg2,
+				 a_init, ibeam, nits, median_flag, 
+				 Nfiles_out); check_err(ncerr, __LINE__,__FILE__);
+
+   /* add string information */
+   ncerr=add_string_nc(ncid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
+   sprintf(crproc,"BYU MERS:meas_meta_sir v%f",VERSION);
+   ncerr=add_string_nc(ncid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__);
+   (void) time(&tod);
+   (void) strftime(crtime,28,"%X %x",localtime(&tod));
+   ncerr=add_string_nc(ncid,"Creation_time",crtime,29); check_err(ncerr, __LINE__,__FILE__); 
+
+   /* add product file names */
+   ncerr=add_string_nc(ncid,"a_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"c_name",c_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"e_name",e_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"i_name",i_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"j_name",j_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"v_name",v_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"p_name",p_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"a_name_ave",a_name_ave,100); check_err(ncerr, __LINE__,__FILE__);
+   if (CREATE_NON) {
+     ncerr=add_string_nc(ncid,"non_aname",non_aname,100); check_err(ncerr, __LINE__,__FILE__);   
+     ncerr=add_string_nc(ncid,"non_vname",non_vname,100); check_err(ncerr, __LINE__,__FILE__);
+   }   
+   ncerr=add_string_nc(ncid,"grd_aname",grd_aname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"grd_vname",grd_vname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"grd_iname",grd_iname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"grd_jname",grd_jname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"grd_pname",grd_pname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"grd_cname",grd_cname,100); check_err(ncerr, __LINE__,__FILE__);
+
    head_len = ftell(imf);
    printf("Input header file length %ld\n",head_len);
    nls=nls-head_len;
-
-   fflush(stdout);
 
 /* header read completed, now determine how much program memory to allocate */
 
@@ -510,10 +569,10 @@ int main(int argc, char **argv)
     }
   }
   
-/* allocate storage space for image and working array */
+/* allocate storage space for image and working arrays
+   note: these arrays are re-used multiple times to save memory */
 
-  nsize = nsx * nsy;
-  
+  nsize = nsx * nsy;  
   a_val  = (float *) malloc(sizeof(float)*nsize);
   b_val  = (float *) malloc(sizeof(float)*nsize);
   a_temp = (float *) malloc(sizeof(float)*nsize);
@@ -643,188 +702,27 @@ int main(int argc, char **argv)
     printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
 	   nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
   }
-  fflush(stdout);
-
-/* generate output SIR file header info */
-
-  nhtype=31;		/* set header type */
-  idatatype=2;		/* output image is in standard i*2 form */
-  ipol=ipol+1;
-  ifreqhm=1;
-  polch='V';
-  if (ipol==1) polch='H';
-  if (ibeam == 1 || ibeam == 2) {
-    ifreqhm=194;
-  } else if (ibeam == 3) {
-    ifreqhm=222;
-  } else if (ibeam == 4 || ibeam == 5) {
-    ifreqhm=370;
-  } else if (ibeam == 6 || ibeam == 7) {
-    ifreqhm=855;
-  }
-
-  nia=0;                /* no extra integers */
-  ldes=0;               /* no extra text */
-  ndes=0;
-  ispare1=0;
-  strncpy(tag,"(c) 2014 BYU MERS Laboratory",40);
-
-  /* expand sensor description */
-  sprintf(sensor,"%s %d%c %d",sensor_in,ifreqhm/10,polch,ibeam);  
-  regname[9]='\0';
-
-  if (median_flag == 1) 
-    sprintf(title,"SIRF image of %s",regname);
-  else
-    sprintf(title,"SIR image of %s",regname);
-
-  (void) time(&tod);
-  (void) strftime(crtime,28,"%X %x",localtime(&tod));
-  printf("Current time: '%s'\n",crtime);
-
-  /* set projection scale factors */
-  switch (iopt){
-  case -1: /* image only */
-    ideg_sc=10;
-    iscale_sc=1000;
-    i0_sc=100;
-    ixdeg_off=0;
-    iydeg_off=0;
-    ia0_off=0;
-    ib0_off=0;
-    break;
-  case 0: /* rectalinear lat/lon */
-    ideg_sc=100;
-    iscale_sc=1000;
-    i0_sc=100;
-    ixdeg_off=-100;
-    iydeg_off=0;
-    ia0_off=0;
-    ib0_off=0;
-    break;
-  case 1: /* lambert */
-  case 2:
-    ideg_sc=100;
-    iscale_sc=1000; /* original = 100 */
-    i0_sc=1;
-    ixdeg_off=0;
-    iydeg_off=0;
-    ia0_off=0;
-    ib0_off=0;
-    break;
-  case 5: /* polar stereographic */
-    ideg_sc=100;
-    iscale_sc=1000;  /* original = 100 */
-    i0_sc=1;
-    ixdeg_off=-100;
-    iydeg_off=0;
-    ia0_off=0;
-    ib0_off=0;
-    break;
-  case  8: /* EASE2 grid */
-  case  9:
-  case 10:
-    ideg_sc=10;
-    iscale_sc=100;
-    i0_sc=10;
-    ixdeg_off=0;
-    iydeg_off=0;
-    ia0_off=0;
-    ib0_off=0;
-    break;
-  case 11: /* EASE1 grid */
-  case 12:
-  case 13:
-    ideg_sc=10;
-    iscale_sc=1000;
-    i0_sc=10;
-    ixdeg_off=0;
-    iydeg_off=0;
-    ia0_off=0;
-    ib0_off=0;
-    break;
-  default: /* unknown */
-    ideg_sc=100;
-    iscale_sc=1000;
-    i0_sc=100;
-    ixdeg_off=0;
-    iydeg_off=0;
-    ia0_off=0;
-    ib0_off=0;
-  }
-
-  /* image specific header info */
-
-  ioff_A=100;
-  iscale_A=200;
-  itype_A=3;
-  anodata_A=100.00;
-  v_min_A=180.0;
-  v_max_A=295.0;
-  sprintf(type_A,"A Tb image  (%s)",a_name);
-  
-  /*ioff_I=-1;
-  iscale_I=100;
-  itype_I=7;
-  anodata_I=-1.00;
-  v_min_I=-1.0;
-  v_max_I=1.0;
-  sprintf(type_I,"Incidence Angle std  (%s)",a_name);
-  
-  ioff_Ia=0;
-  iscale_Ia=100;
-  itype_Ia=9;
-  anodata_Ia=0.0;
-  v_min_Ia=40.0;
-  v_max_Ia=60.0;
-  sprintf(type_Ia,"Incidence Angle ave  (%s)",a_name);
-  */
-  ioff_C=-1;
-  iscale_C=9;
-  itype_C=8;
-  anodata_C=-1.00;
-  v_min_C=-1.0;
-  v_max_C=500.0;
-  sprintf(type_C,"Count image  (%s)",a_name);
-
-  ioff_P=-1;
-  iscale_P=1;
-  itype_P=11;
-  anodata_P=-1.00;
-  v_min_P=0.0;
-  v_max_P=(ieday-isday)*24*60+iemin-ismin;
-  if (v_max_P > 65400.0) v_max_P=65400.0;
-  sprintf(type_P,"Pixel Time image  (%s)",a_name);
-
-  ioff_V=-1;
-  iscale_V=100;
-  itype_V=23;
-  anodata_V=-1.00;
-  v_min_V=0.0;
-  v_max_V=15.0;
-  sprintf(type_V,"Tb STD  (%s)",a_name);
-
-  ioff_E=-16;
-  iscale_E=100;
-  itype_E=21;
-  anodata_E=-16.00;
-  v_min_E=-15.0;
-  v_max_E=15.0;
-  sprintf(type_E,"Tb mean error  (%s)",a_name);
 
 
 /* Begin SIR/SIRF processing.  First initialize working arrays. */
 
-  for (i=0; i < nsize; i++) {
+  for (i=0; i < nsize; i++)
     *(a_val+i) = a_init;
+  for (i=0; i < nsize; i++)
     *(b_val+i) = 0.0;
+  for (i=0; i < nsize; i++)
     *(a_temp+i) = 0.0;
+  for (i=0; i < nsize; i++)
     *(sx+i)  = 0.0;
+  for (i=0; i < nsize; i++)
     *(sy+i)  = 0.0;
+  for (i=0; i < nsize; i++)
     *(sxy+i) = 0.0;
+  for (i=0; i < nsize; i++)
     *(sx2+i) = 0.0;
+  for (i=0; i < nsize; i++)
     *(tot+i) = 0.0;
-  }
+
   old_amin=a_init;
   old_amax=a_init;
   
@@ -873,7 +771,7 @@ int main(int argc, char **argv)
 	store2 = store + 4*count;
       }
 
-      /*      printf("%d %f %f %d\n",irec,tbval,ang,count);
+      /* printf("%d %f %f %d\n",irec,tbval,ang,count);
             for (j=0;j<count;j++) printf("%d ",*((int *)(store+4*j)));
       printf("\n");
       */
@@ -882,7 +780,7 @@ int main(int argc, char **argv)
 
       /* compute AVE image during first iteration */
       if (its == 0) 
-	compute_ave(tbval, count,(int *) store, (short int *) store2);
+	compute_ave(tbval, ang, count,(int *) store, (short int *) store2);
 
       store = store+4*count;
       store = store+2*count;
@@ -895,7 +793,7 @@ done:
 
     amin =  20000.0;            /* for user stats */
     amax = -20000.0;
-    tmax = -1;
+    tmax = -1.0;
     total = 0.0;
     
     for (i=0; i<nsize; i++){
@@ -903,139 +801,91 @@ done:
 	total = total + *(tot+i);
 	*(a_val+i) = *(a_temp+i);
 
-	if (its+1 != nits) {          /* clean up */
-	  *(a_temp+i) = 0.0;
-	  *(sx+i) = 0.0;
-	  *(sx2+i) = 0.0;
-	  *(tot+i) = 0.0; 
-	} else {                      /* last iteration */
-	  /*	*(sx2+i) = *(sx2+i) - *(sx+i) * *(sx+i);
-	     if (*(sx2+i) > 0.0) *(sx2+i) = sqrt((double) *(sx2+i));
-	     *(sxy+i) = *(tot+i); 
-	  */
-	  tmax = max(tmax, *(tot+i));
-	}
 	if (its == 0) {        /* first iteration */
+	  if (*(sy+i) > 0) {      
+	    *(sx+i) = *(sx+i) / *(sy+i);
+	    *(sx2+i) = *(sx2+i) / *(sy+i);
+	    *(sx2+i) = *(sx2+i) - *(sx+i) * *(sx+i);
+	    if (*(sx2+i) > 0.0) 
+	      *(sx2+i) = sqrt((double) *(sx2+i));
+	    else
+	      *(sx2+i) = 0.;
+	  } else {
+	    *(sx2+i) = anodata_I;
+	    *(sx+i) = anodata_Ia;
+	  }
+	  *(sxy+i) = *(tot+i); 
 	  if (*(sy+i) > 0) 
 	    *(b_val+i) = *(b_val+i) / *(sy+i);
 	  else
 	    *(b_val+i) = anodata_A;
 	}
+	if (its+1 != nits) {          /* clean up */
+	  *(a_temp+i) = 0.0;
+	  *(tot+i) = 0.0; 
+	} else                       /* on last iteration */
+	  tmax = max(tmax, *(tot+i));
+
 	amin = min(amin, *(a_val+i));
 	amax = max(amax, *(a_val+i));
 	
       } else {
 	*(a_val+i) = anodata_A;
 	*(b_val+i) = anodata_A;
-	/*	if (its+1 == nits) {
-	  *(sx2+i) = -1;
-	  *(sxy+i) = -1;
-        }
-      */
+	*(sx2+i) = anodata_I;
+	*(sx+i) = anodata_Ia;
       }	
     }
 
-    if (its == 0) printf("Average hits: %.4f\n",total/nsize);
-    printf(" A min   max --> %f %f %d\n",amin,amax,its+1);
-    printf(" A change    --> %f %f\n",amin-old_amin,amax-old_amax);
-    fflush(stdout);
+    if (its == 0) printf(" Average weight: %.4f\n",total/nsize);
+    printf(" A min max  --> %f %f %d\n",amin,amax,its+1);
+    printf(" A change   --> %f %f\n",amin-old_amin,amax-old_amax);
 
     old_amin=amin;
     old_amax=amax;
-
 
     if (median_flag == 1)   /* apply modified median filtering */
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
     if (its == 0) {  /* output AVE image */
-      
-      sprintf(title, "AVE image of %s",regname);
-      sprintf(crproc,"BYU MERS:ssmi_meta_sir v%f AVE image",VERSION);
-
-      printf("	Writing A output AVE file '%s'\n", a_name_ave);
-      ierr = write_sir3(addpath(outpath,a_name_ave,tstr), b_val, &nhead, nhtype, 
-			idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-			ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-			ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
-			iregion, itype_A, iopt, ipol, ifreqhm, ispare1,
-			anodata_A, v_min_A, v_max_A, sensor, title, type_A, tag,
-			crproc, crtime, descrip, ldes, iaopt, nia);
-      if (ierr < 0) {
-	eprintf("*** ERROR writing A AVE output file ***\n");
+      printf("\nWriting Tb (A) AVE output '%s'\n", a_name_ave);
+      ncerr=add_float_array_nc(ncid,"ave_image",b_val,nsx,nsy,anodata_A); check_err(ncerr, __LINE__,__FILE__);      
+      if (ierr != 0) {
+	eprintf("*** ERROR writing A AVE output ***\n");
 	errors++;
       }
     }
 
-    /* output A files during iterations 
-       note: this is optional, and is used primarily for testing/debugging */
+  }
+  printf(" weight max --> %f Average weight: %.4f\n",tmax,total/nsize);
 
-    if ( ((its+1)% 5) == 0 || its+1 == nits) {
-
-      if (median_flag == 1)
-        sprintf(title,"SIRF image of %s",regname);
-      else
-        sprintf(title,"SIR image of %s",regname);
-      sprintf(crproc,"BYU MERS:meas_meta_sir v%f Ai=%6.2f It=%d",VERSION,a_init,its+1);
-
-      printf("\n");      
-      printf("Writing A output SIR file '%s'\n", a_name);
-      ierr = write_sir3(addpath(outpath,a_name,tstr), a_val, &nhead, nhtype, 
-			idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-			ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-			ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
-			iregion, itype_A, iopt, ipol, ifreqhm, ispare1,
-			anodata_A, v_min_A, v_max_A, sensor, title, type_A, tag,
-			crproc, crtime, descrip, ldes, iaopt, nia);
-      if (ierr < 0) {
-	eprintf("*** ERROR writing A output file ***\n");
-	errors++;
-      }
-      fflush(stdout);
-
-    }
+  /* output SIR image */
+  printf("\nWriting Tb (A) SIR output '%s'\n", a_name);
+  ncerr=add_float_array_nc(ncid,"a_image",a_val,nsx,nsy,anodata_A); check_err(ncerr, __LINE__,__FILE__);      
+  if (ierr != 0) {
+    eprintf("*	** ERROR writing A SIR output ***\n");
+    errors++;
   }
 
   /* output other auxilary product images */
-
-  /*  printf("Writing Istd output SIR file '%s'\n", i_name);
-      ierr = write_sir3(addpath(outpath,i_name,tstr), sx2, &nhead, nhtype, 
-		   idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-		   ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		   ioff_I, iscale_I, iyear, isday, ismin, ieday, iemin, 
-		   iregion, itype_I, iopt, ipol, ifreqhm, ispare1,
-		   anodata_I, v_min_I, v_max_I, sensor, title, type_I, tag,
-		   crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Istd output file ***\n");
+  printf("\nWriting Istd (I) SIR output '%s'\n", i_name);
+  ncerr=add_float_array_nc(ncid,"i_image",sx2,nsx,nsy,anodata_I); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr != 0) {
+    eprintf("*** ERROR writing Istd output ***\n");
     errors++;
   }
-  printf("Writing Iave output SIR file '%s'\n", j_name);
-  ierr = write_sir3(addpath(outpath,j_name,tstr), sx, &nhead, nhtype, 
-		   idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-		   ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		   ioff_Ia, iscale_Ia, iyear, isday, ismin, ieday, iemin, 
-		   iregion, itype_Ia, iopt, ipol, ifreqhm, ispare1,
-		   anodata_Ia, v_min_Ia, v_max_Ia, sensor, title, type_Ia, tag,
-		   crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Istd output file ***\n");
+  printf("Writing Iave (J) SIR output '%s'\n", j_name);
+  ncerr=add_float_array_nc(ncid,"j_image",sx,nsx,nsy,anodata_Ia); check_err(ncerr, __LINE__,__FILE__);
+  if (ierr != 0) {
+    eprintf("*** ERROR writing Istd output ***\n");
     errors++;
     }
-  */
 
   /* this product is not produced for weighted SIR/SIRF
-
-  printf("Writing Cnt output SIR file '%s' %d\n", c_name, tmax);
-  v_max_C = (float) (10 * (tmax/10+1));
-  ierr = write_sir3(addpath(outpath,c_name,tstr), sxy, &nhead, nhtype, 
-		   idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-		   ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		   ioff_C, iscale_C, iyear, isday, ismin, ieday, iemin, 
-		   iregion, itype_C, iopt, ipol, ifreqhm, ispare1,
-		   anodata_C, v_min_C, v_max_C, sensor, title, type_C, tag,
-		   crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Istd output file ***\n");
+  printf("Writing Cnt output '%s' %d\n", c_name, tmax);
+  ncerr=add_float_array_nc(ncid,"c_image",sxy,nsx,nsy,anodata_C); check_err(ncerr, __LINE__,__FILE__);
+  if (ierr != 0) {
+    eprintf("*** ERROR writing Istd output ***\n");
     errors++;
   }
   */
@@ -1044,7 +894,6 @@ done:
 /* create STD and Err images */
 
   printf("\nBegin creation of STD images\n");  
-  fflush(stdout);
 
   /* initialize arrays */
 
@@ -1115,40 +964,26 @@ done1:
       bmin = min(bmin, *(sx+i));
       bmax = max(bmax, *(sx+i));
 	
-      } else {
-	*(sxy+i) = anodata_V;
-	*(sx+i) = anodata_E;
-      }
+    } else {
+      *(sxy+i) = anodata_V;
+      *(sx+i) = anodata_E;
+    }
   }
     
   printf(" Tb STD min   max --> %f %f\n",amin,amax);
   printf(" Tb ERR min   max --> %f %f\n",bmin,bmax);
 
-  sprintf(title,"Tb STD image of %s",regname);
-  printf("Writing Tb STD (V) output SIR file '%s'\n", v_name);
-  ierr = write_sir3(addpath(outpath,v_name,tstr), sxy, &nhead, nhtype, 
-		    idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_V, iscale_V, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_V, iopt, ipol, ifreqhm, ispare1,
-		    anodata_V, v_min_V, v_max_V, sensor, title, type_V, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Tb STD (V) output file ***\n");
+  printf("Writing Tb STD (V) SIR output '%s'\n", v_name);
+  ncerr=add_float_array_nc(ncid,"v_image",sxy,nsx,nsy,anodata_V); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr != 0) {
+    eprintf("*** ERROR writing Tb STD (V) output ***\n");
     errors++;
   }
 
-  sprintf(title,"Tb err image of %s",regname);
-  printf("Writing Tb err (E) output SIR file '%s' \n", e_name);
-  ierr = write_sir3(addpath(outpath,e_name,tstr), sx, &nhead, nhtype, 
-		    idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_E, iscale_E, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_E, iopt, ipol, ifreqhm, ispare1,
-		    anodata_E, v_min_E, v_max_E, sensor, title, type_E, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Tb err (E) output file ***\n");
+  printf("Writing Tb err (E) SIR output '%s' \n", e_name);
+  ncerr=add_float_array_nc(ncid,"e_image",sx,nsx,nsy,anodata_E); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr < 0) {
+    eprintf("*** ERROR writing Tb err (E) output ***\n");
     errors++;
   }
 
@@ -1157,7 +992,6 @@ done1:
 /* create time image */
 
   printf("\nBegin creation of time image\n");  
-   fflush(stdout);
 
   /* initialize arrays */
 
@@ -1219,20 +1053,21 @@ done2:
       else
 	*(sxy+i) = anodata_P;
 		
-      amin = min(amin, *(sxy+i));
+      if (*(sxy+i) > 0.0)
+	amin = min(amin, *(sxy+i));
       amax = max(amax, *(sxy+i));
 	
     } else
       *(sxy+i) = anodata_P;
   }
 
-  printf(" Time (prefilter)  min   max --> %f %f\n",amin,amax);
+  printf(" Time min   max --> %f %f\n",amin,amax);
 
   /* median filter time image */
-
+  /* time filtering removed -- DGL 5/16/2014
   filter(sxy, 3, 0, nsx, nsy, a_temp, anodata_P);
 
-  amin =  32000.0;            /* for user stats */
+  amin =  32000.0;
   amax = -32000.0;
 
   for (i=0; i<nsize; i++){
@@ -1243,19 +1078,12 @@ done2:
   }
 
   printf(" Time (postfilter) min   max --> %f %f\n",amin,amax);
-  fflush(stdout);
+  */
 
-  sprintf(title,"Pixel Time image of %s",regname);
-  printf("Writing time output (P) SIR file '%s'\n", p_name);
-  ierr = write_sir3(addpath(outpath,p_name,tstr), sxy, &nhead, nhtype, 
-		    idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_P, iscale_P, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_P, iopt, ipol, ifreqhm, ispare1,
-		    anodata_P, v_min_P, v_max_P, sensor, title, type_P, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing time output (P) file ***\n");
+  printf("Writing time output (P) SIR '%s'\n", p_name);
+  ncerr=add_float_array_nc(ncid,"p_image",sxy,nsx,nsy,anodata_P); check_err(ncerr, __LINE__,__FILE__);
+  if (ierr != 0) {
+    eprintf("*** ERROR writing time output (P) ***\n");
     errors++;
   }
 
@@ -1264,10 +1092,9 @@ done2:
    these are grd images pixel replicated to be at the same 
    resolution of the ave and sir images */
 
-  printf("\nBegin creation of non-enhanced image\n");
-  fflush(stdout);
+  printf("\nBegin creation of non-enhanced GRD images\n");
 
-  /* note that this should be the case: (grid*non_size = sir size)
+  /* note that this should be the case!: (grid*non_size = sir size)
      nsx2 = nsx/non_size_x;
      nsy2 = nsy/non_size_y; */
 
@@ -1275,15 +1102,21 @@ done2:
 
   /* initialize arrays */
 
-  for (i=0; i < nsize2; i++) {
+  for (i=0; i < nsize2; i++)
     *(a_val+i) = 0.0;
+  for (i=0; i < nsize2; i++)
     *(a_temp+i) = 0.0;
-    *(tot+i) = 0;
+  for (i=0; i < nsize2; i++)
+    *(tot+i) = 0.0;
+  for (i=0; i < nsize2; i++)
     *(sx+i)  = 0.0;
+  for (i=0; i < nsize2; i++)
     *(sy+i)  = 0.0;
+  for (i=0; i < nsize2; i++)
     *(sxy+i) = 0.0;
+  for (i=0; i < nsize2; i++)
     *(sx2+i) = 0.0;
- }
+
 
   if (storage == 1) {  /* file storage: rewind file and skip head */
     fseek(imf, head_len, REL_BEGIN);
@@ -1313,7 +1146,7 @@ done2:
 
     /* compute address in shrunk workspace */
 
-    if (iadd < 0) iadd=-iadd;  /* remove asc/des flag */
+    if (iadd < 0) iadd=-iadd;  /* remove asc/des flag (if used) */
     if (iadd > 0) {            /* skip out-of-area measurements */
 
       /* compute location of measurement within lo-res grid */
@@ -1323,21 +1156,21 @@ done2:
       iy = iy / non_size_y;
       iadd = nsx2*iy+ix; 
 
-    /* compute average and variance */
+    /* compute unweighted, normalized stats for measurements hitting grid element */
 
-      if (iadd >= nsx2*nsy2 || iadd < 0) {  /* keep only in-image
-					      measurements */
+      if (iadd >= nsx2*nsy2 || iadd < 0) {  /* keep only in-image measurements */
 	printf("*** Non-enhanced address error: %d %d %d %d %d\n",
 	       iadd,ix,iy,non_size_x,non_size_y);
       } else {
-	n = *(tot + iadd);
-	*(tot +  iadd) = *(tot +   iadd) + 1;
-	/*	*(sx +   iadd) = (*(sx +   iadd) * n + ang)/(n+1);
-	 *(sx2 +  iadd) = (*(sx2 +  iadd) * n + ang*ang)/(n+1); */
-	*(sy +   iadd) = (*(sy +   iadd) * n + tbval)/(n+1);	
-	*(sxy +  iadd) = (*(sxy +  iadd) * n + tbval*ang)/(n+1);	
-	*(a_val+ iadd) = (*(a_val+ iadd) * n + tbval*tbval)/(n+1);	
-	*(a_temp+iadd) = (*(a_temp+iadd) * n + ktime)/(n+1);
+	fn = *(tot + iadd);
+	*(tot +  iadd) = *(tot +   iadd) + 1.0;                    /* count */
+	ninv = 1./ *(tot + iadd);
+	*(sx +   iadd) = (*(sx +   iadd) * fn + ang)*ninv;         /* mean inc angle */
+	*(sx2 +  iadd) = (*(sx2 +  iadd) * fn + ang*ang)*ninv;     /* var inc angle */
+	*(a_val+ iadd) = (*(a_val+ iadd) * fn + tbval)*ninv;	   /* mean Tb */
+	*(sxy +  iadd) = (*(sxy +  iadd) * fn + tbval*ang)*ninv;   /* cross cor TB*inc angle */
+	*(sy +   iadd) = (*(sy +   iadd) * fn + tbval*tbval)*ninv; /* var Tb */
+	*(a_temp+iadd) = (*(a_temp+iadd) * fn + (float)ktime)*ninv;/* mean time */
       }
     }
   }
@@ -1347,159 +1180,109 @@ done3:
   amax = -32000.0;
   bmin =  32000.0;
   bmax = -32000.0;
-  old_bmax = -3200.0;
-  old_bmin =  3200.0;
-  tmax = -1;
+  old_bmax = -32000.0;
+  old_bmin =  32000.0;
+  tmax = -1.0;
   total = 0.0;
     
   for (i=0; i<nsize2; i++){
     if (*(tot+i) > 0) {    /* update only hit pixels */
       total = total + *(tot+i);
-
-      temp =  *(a_val + i) - *(sy + i) * *(sy + i);
-      if (temp > 0.0) {
-	temp = sqrt((double) temp);
-	old_bmin = min(old_bmin, temp);
-	old_bmax = max(old_bmax, temp);
-      } else
-	temp = anodata_V;
-
-      *(a_val+i) = *(sy+i);
-      /*      if (*(tot+i) > 1) {
-	denom = *(sx2+i) - (*(sx+i) * *(sx+i));
-	if (denom > 0.0) {
-	  *(sx2+i) = sqrt(denom);
-	  }
-      } else {
-	  *(sx2+i) = anodata_I;
-      }*/
-      /*
-      if (*(a_val+i) >  32.0) *(a_val+i) =  32.0;
-      if (*(a_val+i) < -50.0) *(a_val+i) = -50.0;
-      */
+      
       amin = min(amin, *(a_val+i));
       amax = max(amax, *(a_val+i));
 
-      *(sxy+i) = temp;
+      if (*(tot+i) > 1.0) {
+	temp =  *(sy+i) - (*(a_val+i) * *(a_val+i));
+	if (temp > 0.0) {
+	  *(sy+i) = sqrt((double) temp);  /* Tb std */ 
+	  old_bmin = min(old_bmin, *(sy+i));
+	  old_bmax = max(old_bmax, *(sy+i));
+	} else
+	  *(sy+i) = 0.0;
+      } else
+	*(sy+i) = 0.0;
+      
+      if (*(tot+i) > 1.0) {
+	denom = *(sx2+i) - (*(sx+i) * *(sx+i));
+	if (denom > 0.0) {
+	  *(sx2+i) = sqrt((double) denom);  /* inc std */
+	  bmin = min(bmin, *(sx2+i));
+	  bmax = max(bmax, *(sx2+i));
+	} else
+	  *(sx2+i) = 0.0;
+      } else
+	*(sx2+i) = 0.0;
+
       tmax = max(tmax, *(tot+i));
-      *(sy+i) = *(tot+i);
-	
+
     } else {
       *(a_val+i) = anodata_A;
       *(a_temp+i) = anodata_P;
       *(sxy+i) = anodata_V;
-      /* *(sx+i) = anodata_Ia;
-       *(sx2+i) = anodata_I;*/
-      *(sy+i) = anodata_C;
+      *(sx+i) = anodata_Ia;
+      *(sx2+i) = anodata_I;
+      *(sy+i) = anodata_V;
+      *(tot+i) = anodata_C;
     }
   }
 
   printf(" Non-enhanced/Grid A  min   max --> %f %f\n",amin,amax);
   printf(" Non-enhanced/Grid V  min   max --> %f %f\n",old_bmin,old_bmax);
-  fflush(stdout);
+  printf(" Non-enhanced/Grid I  min   max --> %f %f\n",bmin,bmax);
+  printf(" Non-enhanced/Grid C        max --> %.1f\n",tmax);
 
-  if (old_bmax < 1.0)
-    v_max_V = 1;
-
-  sprintf(title,"Grid image of %s",regname);
-  printf("Writing Grid A output SIR file '%s'\n", grd_aname);
-  ierr = write_sir3(addpath(outpath,grd_aname,tstr), a_val, &nhead, nhtype, 
-		    idatatype, nsx2, nsy2, xdeg2, ydeg2, 
-		    ascale2, bscale2, a02, b02, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_A, iopt, ipol, ifreqhm, ispare1,
-		    anodata_A, v_min_A, v_max_A, sensor, title, type_A, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing grid output A file ***\n");
+  printf("Writing Grid TB (A) output '%s'\n", grd_aname);
+  ncerr=add_float_array_nc(ncid,"grd_a_image",a_val,nsx2,nsy2,anodata_A); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr != 0) {
+    eprintf("*** ERROR writing grid output A ***\n");
     errors++;
   }
 
-  sprintf(title,"Grid Tb STD image of %s",regname);
-  printf("Writing Grid Tb STD (V) output SIR file '%s'\n", grd_vname);
-  ierr = write_sir3(addpath(outpath,grd_vname,tstr), sxy, &nhead, nhtype, 
-		    idatatype, nsx2, nsy2, xdeg2, ydeg2, 
-		    ascale2, bscale2, a02, b02, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_V, iscale_V, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_V, iopt, ipol, ifreqhm, ispare1,
-		    anodata_V, v_min_V, v_max_V, sensor, title, type_V, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Grid Tb (V) STD output file ***\n");
+  printf("Writing Grid Tb STD (V) output SIR '%s'\n", grd_vname);
+  ncerr=add_float_array_nc(ncid,"grd_v_image",sy,nsx2,nsy2,anodata_V); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr != 0) {
+    eprintf("*** ERROR writing Grid Tb (V) STD output ***\n");
     errors++;
   }
 
-  /*printf("Writing Grid Istd (I) output file '%s'\n", grd_iname);
-  ierr = write_sir3(addpath(outpath,grd_iname,tstr), sx2, &nhead, nhtype, 
-                    idatatype, nsx2, nsy2, xdeg2, ydeg2,
-		    ascale2, bscale2, a02, b02, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_I, iscale_I, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_I, iopt, ipol, ifreqhm, ispare1,
-		    anodata_I, v_min_I, v_max_I, sensor, title, type_I, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Istd output file ***\n");
+  printf("Writing Grid Istd (I) output '%s'\n", grd_iname);
+  ncerr=add_float_array_nc(ncid,"grd_i_image",sx2,nsx2,nsy2,anodata_I); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr !=0) {
+    eprintf("*** ERROR writing Istd output ***\n");
     errors++;
   }
 
-  printf("Writing Grid Iave (J) output file '%s'\n", grd_jname);
-  ierr = write_sir3(addpath(outpath,grd_jname,tstr), sx, &nhead, nhtype, 
-                    idatatype, nsx2, nsy2, xdeg2, ydeg2,
-		    ascale2, bscale2, a02, b02, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_Ia, iscale_Ia, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_Ia, iopt, ipol, ifreqhm, ispare1,
-		    anodata_Ia, v_min_Ia, v_max_Ia, sensor, title, type_Ia, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Istd output file ***\n");
-    errors++;
-  }
-  */
-
-  printf("Writing Grid Cnt (C) output file '%s' %d\n", grd_cname, tmax);
-  v_max_C = (float) (10 * (tmax/10+1));
-  ierr = write_sir3(addpath(outpath,grd_cname,tstr), sy, &nhead, nhtype, 
-		    idatatype, nsx2, nsy2, xdeg2, ydeg2,
-		    ascale2, bscale2, a02, b02, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_C, iscale_C, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_C, iopt, ipol, ifreqhm, ispare1,
-		    anodata_C, v_min_C, v_max_C, sensor, title, type_C, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Istd output file ***\n");
+  printf("Writing Grid Iave (J) output '%s'\n", grd_jname);
+  ncerr=add_float_array_nc(ncid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr != 0) {
+    eprintf("*** ERROR writing Istd output ***\n");
     errors++;
   }
 
-  sprintf(title,"Grid Pixel Time image of %s",regname);
-  printf("Writing Grid time (P) file '%s'\n", grd_pname);
-  ierr = write_sir3(addpath(outpath,grd_pname,tstr), a_temp, &nhead, nhtype, 
-		    idatatype, nsx2, nsy2, xdeg2, ydeg2,
-		    ascale2, bscale2, a02, b02, 
-		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		    ioff_P, iscale_P, iyear, isday, ismin, ieday, iemin, 
-		    iregion, itype_P, iopt, ipol, ifreqhm, ispare1,
-		    anodata_P, v_min_P, v_max_P, sensor, title, type_P, tag,
-		    crproc, crtime, descrip, ldes, iaopt, nia);
-  if (ierr < 0) {
-    eprintf("*** ERROR writing Grid time output (P) file ***\n");
+  printf("Writing Grid Cnt (C) output '%s' %d\n", grd_cname, tmax);
+  ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr != 0) {
+    eprintf("*** ERROR writing Istd output ***\n");
     errors++;
   }
-  fflush(stdout);
 
-  if (1) {
+  printf("Writing Grid time (P) '%s'\n", grd_pname);
+  ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P); check_err(ncerr, __LINE__,__FILE__);
+  if (ncerr != 0) {
+    eprintf("*** ERROR writing Grid time output (P) ***\n");
+    errors++;
+  }
+
+  if (CREATE_NON) {
 
     /* create NON images with same pixel sizes as enhanced resolution images
        using grid image data */
 
-    for (i=0; i < nsize; i++) {
+    for (i=0; i < nsize; i++)
       *(sx + i) = anodata_A;
-      *(sy + i) = anodata_V;
-    }
+    for (i=0; i < nsize; i++)
+      *(sx2 + i) = anodata_V;
   
     for (i=0; i < nsize2; i++) {
       ix = (i % nsx2) * non_size_x;
@@ -1509,76 +1292,62 @@ done3:
 	for (iii=0; iii < non_size_x; iii++) {
 	  iadd = nsx*(iy+ii)+ix+iii;
 	  *(sx + iadd) = *(a_val + i);
-	  *(sy + iadd) = *(sxy + i);
+	  *(sx2 + iadd) = *(sy + i);
 	}
     }
   
-    /* write sir format output files */
-
-    sprintf(title,"Non-enhanced image of %s",regname);
-    printf("Writing Non-enhanced A output SIR file '%s'\n", non_aname);
-    ierr = write_sir3(addpath(outpath,non_aname,tstr), sx, &nhead, nhtype, 
-		      idatatype, nsx, nsy, xdeg, ydeg, 
-		      ascale, bscale, a0, b0, 
-		      ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		      ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
-		      iregion, itype_A, iopt, ipol, ifreqhm, ispare1,
-		      anodata_A, v_min_A, v_max_A, sensor, title, type_A, tag,
-		      crproc, crtime, descrip, ldes, iaopt, nia);
-    if (ierr < 0) {
-      eprintf("*** ERROR writing nonenhanced output A file ***\n");
+    printf("Writing Non-enhanced Tb (A) output '%s'\n", non_aname);
+    ncerr=add_float_array_nc(ncid,"non_a_image",sx,nsx,nsy,anodata_A); check_err(ncerr, __LINE__,__FILE__);
+    if (ncerr != 0) {
+      eprintf("*** ERROR writing nonenhanced output A ***\n");
       errors++;
     }
 
-    sprintf(title,"Non-enhanced STD image of %s",regname);
-    printf("Writing Non-enhanced STD (V) output SIR file '%s'\n", non_vname);
-    ierr = write_sir3(addpath(outpath,non_vname,tstr), sy, &nhead, nhtype, 
-		      idatatype, nsx, nsy, xdeg, ydeg, 
-		      ascale, bscale, a0, b0, 
-		      ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
-		      ioff_V, iscale_V, iyear, isday, ismin, ieday, iemin, 
-		      iregion, itype_V, iopt, ipol, ifreqhm, ispare1,
-		      anodata_V, v_min_V, v_max_V, sensor, title, type_V, tag,
-		      crproc, crtime, descrip, ldes, iaopt, nia);
-    if (ierr < 0) {
-      eprintf("*** ERROR writing Non-enhanced Tb (V) STD output file ***\n");
+    printf("Writing Non-enhanced TbSTD (V) output SIR '%s'\n", non_vname);
+    ncerr=add_float_array_nc(ncid,"non_v_image",sx2,nsx,nsy,anodata_V); check_err(ncerr, __LINE__,__FILE__);
+    if (ncerr != 0) {
+      eprintf("*** ERROR writing Non-enhanced Tb (V) STD output ***\n");
       errors++;
     }
-    fflush(stdout);
+
   }
 
-  printf("Finished writing produt files\n");  
+  ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
+  printf("\nFinished writing dump file: %s\n",inter_name);  
 
-  /* write out info file if processing successful */
+  /* write out info file if processing is completed successfully */
 
   if (errors == 0) {
-    omf = fopen(info_name,"a"); 
+    printf("Info file: %s\n",info_name);
+    omf = fopen(info_name,"w"); 
     if (omf == NULL) {
       eprintfc("ERROR: cannot open info file: '%s'\n", info_name); 
     } else {
       fprintf(omf,"SIR Processing of '%s' successfully completed\n",file_in);
       fprintf(omf,"A output file: '%s'\n",a_name);
-      /*  fprintf(omf,"I output file: '%s'\n",i_name);
-	  fprintf(omf,"J output file: '%s'\n",j_name);*/
-   /* fprintf(omf,"C output file: '%s'\n",c_name); */
+      fprintf(omf,"I output file: '%s'\n",i_name);
+      fprintf(omf,"J output file: '%s'\n",j_name);
+      /* fprintf(omf,"C output file: '%s'\n",c_name); */
       fprintf(omf,"P output file: '%s'\n",p_name);
       fprintf(omf,"V output file: '%s'\n",v_name);
       fprintf(omf,"E output file: '%s'\n",e_name);
       fprintf(omf,"AVE A output file: '%s'\n",a_name_ave);
-      fprintf(omf,"NON A output file: '%s'\n",non_aname);
-      fprintf(omf,"NON V output file: '%s'\n",non_vname);
+      if (CREATE_NON) {
+	fprintf(omf,"NON A output file: '%s'\n",non_aname);
+	fprintf(omf,"NON V output file: '%s'\n",non_vname);
+      }
       fprintf(omf,"GRD A output file: '%s'\n",grd_aname);
       fprintf(omf,"GRD V output file: '%s'\n",grd_vname);
-      /*   fprintf(omf,"GRD I output file: '%s'\n",grd_iname);
-	   fprintf(omf,"GRD J output file: '%s'\n",grd_jname);*/
+      fprintf(omf,"GRD I output file: '%s'\n",grd_iname);
+      fprintf(omf,"GRD J output file: '%s'\n",grd_jname);
       fprintf(omf,"GRD P output file: '%s'\n",grd_pname);
       fprintf(omf,"GRD C output file: '%s'\n",grd_cname);
       fclose(omf);
     }
   }
   
-/* end of program */
-  printf("De-allocating memory\n");  
+  /* end of program */
+  /* printf("De-allocating memory\n");  */
 
   /* free malloc'ed memory (not strictly necessary, but good to be explicit) */
   free(space);
@@ -1641,7 +1410,7 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
 
 /* compute contribution of measurement to AVE image */ 
 
-void compute_ave(float tbval, int count, int fill_array[],
+void compute_ave(float tbval, float ang, int count, int fill_array[],
 		 short int response_array[])
 {
   int i, n, m;
@@ -1651,6 +1420,8 @@ void compute_ave(float tbval, int count, int fill_array[],
     m=response_array[i];
     *(b_val+n-1) = *(b_val+n-1) + m * tbval;
     *(sy+n-1) = *(sy+n-1) + m;
+    *(sx+n-1) = *(sx+n-1) + ang * m;    
+    *(sx2+n-1) = *(sx2+n-1) + ang * ang * m;
   }
   return;
 }
@@ -1750,7 +1521,6 @@ float median(float array[], int count)
 	array[i-1]=array[i-j-1];
 	array[i-j-1]=temp;
       };
-  
   temp=array[count/2];
 
   if (array[count-2]-array[1] < 0.25 && count > 5) {
@@ -1764,7 +1534,7 @@ float median(float array[], int count)
 
 
 
-/* routine to compute variance and error from measurements */
+/* routine to compute the spatial response function weighted variance and error from measurements */
 
 void stat_updates(float tbval, float ang, int count, int fill_array[],
 		  short int response_array[])
@@ -1783,18 +1553,15 @@ void stat_updates(float tbval, float ang, int count, int fill_array[],
     num = num + m;
   }
   if (num == 0) return;
-
-  /*  ave = 10.0 * log10( (double) (total/num)); */
   ave =(double) (total/num);
   
-
   for (i=0; i < count; i++) {
     n=fill_array[i];
     m=response_array[i];
     *(tot+n-1) += m;
     sigv = (tbval - ave);      /* difference */
 
-    *(sx+n-1) += m * sigv; /* both azimod and non-azimod code compute these */
+    *(sx+n-1) += m * sigv; 
     *(sy+n-1) += m * sigv * sigv;
   } 
 
@@ -1802,7 +1569,7 @@ void stat_updates(float tbval, float ang, int count, int fill_array[],
 }
 
 
-/* routine to compute weighted time estimates from measurements */
+/* routine to compute time estimates from measurements */
 
 void time_updates(float tbval, float ktime, float ang __attribute__ ((unused)), int count,
 		  int fill_array[], short int response_array[])
@@ -1814,21 +1581,14 @@ void time_updates(float tbval, float ktime, float ang __attribute__ ((unused)), 
     n=fill_array[i];
     *(tot+n-1) = *(tot+n-1) + 1;
     ave = tbval;
+    /* weight time average 
     *(sx+n-1) = *(sx+n-1) + ktime / ave;
-    *(sy+n-1) = *(sy+n-1) + 1.0 / ave;
+    *(sy+n-1) = *(sy+n-1) + 1.0 / ave;    */
+    /* unweighted time average */
+    *(sx+n-1) = *(sx+n-1) + ktime;
+    *(sy+n-1) = *(sy+n-1) + 1.0;
   }
   return;
-}
-
-
-void Ferror(int i)
-{
-  fprintf(stdout,"*** Error reading input file at %d ***\n",i);
-  fprintf(stderr,"*** Error reading input file at %d ***\n",i);
-  fflush(stdout);
-  fflush(stderr);
-  return;
-  /* exit(-1); */
 }
 
 

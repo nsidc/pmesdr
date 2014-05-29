@@ -13,7 +13,7 @@
 #
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
-TESTDIR = $(TOPDIR)/test
+TESTDIR = $(TOPDIR)/NSIDCtest
 #
 #	commands
 #
@@ -63,7 +63,7 @@ clean :
 rss_nps :
 	$(RM) $(TESTDIR)/rss_nps
 	$(MKDIR) $(TESTDIR)/rss_nps
-	$(LS)  $(TOPDIR)/sample_data/f13_r09999_tb_v7.dat > $(TESTDIR)/rss_nps/F1RSS.lis
+	$(LS)  $(TOPDIR)/sample_data/f13_*_tb_v7.dat > $(TESTDIR)/rss_nps/F1RSS.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_nps/npstest_RSS.meta 13 \
 	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/arctic.def $(TESTDIR)/rss_nps/F1RSS.lis
 
