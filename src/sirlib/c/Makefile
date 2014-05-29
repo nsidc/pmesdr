@@ -8,11 +8,29 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 
+#
+#	system libraries and include directories
+#
+ifeq ($(LOCALE),NSIDCsnow)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  HDF5_INCDIR = /usr/include
+else ifeq ($(LOCALE),NSIDCdev)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  HDF5_INCDIR = /usr/include
+else
+  $(warning Assuming default LOCALE=BYU)
+  NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+  HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+endif
+
 EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
 	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp \
 	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
 	tools/sirdiff tools/sirdiff_mask tools/sir_extractregion tools/sirmask tools/sir_stats
 LIB = libcsir.a
+
 
 AR = ar
 CC = gcc
@@ -21,7 +39,7 @@ MKDIR = mkdir -p
 RM = rm -fr
 
 CONFIG_CFLAGS = 
-CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
+CFLAGS = -Iinclude -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -m64 -O3 $(CONFIG_CFLAGS) 
 LDFLAGS = -L. -lcsir -lm
 
 all : $(EXES) $(LIB)
@@ -64,22 +82,14 @@ sir_ez_example : sir_ez_example.c libcsir.a
 	$(CC) $(CFLAGS) -osir_ez_example sir_ez_example.c $(LDFLAGS)
 
 # create static c routines library
-libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
+libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c lib/netcdf_dump.c
 	rm -f *.o
 	rm -f libcsir.a
 	$(CC) $(CFLAGS) -c lib/sir_io.c
 	$(CC) $(CFLAGS) -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -c lib/sir_geom.c
+	$(CC) $(CFLAGS) -c lib/netcdf_dump.c
 	$(AR)  ruv libcsir.a *.o
-	$(RM) *.o
-
-# create dynamic c routines library
-libcsir.so : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
-	rm -f *.o
-	$(CC) $(CFLAGS) -fPIC -c lib/sir_io.c
-	$(CC) $(CFLAGS) -fPIC -c lib/sir_ez.c
-	$(CC) $(CFLAGS) -fPIC -c lib/sir_geom.c
-	$(CC) -shared -Wl,-soname,libcsir.so.1 -o libcsir.so.1.0.1 sir_io.o sir_ez.o sir_geom.o -lc
 	$(RM) *.o
 
 clean :
