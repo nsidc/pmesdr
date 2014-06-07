@@ -1,0 +1,4034 @@
+MEaSures Meta_Make Program
+Program: meas_meta_make  Version: 0.100000
+
+
+Metafile name: work_RSS/ptest_RSS.meta 
+
+Platform number: 13 13 
+Opening meta output file work_RSS/ptest_RSS.meta
+Opening job output file work_RSS/ptest_RSS.meta.job
+S2G name: ../ref/s2g/ssmi_mN.s2g 
+Input day range 60 to 60 year 1997
+rfile=../ref/arctic.def  -32
+Number of regions: 7
+Region 0 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 1
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F131-Arc97-060-060.setup
+Output A file:    F131-a-Arc97-060-060.sir
+Output C file:    F131-C-Arc97-060-060.sir
+Output I file:    F131-I-Arc97-060-060.sir
+Output J file:    F131-J-Arc97-060-060.sir
+Output P file:    F131-p-Arc97-060-060.sir
+Output E file:    F131-E-Arc97-060-060.sir
+Output V file:    F131-V-Arc97-060-060.sir
+Output A ave file:F131-a-Arc97-060-060.ave
+Output A non file:F131-a-Arc97-060-060.non
+Output V non file:F131-V-Arc97-060-060.non
+Output A grd file:F131-a-Arc97-060-060.grd
+Output V grd file:F131-V-Arc97-060-060.grd
+Output I grd file:F131-I-Arc97-060-060.grd
+Output J grd file:F131-J-Arc97-060-060.grd
+Output C grd file:F131-C-Arc97-060-060.grd
+Output P grd file:F131-p-Arc97-060-060.grd
+Output lis file:  F131-Arc97-060-060.lis
+Region 1 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 2
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F132-Arc97-060-060.setup
+Output A file:    F132-a-Arc97-060-060.sir
+Output C file:    F132-C-Arc97-060-060.sir
+Output I file:    F132-I-Arc97-060-060.sir
+Output J file:    F132-J-Arc97-060-060.sir
+Output P file:    F132-p-Arc97-060-060.sir
+Output E file:    F132-E-Arc97-060-060.sir
+Output V file:    F132-V-Arc97-060-060.sir
+Output A ave file:F132-a-Arc97-060-060.ave
+Output A non file:F132-a-Arc97-060-060.non
+Output V non file:F132-V-Arc97-060-060.non
+Output A grd file:F132-a-Arc97-060-060.grd
+Output V grd file:F132-V-Arc97-060-060.grd
+Output I grd file:F132-I-Arc97-060-060.grd
+Output J grd file:F132-J-Arc97-060-060.grd
+Output C grd file:F132-C-Arc97-060-060.grd
+Output P grd file:F132-p-Arc97-060-060.grd
+Output lis file:  F132-Arc97-060-060.lis
+Region 2 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 3
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F133-Arc97-060-060.setup
+Output A file:    F133-a-Arc97-060-060.sir
+Output C file:    F133-C-Arc97-060-060.sir
+Output I file:    F133-I-Arc97-060-060.sir
+Output J file:    F133-J-Arc97-060-060.sir
+Output P file:    F133-p-Arc97-060-060.sir
+Output E file:    F133-E-Arc97-060-060.sir
+Output V file:    F133-V-Arc97-060-060.sir
+Output A ave file:F133-a-Arc97-060-060.ave
+Output A non file:F133-a-Arc97-060-060.non
+Output V non file:F133-V-Arc97-060-060.non
+Output A grd file:F133-a-Arc97-060-060.grd
+Output V grd file:F133-V-Arc97-060-060.grd
+Output I grd file:F133-I-Arc97-060-060.grd
+Output J grd file:F133-J-Arc97-060-060.grd
+Output C grd file:F133-C-Arc97-060-060.grd
+Output P grd file:F133-p-Arc97-060-060.grd
+Output lis file:  F133-Arc97-060-060.lis
+Region 3 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 4
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F134-Arc97-060-060.setup
+Output A file:    F134-a-Arc97-060-060.sir
+Output C file:    F134-C-Arc97-060-060.sir
+Output I file:    F134-I-Arc97-060-060.sir
+Output J file:    F134-J-Arc97-060-060.sir
+Output P file:    F134-p-Arc97-060-060.sir
+Output E file:    F134-E-Arc97-060-060.sir
+Output V file:    F134-V-Arc97-060-060.sir
+Output A ave file:F134-a-Arc97-060-060.ave
+Output A non file:F134-a-Arc97-060-060.non
+Output V non file:F134-V-Arc97-060-060.non
+Output A grd file:F134-a-Arc97-060-060.grd
+Output V grd file:F134-V-Arc97-060-060.grd
+Output I grd file:F134-I-Arc97-060-060.grd
+Output J grd file:F134-J-Arc97-060-060.grd
+Output C grd file:F134-C-Arc97-060-060.grd
+Output P grd file:F134-p-Arc97-060-060.grd
+Output lis file:  F134-Arc97-060-060.lis
+Region 4 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 5
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F135-Arc97-060-060.setup
+Output A file:    F135-a-Arc97-060-060.sir
+Output C file:    F135-C-Arc97-060-060.sir
+Output I file:    F135-I-Arc97-060-060.sir
+Output J file:    F135-J-Arc97-060-060.sir
+Output P file:    F135-p-Arc97-060-060.sir
+Output E file:    F135-E-Arc97-060-060.sir
+Output V file:    F135-V-Arc97-060-060.sir
+Output A ave file:F135-a-Arc97-060-060.ave
+Output A non file:F135-a-Arc97-060-060.non
+Output V non file:F135-V-Arc97-060-060.non
+Output A grd file:F135-a-Arc97-060-060.grd
+Output V grd file:F135-V-Arc97-060-060.grd
+Output I grd file:F135-I-Arc97-060-060.grd
+Output J grd file:F135-J-Arc97-060-060.grd
+Output C grd file:F135-C-Arc97-060-060.grd
+Output P grd file:F135-p-Arc97-060-060.grd
+Output lis file:  F135-Arc97-060-060.lis
+Region 5 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 6
+Projection 5   size 1540 1540
+Scales:           4.450000 4.450000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F136-Arc97-060-060.setup
+Output A file:    F136-a-Arc97-060-060.sir
+Output C file:    F136-C-Arc97-060-060.sir
+Output I file:    F136-I-Arc97-060-060.sir
+Output J file:    F136-J-Arc97-060-060.sir
+Output P file:    F136-p-Arc97-060-060.sir
+Output E file:    F136-E-Arc97-060-060.sir
+Output V file:    F136-V-Arc97-060-060.sir
+Output A ave file:F136-a-Arc97-060-060.ave
+Output A non file:F136-a-Arc97-060-060.non
+Output V non file:F136-V-Arc97-060-060.non
+Output A grd file:F136-a-Arc97-060-060.grd
+Output V grd file:F136-V-Arc97-060-060.grd
+Output I grd file:F136-I-Arc97-060-060.grd
+Output J grd file:F136-J-Arc97-060-060.grd
+Output C grd file:F136-C-Arc97-060-060.grd
+Output P grd file:F136-p-Arc97-060-060.grd
+Output lis file:  F136-Arc97-060-060.lis
+Region 6 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 7
+Projection 5   size 1540 1540
+Scales:           4.450000 4.450000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F137-Arc97-060-060.setup
+Output A file:    F137-a-Arc97-060-060.sir
+Output C file:    F137-C-Arc97-060-060.sir
+Output I file:    F137-I-Arc97-060-060.sir
+Output J file:    F137-J-Arc97-060-060.sir
+Output P file:    F137-p-Arc97-060-060.sir
+Output E file:    F137-E-Arc97-060-060.sir
+Output V file:    F137-V-Arc97-060-060.sir
+Output A ave file:F137-a-Arc97-060-060.ave
+Output A non file:F137-a-Arc97-060-060.non
+Output V non file:F137-V-Arc97-060-060.non
+Output A grd file:F137-a-Arc97-060-060.grd
+Output V grd file:F137-V-Arc97-060-060.grd
+Output I grd file:F137-I-Arc97-060-060.grd
+Output J grd file:F137-J-Arc97-060-060.grd
+Output C grd file:F137-C-Arc97-060-060.grd
+Output P grd file:F137-p-Arc97-060-060.grd
+Output lis file:  F137-Arc97-060-060.lis
+
+Total regional images: 7 Regions: 7
+Opening input list file work_RSS/F1.lis
+Input_file=../sample_data/f13_r09999_tb_v7.dat
+Total number of input files: 1
+Finished writing meta file work_RSS/ptest_RSS.meta
+Finished writing job file work_RSS/ptest_RSS.meta.job
+
+Job command: nice work_RSS/ptest_RSS.meta > work_RSS/ptest_RSS.meta.out 2>&1
+
+All done
+MEaSures Meta_Make Program
+Program: meas_meta_make  Version: 0.100000
+
+
+Metafile name: work_RSS/test_RSS.meta 
+
+Platform number: 13 13 
+Opening meta output file work_RSS/test_RSS.meta
+Opening job output file work_RSS/test_RSS.meta.job
+S2G name: ../ref/s2g/ssmi_mN.s2g 
+Input day range 60 to 60 year 1997
+rfile=../ref/EASE2N_test1ch.def  -32
+Number of regions: 1
+Region 0 number: 308
+Region name: 'EASE2-N   '  Def Proj 8  Dateline 0
+
+Region definition information
+  Latitude range:  0.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 0
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 8
+EASE2 parameters: proj=8  nease=1  ind=0
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 1
+Resizing for low channel number 1
+Projection 8   size 720 720
+Scales:           0.000000 0.000000
+Origin (lat,lon)  360.000000 360.000000
+Offset x,y in km: 0.000000 0.000000
+Dimensions in km: 0.000000 0.000000
+size in pixels (x,y)(lon,lat): 0.000000 0.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F131-E2N97-060-060.setup
+Output A file:    F131-a-E2N97-060-060.sir
+Output C file:    F131-C-E2N97-060-060.sir
+Output I file:    F131-I-E2N97-060-060.sir
+Output J file:    F131-J-E2N97-060-060.sir
+Output P file:    F131-p-E2N97-060-060.sir
+Output E file:    F131-E-E2N97-060-060.sir
+Output V file:    F131-V-E2N97-060-060.sir
+Output A ave file:F131-a-E2N97-060-060.ave
+Output A non file:F131-a-E2N97-060-060.non
+Output V non file:F131-V-E2N97-060-060.non
+Output A grd file:F131-a-E2N97-060-060.grd
+Output V grd file:F131-V-E2N97-060-060.grd
+Output I grd file:F131-I-E2N97-060-060.grd
+Output J grd file:F131-J-E2N97-060-060.grd
+Output C grd file:F131-C-E2N97-060-060.grd
+Output P grd file:F131-p-E2N97-060-060.grd
+Output lis file:  F131-E2N97-060-060.lis
+
+Total regional images: 1 Regions: 1
+Opening input list file work_RSS/F1.lis
+Input_file=../sample_data/f13_r09999_tb_v7.dat
+Total number of input files: 1
+Finished writing meta file work_RSS/test_RSS.meta
+Finished writing job file work_RSS/test_RSS.meta.job
+
+Job command: nice work_RSS/test_RSS.meta > work_RSS/test_RSS.meta.out 2>&1
+
+All done
+Code version: SSM/I RSS V7 binary
+MEaSures Setup Program
+Program: meas_meta_setup  Version: 0.200000
+
+
+Metafile name: work_RSS/ptest_RSS.meta 
+
+Output path: work_RSS 
+open meta file work_RSS/ptest_RSS.meta
+Sensor string='13'
+Regions in meta file: 7
+Region 1 of 7  Total regions: 0
+Section 0 image count 0
+
+SIR file header information: 1 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F131-Arc97-060-060.setup'  1
+Done with setup header for image
+Region 2 of 7  Total regions: 1
+Section 0 image count 1
+
+SIR file header information: 2 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 0
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F132-Arc97-060-060.setup'  2
+Done with setup header for image
+Region 3 of 7  Total regions: 2
+Section 0 image count 2
+
+SIR file header information: 3 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F133-Arc97-060-060.setup'  3
+Done with setup header for image
+Region 4 of 7  Total regions: 3
+Section 0 image count 3
+
+SIR file header information: 4 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F134-Arc97-060-060.setup'  4
+Done with setup header for image
+Region 5 of 7  Total regions: 4
+Section 0 image count 4
+
+SIR file header information: 5 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 0
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F135-Arc97-060-060.setup'  5
+Done with setup header for image
+Region 6 of 7  Total regions: 5
+Section 0 image count 5
+
+SIR file header information: 6 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 1540 x 1540   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 4.450000 4.450000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 4.450000 4.450000   Origin: -3400.000000 -3400.000000
+  GRD image size: 308 308  Size: 4.450000 4.450000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 22.250000 22.250000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F136-Arc97-060-060.setup'  6
+Done with setup header for image
+Region 7 of 7  Total regions: 6
+Section 0 image count 6
+
+SIR file header information: 7 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 1540 x 1540   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 4.450000 4.450000  Pol (0=h,1=v): 0
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 4.450000 4.450000   Origin: -3400.000000 -3400.000000
+  GRD image size: 308 308  Size: 4.450000 4.450000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 22.250000 22.250000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F137-Arc97-060-060.setup'  7
+Done with setup header for image
+Number of output setup files 7
+Read ssmiRSS minmax lat file: ../../ref//minmaxlat.dat
+Region 0 of 0: nominal km/pixel=0.112360
+Region 1 of 1: nominal km/pixel=0.112360
+Region 2 of 2: nominal km/pixel=0.112360
+Region 3 of 3: nominal km/pixel=0.112360
+Region 4 of 4: nominal km/pixel=0.112360
+Region 5 of 5: nominal km/pixel=0.224719
+Region 6 of 6: nominal km/pixel=0.224719
+
+Region 1 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+Reading pixel locations file: /auto/users/long/src/linux/measures/ref/locs//0770-0770-05-3400-3400-0045-0070.loc
+
+Region 2 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 3 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 4 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 5 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 6 of 7: 1540x1540=2371600
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        4.450000 , 4.450000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+Reading pixel locations file: /auto/users/long/src/linux/measures/ref/locs//1540-1540-05-3400-3400-0045-0070.loc
+
+Region 7 of 7: 1540x1540=2371600
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        4.450000 , 4.450000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Opening input TB file 1 '../sample_data/f13_r09999_tb_v7.dat'
+Input file ../sample_data/f13_r09999_tb_v7.dat
+ SSMI Hi rec scans = 3544
+
+Satellite 13  orbit 9999  scans 3544
+start time: '19970600301152718.797200' 1997 0 0 0
+* start time: 19970600301152718.797200 -89454761.202800  1997 1 3 60 15 27 18
+* stop time:  19970600301152718.797200 -89448033.124800  1997 1 3 60 17 19 26
+first scan:-89454761.202800 1997 1 3 60 15 27 18
+last scan: -89448033.124800 1997 1 3 60 17 19 26
+search year: 1997 dstart,dend: 60 60  mstart: 0
+Scans     500 | Pulses     63360 | Output         0 | Day  60
+Scans    1000 | Pulses    127360 | Output         0 | Day  60
+Scans    1500 | Pulses    191360 | Output     19306 | Day  60
+Scans    2000 | Pulses    255360 | Output    212457 | Day  60
+Scans    2500 | Pulses    319360 | Output    212457 | Day  60
+Scans    3000 | Pulses    383360 | Output    212457 | Day  60
+Scans    3500 | Pulses    447360 | Output    212457 | Day  60
+
+Total input scans: 3544  Total input pulses: 453120
+Output Cells/Records: 212457  Revs: 1  Last rev: 9999
+Region counts:  16337 16337 16337 16337 16337 65386 65386
+Input File Completed:  ../sample_data/f13_r09999_tb_v7.dat
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 212457
+IPR count average:  34.212137
+IPR count max,min:  90 21 
+Tb max,min:  269.239990 103.550003 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 453120 3544
+
+Total input scans: 3544  Total input pulses: 453120
+Output Cells/Records: 212457  Revs: 1  Last rev: 9999
+Region counts:  16337 16337 16337 16337 16337 65386 65386
+Input File Completed:  End_input_file_list
+
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 212457
+IPR count average:  34.212137
+IPR count max,min:  90 21 
+Tb max,min:  269.239990 103.550003 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 453120 3544
+
+Region 110 Arctic beam 1 records 16337
+Output data written to F131-Arc97-060-060.setup
+
+Region 110 Arctic beam 2 records 16337
+Output data written to F132-Arc97-060-060.setup
+
+Region 110 Arctic beam 3 records 16337
+Output data written to F133-Arc97-060-060.setup
+
+Region 110 Arctic beam 4 records 16337
+Output data written to F134-Arc97-060-060.setup
+
+Region 110 Arctic beam 5 records 16337
+Output data written to F135-Arc97-060-060.setup
+
+Region 110 Arctic beam 6 records 65386
+Output data written to F136-Arc97-060-060.setup
+
+Region 110 Arctic beam 7 records 65386
+Output data written to F137-Arc97-060-060.setup
+
+Setup program successfully completed
+Code version: SSM/I RSS V7 binary
+MEaSures Setup Program
+Program: meas_meta_setup  Version: 0.200000
+
+
+Metafile name: work_RSS/test_RSS.meta 
+
+Output path: work_RSS 
+open meta file work_RSS/test_RSS.meta
+Sensor string='13'
+Regions in meta file: 1
+Region 1 of 1  Total regions: 0
+Section 0 image count 0
+
+SIR file header information: 1 1 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 720 x 720   Projection: 8
+  Origin: 0.000000 0.000000  Span: 360.000000 360.000000
+  Scales: 0.000000 0.000000  Pol (0=h,1=v): 1
+  Region: EASE2-N  Num 308
+  Reg LL corner: 0.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 360.000000 360.000000
+  Array Dimensions in Km: x=720.000000 y=720.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: 360.000000 360.000000  Span: 360.000000 360.000000
+  Scales: 0.000000 0.000000   Origin: 0.000000 0.000000
+  GRD image size: 180 180  Size: 0.000000 0.000000
+  GRD image span: 360.000000 360.000000  Orig: 0.000000 0.000000
+  GRD image scale: -2.000000 0.000000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_RSS/F131-E2N97-060-060.setup'  1
+Done with setup header for image
+Number of output setup files 1
+Read ssmiRSS minmax lat file: ../../ref//minmaxlat.dat
+Region 0 of 0: nominal km/pixel=0.040000
+
+Region 1 of 1: 720x720=518400
+  EASE2 polar azimuthal form: 
+   Map center (col,row): 360.000000 , 360.000000
+   Scale factor, ind:    0.000000 , 0.000000
+   Map origin (col,row): 0.000000 , 0.000000
+Reading pixel locations file: /auto/users/long/src/linux/measures/ref/locs//0720-0720-08-0000-0000-0360-0360.loc
+
+Opening input TB file 1 '../sample_data/f13_r09999_tb_v7.dat'
+Input file ../sample_data/f13_r09999_tb_v7.dat
+ SSMI Hi rec scans = 3544
+
+Satellite 13  orbit 9999  scans 3544
+start time: '19970600301152718.797200' 1997 0 0 0
+* start time: 19970600301152718.797200 -89454761.202800  1997 1 3 60 15 27 18
+* stop time:  19970600301152718.797200 -89448033.124800  1997 1 3 60 17 19 26
+first scan:-89454761.202800 1997 1 3 60 15 27 18
+last scan: -89448033.124800 1997 1 3 60 17 19 26
+search year: 1997 dstart,dend: 60 60  mstart: 0
+Scans     500 | Pulses     63360 | Output         0 | Day  60
+Scans    1000 | Pulses    127360 | Output      3021 | Day  60
+Scans    1500 | Pulses    191360 | Output     19021 | Day  60
+Scans    2000 | Pulses    255360 | Output     35019 | Day  60
+Scans    2500 | Pulses    319360 | Output     51013 | Day  60
+Scans    3000 | Pulses    383360 | Output     51419 | Day  60
+Scans    3500 | Pulses    447360 | Output     51419 | Day  60
+
+Total input scans: 3544  Total input pulses: 453120
+Output Cells/Records: 51419  Revs: 1  Last rev: 9999
+Region counts:  51419
+Input File Completed:  ../sample_data/f13_r09999_tb_v7.dat
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 51419
+IPR count average:  10.037146
+IPR count max,min:  13 7 
+Tb max,min:  292.619995 100.220001 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 453120 3544
+
+Total input scans: 3544  Total input pulses: 453120
+Output Cells/Records: 51419  Revs: 1  Last rev: 9999
+Region counts:  51419
+Input File Completed:  End_input_file_list
+
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 51419
+IPR count average:  10.037146
+IPR count max,min:  13 7 
+Tb max,min:  292.619995 100.220001 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 453120 3544
+
+Region 308 EASE2-N beam 1 records 51419
+Output data written to F131-E2N97-060-060.setup
+
+Setup program successfully completed
+BYU SSM/I meta SIR/SIRF program: C version 1.000000
+Output path work_RSS: Storage option 0:  Memory only
+
+Input file header info: 'work_RSS/F131-Arc97-060-060.setup'
+  Year, day range: 1997 60 - 60
+  Image size: 770 x 770 = 592900   Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Region: 'Arctic'   Records: 0
+  Corners: LL 60.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+
+Beam code 1
+A_initialization of 200.000000
+Max iterations of 20
+Median flag: 0
+Has azimuth angle: 1
+Max fill 2000
+Sensor '13'
+
+A output file: 'F131-a-Arc97-060-060.sir'
+I output file: 'F131-I-Arc97-060-060.sir'
+J output file: 'F131-J-Arc97-060-060.sir'
+C output file: 'F131-C-Arc97-060-060.sir'
+P output file: 'F131-p-Arc97-060-060.sir'
+E output file: 'F131-E-Arc97-060-060.sir'
+SIR V output file: 'F131-V-Arc97-060-060.sir'
+AVE A output file: 'F131-a-Arc97-060-060.ave'
+NON A output file: 'F131-a-Arc97-060-060.non'
+NON V output file: 'F131-V-Arc97-060-060.non'
+GRD A output file: 'F131-a-Arc97-060-060.grd'
+GRD V output file: 'F131-V-Arc97-060-060.grd'
+GRD I output file: 'F131-I-Arc97-060-060.grd'
+GRD J output file: 'F131-J-Arc97-060-060.grd'
+GRD P output file: 'F131-p-Arc97-060-060.grd'
+GRD C output file: 'F131-C-Arc97-060-060.grd'
+Info file: 'F131-Arc97-060-060.lis'
+
+Input header file length 3514
+  File size: 8486322  Space allocated: 8486322
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 16337 16337 recs = 8094234 of 8486322 (95.4% 100.0%)
+
+SIR parameters: A_init=200.000000  N=20
+
+SIR iteration 1 16337
+ Average weight: 2409.0728
+ A min max  --> 172.071167 212.529282 1
+ A change   --> -27.928833 12.529282
+
+Writing Tb (A) AVE output 'F131-a-Arc97-060-060.ave'
+
+SIR iteration 2 16337
+ A min max  --> 152.872452 222.668793 2
+ A change   --> -19.198715 10.139511
+
+SIR iteration 3 16337
+ A min max  --> 139.418793 230.833328 3
+ A change   --> -13.453659 8.164536
+
+SIR iteration 4 16337
+ A min max  --> 129.680832 237.452606 4
+ A change   --> -9.737961 6.619278
+
+SIR iteration 5 16337
+ A min max  --> 122.357925 244.832291 5
+ A change   --> -7.322906 7.379684
+
+SIR iteration 6 16337
+ A min max  --> 116.873627 252.199890 6
+ A change   --> -5.484299 7.367599
+
+SIR iteration 7 16337
+ A min max  --> 112.721664 258.948975 7
+ A change   --> -4.151962 6.749084
+
+SIR iteration 8 16337
+ A min max  --> 109.482521 265.097961 8
+ A change   --> -3.239143 6.148987
+
+SIR iteration 9 16337
+ A min max  --> 106.924446 270.676422 9
+ A change   --> -2.558075 5.578461
+
+SIR iteration 10 16337
+ A min max  --> 104.877792 275.720947 10
+ A change   --> -2.046654 5.044525
+
+SIR iteration 11 16337
+ A min max  --> 103.102379 280.271790 11
+ A change   --> -1.775414 4.550842
+
+SIR iteration 12 16337
+ A min max  --> 101.688126 284.369965 12
+ A change   --> -1.414253 4.098175
+
+SIR iteration 13 16337
+ A min max  --> 100.564270 288.055573 13
+ A change   --> -1.123856 3.685608
+
+SIR iteration 14 16337
+ A min max  --> 99.676262 291.367004 14
+ A change   --> -0.888008 3.311432
+
+SIR iteration 15 16337
+ A min max  --> 98.981483 294.340576 15
+ A change   --> -0.694778 2.973572
+
+SIR iteration 16 16337
+ A min max  --> 98.446358 297.010071 16
+ A change   --> -0.535126 2.669495
+
+SIR iteration 17 16337
+ A min max  --> 97.373405 299.406464 17
+ A change   --> -1.072952 2.396393
+
+SIR iteration 18 16337
+ A min max  --> 96.196411 301.557800 18
+ A change   --> -1.176994 2.151337
+
+SIR iteration 19 16337
+ A min max  --> 95.123787 303.489380 19
+ A change   --> -1.072624 1.931580
+
+SIR iteration 20 16337
+ A min max  --> 94.141617 305.223969 20
+ A change   --> -0.982170 1.734589
+ weight max --> 19812.000000 Average weight: 2409.0728
+
+Writing Tb (A) SIR output 'F131-a-Arc97-060-060.sir'
+
+Writing Istd (I) SIR output 'F131-I-Arc97-060-060.sir'
+Writing Iave (J) SIR output 'F131-J-Arc97-060-060.sir'
+
+Begin creation of STD images
+ Tb STD min   max --> 0.000000 9.524336
+ Tb ERR min   max --> -8.546631 13.490234
+Writing Tb STD (V) SIR output 'F131-V-Arc97-060-060.sir'
+Writing Tb err (E) SIR output 'F131-E-Arc97-060-060.sir' 
+
+Begin creation of time image
+ Time min   max --> 972.000000 990.000000
+Writing time output (P) SIR 'F131-p-Arc97-060-060.sir'
+
+Begin creation of non-enhanced GRD images
+ Non-enhanced/Grid A  min   max --> 103.809998 257.039978
+ Non-enhanced/Grid V  min   max --> 0.044194 30.785484
+ Non-enhanced/Grid I  min   max --> 0.015625 0.027063
+ Non-enhanced/Grid C        max --> 6.0
+Writing Grid TB (A) output 'F131-a-Arc97-060-060.grd'
+Writing Grid Tb STD (V) output SIR 'F131-V-Arc97-060-060.grd'
+Writing Grid Istd (I) output 'F131-I-Arc97-060-060.grd'
+Writing Grid Iave (J) output 'F131-J-Arc97-060-060.grd'
+Writing Grid Cnt (C) output 'F131-C-Arc97-060-060.grd' 4238982
+Writing Grid time (P) 'F131-p-Arc97-060-060.grd'
+Writing Non-enhanced Tb (A) output 'F131-a-Arc97-060-060.non'
+Writing Non-enhanced TbSTD (V) output SIR 'F131-V-Arc97-060-060.non'
+
+Finished writing dump file: work_RSS/F131-Arc97-060-060.lis_dump.nc
+Info file: F131-Arc97-060-060.lis
+BYU SSM/I meta SIR/SIRF program: C version 1.000000
+Output path work_RSS: Storage option 0:  Memory only
+
+Input file header info: 'work_RSS/F134-Arc97-060-060.setup'
+  Year, day range: 1997 60 - 60
+  Image size: 770 x 770 = 592900   Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Region: 'Arctic'   Records: 0
+  Corners: LL 60.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+
+Beam code 4
+A_initialization of 200.000000
+Max iterations of 30
+Median flag: 0
+Has azimuth angle: 1
+Max fill 2000
+Sensor '13'
+
+A output file: 'F134-a-Arc97-060-060.sir'
+I output file: 'F134-I-Arc97-060-060.sir'
+J output file: 'F134-J-Arc97-060-060.sir'
+C output file: 'F134-C-Arc97-060-060.sir'
+P output file: 'F134-p-Arc97-060-060.sir'
+E output file: 'F134-E-Arc97-060-060.sir'
+SIR V output file: 'F134-V-Arc97-060-060.sir'
+AVE A output file: 'F134-a-Arc97-060-060.ave'
+NON A output file: 'F134-a-Arc97-060-060.non'
+NON V output file: 'F134-V-Arc97-060-060.non'
+GRD A output file: 'F134-a-Arc97-060-060.grd'
+GRD V output file: 'F134-V-Arc97-060-060.grd'
+GRD I output file: 'F134-I-Arc97-060-060.grd'
+GRD J output file: 'F134-J-Arc97-060-060.grd'
+GRD P output file: 'F134-p-Arc97-060-060.grd'
+GRD C output file: 'F134-C-Arc97-060-060.grd'
+Info file: 'F134-Arc97-060-060.lis'
+
+Input header file length 3514
+  File size: 3458448  Space allocated: 3458448
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 16337 16337 recs = 3066360 of 3458448 (88.7% 100.0%)
+
+SIR parameters: A_init=200.000000  N=30
+
+SIR iteration 1 16337
+ Average weight: 836.9482
+ A min max  --> 181.371155 213.128143 1
+ A change   --> -18.628845 13.128143
+
+Writing Tb (A) AVE output 'F134-a-Arc97-060-060.ave'
+
+SIR iteration 2 16337
+ A min max  --> 168.159851 223.762497 2
+ A change   --> -13.211304 10.634354
+
+SIR iteration 3 16337
+ A min max  --> 158.664154 232.252197 3
+ A change   --> -9.495697 8.489700
+
+SIR iteration 4 16337
+ A min max  --> 151.689590 239.344116 4
+ A change   --> -6.974564 7.091919
+
+SIR iteration 5 16337
+ A min max  --> 146.359619 245.449097 5
+ A change   --> -5.329971 6.104980
+
+SIR iteration 6 16337
+ A min max  --> 142.138290 250.452957 6
+ A change   --> -4.221329 5.003860
+
+SIR iteration 7 16337
+ A min max  --> 138.256729 254.528488 7
+ A change   --> -3.881561 4.075531
+
+SIR iteration 8 16337
+ A min max  --> 135.023071 257.828430 8
+ A change   --> -3.233658 3.299942
+
+SIR iteration 9 16337
+ A min max  --> 132.285736 260.485229 9
+ A change   --> -2.737335 2.656799
+
+SIR iteration 10 16337
+ A min max  --> 129.934235 262.612030 10
+ A change   --> -2.351501 2.126801
+
+SIR iteration 11 16337
+ A min max  --> 127.887138 264.304260 11
+ A change   --> -2.047096 1.692230
+
+SIR iteration 12 16337
+ A min max  --> 126.083855 265.641846 12
+ A change   --> -1.803284 1.337585
+
+SIR iteration 13 16337
+ A min max  --> 124.478783 266.691132 13
+ A change   --> -1.605072 1.049286
+
+SIR iteration 14 16337
+ A min max  --> 123.037300 267.506866 14
+ A change   --> -1.441483 0.815735
+
+SIR iteration 15 16337
+ A min max  --> 121.732803 268.134094 15
+ A change   --> -1.304497 0.627228
+
+SIR iteration 16 16337
+ A min max  --> 120.544601 268.609650 16
+ A change   --> -1.188202 0.475555
+
+SIR iteration 17 16337
+ A min max  --> 119.456383 268.963470 17
+ A change   --> -1.088219 0.353821
+
+SIR iteration 18 16337
+ A min max  --> 118.455154 269.219879 18
+ A change   --> -1.001228 0.256409
+
+SIR iteration 19 16337
+ A min max  --> 117.530457 269.522156 19
+ A change   --> -0.924698 0.302277
+
+SIR iteration 20 16337
+ A min max  --> 116.673759 271.096222 20
+ A change   --> -0.856697 1.574066
+
+SIR iteration 21 16337
+ A min max  --> 115.878044 273.224304 21
+ A change   --> -0.795715 2.128082
+
+SIR iteration 22 16337
+ A min max  --> 115.137405 275.250854 22
+ A change   --> -0.740639 2.026550
+
+SIR iteration 23 16337
+ A min max  --> 114.446854 277.182343 23
+ A change   --> -0.690552 1.931488
+
+SIR iteration 24 16337
+ A min max  --> 113.802109 279.024750 24
+ A change   --> -0.644745 1.842407
+
+SIR iteration 25 16337
+ A min max  --> 113.199455 280.783569 25
+ A change   --> -0.602654 1.758820
+
+SIR iteration 26 16337
+ A min max  --> 112.635651 282.463959 26
+ A change   --> -0.563805 1.680389
+
+SIR iteration 27 16337
+ A min max  --> 112.107819 284.070618 27
+ A change   --> -0.527832 1.606659
+
+SIR iteration 28 16337
+ A min max  --> 111.613388 285.608002 28
+ A change   --> -0.494431 1.537384
+
+SIR iteration 29 16337
+ A min max  --> 111.150070 287.080109 29
+ A change   --> -0.463318 1.472107
+
+SIR iteration 30 16337
+ A min max  --> 110.715782 288.490784 30
+ A change   --> -0.434288 1.410675
+ weight max --> 7759.000000 Average weight: 836.9482
+
+Writing Tb (A) SIR output 'F134-a-Arc97-060-060.sir'
+
+Writing Istd (I) SIR output 'F134-I-Arc97-060-060.sir'
+Writing Iave (J) SIR output 'F134-J-Arc97-060-060.sir'
+
+Begin creation of STD images
+ Tb STD min   max --> 0.000000 7.389250
+ Tb ERR min   max --> -3.967598 6.409470
+Writing Tb STD (V) SIR output 'F134-V-Arc97-060-060.sir'
+Writing Tb err (E) SIR output 'F134-E-Arc97-060-060.sir' 
+
+Begin creation of time image
+ Time min   max --> 972.000000 990.000000
+Writing time output (P) SIR 'F134-p-Arc97-060-060.sir'
+
+Begin creation of non-enhanced GRD images
+ Non-enhanced/Grid A  min   max --> 132.607513 260.149994
+ Non-enhanced/Grid V  min   max --> 0.044194 30.085262
+ Non-enhanced/Grid I  min   max --> 0.015625 0.027063
+ Non-enhanced/Grid C        max --> 6.0
+Writing Grid TB (A) output 'F134-a-Arc97-060-060.grd'
+Writing Grid Tb STD (V) output SIR 'F134-V-Arc97-060-060.grd'
+Writing Grid Istd (I) output 'F134-I-Arc97-060-060.grd'
+Writing Grid Iave (J) output 'F134-J-Arc97-060-060.grd'
+Writing Grid Cnt (C) output 'F134-C-Arc97-060-060.grd' 4238982
+Writing Grid time (P) 'F134-p-Arc97-060-060.grd'
+Writing Non-enhanced Tb (A) output 'F134-a-Arc97-060-060.non'
+Writing Non-enhanced TbSTD (V) output SIR 'F134-V-Arc97-060-060.non'
+
+Finished writing dump file: work_RSS/F134-Arc97-060-060.lis_dump.nc
+Info file: F134-Arc97-060-060.lis
+BYU SSM/I meta BG program: C version 1.000000
+BGI options: Nsize=0 omega=0.001000 gamma=0.031416 delta2=0
+
+Input file header info: '(null)'
+  Year, day range: 1997 60 - 60
+  Image size: 770 x 770 = 592900   Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Region: 'Arctic'   Records: 0
+  Corners: LL 60.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+
+Beam code 4
+Median flag: 0
+Has azimuth angle: 1
+Wscale -1
+Sensor '13'
+
+A output file: 'F134-a-Arc97-060-060.sir'
+Info file: 'F134-Arc97-060-060.lis'
+
+Input header file length 3514
+  File size: 3458448  Space allocated: 3458448
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 16337 16337 recs = 3094072 of 3458448 (89.5% 100.0%)
+
+Maximum hits above threshold: 7  max size: 7
+Index array created 592900 16337
+Processing row 0 of 770  -125278552064.000000
+Processing row 5 of 770  -125278552064.000000
+Processing row 10 of 770  -125278552064.000000
+Processing row 15 of 770  -125278552064.000000
+Processing row 20 of 770  -125278552064.000000
+Processing row 25 of 770  -125278552064.000000
+Processing row 30 of 770  -125278552064.000000
+Processing row 35 of 770  -125278552064.000000
+Processing row 40 of 770  -125278552064.000000
+Processing row 45 of 770  -125278552064.000000
+Processing row 50 of 770  -125278552064.000000
+Processing row 55 of 770  -125278552064.000000
+Processing row 60 of 770  -125278552064.000000
+Processing row 65 of 770  -125278552064.000000
+Processing row 70 of 770  -125278552064.000000
+Processing row 75 of 770  -125278552064.000000
+Processing row 80 of 770  -125278552064.000000
+Processing row 85 of 770  -125278552064.000000
+Processing row 90 of 770  183.260010
+Processing row 95 of 770  175.500000
+Processing row 100 of 770  187.929993
+Processing row 105 of 770  190.440002
+Processing row 110 of 770  207.910004
+Processing row 115 of 770  175.059998
+Processing row 120 of 770  176.479996
+Processing row 125 of 770  181.089996
+Processing row 130 of 770  178.880005
+Processing row 135 of 770  173.369995
+Processing row 140 of 770  179.750000
+Processing row 145 of 770  242.750000
+Processing row 150 of 770  224.130005
+Processing row 155 of 770  208.389999
+Processing row 160 of 770  212.739990
+Processing row 165 of 770  246.879990
+Processing row 170 of 770  248.190002
+Processing row 175 of 770  167.160004
+Processing row 180 of 770  166.654633
+Processing row 185 of 770  166.700470
+Processing row 190 of 770  168.493713
+Processing row 195 of 770  167.207581
+Processing row 200 of 770  164.149246
+Processing row 205 of 770  159.421005
+Processing row 210 of 770  156.648132
+Processing row 215 of 770  147.826553
+Processing row 220 of 770  143.360336
+Processing row 225 of 770  142.759277
+Processing row 230 of 770  145.053436
+Processing row 235 of 770  147.753220
+Processing row 240 of 770  150.432190
+Processing row 245 of 770  151.220001
+Processing row 250 of 770  149.950851
+Processing row 255 of 770  149.679932
+Processing row 260 of 770  151.827820
+Processing row 265 of 770  154.619492
+Processing row 270 of 770  156.650024
+Processing row 275 of 770  168.688599
+Processing row 280 of 770  180.681747
+Processing row 285 of 770  178.589264
+Processing row 290 of 770  179.496246
+Processing row 295 of 770  189.821503
+Processing row 300 of 770  186.303452
+Processing row 305 of 770  186.343811
+Processing row 310 of 770  191.303467
+Processing row 315 of 770  184.242889
+Processing row 320 of 770  182.353668
+Processing row 325 of 770  181.302841
+Processing row 330 of 770  185.219101
+Processing row 335 of 770  186.366455
+Processing row 340 of 770  188.963913
+Processing row 345 of 770  188.817596
+Processing row 350 of 770  186.049988
+Processing row 355 of 770  189.630005
+Processing row 360 of 770  181.869995
+Processing row 365 of 770  180.649994
+Processing row 370 of 770  179.000000
+Processing row 375 of 770  180.559998
+Processing row 380 of 770  177.989990
+Processing row 385 of 770  179.209991
+Processing row 390 of 770  178.649994
+Processing row 395 of 770  175.729996
+Processing row 400 of 770  182.029999
+Processing row 405 of 770  183.380005
+Processing row 410 of 770  181.130005
+Processing row 415 of 770  189.679993
+Processing row 420 of 770  194.566101
+Processing row 425 of 770  200.519989
+Processing row 430 of 770  202.389999
+Processing row 435 of 770  209.380005
+Processing row 440 of 770  208.709991
+Processing row 445 of 770  205.880005
+Processing row 450 of 770  205.629913
+Processing row 455 of 770  226.360001
+Processing row 460 of 770  224.169998
+Processing row 465 of 770  193.709991
+Processing row 470 of 770  179.669998
+Processing row 475 of 770  174.489990
+Processing row 480 of 770  202.899994
+Processing row 485 of 770  209.479996
+Processing row 490 of 770  208.000000
+Processing row 495 of 770  191.489990
+Processing row 500 of 770  192.339996
+Processing row 505 of 770  213.290009
+Processing row 510 of 770  181.739990
+Processing row 515 of 770  190.839996
+Processing row 520 of 770  195.919998
+Processing row 525 of 770  196.070007
+Processing row 530 of 770  177.570007
+Processing row 535 of 770  173.820007
+Processing row 540 of 770  173.820007
+Processing row 545 of 770  173.820007
+Processing row 550 of 770  173.820007
+Processing row 555 of 770  173.820007
+Processing row 560 of 770  173.820007
+Processing row 565 of 770  173.820007
+Processing row 570 of 770  173.820007
+Processing row 575 of 770  173.820007
+Processing row 580 of 770  173.820007
+Processing row 585 of 770  173.820007
+Processing row 590 of 770  173.820007
+Processing row 595 of 770  173.820007
+Processing row 600 of 770  173.820007
+Processing row 605 of 770  173.820007
+Processing row 610 of 770  173.820007
+Processing row 615 of 770  173.820007
+Processing row 620 of 770  173.820007
+Processing row 625 of 770  173.820007
+Processing row 630 of 770  173.820007
+Processing row 635 of 770  173.820007
+Processing row 640 of 770  173.820007
+Processing row 645 of 770  173.820007
+Processing row 650 of 770  173.820007
+Processing row 655 of 770  173.820007
+Processing row 660 of 770  173.820007
+Processing row 665 of 770  173.820007
+Processing row 670 of 770  173.820007
+Processing row 675 of 770  173.820007
+Processing row 680 of 770  173.820007
+Processing row 685 of 770  173.820007
+Processing row 690 of 770  173.820007
+Processing row 695 of 770  173.820007
+Processing row 700 of 770  173.820007
+Processing row 705 of 770  173.820007
+Processing row 710 of 770  173.820007
+Processing row 715 of 770  173.820007
+Processing row 720 of 770  173.820007
+Processing row 725 of 770  173.820007
+Processing row 730 of 770  173.820007
+Processing row 735 of 770  173.820007
+Processing row 740 of 770  173.820007
+Processing row 745 of 770  173.820007
+Processing row 750 of 770  173.820007
+Processing row 755 of 770  173.820007
+Processing row 760 of 770  173.820007
+Processing row 765 of 770  173.820007
+
+Writing A output BGI 'F134-a-Arc97-060-060.bgi'
+*	** ERROR writing A BGI output ***
+
+Finished writing dump file: work_RSS/F134-Arc97-060-060.lis_dump1.nc
+BYU SSM/I meta undump program: version 0.000000
+Output path work_RSS: Storage option 0:  BYU .SIR file output format
+NetCDF file work_RSS/F131-Arc97-060-060.lis_dump.nc
+ has 30 dimensions   15 variables  51 global attributes  -1 unlimited
+
+Input file header info: 'work_RSS/F131-Arc97-060-060.lis_dump.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 770 x 770  Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+  Region name: Arctic  Sensor name: 13
+
+Current time: '13:42:01 05/30/14'
+ Writing Tb (A) output AVE file 'F131-a-Arc97-060-060.ave'
+   image min/max: 103.885086 257.039978
+ Writing Tb (A) output SIR file 'F131-a-Arc97-060-060.sir'
+   image min/max: 100.010246 305.223969  100.000000
+ write_sir Underflows: 64  Overflows: 0  Count: 592900
+ Writing Istd (I) output SIR file 'F131-I-Arc97-060-060.sir'
+   image min/max: 0.000000 0.038273  -1.000000
+ Writing Iave (J) output SIR file 'F131-J-Arc97-060-060.sir'
+   image min/max: 53.001991 53.074009  0.000000
+ Writing Tb STD (V) output SIR file 'F131-V-Arc97-060-060.sir'
+   image min/max: 0.000000 9.524336  -1.000000
+ Writing Tb err (E) output SIR file 'F131-E-Arc97-060-060.sir'
+   image min/max: -8.546631 13.490234  -15.000000
+ Writing pixel time (P) output SIR file 'F131-p-Arc97-060-060.sir'
+   image min/max: 972.000000 990.000000  -1.000000
+ Writing Tb (A) output GRD file 'F131-a-Arc97-060-060.grd'
+   image min/max: 103.809998 257.039978  100.000000
+ Writing Tb std (V) output GRD file 'F131-V-Arc97-060-060.grd'
+   image min/max: 0.000000 30.785484  -1.000000
+ Writing Inc std (I) output GRD file 'F131-I-Arc97-060-060.grd'
+   image min/max: 0.000000 0.027063  -1.000000
+ Writing Inc ave (J) output GRD file 'F131-J-Arc97-060-060.grd'
+   image min/max: 53.001999 53.074001  0.000000
+ Writing Count (C) output GRD file 'F131-C-Arc97-060-060.grd'
+   image min/max: 1.000000 6.000000  -1.000000
+ Writing Pixel time (P) output GRD file 'F131-p-Arc97-060-060.grd'
+   image min/max: 990.000000 990.000000  -1.000000
+ Writing Tb (A) output NON file 'F131-a-Arc97-060-060.non'
+   image min/max: 103.809998 257.039978  100.000000
+ Writing Tb std (V) output NON file 'F131-V-Arc97-060-060.non'
+   image min/max: 0.000000 30.785484  -1.000000
+BYU SSM/I meta undump program: version 0.000000
+Output path work_RSS: Storage option 0:  BYU .SIR file output format
+NetCDF file work_RSS/F134-Arc97-060-060.lis_dump.nc
+ has 30 dimensions   15 variables  51 global attributes  -1 unlimited
+
+Input file header info: 'work_RSS/F134-Arc97-060-060.lis_dump.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 770 x 770  Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+  Region name: Arctic  Sensor name: 13
+
+Current time: '13:42:01 05/30/14'
+ Writing Tb (A) output AVE file 'F134-a-Arc97-060-060.ave'
+   image min/max: 132.425293 260.149994
+ Writing Tb (A) output SIR file 'F134-a-Arc97-060-060.sir'
+   image min/max: 110.715782 288.490784  100.000000
+ Writing Istd (I) output SIR file 'F134-I-Arc97-060-060.sir'
+   image min/max: 0.000000 0.031250  -1.000000
+ Writing Iave (J) output SIR file 'F134-J-Arc97-060-060.sir'
+   image min/max: 53.001995 53.074005  0.000000
+ Writing Tb STD (V) output SIR file 'F134-V-Arc97-060-060.sir'
+   image min/max: 0.000000 7.389250  -1.000000
+ Writing Tb err (E) output SIR file 'F134-E-Arc97-060-060.sir'
+   image min/max: -3.967598 6.409470  -15.000000
+ Writing pixel time (P) output SIR file 'F134-p-Arc97-060-060.sir'
+   image min/max: 972.000000 990.000000  -1.000000
+ Writing Tb (A) output GRD file 'F134-a-Arc97-060-060.grd'
+   image min/max: 132.607513 260.149994  100.000000
+ Writing Tb std (V) output GRD file 'F134-V-Arc97-060-060.grd'
+   image min/max: 0.000000 30.085262  -1.000000
+ Writing Inc std (I) output GRD file 'F134-I-Arc97-060-060.grd'
+   image min/max: 0.000000 0.027063  -1.000000
+ Writing Inc ave (J) output GRD file 'F134-J-Arc97-060-060.grd'
+   image min/max: 53.001999 53.074001  0.000000
+ Writing Count (C) output GRD file 'F134-C-Arc97-060-060.grd'
+   image min/max: 1.000000 6.000000  -1.000000
+ Writing Pixel time (P) output GRD file 'F134-p-Arc97-060-060.grd'
+   image min/max: 990.000000 990.000000  -1.000000
+ Writing Tb (A) output NON file 'F134-a-Arc97-060-060.non'
+   image min/max: 132.607513 260.149994  100.000000
+ Writing Tb std (V) output NON file 'F134-V-Arc97-060-060.non'
+   image min/max: 0.000000 30.085262  -1.000000
+BYU SSM/I meta undump program: version 0.000000
+Output path work_RSS: Storage option 0:  BYU .SIR file output format
+NetCDF file work_RSS/F134-Arc97-060-060.lis_dump1.nc
+ has 2 dimensions   1 variables  36 global attributes  -1 unlimited
+
+Input file header info: 'work_RSS/F134-Arc97-060-060.lis_dump1.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 770 x 770  Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+  Region name: Arctic  Sensor name: 13
+
+Generating only BGI file *
+Current time: '13:42:02 05/30/14'
+ Writing A output BGI file 'F134-a-Arc97-060-060.bgi'
+   image min/max: 132.280273 260.149994  100.000000
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+BYU SSM/I meta undump program: version 0.000000
+Output path work_RSS: Storage option 1:  NetCDF file output format
+NetCDF file work_RSS/F131-Arc97-060-060.lis_dump.nc
+ has 30 dimensions   15 variables  51 global attributes  -1 unlimited
+
+Input file header info: 'work_RSS/F131-Arc97-060-060.lis_dump.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 770 x 770  Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+  Region name: Arctic  Sensor name: 13
+
+Current time: '13:46:18 05/30/14'
+ Writing Tb (A) output AVE file 'F131-a-Arc97-060-060.ave'
+   image min/max: 103.885086 257.039978
+ NetCDF output file: work_RSS/F131-a-Arc97-060-060.ave.nc
+ Spatial resolution enhancement algorithm: AVE
+ Writing Tb (A) output SIR file 'F131-a-Arc97-060-060.sir'
+   image min/max: 100.010246 305.223969  100.000000
+ NetCDF output file: work_RSS/F131-a-Arc97-060-060.sir.nc
+ Spatial resolution enhancement algorithm: SIR
+ Writing Istd (I) output SIR file 'F131-I-Arc97-060-060.sir'
+   image min/max: 0.000000 0.038273  -1.000000
+ NetCDF output file: work_RSS/F131-I-Arc97-060-060.sir.nc
+ Spatial resolution enhancement algorithm: SIR
+ Writing Iave (J) output SIR file 'F131-J-Arc97-060-060.sir'
+   image min/max: 53.001991 53.074009  0.000000
+ NetCDF output file: work_RSS/F131-J-Arc97-060-060.sir.nc
+ Spatial resolution enhancement algorithm: SIR
+ Writing Tb STD (V) output SIR file 'F131-V-Arc97-060-060.sir'
+   image min/max: 0.000000 9.524336  -1.000000
+ NetCDF output file: work_RSS/F131-V-Arc97-060-060.sir.nc
+ Spatial resolution enhancement algorithm: SIR
+ Writing Tb err (E) output SIR file 'F131-E-Arc97-060-060.sir'
+   image min/max: -8.546631 13.490234  -15.000000
+ NetCDF output file: work_RSS/F131-E-Arc97-060-060.sir.nc
+ Spatial resolution enhancement algorithm: SIR
+ Writing pixel time (P) output SIR file 'F131-p-Arc97-060-060.sir'
+   image min/max: 972.000000 990.000000  -1.000000
+ NetCDF output file: work_RSS/F131-p-Arc97-060-060.sir.nc
+ Spatial resolution enhancement algorithm: SIR
+ Writing Tb (A) output GRD file 'F131-a-Arc97-060-060.grd'
+   image min/max: 103.809998 257.039978  100.000000
+ NetCDF output file: work_RSS/F131-a-Arc97-060-060.grd.nc
+ Spatial resolution enhancement algorithm: grd
+ Writing Tb std (V) output GRD file 'F131-V-Arc97-060-060.grd'
+   image min/max: 0.000000 30.785484  -1.000000
+ NetCDF output file: work_RSS/F131-V-Arc97-060-060.grd.nc
+ Spatial resolution enhancement algorithm: grd
+ Writing Inc std (I) output GRD file 'F131-I-Arc97-060-060.grd'
+   image min/max: 0.000000 0.027063  -1.000000
+ NetCDF output file: work_RSS/F131-I-Arc97-060-060.grd.nc
+ Spatial resolution enhancement algorithm: grd
+ Writing Inc ave (J) output GRD file 'F131-J-Arc97-060-060.grd'
+   image min/max: 53.001999 53.074001  0.000000
+ NetCDF output file: work_RSS/F131-J-Arc97-060-060.grd.nc
+ Spatial resolution enhancement algorithm: grd
+ Writing Count (C) output GRD file 'F131-C-Arc97-060-060.grd'
+   image min/max: 1.000000 6.000000  -1.000000
+ NetCDF output file: work_RSS/F131-C-Arc97-060-060.grd.nc
+ Spatial resolution enhancement algorithm: grd
+ Writing Pixel time (P) output GRD file 'F131-p-Arc97-060-060.grd'
+   image min/max: 990.000000 990.000000  -1.000000
+ NetCDF output file: work_RSS/F131-p-Arc97-060-060.grd.nc
+ Spatial resolution enhancement algorithm: grd
+ Writing Tb (A) output NON file 'F131-a-Arc97-060-060.non'
+   image min/max: 103.809998 257.039978  100.000000
+ NetCDF output file: work_RSS/F131-a-Arc97-060-060.non.nc
+ Spatial resolution enhancement algorithm: non
+ Writing Tb std (V) output NON file 'F131-V-Arc97-060-060.non'
+   image min/max: 0.000000 30.785484  -1.000000
+ NetCDF output file: work_RSS/F131-V-Arc97-060-060.grd.nc
+ Spatial resolution enhancement algorithm: grd
+BYU SSM/I meta SIR/SIRF program: C version 1.000000
+Output path work_RSS: Storage option 0:  Memory only
+
+Input file header info: 'work_RSS/F131-E2N97-060-060.setup'
+  Year, day range: 1997 60 - 60
+  Image size: 720 x 720 = 518400   Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Region: 'EASE2-N'   Records: 0
+  Corners: LL 0.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+
+Beam code 1
+A_initialization of 200.000000
+Max iterations of 20
+Median flag: 0
+Has azimuth angle: 1
+Max fill 2000
+Sensor '13'
+
+A output file: 'F131-a-E2N97-060-060.sir'
+I output file: 'F131-I-E2N97-060-060.sir'
+J output file: 'F131-J-E2N97-060-060.sir'
+C output file: 'F131-C-E2N97-060-060.sir'
+P output file: 'F131-p-E2N97-060-060.sir'
+E output file: 'F131-E-E2N97-060-060.sir'
+SIR V output file: 'F131-V-E2N97-060-060.sir'
+AVE A output file: 'F131-a-E2N97-060-060.ave'
+NON A output file: 'F131-a-E2N97-060-060.non'
+NON V output file: 'F131-V-E2N97-060-060.non'
+GRD A output file: 'F131-a-E2N97-060-060.grd'
+GRD V output file: 'F131-V-E2N97-060-060.grd'
+GRD I output file: 'F131-I-E2N97-060-060.grd'
+GRD J output file: 'F131-J-E2N97-060-060.grd'
+GRD P output file: 'F131-p-E2N97-060-060.grd'
+GRD C output file: 'F131-C-E2N97-060-060.grd'
+Info file: 'F131-E2N97-060-060.lis'
+
+Input header file length 3514
+  File size: 5564712  Space allocated: 5564712
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 51419 51419 recs = 4330656 of 5564712 (77.8% 100.0%)
+
+SIR parameters: A_init=200.000000  N=20
+
+SIR iteration 1 51419
+ Average weight: 1106.9574
+ A min max  --> 170.845856 218.914764 1
+ A change   --> -29.154144 18.914764
+
+Writing Tb (A) AVE output 'F131-a-E2N97-060-060.ave'
+
+SIR iteration 2 51419
+ A min max  --> 150.891785 234.778671 2
+ A change   --> -19.954071 15.863907
+
+SIR iteration 3 51419
+ A min max  --> 136.957687 247.785324 3
+ A change   --> -13.934097 13.006653
+
+SIR iteration 4 51419
+ A min max  --> 127.065430 258.266968 4
+ A change   --> -9.892258 10.481644
+
+SIR iteration 5 51419
+ A min max  --> 119.903069 266.606415 5
+ A change   --> -7.162361 8.339447
+
+SIR iteration 6 51419
+ A min max  --> 114.521820 273.180542 6
+ A change   --> -5.381248 6.574127
+
+SIR iteration 7 51419
+ A min max  --> 110.523468 278.330170 7
+ A change   --> -3.998352 5.149628
+
+SIR iteration 8 51419
+ A min max  --> 107.366814 282.347443 8
+ A change   --> -3.156654 4.017273
+
+SIR iteration 9 51419
+ A min max  --> 104.777901 285.474121 9
+ A change   --> -2.588913 3.126678
+
+SIR iteration 10 51419
+ A min max  --> 102.749161 287.905487 10
+ A change   --> -2.028740 2.431366
+
+SIR iteration 11 51419
+ A min max  --> 100.760002 289.796509 11
+ A change   --> -1.989159 1.891022
+
+SIR iteration 12 51419
+ A min max  --> 98.867584 291.268738 12
+ A change   --> -1.892418 1.472229
+
+SIR iteration 13 51419
+ A min max  --> 97.263985 292.416718 13
+ A change   --> -1.603600 1.147980
+
+SIR iteration 14 51419
+ A min max  --> 95.624092 293.313538 14
+ A change   --> -1.639893 0.896820
+
+SIR iteration 15 51419
+ A min max  --> 94.039185 294.015533 15
+ A change   --> -1.584908 0.701996
+
+SIR iteration 16 51419
+ A min max  --> 92.588470 294.566010 16
+ A change   --> -1.450714 0.550476
+
+SIR iteration 17 51419
+ A min max  --> 91.251030 296.722137 17
+ A change   --> -1.337440 2.156128
+
+SIR iteration 18 51419
+ A min max  --> 90.010429 299.923523 18
+ A change   --> -1.240601 3.201385
+
+SIR iteration 19 51419
+ A min max  --> 88.853592 302.943298 19
+ A change   --> -1.156837 3.019775
+
+SIR iteration 20 51419
+ A min max  --> 87.770012 305.794189 20
+ A change   --> -1.083580 2.850891
+ weight max --> 24331.000000 Average weight: 1106.9574
+
+Writing Tb (A) SIR output 'F131-a-E2N97-060-060.sir'
+
+Writing Istd (I) SIR output 'F131-I-E2N97-060-060.sir'
+Writing Iave (J) SIR output 'F131-J-E2N97-060-060.sir'
+
+Begin creation of STD images
+ Tb STD min   max --> 0.000000 25.799112
+ Tb ERR min   max --> -16.628433 14.676665
+Writing Tb STD (V) SIR output 'F131-V-E2N97-060-060.sir'
+Writing Tb err (E) SIR output 'F131-E-E2N97-060-060.sir' 
+
+Begin creation of time image
+ Time min   max --> 955.000000 1007.000000
+Writing time output (P) SIR 'F131-p-E2N97-060-060.sir'
+
+Begin creation of non-enhanced GRD images
+ Non-enhanced/Grid A  min   max --> 100.666946 290.233307
+ Non-enhanced/Grid V  min   max --> 0.076547 56.130882
+ Non-enhanced/Grid I  min   max --> 0.015625 0.046875
+ Non-enhanced/Grid C        max --> 28.0
+Writing Grid TB (A) output 'F131-a-E2N97-060-060.grd'
+Writing Grid Tb STD (V) output SIR 'F131-V-E2N97-060-060.grd'
+Writing Grid Istd (I) output 'F131-I-E2N97-060-060.grd'
+Writing Grid Iave (J) output 'F131-J-E2N97-060-060.grd'
+Writing Grid Cnt (C) output 'F131-C-E2N97-060-060.grd' 4238982
+Writing Grid time (P) 'F131-p-E2N97-060-060.grd'
+Writing Non-enhanced Tb (A) output 'F131-a-E2N97-060-060.non'
+Writing Non-enhanced TbSTD (V) output SIR 'F131-V-E2N97-060-060.non'
+
+Finished writing dump file: work_RSS/F131-E2N97-060-060.lis_dump.nc
+Info file: F131-E2N97-060-060.lis
+BYU SSM/I meta BG program: C version 1.000000
+BGI options: Nsize=0 omega=0.001000 gamma=0.031416 delta2=0
+
+Input file header info: '(null)'
+  Year, day range: 1997 60 - 60
+  Image size: 720 x 720 = 518400   Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Region: 'EASE2-N'   Records: 0
+  Corners: LL 0.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+
+Beam code 1
+Median flag: 0
+Has azimuth angle: 1
+Wscale -1
+Sensor '13'
+
+A output file: 'F131-a-E2N97-060-060.sir'
+Info file: 'F131-E2N97-060-060.lis'
+
+Input header file length 3514
+  File size: 5564712  Space allocated: 5564712
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 51419 51419 recs = 4420520 of 5564712 (79.4% 100.0%)
+
+Maximum hits above threshold: 22  max size: 5
+Index array created 518400 51419
+Processing row 0 of 720  -515269228465719717145423557932613632.000000
+Processing row 5 of 720  -515269228465719717145423557932613632.000000
+Processing row 10 of 720  -515269228465719717145423557932613632.000000
+Processing row 15 of 720  -515269228465719717145423557932613632.000000
+Processing row 20 of 720  -515269228465719717145423557932613632.000000
+Processing row 25 of 720  286.779999
+Processing row 30 of 720  285.260040
+Processing row 35 of 720  281.778076
+Processing row 40 of 720  281.968323
+Processing row 45 of 720  278.729980
+Processing row 50 of 720  279.880005
+Processing row 55 of 720  174.169998
+Processing row 60 of 720  600.006958
+Processing row 65 of 720  265.914978
+Processing row 70 of 720  284.599976
+Processing row 75 of 720  284.789978
+Processing row 80 of 720  284.769989
+Processing row 85 of 720  277.230042
+Processing row 90 of 720  270.614990
+Processing row 95 of 720  260.500000
+Processing row 100 of 720  252.255005
+Processing row 105 of 720  248.459991
+Processing row 110 of 720  250.289993
+Processing row 115 of 720  245.779999
+Processing row 120 of 720  247.190002
+Processing row 125 of 720  241.956940
+Processing row 130 of 720  237.720001
+Processing row 135 of 720  250.190002
+Processing row 140 of 720  165.863007
+Processing row 145 of 720  164.627441
+Processing row 150 of 720  117.149994
+Processing row 155 of 720  119.069229
+Processing row 160 of 720  137.540009
+Processing row 165 of 720  136.399994
+Processing row 170 of 720  143.459991
+Processing row 175 of 720  254.597916
+Processing row 180 of 720  253.827805
+Processing row 185 of 720  261.234985
+Processing row 190 of 720  255.919998
+Processing row 195 of 720  256.125793
+Processing row 200 of 720  144.803467
+Processing row 205 of 720  -62.914970
+Processing row 210 of 720  156.352509
+Processing row 215 of 720  132.544724
+Processing row 220 of 720  120.029907
+Processing row 225 of 720  139.782715
+Processing row 230 of 720  148.478745
+Processing row 235 of 720  165.470276
+Processing row 240 of 720  113.050789
+Processing row 245 of 720  113.375923
+Processing row 250 of 720  119.873978
+Processing row 255 of 720  134.223160
+Processing row 260 of 720  130.237762
+Processing row 265 of 720  -27.460796
+Processing row 270 of 720  113.087318
+Processing row 275 of 720  109.991699
+Processing row 280 of 720  116.263916
+Processing row 285 of 720  163.448486
+Processing row 290 of 720  4.712824
+Processing row 295 of 720  126.699104
+Processing row 300 of 720  114.569885
+Processing row 305 of 720  120.574448
+Processing row 310 of 720  310.137817
+Processing row 315 of 720  244.836060
+Processing row 320 of 720  198.570740
+Processing row 325 of 720  159.760834
+Processing row 330 of 720  195.309448
+Processing row 335 of 720  201.215805
+Processing row 340 of 720  201.479996
+Processing row 345 of 720  202.628525
+Processing row 350 of 720  207.234863
+Processing row 355 of 720  204.339996
+Processing row 360 of 720  202.169998
+Processing row 365 of 720  198.871155
+Processing row 370 of 720  199.070007
+Processing row 375 of 720  197.100006
+Processing row 380 of 720  198.995026
+Processing row 385 of 720  222.368164
+Processing row 390 of 720  199.176163
+Processing row 395 of 720  198.699997
+Processing row 400 of 720  208.467529
+Processing row 405 of 720  205.394165
+Processing row 410 of 720  208.070633
+Processing row 415 of 720  213.514221
+Processing row 420 of 720  220.690002
+Processing row 425 of 720  223.602203
+Processing row 430 of 720  220.644806
+Processing row 435 of 720  220.533829
+Processing row 440 of 720  216.550598
+Processing row 445 of 720  211.654938
+Processing row 450 of 720  219.399994
+Processing row 455 of 720  228.289948
+Processing row 460 of 720  214.779587
+Processing row 465 of 720  222.209991
+Processing row 470 of 720  168.225891
+Processing row 475 of 720  210.281738
+Processing row 480 of 720  199.154480
+Processing row 485 of 720  203.490906
+Processing row 490 of 720  176.865234
+Processing row 495 of 720  107.294846
+Processing row 500 of 720  190.871475
+Processing row 505 of 720  115.013855
+Processing row 510 of 720  105.910370
+Processing row 515 of 720  106.145012
+Processing row 520 of 720  94.512009
+Processing row 525 of 720  104.669998
+Processing row 530 of 720  102.719757
+Processing row 535 of 720  102.410156
+Processing row 540 of 720  128.444366
+Processing row 545 of 720  108.359337
+Processing row 550 of 720  109.819717
+Processing row 555 of 720  111.550003
+Processing row 560 of 720  111.257584
+Processing row 565 of 720  102.011200
+Processing row 570 of 720  112.370003
+Processing row 575 of 720  114.389999
+Processing row 580 of 720  122.099998
+Processing row 585 of 720  119.040001
+Processing row 590 of 720  116.879997
+Processing row 595 of 720  115.729370
+Processing row 600 of 720  117.290001
+Processing row 605 of 720  126.250000
+Processing row 610 of 720  130.279999
+Processing row 615 of 720  132.800003
+Processing row 620 of 720  137.860001
+Processing row 625 of 720  136.009995
+Processing row 630 of 720  134.250000
+Processing row 635 of 720  136.190002
+Processing row 640 of 720  124.470360
+Processing row 645 of 720  134.239990
+Processing row 650 of 720  135.195007
+Processing row 655 of 720  135.781433
+Processing row 660 of 720  132.309998
+Processing row 665 of 720  112.437729
+Processing row 670 of 720  137.814667
+Processing row 675 of 720  143.334900
+Processing row 680 of 720  152.399979
+Processing row 685 of 720  212.446533
+Processing row 690 of 720  188.787903
+Processing row 695 of 720  231.618530
+Processing row 700 of 720  145.081299
+Processing row 705 of 720  149.846405
+Processing row 710 of 720  146.590210
+Processing row 715 of 720  149.472534
+
+Writing A output BGI 'F131-a-E2N97-060-060.bgi'
+*	** ERROR writing A BGI output ***
+
+Finished writing dump file: work_RSS/F131-E2N97-060-060.lis_dump1.nc
+BYU SSM/I meta undump program: version 0.000000
+Output path work_RSS: Storage option 0:  BYU .SIR file output format
+NetCDF file work_RSS/F131-E2N97-060-060.lis_dump.nc
+ has 30 dimensions   15 variables  51 global attributes  -1 unlimited
+
+Input file header info: 'work_RSS/F131-E2N97-060-060.lis_dump.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 720 x 720  Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+  Region name: EASE2-N  Sensor name: 13
+
+Current time: '13:46:40 05/30/14'
+ Writing Tb (A) output AVE file 'F131-a-E2N97-060-060.ave'
+   image min/max: 100.382759 292.289978
+ Writing Tb (A) output SIR file 'F131-a-E2N97-060-060.sir'
+   image min/max: 100.023590 305.794189  100.000000
+ write_sir Underflows: 71  Overflows: 0  Count: 518400
+ Writing Istd (I) output SIR file 'F131-I-E2N97-060-060.sir'
+   image min/max: 0.000000 0.038273  -1.000000
+ Writing Iave (J) output SIR file 'F131-J-E2N97-060-060.sir'
+   image min/max: 52.959999 53.124001  0.000000
+ Writing Tb STD (V) output SIR file 'F131-V-E2N97-060-060.sir'
+   image min/max: 0.000000 25.799112  -1.000000
+ Writing Tb err (E) output SIR file 'F131-E-E2N97-060-060.sir'
+   image min/max: -12.534177 14.676665  -15.000000
+ write_sir Underflows: 2  Overflows: 0  Count: 518400
+ Writing pixel time (P) output SIR file 'F131-p-E2N97-060-060.sir'
+   image min/max: 955.000000 1007.000000  -1.000000
+ Writing Tb (A) output GRD file 'F131-a-E2N97-060-060.grd'
+   image min/max: 100.666946 290.233307  100.000000
+ Writing Tb std (V) output GRD file 'F131-V-E2N97-060-060.grd'
+   image min/max: 0.000000 56.130882  -1.000000
+ Writing Inc std (I) output GRD file 'F131-I-E2N97-060-060.grd'
+   image min/max: 0.000000 0.046875  -1.000000
+ Writing Inc ave (J) output GRD file 'F131-J-E2N97-060-060.grd'
+   image min/max: 52.959999 53.122574  0.000000
+ Writing Count (C) output GRD file 'F131-C-E2N97-060-060.grd'
+   image min/max: 1.000000 28.000000  -1.000000
+ Writing Pixel time (P) output GRD file 'F131-p-E2N97-060-060.grd'
+   image min/max: 1007.000000 1007.000244  -1.000000
+ Writing Tb (A) output NON file 'F131-a-E2N97-060-060.non'
+   image min/max: 100.666946 290.233307  100.000000
+ Writing Tb std (V) output NON file 'F131-V-E2N97-060-060.non'
+   image min/max: 0.000000 56.130882  -1.000000
+BYU SSM/I meta undump program: version 0.000000
+Output path work_RSS: Storage option 0:  BYU .SIR file output format
+NetCDF file work_RSS/F131-E2N97-060-060.lis_dump1.nc
+ has 2 dimensions   1 variables  36 global attributes  -1 unlimited
+
+Input file header info: 'work_RSS/F131-E2N97-060-060.lis_dump1.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 720 x 720  Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+  Region name: EASE2-N  Sensor name: 13
+
+Generating only BGI file *
+Current time: '13:46:41 05/30/14'
+ Writing A output BGI file 'F131-a-E2N97-060-060.bgi'
+   image min/max: 100.009995 2869.354004  100.000000
+ write_sir Underflows: 2445  Overflows: 544  Count: 518400
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F131-a-Arc97-060-060.sir (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_RSS/F131-a-Arc97-060-060.sir.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F131-a-Arc97-060-060.ave (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_RSS/F131-a-Arc97-060-060.ave.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F131-a-Arc97-060-060.grd (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 154 x 154
+Writing output gif file to 'work_RSS/F131-a-Arc97-060-060.grd.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F134-a-Arc97-060-060.sir (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_RSS/F134-a-Arc97-060-060.sir.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F134-a-Arc97-060-060.ave (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_RSS/F134-a-Arc97-060-060.ave.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F134-a-Arc97-060-060.grd (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 154 x 154
+Writing output gif file to 'work_RSS/F134-a-Arc97-060-060.grd.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F134-a-Arc97-060-060.bgi (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_RSS/F134-a-Arc97-060-060.bgi.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F131-a-E2N97-060-060.sir (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 720 x 720
+Writing output gif file to 'work_RSS/F131-a-E2N97-060-060.sir.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F131-a-E2N97-060-060.ave (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 720 x 720
+Writing output gif file to 'work_RSS/F131-a-E2N97-060-060.ave.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F131-a-E2N97-060-060.grd (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 180 x 180
+Writing output gif file to 'work_RSS/F131-a-E2N97-060-060.grd.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_RSS/F131-a-E2N97-060-060.bgi (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 720 x 720
+Writing output gif file to 'work_RSS/F131-a-E2N97-060-060.bgi.gif'
+gif output file successfully written 0
+MEaSures Meta_Make Program
+Program: meas_meta_make  Version: 0.100000
+
+
+Metafile name: work_CSU/ptest_CSU.meta 
+
+Platform number: 13 13 
+Opening meta output file work_CSU/ptest_CSU.meta
+Opening job output file work_CSU/ptest_CSU.meta.job
+S2G name: ../ref/s2g/ssmi_mN.s2g 
+Input day range 60 to 60 year 1997
+rfile=../ref/arctic.def  -32
+Number of regions: 7
+Region 0 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 1
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F131-Arc97-060-060.setup
+Output A file:    F131-a-Arc97-060-060.sir
+Output C file:    F131-C-Arc97-060-060.sir
+Output I file:    F131-I-Arc97-060-060.sir
+Output J file:    F131-J-Arc97-060-060.sir
+Output P file:    F131-p-Arc97-060-060.sir
+Output E file:    F131-E-Arc97-060-060.sir
+Output V file:    F131-V-Arc97-060-060.sir
+Output A ave file:F131-a-Arc97-060-060.ave
+Output A non file:F131-a-Arc97-060-060.non
+Output V non file:F131-V-Arc97-060-060.non
+Output A grd file:F131-a-Arc97-060-060.grd
+Output V grd file:F131-V-Arc97-060-060.grd
+Output I grd file:F131-I-Arc97-060-060.grd
+Output J grd file:F131-J-Arc97-060-060.grd
+Output C grd file:F131-C-Arc97-060-060.grd
+Output P grd file:F131-p-Arc97-060-060.grd
+Output lis file:  F131-Arc97-060-060.lis
+Region 1 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 2
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F132-Arc97-060-060.setup
+Output A file:    F132-a-Arc97-060-060.sir
+Output C file:    F132-C-Arc97-060-060.sir
+Output I file:    F132-I-Arc97-060-060.sir
+Output J file:    F132-J-Arc97-060-060.sir
+Output P file:    F132-p-Arc97-060-060.sir
+Output E file:    F132-E-Arc97-060-060.sir
+Output V file:    F132-V-Arc97-060-060.sir
+Output A ave file:F132-a-Arc97-060-060.ave
+Output A non file:F132-a-Arc97-060-060.non
+Output V non file:F132-V-Arc97-060-060.non
+Output A grd file:F132-a-Arc97-060-060.grd
+Output V grd file:F132-V-Arc97-060-060.grd
+Output I grd file:F132-I-Arc97-060-060.grd
+Output J grd file:F132-J-Arc97-060-060.grd
+Output C grd file:F132-C-Arc97-060-060.grd
+Output P grd file:F132-p-Arc97-060-060.grd
+Output lis file:  F132-Arc97-060-060.lis
+Region 2 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 3
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F133-Arc97-060-060.setup
+Output A file:    F133-a-Arc97-060-060.sir
+Output C file:    F133-C-Arc97-060-060.sir
+Output I file:    F133-I-Arc97-060-060.sir
+Output J file:    F133-J-Arc97-060-060.sir
+Output P file:    F133-p-Arc97-060-060.sir
+Output E file:    F133-E-Arc97-060-060.sir
+Output V file:    F133-V-Arc97-060-060.sir
+Output A ave file:F133-a-Arc97-060-060.ave
+Output A non file:F133-a-Arc97-060-060.non
+Output V non file:F133-V-Arc97-060-060.non
+Output A grd file:F133-a-Arc97-060-060.grd
+Output V grd file:F133-V-Arc97-060-060.grd
+Output I grd file:F133-I-Arc97-060-060.grd
+Output J grd file:F133-J-Arc97-060-060.grd
+Output C grd file:F133-C-Arc97-060-060.grd
+Output P grd file:F133-p-Arc97-060-060.grd
+Output lis file:  F133-Arc97-060-060.lis
+Region 3 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 4
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F134-Arc97-060-060.setup
+Output A file:    F134-a-Arc97-060-060.sir
+Output C file:    F134-C-Arc97-060-060.sir
+Output I file:    F134-I-Arc97-060-060.sir
+Output J file:    F134-J-Arc97-060-060.sir
+Output P file:    F134-p-Arc97-060-060.sir
+Output E file:    F134-E-Arc97-060-060.sir
+Output V file:    F134-V-Arc97-060-060.sir
+Output A ave file:F134-a-Arc97-060-060.ave
+Output A non file:F134-a-Arc97-060-060.non
+Output V non file:F134-V-Arc97-060-060.non
+Output A grd file:F134-a-Arc97-060-060.grd
+Output V grd file:F134-V-Arc97-060-060.grd
+Output I grd file:F134-I-Arc97-060-060.grd
+Output J grd file:F134-J-Arc97-060-060.grd
+Output C grd file:F134-C-Arc97-060-060.grd
+Output P grd file:F134-p-Arc97-060-060.grd
+Output lis file:  F134-Arc97-060-060.lis
+Region 4 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 5
+Projection 5   size 770 770
+Scales:           8.900000 8.900000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F135-Arc97-060-060.setup
+Output A file:    F135-a-Arc97-060-060.sir
+Output C file:    F135-C-Arc97-060-060.sir
+Output I file:    F135-I-Arc97-060-060.sir
+Output J file:    F135-J-Arc97-060-060.sir
+Output P file:    F135-p-Arc97-060-060.sir
+Output E file:    F135-E-Arc97-060-060.sir
+Output V file:    F135-V-Arc97-060-060.sir
+Output A ave file:F135-a-Arc97-060-060.ave
+Output A non file:F135-a-Arc97-060-060.non
+Output V non file:F135-V-Arc97-060-060.non
+Output A grd file:F135-a-Arc97-060-060.grd
+Output V grd file:F135-V-Arc97-060-060.grd
+Output I grd file:F135-I-Arc97-060-060.grd
+Output J grd file:F135-J-Arc97-060-060.grd
+Output C grd file:F135-C-Arc97-060-060.grd
+Output P grd file:F135-p-Arc97-060-060.grd
+Output lis file:  F135-Arc97-060-060.lis
+Region 5 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 6
+Projection 5   size 1540 1540
+Scales:           4.450000 4.450000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F136-Arc97-060-060.setup
+Output A file:    F136-a-Arc97-060-060.sir
+Output C file:    F136-C-Arc97-060-060.sir
+Output I file:    F136-I-Arc97-060-060.sir
+Output J file:    F136-J-Arc97-060-060.sir
+Output P file:    F136-p-Arc97-060-060.sir
+Output E file:    F136-E-Arc97-060-060.sir
+Output V file:    F136-V-Arc97-060-060.sir
+Output A ave file:F136-a-Arc97-060-060.ave
+Output A non file:F136-a-Arc97-060-060.non
+Output V non file:F136-V-Arc97-060-060.non
+Output A grd file:F136-a-Arc97-060-060.grd
+Output V grd file:F136-V-Arc97-060-060.grd
+Output I grd file:F136-I-Arc97-060-060.grd
+Output J grd file:F136-J-Arc97-060-060.grd
+Output C grd file:F136-C-Arc97-060-060.grd
+Output P grd file:F136-p-Arc97-060-060.grd
+Output lis file:  F136-Arc97-060-060.lis
+Region 6 number: 110
+Region name: 'Arctic    '  Def Proj 5  Dateline 0
+
+Region definition information
+  Latitude range:  60.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 1
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 5
+Polar Stereographic pixel spacing: 4.450000, 4.450000 km/pixel
+Polster 1 -45.000000 70.000000 -45.000000 70.000000  60.000000 -135.000000 60.000000 45.000000  60.000000 135.000000 60.000000 -45.000000
+Polster 0 -135.000000 60.000000 -3323.230957 -0.000156 -45.000000 70.000000
+Polster 2 -3323.230957 3323.230957 3323.230957 -3323.230957
+Region geometry (in km): (raw computations)  proj=5
+  upper-most y 3323.230957
+  lower-most y -3323.230957
+  right-most x 3323.230957
+  left-most  x -3323.230957
+Region geometry (in km): (after smoothed dimensioning)
+  upper-most y 3400.000000
+  lower-most y -3400.000000
+  right-most x 3400.000000
+  left-most  x -3400.000000
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 7
+Projection 5   size 1540 1540
+Scales:           4.450000 4.450000
+Origin (lat,lon)  70.000000 -45.000000
+Offset x,y in km: -3400.000000 -3400.000000
+Dimensions in km: -3400.000000 -3400.000000
+size in pixels (x,y)(lon,lat): -3400.000000 -3400.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F137-Arc97-060-060.setup
+Output A file:    F137-a-Arc97-060-060.sir
+Output C file:    F137-C-Arc97-060-060.sir
+Output I file:    F137-I-Arc97-060-060.sir
+Output J file:    F137-J-Arc97-060-060.sir
+Output P file:    F137-p-Arc97-060-060.sir
+Output E file:    F137-E-Arc97-060-060.sir
+Output V file:    F137-V-Arc97-060-060.sir
+Output A ave file:F137-a-Arc97-060-060.ave
+Output A non file:F137-a-Arc97-060-060.non
+Output V non file:F137-V-Arc97-060-060.non
+Output A grd file:F137-a-Arc97-060-060.grd
+Output V grd file:F137-V-Arc97-060-060.grd
+Output I grd file:F137-I-Arc97-060-060.grd
+Output J grd file:F137-J-Arc97-060-060.grd
+Output C grd file:F137-C-Arc97-060-060.grd
+Output P grd file:F137-p-Arc97-060-060.grd
+Output lis file:  F137-Arc97-060-060.lis
+
+Total regional images: 7 Regions: 7
+Opening input list file work_CSU/F2.lis
+Input_file=../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+Total number of input files: 1
+Finished writing meta file work_CSU/ptest_CSU.meta
+Finished writing job file work_CSU/ptest_CSU.meta.job
+
+Job command: nice work_CSU/ptest_CSU.meta > work_CSU/ptest_CSU.meta.out 2>&1
+
+All done
+MEaSures Meta_Make Program
+Program: meas_meta_make  Version: 0.100000
+
+
+Metafile name: work_CSU/test_CSU.meta 
+
+Platform number: 13 13 
+Opening meta output file work_CSU/test_CSU.meta
+Opening job output file work_CSU/test_CSU.meta.job
+S2G name: ../ref/s2g/ssmi_mN.s2g 
+Input day range 60 to 60 year 1997
+rfile=../ref/EASE2N_test1ch.def  -32
+Number of regions: 1
+Region 0 number: 308
+Region name: 'EASE2-N   '  Def Proj 8  Dateline 0
+
+Region definition information
+  Latitude range:  0.000000 90.000000
+  Longitude range: -180.000000 180.000000
+  Region polar code (0=arbitrary, 1=N pol, 2=S pole: 0
+Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,
+      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): 8
+EASE2 parameters: proj=8  nease=1  ind=0
+Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) 0
+Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): 1
+Resizing for low channel number 1
+Projection 8   size 720 720
+Scales:           0.000000 0.000000
+Origin (lat,lon)  360.000000 360.000000
+Offset x,y in km: 0.000000 0.000000
+Dimensions in km: 0.000000 0.000000
+size in pixels (x,y)(lon,lat): 0.000000 0.000000
+
+Sectioning code: 0
+
+Sectioning: (x,y) 0 0
+Output setup file:F131-E2N97-060-060.setup
+Output A file:    F131-a-E2N97-060-060.sir
+Output C file:    F131-C-E2N97-060-060.sir
+Output I file:    F131-I-E2N97-060-060.sir
+Output J file:    F131-J-E2N97-060-060.sir
+Output P file:    F131-p-E2N97-060-060.sir
+Output E file:    F131-E-E2N97-060-060.sir
+Output V file:    F131-V-E2N97-060-060.sir
+Output A ave file:F131-a-E2N97-060-060.ave
+Output A non file:F131-a-E2N97-060-060.non
+Output V non file:F131-V-E2N97-060-060.non
+Output A grd file:F131-a-E2N97-060-060.grd
+Output V grd file:F131-V-E2N97-060-060.grd
+Output I grd file:F131-I-E2N97-060-060.grd
+Output J grd file:F131-J-E2N97-060-060.grd
+Output C grd file:F131-C-E2N97-060-060.grd
+Output P grd file:F131-p-E2N97-060-060.grd
+Output lis file:  F131-E2N97-060-060.lis
+
+Total regional images: 1 Regions: 1
+Opening input list file work_CSU/F2.lis
+Input_file=../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+Total number of input files: 1
+Finished writing meta file work_CSU/test_CSU.meta
+Finished writing job file work_CSU/test_CSU.meta.job
+
+Job command: nice work_CSU/test_CSU.meta > work_CSU/test_CSU.meta.out 2>&1
+
+All done
+Code version: SSM/I CSU netcdf
+MEaSures Setup Program
+Program: meas_meta_setup  Version: 0.200000
+
+
+Metafile name: work_CSU/ptest_CSU.meta 
+
+Output path: work_CSU 
+open meta file work_CSU/ptest_CSU.meta
+Sensor string='13'
+Regions in meta file: 7
+Region 1 of 7  Total regions: 0
+Section 0 image count 0
+
+SIR file header information: 1 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F131-Arc97-060-060.setup'  1
+Done with setup header for image
+Region 2 of 7  Total regions: 1
+Section 0 image count 1
+
+SIR file header information: 2 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 0
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F132-Arc97-060-060.setup'  2
+Done with setup header for image
+Region 3 of 7  Total regions: 2
+Section 0 image count 2
+
+SIR file header information: 3 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F133-Arc97-060-060.setup'  3
+Done with setup header for image
+Region 4 of 7  Total regions: 3
+Section 0 image count 3
+
+SIR file header information: 4 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F134-Arc97-060-060.setup'  4
+Done with setup header for image
+Region 5 of 7  Total regions: 4
+Section 0 image count 4
+
+SIR file header information: 5 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 770 x 770   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 8.900000 8.900000  Pol (0=h,1=v): 0
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 8.900000 8.900000   Origin: -3400.000000 -3400.000000
+  GRD image size: 154 154  Size: 8.900000 8.900000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 44.500000 44.500000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F135-Arc97-060-060.setup'  5
+Done with setup header for image
+Region 6 of 7  Total regions: 5
+Section 0 image count 5
+
+SIR file header information: 6 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 1540 x 1540   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 4.450000 4.450000  Pol (0=h,1=v): 1
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 4.450000 4.450000   Origin: -3400.000000 -3400.000000
+  GRD image size: 308 308  Size: 4.450000 4.450000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 22.250000 22.250000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F136-Arc97-060-060.setup'  6
+Done with setup header for image
+Region 7 of 7  Total regions: 6
+Section 0 image count 6
+
+SIR file header information: 7 7 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 1540 x 1540   Projection: 5
+  Origin: -3400.000000 -3400.000000  Span: -45.000000 70.000000
+  Scales: 4.450000 4.450000  Pol (0=h,1=v): 0
+  Region: Arctic  Num 110
+  Reg LL corner: 60.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 70.000000 -45.000000
+  Array Dimensions in Km: x=6800.000000 y=6800.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: -45.000000 70.000000  Span: 70.000000 -45.000000
+  Scales: 4.450000 4.450000   Origin: -3400.000000 -3400.000000
+  GRD image size: 308 308  Size: 4.450000 4.450000
+  GRD image span: -45.000000 70.000000  Orig: -3400.000000 -3400.000000
+  GRD image scale: 22.250000 22.250000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F137-Arc97-060-060.setup'  7
+Done with setup header for image
+Number of output setup files 7
+Read ssmiRSS minmax lat file: ../../ref//minmaxlat.dat
+Region 0 of 0: nominal km/pixel=0.112360
+Region 1 of 1: nominal km/pixel=0.112360
+Region 2 of 2: nominal km/pixel=0.112360
+Region 3 of 3: nominal km/pixel=0.112360
+Region 4 of 4: nominal km/pixel=0.112360
+Region 5 of 5: nominal km/pixel=0.224719
+Region 6 of 6: nominal km/pixel=0.224719
+
+Region 1 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+Reading pixel locations file: /auto/users/long/src/linux/measures/ref/locs//0770-0770-05-3400-3400-0045-0070.loc
+
+Region 2 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 3 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 4 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 5 of 7: 770x770=592900
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        8.900000 , 8.900000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Region 6 of 7: 1540x1540=2371600
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        4.450000 , 4.450000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+Reading pixel locations file: /auto/users/long/src/linux/measures/ref/locs//1540-1540-05-3400-3400-0045-0070.loc
+
+Region 7 of 7: 1540x1540=2371600
+  Polar sterographic form: 
+   Center Lon,Lat:    -45.000000 , 70.000000
+   X,Y scales:        4.450000 , 4.450000 (km/pix)
+   Lower-Left Corner: -3400.000000 , -3400.000000
+
+Opening input TB file 1 '../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc'
+Open file ../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+ SSMI Lo res scans  = 1611
+ SSMI Hi res scans  = 3222
+
+ Title         = CSU SSM/I FCDR
+ Author        = Wesley Berg
+ Contact       = fcdr@atmos.colostate.edu
+ URL           = http://rain.atmos.colostate.edu/FCDR
+ Institution   = Colorado State University, Dept. of Atmospheric Science, Kummerow research group
+ Version       = V01R00
+ Revision Date = 2013-02-01
+ Satellite     = DMSP 5D-2/F13 > Defense Meteorological Satellite Program-F13
+ Sensor        = SSM/I > Special Sensor Microwave/Imager
+ Orbit Number  = 09999
+ Source File   = SSMI_TDRBASE_V01R03_F13_D19970301_S1557_E1739_R09999.nc
+ Filename      = CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+ Granule Start = 1997-03-01T15:57:58Z
+ Granule End   = 1997-03-01T17:39:57Z
+ Creation Date = 2013-02-02T15:57MST
+
+Spacecraft ID = 13
+Orbit Number  =  9999
+Satellite 13  orbit 9999  scans 3222
+start time: '1997-03-01T15:57:58Z' 1997 1 15 57
+* start time: 1997-03-01T15:57:58Z 320774277.007500  1997 1 3 60 15 57 57
+* stop time:  1997-03-01T15:57:58Z 320780393.614800  1997 1 3 60 17 39 53
+first scan:320774277.007500 1997 1 3 60 15 57 57
+last scan: 320780393.614800 1997 1 3 60 17 39 53
+search year: 1997 dstart,dend: 60 60  mstart: 0
+Scans     500 | Pulses     63872 | Output      6946 | Day  60
+Scans    1000 | Pulses    127872 | Output    210646 | Day  60
+Scans    1500 | Pulses    191872 | Output    212420 | Day  60
+Scans    2000 | Pulses    255872 | Output    212420 | Day  60
+Scans    2500 | Pulses    319872 | Output    212420 | Day  60
+Scans    3000 | Pulses    383872 | Output    212420 | Day  60
+
+Total input scans: 3222  Total input pulses: 412416
+Output Cells/Records: 212420  Revs: 1  Last rev: 9999
+Region counts:  16340 16340 16340 16340 16340 65360 65360
+Input File Completed:  ../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 212420
+IPR count average:  34.170069
+IPR count max,min:  90 21 
+Tb max,min:  269.309998 104.309998 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 412416 3222
+
+Total input scans: 3222  Total input pulses: 412416
+Output Cells/Records: 212420  Revs: 1  Last rev: 9999
+Region counts:  16340 16340 16340 16340 16340 65360 65360
+Input File Completed:  End_input_file_list
+
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 212420
+IPR count average:  34.170069
+IPR count max,min:  90 21 
+Tb max,min:  269.309998 104.309998 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 412416 3222
+
+Region 110 Arctic beam 1 records 16340
+Output data written to F131-Arc97-060-060.setup
+
+Region 110 Arctic beam 2 records 16340
+Output data written to F132-Arc97-060-060.setup
+
+Region 110 Arctic beam 3 records 16340
+Output data written to F133-Arc97-060-060.setup
+
+Region 110 Arctic beam 4 records 16340
+Output data written to F134-Arc97-060-060.setup
+
+Region 110 Arctic beam 5 records 16340
+Output data written to F135-Arc97-060-060.setup
+
+Region 110 Arctic beam 6 records 65360
+Output data written to F136-Arc97-060-060.setup
+
+Region 110 Arctic beam 7 records 65360
+Output data written to F137-Arc97-060-060.setup
+
+Setup program successfully completed
+Code version: SSM/I CSU netcdf
+MEaSures Setup Program
+Program: meas_meta_setup  Version: 0.200000
+
+
+Metafile name: work_CSU/test_CSU.meta 
+
+Output path: work_CSU 
+open meta file work_CSU/test_CSU.meta
+Sensor string='13'
+Regions in meta file: 1
+Region 1 of 1  Total regions: 0
+Section 0 image count 0
+
+SIR file header information: 1 1 0 0
+  Year, day range: 1997 60 60 0 1440
+  Image size: 720 x 720   Projection: 8
+  Origin: 0.000000 0.000000  Span: 360.000000 360.000000
+  Scales: 0.000000 0.000000  Pol (0=h,1=v): 1
+  Region: EASE2-N  Num 308
+  Reg LL corner: 0.000000 -180.000000   UR corner: 90.000000 180.000000
+  Origin (lat,lon): 360.000000 360.000000
+  Array Dimensions in Km: x=720.000000 y=720.000000
+  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): 0
+  Grid size: 360.000000 360.000000  Span: 360.000000 360.000000
+  Scales: 0.000000 0.000000   Origin: 0.000000 0.000000
+  GRD image size: 180 180  Size: 0.000000 0.000000
+  GRD image span: 360.000000 360.000000  Orig: 0.000000 0.000000
+  GRD image scale: -2.000000 0.000000
+  Median filter 0  Ref Inc angle 53.000000
+  Incidence angle correction 0  b_correct 0.000000
+
+Opened setup output file 'work_CSU/F131-E2N97-060-060.setup'  1
+Done with setup header for image
+Number of output setup files 1
+Read ssmiRSS minmax lat file: ../../ref//minmaxlat.dat
+Region 0 of 0: nominal km/pixel=0.040000
+
+Region 1 of 1: 720x720=518400
+  EASE2 polar azimuthal form: 
+   Map center (col,row): 360.000000 , 360.000000
+   Scale factor, ind:    0.000000 , 0.000000
+   Map origin (col,row): 0.000000 , 0.000000
+Reading pixel locations file: /auto/users/long/src/linux/measures/ref/locs//0720-0720-08-0000-0000-0360-0360.loc
+
+Opening input TB file 1 '../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc'
+Open file ../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+ SSMI Lo res scans  = 1611
+ SSMI Hi res scans  = 3222
+
+ Title         = CSU SSM/I FCDR
+ Author        = Wesley Berg
+ Contact       = fcdr@atmos.colostate.edu
+ URL           = http://rain.atmos.colostate.edu/FCDR
+ Institution   = Colorado State University, Dept. of Atmospheric Science, Kummerow research group
+ Version       = V01R00
+ Revision Date = 2013-02-01
+ Satellite     = DMSP 5D-2/F13 > Defense Meteorological Satellite Program-F13
+ Sensor        = SSM/I > Special Sensor Microwave/Imager
+ Orbit Number  = 09999
+ Source File   = SSMI_TDRBASE_V01R03_F13_D19970301_S1557_E1739_R09999.nc
+ Filename      = CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+ Granule Start = 1997-03-01T15:57:58Z
+ Granule End   = 1997-03-01T17:39:57Z
+ Creation Date = 2013-02-02T15:57MST
+
+Spacecraft ID = 13
+Orbit Number  =  9999
+Satellite 13  orbit 9999  scans 3222
+start time: '1997-03-01T15:57:58Z' 1997 1 15 57
+* start time: 1997-03-01T15:57:58Z 320774277.007500  1997 1 3 60 15 57 57
+* stop time:  1997-03-01T15:57:58Z 320780393.614800  1997 1 3 60 17 39 53
+first scan:320774277.007500 1997 1 3 60 15 57 57
+last scan: 320780393.614800 1997 1 3 60 17 39 53
+search year: 1997 dstart,dend: 60 60  mstart: 0
+Scans     500 | Pulses     63872 | Output     16000 | Day  60
+Scans    1000 | Pulses    127872 | Output     32000 | Day  60
+Scans    1500 | Pulses    191872 | Output     48000 | Day  60
+Scans    2000 | Pulses    255872 | Output     49434 | Day  60
+Scans    2500 | Pulses    319872 | Output     49434 | Day  60
+Scans    3000 | Pulses    383872 | Output     49434 | Day  60
+
+Total input scans: 3222  Total input pulses: 412416
+Output Cells/Records: 51407  Revs: 1  Last rev: 9999
+Region counts:  51407
+Input File Completed:  ../sample_data/CSU_SSMI_FCDR_V01R00_F13_D19970301_S1557_E1739_R09999.nc
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 51407
+IPR count average:  10.364017
+IPR count max,min:  13 7 
+Tb max,min:  295.380005 100.400002 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 412416 3222
+
+Total input scans: 3222  Total input pulses: 412416
+Output Cells/Records: 51407  Revs: 1  Last rev: 9999
+Region counts:  51407
+Input File Completed:  End_input_file_list
+
+Last Day 60 in Range: 60 - 60
+
+Number of measurements: 51407
+IPR count average:  10.364017
+IPR count max,min:  13 7 
+Tb max,min:  295.380005 100.400002 
+
+*** DAY RANGE IS NOT FINISHED ***
+End of day period reached 60 60  1
+Done with setup records 412416 3222
+
+Region 308 EASE2-N beam 1 records 51407
+Output data written to F131-E2N97-060-060.setup
+
+Setup program successfully completed
+BYU SSM/I meta SIR/SIRF program: C version 1.000000
+Output path work_CSU: Storage option 0:  Memory only
+
+Input file header info: 'work_CSU/F134-Arc97-060-060.setup'
+  Year, day range: 1997 60 - 60
+  Image size: 770 x 770 = 592900   Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Region: 'Arctic'   Records: 0
+  Corners: LL 60.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+
+Beam code 4
+A_initialization of 200.000000
+Max iterations of 30
+Median flag: 0
+Has azimuth angle: 1
+Max fill 2000
+Sensor '13'
+
+A output file: 'F134-a-Arc97-060-060.sir'
+I output file: 'F134-I-Arc97-060-060.sir'
+J output file: 'F134-J-Arc97-060-060.sir'
+C output file: 'F134-C-Arc97-060-060.sir'
+P output file: 'F134-p-Arc97-060-060.sir'
+E output file: 'F134-E-Arc97-060-060.sir'
+SIR V output file: 'F134-V-Arc97-060-060.sir'
+AVE A output file: 'F134-a-Arc97-060-060.ave'
+NON A output file: 'F134-a-Arc97-060-060.non'
+NON V output file: 'F134-V-Arc97-060-060.non'
+GRD A output file: 'F134-a-Arc97-060-060.grd'
+GRD V output file: 'F134-V-Arc97-060-060.grd'
+GRD I output file: 'F134-I-Arc97-060-060.grd'
+GRD J output file: 'F134-J-Arc97-060-060.grd'
+GRD P output file: 'F134-p-Arc97-060-060.grd'
+GRD C output file: 'F134-C-Arc97-060-060.grd'
+Info file: 'F134-Arc97-060-060.lis'
+
+Input header file length 3514
+  File size: 3438924  Space allocated: 3438924
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 16340 16340 recs = 3046764 of 3438924 (88.6% 100.0%)
+
+SIR parameters: A_init=200.000000  N=30
+
+SIR iteration 1 16340
+ Average weight: 831.1502
+ A min max  --> 181.666840 213.139633 1
+ A change   --> -18.333160 13.139633
+
+Writing Tb (A) AVE output 'F134-a-Arc97-060-060.ave'
+
+SIR iteration 2 16340
+ A min max  --> 168.646713 223.787064 2
+ A change   --> -13.020126 10.647430
+
+SIR iteration 3 16340
+ A min max  --> 159.276382 232.321808 3
+ A change   --> -9.370331 8.534744
+
+SIR iteration 4 16340
+ A min max  --> 152.453873 239.149033 4
+ A change   --> -6.822510 6.827225
+
+SIR iteration 5 16340
+ A min max  --> 147.240341 244.535736 5
+ A change   --> -5.213531 5.386703
+
+SIR iteration 6 16340
+ A min max  --> 143.276459 248.754669 6
+ A change   --> -3.963882 4.218933
+
+SIR iteration 7 16340
+ A min max  --> 139.158417 252.072586 7
+ A change   --> -4.118042 3.317917
+
+SIR iteration 8 16340
+ A min max  --> 135.726944 254.881912 8
+ A change   --> -3.431473 2.809326
+
+SIR iteration 9 16340
+ A min max  --> 132.843185 257.843964 9
+ A change   --> -2.883759 2.962051
+
+SIR iteration 10 16340
+ A min max  --> 130.401672 260.378662 10
+ A change   --> -2.441513 2.534698
+
+SIR iteration 11 16340
+ A min max  --> 128.321121 262.563324 11
+ A change   --> -2.080551 2.184662
+
+SIR iteration 12 16340
+ A min max  --> 126.538048 264.460938 12
+ A change   --> -1.783073 1.897614
+
+SIR iteration 13 16340
+ A min max  --> 125.002281 266.122650 13
+ A change   --> -1.535767 1.661713
+
+SIR iteration 14 16340
+ A min max  --> 123.673637 267.589447 14
+ A change   --> -1.328644 1.466797
+
+SIR iteration 15 16340
+ A min max  --> 122.519623 268.890045 15
+ A change   --> -1.154015 1.300598
+
+SIR iteration 16 16340
+ A min max  --> 121.513832 270.050659 16
+ A change   --> -1.005791 1.160614
+
+SIR iteration 17 16340
+ A min max  --> 120.634583 271.091187 17
+ A change   --> -0.879250 1.040527
+
+SIR iteration 18 16340
+ A min max  --> 119.863953 272.030487 18
+ A change   --> -0.770630 0.939301
+
+SIR iteration 19 16340
+ A min max  --> 119.187042 272.884033 19
+ A change   --> -0.676910 0.853546
+
+SIR iteration 20 16340
+ A min max  --> 118.591385 273.664490 20
+ A change   --> -0.595657 0.780457
+
+SIR iteration 21 16340
+ A min max  --> 118.066452 274.382202 21
+ A change   --> -0.524933 0.717712
+
+SIR iteration 22 16340
+ A min max  --> 117.603340 275.045746 22
+ A change   --> -0.463112 0.663544
+
+SIR iteration 23 16340
+ A min max  --> 117.194481 275.662201 23
+ A change   --> -0.408859 0.616455
+
+SIR iteration 24 16340
+ A min max  --> 116.833405 276.513855 24
+ A change   --> -0.361076 0.851654
+
+SIR iteration 25 16340
+ A min max  --> 116.514549 278.171173 25
+ A change   --> -0.318855 1.657318
+
+SIR iteration 26 16340
+ A min max  --> 116.105019 279.763580 26
+ A change   --> -0.409531 1.592407
+
+SIR iteration 27 16340
+ A min max  --> 115.531075 281.295380 27
+ A change   --> -0.573944 1.531799
+
+SIR iteration 28 16340
+ A min max  --> 114.981209 282.770599 28
+ A change   --> -0.549866 1.475220
+
+SIR iteration 29 16340
+ A min max  --> 114.453644 284.192871 29
+ A change   --> -0.527565 1.422272
+
+SIR iteration 30 16340
+ A min max  --> 113.946823 285.565552 30
+ A change   --> -0.506821 1.372681
+ weight max --> 8834.000000 Average weight: 831.1502
+
+Writing Tb (A) SIR output 'F134-a-Arc97-060-060.sir'
+
+Writing Istd (I) SIR output 'F134-I-Arc97-060-060.sir'
+Writing Iave (J) SIR output 'F134-J-Arc97-060-060.sir'
+
+Begin creation of STD images
+ Tb STD min   max --> 0.000000 8.145538
+ Tb ERR min   max --> -5.883698 6.432910
+Writing Tb STD (V) SIR output 'F134-V-Arc97-060-060.sir'
+Writing Tb err (E) SIR output 'F134-E-Arc97-060-060.sir' 
+
+Begin creation of time image
+ Time min   max --> 972.000000 990.000000
+Writing time output (P) SIR 'F134-p-Arc97-060-060.sir'
+
+Begin creation of non-enhanced GRD images
+ Non-enhanced/Grid A  min   max --> 133.522507 260.209991
+ Non-enhanced/Grid V  min   max --> 0.044194 30.883476
+ Non-enhanced/Grid I  min   max --> 0.015625 0.027063
+ Non-enhanced/Grid C        max --> 6.0
+Writing Grid TB (A) output 'F134-a-Arc97-060-060.grd'
+Writing Grid Tb STD (V) output SIR 'F134-V-Arc97-060-060.grd'
+Writing Grid Istd (I) output 'F134-I-Arc97-060-060.grd'
+Writing Grid Iave (J) output 'F134-J-Arc97-060-060.grd'
+Writing Grid Cnt (C) output 'F134-C-Arc97-060-060.grd' 4238982
+Writing Grid time (P) 'F134-p-Arc97-060-060.grd'
+Writing Non-enhanced Tb (A) output 'F134-a-Arc97-060-060.non'
+Writing Non-enhanced TbSTD (V) output SIR 'F134-V-Arc97-060-060.non'
+
+Finished writing dump file: work_CSU/F134-Arc97-060-060.lis_dump.nc
+Info file: F134-Arc97-060-060.lis
+BYU SSM/I meta BG program: C version 1.000000
+BGI options: Nsize=0 omega=0.001000 gamma=0.031416 delta2=0
+
+Input file header info: '(null)'
+  Year, day range: 1997 60 - 60
+  Image size: 770 x 770 = 592900   Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Region: 'Arctic'   Records: 0
+  Corners: LL 60.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+
+Beam code 4
+Median flag: 0
+Has azimuth angle: 1
+Wscale -1
+Sensor '13'
+
+A output file: 'F134-a-Arc97-060-060.sir'
+Info file: 'F134-Arc97-060-060.lis'
+
+Input header file length 3514
+  File size: 3438924  Space allocated: 3438924
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 16340 16340 recs = 3074864 of 3438924 (89.4% 100.0%)
+
+Maximum hits above threshold: 8  max size: 7
+Index array created 592900 16340
+Processing row 0 of 770  0.000000
+Processing row 5 of 770  0.000000
+Processing row 10 of 770  0.000000
+Processing row 15 of 770  0.000000
+Processing row 20 of 770  0.000000
+Processing row 25 of 770  0.000000
+Processing row 30 of 770  0.000000
+Processing row 35 of 770  0.000000
+Processing row 40 of 770  0.000000
+Processing row 45 of 770  0.000000
+Processing row 50 of 770  0.000000
+Processing row 55 of 770  0.000000
+Processing row 60 of 770  0.000000
+Processing row 65 of 770  0.000000
+Processing row 70 of 770  0.000000
+Processing row 75 of 770  0.000000
+Processing row 80 of 770  0.000000
+Processing row 85 of 770  0.000000
+Processing row 90 of 770  184.720001
+Processing row 95 of 770  175.940002
+Processing row 100 of 770  188.800003
+Processing row 105 of 770  200.919998
+Processing row 110 of 770  208.190002
+Processing row 115 of 770  174.529999
+Processing row 120 of 770  179.800568
+Processing row 125 of 770  181.630005
+Processing row 130 of 770  179.440002
+Processing row 135 of 770  173.899994
+Processing row 140 of 770  180.220001
+Processing row 145 of 770  242.929993
+Processing row 150 of 770  224.270004
+Processing row 155 of 770  211.235016
+Processing row 160 of 770  209.265335
+Processing row 165 of 770  239.181671
+Processing row 170 of 770  248.270004
+Processing row 175 of 770  167.465118
+Processing row 180 of 770  167.002762
+Processing row 185 of 770  167.125671
+Processing row 190 of 770  169.187256
+Processing row 195 of 770  166.418457
+Processing row 200 of 770  164.717300
+Processing row 205 of 770  156.233368
+Processing row 210 of 770  156.871017
+Processing row 215 of 770  149.693024
+Processing row 220 of 770  143.884689
+Processing row 225 of 770  143.186035
+Processing row 230 of 770  145.614960
+Processing row 235 of 770  148.733887
+Processing row 240 of 770  150.236481
+Processing row 245 of 770  150.885468
+Processing row 250 of 770  149.954102
+Processing row 255 of 770  150.243851
+Processing row 260 of 770  154.140289
+Processing row 265 of 770  156.787537
+Processing row 270 of 770  159.585266
+Processing row 275 of 770  170.229691
+Processing row 280 of 770  181.383926
+Processing row 285 of 770  178.754517
+Processing row 290 of 770  179.096649
+Processing row 295 of 770  188.969391
+Processing row 300 of 770  186.602432
+Processing row 305 of 770  186.389679
+Processing row 310 of 770  190.274994
+Processing row 315 of 770  184.085739
+Processing row 320 of 770  183.006912
+Processing row 325 of 770  181.562210
+Processing row 330 of 770  185.465866
+Processing row 335 of 770  186.648773
+Processing row 340 of 770  189.552017
+Processing row 345 of 770  188.762466
+Processing row 350 of 770  186.499985
+Processing row 355 of 770  190.089996
+Processing row 360 of 770  182.229996
+Processing row 365 of 770  180.990005
+Processing row 370 of 770  179.389999
+Processing row 375 of 770  180.110001
+Processing row 380 of 770  178.869980
+Processing row 385 of 770  180.059998
+Processing row 390 of 770  181.840012
+Processing row 395 of 770  176.710007
+Processing row 400 of 770  182.339996
+Processing row 405 of 770  182.169998
+Processing row 410 of 770  181.509995
+Processing row 415 of 770  191.419998
+Processing row 420 of 770  195.600006
+Processing row 425 of 770  202.679993
+Processing row 430 of 770  202.919998
+Processing row 435 of 770  209.889999
+Processing row 440 of 770  208.490005
+Processing row 445 of 770  208.429993
+Processing row 450 of 770  205.559998
+Processing row 455 of 770  227.580002
+Processing row 460 of 770  222.460007
+Processing row 465 of 770  194.050003
+Processing row 470 of 770  178.169998
+Processing row 475 of 770  175.210007
+Processing row 480 of 770  204.910004
+Processing row 485 of 770  209.710007
+Processing row 490 of 770  204.320007
+Processing row 495 of 770  191.919998
+Processing row 500 of 770  202.570007
+Processing row 505 of 770  203.509995
+Processing row 510 of 770  182.000000
+Processing row 515 of 770  194.759995
+Processing row 520 of 770  191.490005
+Processing row 525 of 770  196.380005
+Processing row 530 of 770  170.490005
+Processing row 535 of 770  174.190002
+Processing row 540 of 770  174.190002
+Processing row 545 of 770  174.190002
+Processing row 550 of 770  174.190002
+Processing row 555 of 770  174.190002
+Processing row 560 of 770  174.190002
+Processing row 565 of 770  174.190002
+Processing row 570 of 770  174.190002
+Processing row 575 of 770  174.190002
+Processing row 580 of 770  174.190002
+Processing row 585 of 770  174.190002
+Processing row 590 of 770  174.190002
+Processing row 595 of 770  174.190002
+Processing row 600 of 770  174.190002
+Processing row 605 of 770  174.190002
+Processing row 610 of 770  174.190002
+Processing row 615 of 770  174.190002
+Processing row 620 of 770  174.190002
+Processing row 625 of 770  174.190002
+Processing row 630 of 770  174.190002
+Processing row 635 of 770  174.190002
+Processing row 640 of 770  174.190002
+Processing row 645 of 770  174.190002
+Processing row 650 of 770  174.190002
+Processing row 655 of 770  174.190002
+Processing row 660 of 770  174.190002
+Processing row 665 of 770  174.190002
+Processing row 670 of 770  174.190002
+Processing row 675 of 770  174.190002
+Processing row 680 of 770  174.190002
+Processing row 685 of 770  174.190002
+Processing row 690 of 770  174.190002
+Processing row 695 of 770  174.190002
+Processing row 700 of 770  174.190002
+Processing row 705 of 770  174.190002
+Processing row 710 of 770  174.190002
+Processing row 715 of 770  174.190002
+Processing row 720 of 770  174.190002
+Processing row 725 of 770  174.190002
+Processing row 730 of 770  174.190002
+Processing row 735 of 770  174.190002
+Processing row 740 of 770  174.190002
+Processing row 745 of 770  174.190002
+Processing row 750 of 770  174.190002
+Processing row 755 of 770  174.190002
+Processing row 760 of 770  174.190002
+Processing row 765 of 770  174.190002
+
+Writing A output BGI 'F134-a-Arc97-060-060.bgi'
+*	** ERROR writing A BGI output ***
+
+Finished writing dump file: work_CSU/F134-Arc97-060-060.lis_dump1.nc
+BYU SSM/I meta undump program: version 0.000000
+Output path work_CSU: Storage option 0:  BYU .SIR file output format
+NetCDF file work_CSU/F134-Arc97-060-060.lis_dump.nc
+ has 30 dimensions   15 variables  51 global attributes  -1 unlimited
+
+Input file header info: 'work_CSU/F134-Arc97-060-060.lis_dump.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 770 x 770  Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+  Region name: Arctic  Sensor name: 13
+
+Current time: '13:50:54 05/30/14'
+ Writing Tb (A) output AVE file 'F134-a-Arc97-060-060.ave'
+   image min/max: 133.389435 260.209991
+ Writing Tb (A) output SIR file 'F134-a-Arc97-060-060.sir'
+   image min/max: 113.946823 285.565552  100.000000
+ Writing Istd (I) output SIR file 'F134-I-Arc97-060-060.sir'
+   image min/max: 0.000000 0.031250  -1.000000
+ Writing Iave (J) output SIR file 'F134-J-Arc97-060-060.sir'
+   image min/max: 52.889996 53.160004  0.000000
+ Writing Tb STD (V) output SIR file 'F134-V-Arc97-060-060.sir'
+   image min/max: 0.000000 8.145538  -1.000000
+ Writing Tb err (E) output SIR file 'F134-E-Arc97-060-060.sir'
+   image min/max: -5.883698 6.432910  -15.000000
+ Writing pixel time (P) output SIR file 'F134-p-Arc97-060-060.sir'
+   image min/max: 972.000000 990.000000  -1.000000
+ Writing Tb (A) output GRD file 'F134-a-Arc97-060-060.grd'
+   image min/max: 133.522507 260.209991  100.000000
+ Writing Tb std (V) output GRD file 'F134-V-Arc97-060-060.grd'
+   image min/max: 0.000000 30.883476  -1.000000
+ Writing Inc std (I) output GRD file 'F134-I-Arc97-060-060.grd'
+   image min/max: 0.000000 0.027063  -1.000000
+ Writing Inc ave (J) output GRD file 'F134-J-Arc97-060-060.grd'
+   image min/max: 52.889999 53.160000  0.000000
+ Writing Count (C) output GRD file 'F134-C-Arc97-060-060.grd'
+   image min/max: 1.000000 6.000000  -1.000000
+ Writing Pixel time (P) output GRD file 'F134-p-Arc97-060-060.grd'
+   image min/max: 990.000000 990.000000  -1.000000
+ Writing Tb (A) output NON file 'F134-a-Arc97-060-060.non'
+   image min/max: 133.522507 260.209991  100.000000
+ Writing Tb std (V) output NON file 'F134-V-Arc97-060-060.non'
+   image min/max: 0.000000 30.883476  -1.000000
+BYU SSM/I meta undump program: version 0.000000
+Output path work_CSU: Storage option 0:  BYU .SIR file output format
+NetCDF file work_CSU/F134-Arc97-060-060.lis_dump1.nc
+ has 2 dimensions   1 variables  36 global attributes  -1 unlimited
+
+Input file header info: 'work_CSU/F134-Arc97-060-060.lis_dump1.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 770 x 770  Projection: 5
+  Origin: -3400.000000,-3400.000000  Span: -45.000000,70.000000
+  Scales: 8.900000,8.900000  Pol: 1  Reg: 110
+  Grid size: 154 x 154 = 23716  Scales 5 5
+  Grid Origin: -3400.000000,-3400.000000  Grid Span: -45.000000,70.000000
+  Grid Scales: 44.500000,44.500000
+  Region name: Arctic  Sensor name: 13
+
+Generating only BGI file *
+Current time: '13:50:55 05/30/14'
+ Writing A output BGI file 'F134-a-Arc97-060-060.bgi'
+   image min/max: 133.346893 260.209991  100.000000
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+BYU SSM/I meta SIR/SIRF program: C version 1.000000
+Output path work_CSU: Storage option 0:  Memory only
+
+Input file header info: 'work_CSU/F131-E2N97-060-060.setup'
+  Year, day range: 1997 60 - 60
+  Image size: 720 x 720 = 518400   Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Region: 'EASE2-N'   Records: 0
+  Corners: LL 0.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+
+Beam code 1
+A_initialization of 200.000000
+Max iterations of 20
+Median flag: 0
+Has azimuth angle: 1
+Max fill 2000
+Sensor '13'
+
+A output file: 'F131-a-E2N97-060-060.sir'
+I output file: 'F131-I-E2N97-060-060.sir'
+J output file: 'F131-J-E2N97-060-060.sir'
+C output file: 'F131-C-E2N97-060-060.sir'
+P output file: 'F131-p-E2N97-060-060.sir'
+E output file: 'F131-E-E2N97-060-060.sir'
+SIR V output file: 'F131-V-E2N97-060-060.sir'
+AVE A output file: 'F131-a-E2N97-060-060.ave'
+NON A output file: 'F131-a-E2N97-060-060.non'
+NON V output file: 'F131-V-E2N97-060-060.non'
+GRD A output file: 'F131-a-E2N97-060-060.grd'
+GRD V output file: 'F131-V-E2N97-060-060.grd'
+GRD I output file: 'F131-I-E2N97-060-060.grd'
+GRD J output file: 'F131-J-E2N97-060-060.grd'
+GRD P output file: 'F131-p-E2N97-060-060.grd'
+GRD C output file: 'F131-C-E2N97-060-060.grd'
+Info file: 'F131-E2N97-060-060.lis'
+
+Input header file length 3514
+  File size: 5664234  Space allocated: 5664234
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 51407 51407 recs = 4430466 of 5664234 (78.2% 100.0%)
+
+SIR parameters: A_init=200.000000  N=20
+
+SIR iteration 1 51407
+ Average weight: 1140.0408
+ A min max  --> 171.053787 219.278061 1
+ A change   --> -28.946213 19.278061
+
+Writing Tb (A) AVE output 'F131-a-E2N97-060-060.ave'
+
+SIR iteration 2 51407
+ A min max  --> 151.230591 235.452454 2
+ A change   --> -19.823196 16.174393
+
+SIR iteration 3 51407
+ A min max  --> 137.383728 248.700302 3
+ A change   --> -13.846863 13.247849
+
+SIR iteration 4 51407
+ A min max  --> 127.553123 259.350464 4
+ A change   --> -9.830605 10.650162
+
+SIR iteration 5 51407
+ A min max  --> 120.447159 267.790588 5
+ A change   --> -7.105965 8.440125
+
+SIR iteration 6 51407
+ A min max  --> 114.982101 274.407074 6
+ A change   --> -5.465057 6.616486
+
+SIR iteration 7 51407
+ A min max  --> 109.639084 279.551636 7
+ A change   --> -5.343018 5.144562
+
+SIR iteration 8 51407
+ A min max  --> 105.246674 283.527435 8
+ A change   --> -4.392410 3.975800
+
+SIR iteration 9 51407
+ A min max  --> 101.589020 286.585999 9
+ A change   --> -3.657654 3.058563
+
+SIR iteration 10 51407
+ A min max  --> 98.509430 289.572510 10
+ A change   --> -3.079590 2.986511
+
+SIR iteration 11 51407
+ A min max  --> 95.891899 292.199707 11
+ A change   --> -2.617531 2.627197
+
+SIR iteration 12 51407
+ A min max  --> 93.649033 294.343384 12
+ A change   --> -2.242867 2.143677
+
+SIR iteration 13 51407
+ A min max  --> 91.567909 296.094116 13
+ A change   --> -2.081123 1.750732
+
+SIR iteration 14 51407
+ A min max  --> 89.477631 297.525757 14
+ A change   --> -2.090279 1.431641
+
+SIR iteration 15 51407
+ A min max  --> 87.608925 298.693512 15
+ A change   --> -1.868706 1.167755
+
+SIR iteration 16 51407
+ A min max  --> 85.929337 299.789734 16
+ A change   --> -1.679588 1.096222
+
+SIR iteration 17 51407
+ A min max  --> 84.412323 302.091217 17
+ A change   --> -1.517014 2.301483
+
+SIR iteration 18 51407
+ A min max  --> 83.036018 304.252441 18
+ A change   --> -1.376305 2.161224
+
+SIR iteration 19 51407
+ A min max  --> 81.782242 306.291534 19
+ A change   --> -1.253777 2.039093
+
+SIR iteration 20 51407
+ A min max  --> 80.635780 308.223389 20
+ A change   --> -1.146461 1.931854
+ weight max --> 24292.000000 Average weight: 1140.0408
+
+Writing Tb (A) SIR output 'F131-a-E2N97-060-060.sir'
+
+Writing Istd (I) SIR output 'F131-I-E2N97-060-060.sir'
+Writing Iave (J) SIR output 'F131-J-E2N97-060-060.sir'
+
+Begin creation of STD images
+ Tb STD min   max --> 0.000000 29.402744
+ Tb ERR min   max --> -17.106476 17.263428
+Writing Tb STD (V) SIR output 'F131-V-E2N97-060-060.sir'
+Writing Tb err (E) SIR output 'F131-E-E2N97-060-060.sir' 
+
+Begin creation of time image
+ Time min   max --> 957.000000 1059.000000
+Writing time output (P) SIR 'F131-p-E2N97-060-060.sir'
+
+Begin creation of non-enhanced GRD images
+ Non-enhanced/Grid A  min   max --> 101.176682 292.982178
+ Non-enhanced/Grid V  min   max --> 0.088388 56.660618
+ Non-enhanced/Grid I  min   max --> 0.015625 0.046875
+ Non-enhanced/Grid C        max --> 28.0
+Writing Grid TB (A) output 'F131-a-E2N97-060-060.grd'
+Writing Grid Tb STD (V) output SIR 'F131-V-E2N97-060-060.grd'
+Writing Grid Istd (I) output 'F131-I-E2N97-060-060.grd'
+Writing Grid Iave (J) output 'F131-J-E2N97-060-060.grd'
+Writing Grid Cnt (C) output 'F131-C-E2N97-060-060.grd' 4238982
+Writing Grid time (P) 'F131-p-E2N97-060-060.grd'
+Writing Non-enhanced Tb (A) output 'F131-a-E2N97-060-060.non'
+Writing Non-enhanced TbSTD (V) output SIR 'F131-V-E2N97-060-060.non'
+
+Finished writing dump file: work_CSU/F131-E2N97-060-060.lis_dump.nc
+Info file: F131-E2N97-060-060.lis
+BYU SSM/I meta undump program: version 0.000000
+Output path work_CSU: Storage option 0:  BYU .SIR file output format
+NetCDF file work_CSU/F131-E2N97-060-060.lis_dump.nc
+ has 30 dimensions   15 variables  51 global attributes  -1 unlimited
+
+Input file header info: 'work_CSU/F131-E2N97-060-060.lis_dump.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 720 x 720  Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+  Region name: EASE2-N  Sensor name: 13
+
+Current time: '13:51:44 05/30/14'
+ Writing Tb (A) output AVE file 'F131-a-E2N97-060-060.ave'
+   image min/max: 100.972992 294.442047
+ Writing Tb (A) output SIR file 'F131-a-E2N97-060-060.sir'
+   image min/max: 100.005730 308.223389  100.000000
+ write_sir Underflows: 121  Overflows: 0  Count: 518400
+ Writing Istd (I) output SIR file 'F131-I-E2N97-060-060.sir'
+   image min/max: 0.000000 0.038273  -1.000000
+ Writing Iave (J) output SIR file 'F131-J-E2N97-060-060.sir'
+   image min/max: 52.879990 53.169998  0.000000
+ Writing Tb STD (V) output SIR file 'F131-V-E2N97-060-060.sir'
+   image min/max: 0.000000 29.402744  -1.000000
+ Writing Tb err (E) output SIR file 'F131-E-E2N97-060-060.sir'
+   image min/max: -14.410156 17.263428  -15.000000
+ write_sir Underflows: 2  Overflows: 0  Count: 518400
+ Writing pixel time (P) output SIR file 'F131-p-E2N97-060-060.sir'
+   image min/max: 957.000000 1059.000000  -1.000000
+ Writing Tb (A) output GRD file 'F131-a-E2N97-060-060.grd'
+   image min/max: 101.176682 292.982178  100.000000
+ Writing Tb std (V) output GRD file 'F131-V-E2N97-060-060.grd'
+   image min/max: 0.000000 56.660618  -1.000000
+ Writing Inc std (I) output GRD file 'F131-I-E2N97-060-060.grd'
+   image min/max: 0.000000 0.046875  -1.000000
+ Writing Inc ave (J) output GRD file 'F131-J-E2N97-060-060.grd'
+   image min/max: 52.880001 53.160000  0.000000
+ Writing Count (C) output GRD file 'F131-C-E2N97-060-060.grd'
+   image min/max: 1.000000 28.000000  -1.000000
+ Writing Pixel time (P) output GRD file 'F131-p-E2N97-060-060.grd'
+   image min/max: 1059.000000 1059.000000  -1.000000
+ Writing Tb (A) output NON file 'F131-a-E2N97-060-060.non'
+   image min/max: 101.176682 292.982178  100.000000
+ Writing Tb std (V) output NON file 'F131-V-E2N97-060-060.non'
+   image min/max: 0.000000 56.660618  -1.000000
+BYU SSM/I meta BG program: C version 1.000000
+BGI options: Nsize=0 omega=0.001000 gamma=0.031416 delta2=0
+
+Input file header info: '(null)'
+  Year, day range: 1997 60 - 60
+  Image size: 720 x 720 = 518400   Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Region: 'EASE2-N'   Records: 0
+  Corners: LL 0.000000,-180.000000 UR 90.000000,180.000000
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+
+Beam code 1
+Median flag: 0
+Has azimuth angle: 1
+Wscale -1
+Sensor '13'
+
+A output file: 'F131-a-E2N97-060-060.sir'
+Info file: 'F131-E2N97-060-060.lis'
+
+Input header file length 3514
+  File size: 5664234  Space allocated: 5664234
+Begin setup file copy into memory
+  Input file read into ram
+  Total storage used: 51407 51407 recs = 4520200 of 5664234 (79.8% 100.0%)
+
+Maximum hits above threshold: 22  max size: 7
+Index array created 518400 51407
+Processing row 0 of 720  166.856949
+Processing row 5 of 720  155.332672
+Processing row 10 of 720  162.283005
+Processing row 15 of 720  183.716812
+Processing row 20 of 720  263.834961
+Processing row 25 of 720  243.449997
+Processing row 30 of 720  280.109985
+Processing row 35 of 720  291.570007
+Processing row 40 of 720  288.329163
+Processing row 45 of 720  289.461487
+Processing row 50 of 720  288.730652
+Processing row 55 of 720  286.489990
+Processing row 60 of 720  288.209991
+Processing row 65 of 720  289.519989
+Processing row 70 of 720  283.559967
+Processing row 75 of 720  293.470001
+Processing row 80 of 720  284.930573
+Processing row 85 of 720  278.989990
+Processing row 90 of 720  270.694946
+Processing row 95 of 720  257.739990
+Processing row 100 of 720  254.200287
+Processing row 105 of 720  254.370010
+Processing row 110 of 720  250.850677
+Processing row 115 of 720  251.369751
+Processing row 120 of 720  245.605011
+Processing row 125 of 720  244.115417
+Processing row 130 of 720  238.106674
+Processing row 135 of 720  248.134674
+Processing row 140 of 720  145.850006
+Processing row 145 of 720  122.610001
+Processing row 150 of 720  146.759995
+Processing row 155 of 720  131.089996
+Processing row 160 of 720  144.130005
+Processing row 165 of 720  142.072968
+Processing row 170 of 720  248.471893
+Processing row 175 of 720  258.310028
+Processing row 180 of 720  256.987671
+Processing row 185 of 720  262.989990
+Processing row 190 of 720  257.262482
+Processing row 195 of 720  301.772217
+Processing row 200 of 720  -95.631096
+Processing row 205 of 720  124.512482
+Processing row 210 of 720  129.357437
+Processing row 215 of 720  162.491409
+Processing row 220 of 720  163.382935
+Processing row 225 of 720  48.989594
+Processing row 230 of 720  123.317017
+Processing row 235 of 720  254.502304
+Processing row 240 of 720  114.167656
+Processing row 245 of 720  75.773193
+Processing row 250 of 720  120.764412
+Processing row 255 of 720  135.184464
+Processing row 260 of 720  135.108932
+Processing row 265 of 720  124.908112
+Processing row 270 of 720  113.243019
+Processing row 275 of 720  111.741844
+Processing row 280 of 720  113.834648
+Processing row 285 of 720  168.677124
+Processing row 290 of 720  142.968735
+Processing row 295 of 720  127.705185
+Processing row 300 of 720  128.408630
+Processing row 305 of 720  123.335495
+Processing row 310 of 720  170.440964
+Processing row 315 of 720  202.781403
+Processing row 320 of 720  199.316895
+Processing row 325 of 720  214.836349
+Processing row 330 of 720  201.589371
+Processing row 335 of 720  203.225525
+Processing row 340 of 720  203.967834
+Processing row 345 of 720  218.516876
+Processing row 350 of 720  209.179993
+Processing row 355 of 720  206.309998
+Processing row 360 of 720  204.059998
+Processing row 365 of 720  199.970032
+Processing row 370 of 720  201.000000
+Processing row 375 of 720  200.299988
+Processing row 380 of 720  201.275085
+Processing row 385 of 720  207.453979
+Processing row 390 of 720  198.799988
+Processing row 395 of 720  200.840027
+Processing row 400 of 720  203.250244
+Processing row 405 of 720  209.630035
+Processing row 410 of 720  211.179962
+Processing row 415 of 720  215.760010
+Processing row 420 of 720  223.770844
+Processing row 425 of 720  225.859985
+Processing row 430 of 720  183.019043
+Processing row 435 of 720  224.484863
+Processing row 440 of 720  218.619995
+Processing row 445 of 720  213.181183
+Processing row 450 of 720  230.279999
+Processing row 455 of 720  229.250000
+Processing row 460 of 720  191.276031
+Processing row 465 of 720  219.437500
+Processing row 470 of 720  211.646698
+Processing row 475 of 720  208.179291
+Processing row 480 of 720  199.039993
+Processing row 485 of 720  207.250000
+Processing row 490 of 720  171.109985
+Processing row 495 of 720  107.839996
+Processing row 500 of 720  181.090012
+Processing row 505 of 720  108.593094
+Processing row 510 of 720  107.869843
+Processing row 515 of 720  106.456741
+Processing row 520 of 720  106.593018
+Processing row 525 of 720  106.531158
+Processing row 530 of 720  103.769997
+Processing row 535 of 720  103.930061
+Processing row 540 of 720  105.650002
+Processing row 545 of 720  109.580002
+Processing row 550 of 720  111.289978
+Processing row 555 of 720  113.385986
+Processing row 560 of 720  112.449997
+Processing row 565 of 720  110.386986
+Processing row 570 of 720  113.844681
+Processing row 575 of 720  114.042664
+Processing row 580 of 720  123.025253
+Processing row 585 of 720  119.680977
+Processing row 590 of 720  115.809990
+Processing row 595 of 720  114.904755
+Processing row 600 of 720  121.502243
+Processing row 605 of 720  128.740036
+Processing row 610 of 720  131.749954
+Processing row 615 of 720  136.414810
+Processing row 620 of 720  138.750046
+Processing row 625 of 720  136.055054
+Processing row 630 of 720  133.870026
+Processing row 635 of 720  136.940002
+Processing row 640 of 720  141.542053
+Processing row 645 of 720  133.809906
+Processing row 650 of 720  132.050034
+Processing row 655 of 720  138.050018
+Processing row 660 of 720  131.680969
+Processing row 665 of 720  132.625381
+Processing row 670 of 720  138.509949
+Processing row 675 of 720  144.610565
+Processing row 680 of 720  155.039032
+Processing row 685 of 720  188.130005
+Processing row 690 of 720  188.084961
+Processing row 695 of 720  162.729980
+Processing row 700 of 720  156.489990
+Processing row 705 of 720  150.056992
+Processing row 710 of 720  148.330353
+Processing row 715 of 720  150.844803
+
+Writing A output BGI 'F131-a-E2N97-060-060.bgi'
+*	** ERROR writing A BGI output ***
+
+Finished writing dump file: work_CSU/F131-E2N97-060-060.lis_dump1.nc
+BYU SSM/I meta undump program: version 0.000000
+Output path work_CSU: Storage option 0:  BYU .SIR file output format
+NetCDF file work_CSU/F131-E2N97-060-060.lis_dump1.nc
+ has 2 dimensions   1 variables  36 global attributes  -1 unlimited
+
+Input file header info: 'work_CSU/F131-E2N97-060-060.lis_dump1.nc'
+  Year, day range: 1997  60 - 60
+  Image size: 720 x 720  Projection: 8
+  Origin: 0.000000,0.000000  Span: 360.000000,360.000000
+  Scales: 0.000000,0.000000  Pol: 1  Reg: 308
+  Grid size: 180 x 180 = 32400  Scales 4 4
+  Grid Origin: 0.000000,0.000000  Grid Span: 360.000000,360.000000
+  Grid Scales: -2.000000,0.000000
+  Region name: EASE2-N  Sensor name: 13
+
+Generating only BGI file *
+Current time: '13:52:22 05/30/14'
+ Writing A output BGI file 'F131-a-E2N97-060-060.bgi'
+   image min/max: 100.014404 3538.785889  100.000000
+ write_sir Underflows: 1982  Overflows: 281  Count: 518400
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+Could not get desired visual (things might not be pretty...)
+visual code=1
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F134-a-Arc97-060-060.sir (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_CSU/F134-a-Arc97-060-060.sir.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F134-a-Arc97-060-060.ave (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_CSU/F134-a-Arc97-060-060.ave.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F134-a-Arc97-060-060.grd (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 154 x 154
+Writing output gif file to 'work_CSU/F134-a-Arc97-060-060.grd.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F134-a-Arc97-060-060.bgi (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 770 x 770
+Writing output gif file to 'work_CSU/F134-a-Arc97-060-060.bgi.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F131-a-E2N97-060-060.sir (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 720 x 720
+Writing output gif file to 'work_CSU/F131-a-E2N97-060-060.sir.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F131-a-E2N97-060-060.ave (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 720 x 720
+Writing output gif file to 'work_CSU/F131-a-E2N97-060-060.ave.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F131-a-E2N97-060-060.grd (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 180 x 180
+Writing output gif file to 'work_CSU/F131-a-E2N97-060-060.grd.gif'
+gif output file successfully written 0
+BYU SIR to GIF conversion program w/scaling & plotting
+Opening options input file '../ref/s2g/ssmi.s2g'
+Opening options input file '../ref/s2g/ssmi.s2g'
+Successfully read SIR file work_CSU/F131-a-E2N97-060-060.bgi (1 of 1) 100.000000 100.000000 0.000000
+ scaling: no data=-1 [180.000000,295.000000] to [0,254] 0
+
+Image range Min, Max: 180.000000 , 295.000000
+Color table scaling: [180.000000, 295.000000] -> [0, 254]
+Pixel reduction factor: 1
+Output image size in pixels: 720 x 720
+Writing output gif file to 'work_CSU/F131-a-E2N97-060-060.bgi.gif'
+gif output file successfully written 0
