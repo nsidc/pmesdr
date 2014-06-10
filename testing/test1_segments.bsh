@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# regression testing using just a single orbit ('cause it is faster)
+#
+# written by D.G. Long at BYU 14 Mar 2014
+# updated by D.G. Long at BYU 20 May 2014 + use meas_undump
+# updated by D.G. Long at BYU  7 Jun 2014 + added segmentation
+
+# set environment variables that are required for meas_meta_setup
+meas_home="/auto/users/long/src/linux/measures"  # localization specific
+SIR_areas="$meas_home/ref/locs/"           # path to location of location files
+SIR_region="$meas_home/ref/regiondef1.dat" # path to regiondef1.dat
+export meas_home SIR_areas SIR_region
+
+#####################
+#
+# generate product files using RSS data as input
+## note: the setup and product files made from RSS and CSU data have the name!
+#
+########################
+
+# create a working directory
+mkdir work_RSS
+
+# create input file listing (RSS)
+ls -1 ../sample_data/f13_r09999_tb_v7.dat > work_RSS/F1.lis
+
+# create test meta file for north polar stererographic projection (7 channels)
+../src/prod/meas_meta_make/meas_meta_make work_RSS/stest_RSS.meta 13 ../ref/s2g/ssmi_mN.s2g 60 60 1997 ../ref/arctic_segment.def work_RSS/F1.lis
+
+# Make setup files for polar stereographic case
+# create setup files (RSS)
+../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS work_RSS/stest_RSS.meta work_RSS 0
+
+########################
+# create SIR intermediate dump files from polar stereographic setup files
+../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-01.setup work_RSS
+../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-02.setup work_RSS
+../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-03.setup work_RSS
+../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-04.setup work_RSS
+
+# combine dump file segments into single dump file
+../src/prod/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS work_RSS 0
+
+# create BYU .SIR-format product files from dump files
+../src/prod/meas_undump/meas_undump work_RSS/F131-Arc97-060-060.lis_dump.nc work_RSS 0 1
+
+# other (unprocessed) channels
+#../src/prod/meas_undump/meas_undump work_RSS/F132-Arc97-060-060.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F133-Arc97-060-060.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F134-Arc97-060-060.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F135-Arc97-060-060.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F136-Arc97-060-060.lis_dump.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F137-Arc97-060-060.lis_dump.nc work_RSS 0 1
+
+# create BYU .SIR-format bgi product files from dump files
+#../src/prod/meas_undump/meas_undump work_RSS/F131-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F132-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F133-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F134-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F135-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F136-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+#../src/prod/meas_undump/meas_undump work_RSS/F137-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+
+# view selected results (manual)
+../src/sirtool/sirtool work_RSS/F134-a-Arc97-060-060.sir
+../src/sirtool/sirtool work_RSS/F134-a-Arc97-060-060.ave
+../src/sirtool/sirtool work_RSS/F134-a-Arc97-060-060.grd
+#../src/sirtool/sirtool work_RSS/F134-a-Arc97-060-060.bgi
