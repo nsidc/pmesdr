@@ -132,9 +132,13 @@ int main(int argc, char **argv)
   }
   file_in=argv[1];
 
+  for (i=0; i<6; i++)
+    printf("Args: %d %s\n",i,argv[i]);  
+
   /* get verbose flag first */
   if (argc > 5) 
     sscanf(argv[5],"%d",&verbose);
+  printf("verbosity %d %s\n",verbose,argv[5]);  
 
   strncpy(inpath,"./",100); /* default input path */
   if (argc > 2) 
@@ -150,6 +154,7 @@ int main(int argc, char **argv)
 
   if (argc > 4) 
     sscanf(argv[4],"%d",&option);
+  printf("option %d %s\n",option,argv[4]);  
 
   if (verbose)
     if (option == 0)
@@ -492,7 +497,7 @@ int combine_segments(int nsection, int ncid0, int *ncid, char *var_name, int ity
       if (verbose>4)
 	printf("      section %d %d %d,%d %s\n",j,ncid[j],nx,ny,var_name);  
 
-      /* read array */
+      /* read array */      
       ncerr=get_float_array_nc(ncid[j],var_name,stval2,&nsx1,&nsy1,&anodata); check_err(ncerr, __LINE__,__FILE__);  
 
       if (flag==1) { /* initialize array to anodata on first section */
@@ -532,6 +537,8 @@ int combine_segments(int nsection, int ncid0, int *ncid, char *var_name, int ity
     sprintf(err_txt,"*** ERROR writing variable array %s ***\n",var_name);
     eprintf(err_txt);  
   }
+
+  printf("There %d %d\n",j,ncid[j]);
 
   return(ncerr);  
 }
@@ -671,26 +678,30 @@ void combine_dump(char *names, int *pix, int nsection, int ncnt, int ncnt0,
     /* add product file names */
     /* note that the order and names of the files names in the meta file must match this code */
     nind=max_name_len*(0*max_filetypes);
-    ncerr=add_string_nc(ncid0,"a_name",&names[nind+max_name_len*0],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"c_name",&names[nind+max_name_len*1],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"i_name",&names[nind+max_name_len*2],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"j_name",&names[nind+max_name_len*3],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"e_name",&names[nind+max_name_len*4],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"v_name",&names[nind+max_name_len*5],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"p_name",&names[nind+max_name_len*6],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"a_name_ave",&names[nind+max_name_len*7],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"grd_aname",&names[nind+max_name_len*8],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"grd_vname",&names[nind+max_name_len*9],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"grd_iname",&names[nind+max_name_len*10],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"grd_jname",&names[nind+max_name_len*11],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"grd_cname",&names[nind+max_name_len*12],100); check_err(ncerr, __LINE__,__FILE__);
-    ncerr=add_string_nc(ncid0,"grd_pname",&names[nind+max_name_len*13],100); check_err(ncerr, __LINE__,__FILE__);
+    if (option==0) { /* SIR file case */
+      ncerr=add_string_nc(ncid0,"a_name",&names[nind+max_name_len*0],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"c_name",&names[nind+max_name_len*1],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"i_name",&names[nind+max_name_len*2],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"j_name",&names[nind+max_name_len*3],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"e_name",&names[nind+max_name_len*4],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"v_name",&names[nind+max_name_len*5],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"p_name",&names[nind+max_name_len*6],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"a_name_ave",&names[nind+max_name_len*7],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"grd_aname",&names[nind+max_name_len*8],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"grd_vname",&names[nind+max_name_len*9],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"grd_iname",&names[nind+max_name_len*10],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"grd_jname",&names[nind+max_name_len*11],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"grd_cname",&names[nind+max_name_len*12],100); check_err(ncerr, __LINE__,__FILE__);
+      ncerr=add_string_nc(ncid0,"grd_pname",&names[nind+max_name_len*13],100); check_err(ncerr, __LINE__,__FILE__);
 
-    if (CREATE_NON) {
-      ncerr=add_string_nc(ncid0,"non_aname",&names[nind+max_name_len*14],100); check_err(ncerr, __LINE__,__FILE__);
-      ncerr=add_string_nc(ncid0,"non_vname",&names[nind+max_name_len*15],100); check_err(ncerr, __LINE__,__FILE__);
+      if (CREATE_NON) {
+	ncerr=add_string_nc(ncid0,"non_aname",&names[nind+max_name_len*14],100); check_err(ncerr, __LINE__,__FILE__);
+	ncerr=add_string_nc(ncid0,"non_vname",&names[nind+max_name_len*15],100); check_err(ncerr, __LINE__,__FILE__);
+      }
+    } else { /* bgi case */
+      ncerr=add_string_nc(ncid0,"bgi_name",&names[nind+max_name_len*0],100); check_err(ncerr, __LINE__,__FILE__);
     }
-
+    
     /* allocate working arrays */
     stval=(float *) calloc(nsx*nsy,sizeof(float));
     stval2=(float *) calloc(nsx*nsy,sizeof(float));
@@ -701,27 +712,32 @@ void combine_dump(char *names, int *pix, int nsection, int ncnt, int ncnt0,
     }
 
     /* for each output array, combine segments and save */
+    if (option==0) { /* SIR file case */
 
-    ncerr=combine_segments(nsection, ncid0, ncid, "ave_image", 7, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "a_image", 0, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "i_image", 2, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "j_image", 3, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    //ncerr=combine_segments(nsection, ncid0, ncid, "c_image", 1, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "v_image", 5, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "e_image", 4, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "p_image", 6, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "ave_image", 7, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "a_image", 0, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "i_image", 2, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "j_image", 3, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      //ncerr=combine_segments(nsection, ncid0, ncid, "c_image", 1, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "v_image", 5, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "e_image", 4, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "p_image", 6, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
 
-    ncerr=combine_segments(nsection, ncid0, ncid, "grd_a_image", 8, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "grd_v_image", 9, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "grd_i_image", 10, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "grd_j_image", 11, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "grd_c_image", 12, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-    ncerr=combine_segments(nsection, ncid0, ncid, "grd_p_image", 13, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "grd_a_image", 8, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "grd_v_image", 9, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "grd_i_image", 10, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "grd_j_image", 11, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "grd_c_image", 12, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      ncerr=combine_segments(nsection, ncid0, ncid, "grd_p_image", 13, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
 
-    if (CREATE_NON) {
-      ncerr=combine_segments(nsection, ncid0, ncid, "non_a_image", 14, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
-      ncerr=combine_segments(nsection, ncid0, ncid, "non_v_image", 15, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      if (CREATE_NON) {
+	ncerr=combine_segments(nsection, ncid0, ncid, "non_a_image", 14, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+	ncerr=combine_segments(nsection, ncid0, ncid, "non_v_image", 15, 1, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);
+      }
+    } else { /* bgi case (only one array) */
+      ncerr=combine_segments(nsection, ncid0, ncid, "bgi_image", 0, 0, nsx, nsy, nsx2, nsy2, stval, stval2, pix, &dhead[0], verbose);	
     }
+    
 
     /* close input files */
     for (j=1; j <= nsection; j++)  /* for each section */
