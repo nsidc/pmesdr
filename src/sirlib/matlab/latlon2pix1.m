@@ -1,4 +1,4 @@
-function [x, y] = latlon2pix1(alon,alat,head)
+function [x, y] = latlon2pix(alon,alat,head)
 %
 %  function [x, y] = latlon2pix1(lon,lat,head)
 %
@@ -42,7 +42,7 @@ elseif iopt == 5             % polar stereographic
  x=(thelon-a0)/ascale+1.0;
  y=(thelat-b0)/bscale+1.0;
 elseif (iopt == 8) | (iopt == 9) | (iopt == 10)  % EASE2
- [thelon thelat]=ease2grid(iopt,alat,alon,ascale);
+ [thelon thelat]=ease2grid(iopt,alat,alon,ascale,bscale);
  x=thelon+1.0-a0;
  y=thelat+1.0-b0;
 elseif (iopt == 11) | (iopt == 12) | (iopt == 13)  % EASE1

@@ -47,11 +47,16 @@ else ifeq ($(LOCALE),NSIDCdev)
   ZLIB_LIBDIR = /usr/lib64
 else
   $(warning Assuming default LOCALE=BYU)
-  NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-  NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
-  HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-  HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
-  ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_INCDIR = /usr/include
+  HDF5_LIBDIR = /usr/lib64
+  ZLIB_LIBDIR = /usr/lib64
+  #NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+  #NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
+  #HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+  #HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
+  #ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
 endif
 
 #
@@ -60,7 +65,7 @@ endif
 
 SUBDIRS = ../sirlib/c meas_meta_make \
 	meas_meta_setup/meas_meta_setup_RSS meas_meta_setup/meas_meta_setup_CSU \
-	meas_meta_sir meas_meta_bgi sir2netcdf
+	meas_meta_sir meas_meta_bgi meas_undump
 
 all install clean:
 	for i in $(SUBDIRS); do			\
