@@ -48,7 +48,7 @@ ls -1 ../sample_data/f13_r09999_tb_v7.dat > work_RSS/F1.lis
 # combine dump file segments into single dump file
 # note: the program normally will do all channels at the same time, but since only one
 # has been processed, it only produces one output file
-../src/prod/meas_combine_segs/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS work_RSS 1
+../src/prod/meas_combine_segs/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS 0 1
 
 # create BYU .SIR-format product files from dump files
 # (could also be run the option tset to produce netcdf product files)
@@ -73,7 +73,7 @@ ls -1 ../sample_data/f13_r09999_tb_v7.dat > work_RSS/F1.lis
 # combine BGI dump file segments into single dump file
 # note: the program normally will do all channels at the same time, but since only one
 # has been processed, it only produces one output file
-../src/prod/meas_combine_segs/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS work_RSS 1
+../src/prod/meas_combine_segs/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS 1 1
 
 # create BYU .SIR-format bgi product files from dump files
 #../src/prod/meas_undump/meas_undump work_RSS/F131-Arc97-060-060.lis_dump1.nc work_RSS 0 1
