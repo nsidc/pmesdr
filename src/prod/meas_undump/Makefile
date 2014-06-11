@@ -1,6 +1,6 @@
 
 #========================================================================
-# Makefile for meas_umdump utility
+# Makefile for meas_undump utility
 #
 # 2014-05-30 D.G. Long, adapted from code by
 # M. J. Brodzik 303-492-8263 brodzik@nsidc.org
@@ -56,9 +56,6 @@ else
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
-  #NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
-  #HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
-  #ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
 endif
 
 #

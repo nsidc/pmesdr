@@ -1,6 +1,8 @@
 #!/bin/bash
 #
 # regression testing using just a single orbit ('cause it is faster)
+# this version illustrates image sgmentatino
+# note: bash script is for illustration purposes -- does not compute everything
 #
 # written by D.G. Long at BYU 14 Mar 2014
 # updated by D.G. Long at BYU 20 May 2014 + use meas_undump
@@ -15,7 +17,8 @@ export meas_home SIR_areas SIR_region
 #####################
 #
 # generate product files using RSS data as input
-## note: the setup and product files made from RSS and CSU data have the name!
+## reminder note: the setup and product files made from RSS and 
+# CSU data have the name!
 #
 ########################
 
@@ -26,6 +29,7 @@ mkdir work_RSS
 ls -1 ../sample_data/f13_r09999_tb_v7.dat > work_RSS/F1.lis
 
 # create test meta file for north polar stererographic projection (7 channels)
+# note: the file arctic_segment.def specifies segmenting the Arctic image into 4 segments
 ../src/prod/meas_meta_make/meas_meta_make work_RSS/stest_RSS.meta 13 ../ref/s2g/ssmi_mN.s2g 60 60 1997 ../ref/arctic_segment.def work_RSS/F1.lis
 
 # Make setup files for polar stereographic case
@@ -33,18 +37,22 @@ ls -1 ../sample_data/f13_r09999_tb_v7.dat > work_RSS/F1.lis
 ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS work_RSS/stest_RSS.meta work_RSS 0
 
 ########################
-# create SIR intermediate dump files from polar stereographic setup files
+# create (selected)  SIR intermediate dump files from polar stereographic setup files
+# this should done for all the segup files produced in the previous step, but here only one
+# channel is illustrated
 ../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-01.setup work_RSS
 ../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-02.setup work_RSS
 ../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-03.setup work_RSS
 ../src/prod/meas_meta_sir/meas_meta_sir work_RSS/F131-Arc97-060-060-s004-04.setup work_RSS
 
 # combine dump file segments into single dump file
-../src/prod/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS work_RSS 0
+# note: the program normally will do all channels at the same time, but since only one
+# has been processed, it only produces one output file
+../src/prod/meas_combine_segs/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS work_RSS 1
 
 # create BYU .SIR-format product files from dump files
+# (could also be run the option tset to produce netcdf product files)
 ../src/prod/meas_undump/meas_undump work_RSS/F131-Arc97-060-060.lis_dump.nc work_RSS 0 1
-
 # other (unprocessed) channels
 #../src/prod/meas_undump/meas_undump work_RSS/F132-Arc97-060-060.lis_dump.nc work_RSS 0 1
 #../src/prod/meas_undump/meas_undump work_RSS/F133-Arc97-060-060.lis_dump.nc work_RSS 0 1
@@ -52,6 +60,20 @@ ls -1 ../sample_data/f13_r09999_tb_v7.dat > work_RSS/F1.lis
 #../src/prod/meas_undump/meas_undump work_RSS/F135-Arc97-060-060.lis_dump.nc work_RSS 0 1
 #../src/prod/meas_undump/meas_undump work_RSS/F136-Arc97-060-060.lis_dump.nc work_RSS 0 1
 #../src/prod/meas_undump/meas_undump work_RSS/F137-Arc97-060-060.lis_dump.nc work_RSS 0 1
+
+########################
+# create (selected) BGI intermediate dump files from polar stereographic setup files
+# this should done for all the segup files produced in the previous step, but here only one
+# channel is illustrated
+../src/prod/meas_meta_bgi/meas_meta_bgi work_RSS/F131-Arc97-060-060-s004-01.setup work_RSS
+../src/prod/meas_meta_bgi/meas_meta_bgi work_RSS/F131-Arc97-060-060-s004-02.setup work_RSS
+../src/prod/meas_meta_bgi/meas_meta_bgi work_RSS/F131-Arc97-060-060-s004-03.setup work_RSS
+../src/prod/meas_meta_bgi/meas_meta_bgi work_RSS/F131-Arc97-060-060-s004-04.setup work_RSS
+
+# combine BGI dump file segments into single dump file
+# note: the program normally will do all channels at the same time, but since only one
+# has been processed, it only produces one output file
+../src/prod/meas_combine_segs/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS work_RSS 1
 
 # create BYU .SIR-format bgi product files from dump files
 #../src/prod/meas_undump/meas_undump work_RSS/F131-Arc97-060-060.lis_dump1.nc work_RSS 0 1

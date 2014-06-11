@@ -1260,7 +1260,7 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       fprintf(mout,"   Image_size_x=%d\n", nsx);
       fprintf(mout,"   Image_size_y=%d\n", nsy);
       if (isection > 0)
-	fprintf(mout,"   Section_loc_pixels=%d %d %d %d %d\n",ix1,iy1,ix2,iy2,jx1,jy1,jx2,jy2);
+	fprintf(mout,"   Section_loc_pixels=%d %d %d %d %d %d %d %d\n",ix1,iy1,ix2,iy2,jx1,jy1,jx2,jy2);
 
       /* generate parameters for non-enhanced gridded images */
       nsx2=nsx/non_size;
@@ -1309,7 +1309,7 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       fprintf(mout,"   Grid_projection_scale_x=%16.9f\n", ascale2);
       fprintf(mout,"   Grid_projection_scale_y=%16.9f\n", bscale2);
       if (isection>0)
-	fprintf(mout,"   Section_grd_pixels=%d %d %d %d %d\n", ix1g,iy1g,ix2g,iy2g,jx1g,jy1g,jx2g,jy2g);
+	fprintf(mout,"   Section_grd_pixels=%d %d %d %d %d %d %d %d\n", ix1g,iy1g,ix2g,iy2g,jx1g,jy1g,jx2g,jy2g);
 	      
       /* for this region, generate standard product data file names abreviation */
       switch(regnum) {

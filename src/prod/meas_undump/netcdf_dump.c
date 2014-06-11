@@ -5,6 +5,7 @@
   read and write intermediate dump files
 
   written by DGL at BYU 15 May 2014
+  revised by DGL at BYU  9 Jun 2014 + added ez_* routines
 
 ******************************************************************/
 
@@ -14,6 +15,7 @@
 #include <math.h>
 
 #include <netcdf.h>  /* netCDF interface */
+#include <ezdump.h>  /* ezdump interface */
 
 # define RANK_0 0	
 # define RANK_1 1
@@ -319,10 +321,10 @@ int nc_close_file(int ncid)
 
 
 int nc_open_file_read_head(char *filename, int *ncid_in, int *nsx, int *nsy, int *iopt, 
-		 float *ascale, float *bscale, float* a0, float *b0, float *xdeg, float *ydeg, 
-		 int *isday, int *ieday, int *ismin, int *iemin, int *iyear, int *iregion, int *ipol, 
-		 int *nsx2, int *nsy2, int *non_size_x, int *non_size_y, float *ascale2, float *bscale2, 
-		 float *a02, float *b02, float *xdeg2, float *ydeg2,
+			   float *ascale, float *bscale, float* a0, float *b0, float *xdeg, float *ydeg, 
+			   int *isday, int *ieday, int *ismin, int *iemin, int *iyear, int *iregion, int *ipol, 
+			   int *nsx2, int *nsy2, int *non_size_x, int *non_size_y, float *ascale2, float *bscale2, 
+			   float *a02, float *b02, float *xdeg2, float *ydeg2,
 			   float *a_init, int *ibeam, int *nits, int *median_flag, int *nout)
 {
   int ncid, stat;
@@ -338,7 +340,7 @@ int nc_open_file_read_head(char *filename, int *ncid_in, int *nsx, int *nsy, int
   /* determine number of parameters in netcdf file */
   stat = nc_inq(ncid, &ndims_in, &nvars_in, &ngatts_in, &unlimdimid_in); check_err(stat,__LINE__,__FILE__);
   
-  printf("NetCDF file %s\n has %d dimensions   %d variables  %d global attributes  %d unlimited\n",filename, ndims_in, nvars_in, ngatts_in, unlimdimid_in);  
+  //printf("NetCDF file %s\n has %d dimensions   %d variables  %d global attributes  %d unlimited\n",filename, ndims_in, nvars_in, ngatts_in, unlimdimid_in);  
 
   /* define primary dimensions, which will be in order they were written */
   //stat = nc_inq_dim(ncid, 0, n1, &d1 ); check_err(stat,__LINE__,__FILE__); /* nsx */
@@ -432,3 +434,92 @@ int get_float_array_nc(int ncid, char *name, float *val, int *nsx, int *nsy, flo
 
   return(stat);
 }
+
+
+int ez_nc_open_file_read_head(char *filename, int *ncid, eznc_head *dhead)
+{
+  int stat;
+  
+  stat=nc_open_file_read_head(filename, ncid, &dhead->nsx, &dhead->nsy, &dhead->iopt, 
+			      &dhead->ascale, &dhead->bscale, &dhead->a0, &dhead->b0, &dhead->xdeg, &dhead->ydeg, 
+			      &dhead->isday, &dhead->ieday, &dhead->ismin, &dhead->iemin, &dhead->iyear, &dhead->iregion, &dhead->ipol, 
+			      &dhead->nsx2, &dhead->nsy2, &dhead->non_size_x, &dhead->non_size_y, &dhead->ascale2, &dhead->bscale2, 
+			      &dhead->a02, &dhead->b02, &dhead->xdeg2, &dhead->ydeg2,
+			      &dhead->a_init, &dhead->ibeam, &dhead->nits, &dhead->median_flag, &dhead->nout);
+    
+  dhead->ncid=*ncid;
+  return(stat);  
+}
+
+int ez_nc_open_file_write_head(char *filename, int *ncid, eznc_head *dhead)
+{
+  int stat;
+  stat=nc_open_file_write_head(filename, ncid, dhead->nsx, dhead->nsy, dhead->iopt, 
+			       dhead->ascale, dhead->bscale, dhead->a0, dhead->b0, dhead->xdeg, dhead->ydeg, 
+			       dhead->isday, dhead->ieday, dhead->ismin, dhead->iemin, dhead->iyear, dhead->iregion, dhead->ipol, 
+			       dhead->nsx2, dhead->nsy2, dhead->non_size_x, dhead->non_size_y, dhead->ascale2, dhead->bscale2, 
+			       dhead->a02, dhead->b02, dhead->xdeg2, dhead->ydeg2,
+			       dhead->a_init, dhead->ibeam, dhead->nits, dhead->median_flag, dhead->nout);
+    dhead->ncid=*ncid;
+  return(stat);
+}
+
+
+int copy_string_nc(int ncid_in, int ncid_out, char *name, char *str, int maxc)
+{
+  int status;
+  status=get_string_nc(ncid_in, name, str, maxc);
+  status=add_string_nc(ncid_out, name, str, maxc);
+  return(status);
+}
+
+
+int copy_float_array_nc(int ncid_in, int ncid_out, char *name, float *val, int *nsx, int *nsy, float *anodata)
+{
+  int stat;
+  stat=get_float_array_nc(ncid_in, name, val, nsx, nsy, anodata);
+  stat=add_float_array_nc(ncid_out, name, val, *nsx, *nsy, *anodata);
+  return(stat);
+}
+
+
+
+int ez_copy_head(eznc_head *in, eznc_head *out)
+{
+  strncpy(out->fname, in->fname, 180);
+  out->ncid=in->ncid;
+  out->nsx=in->nsx;
+  out->nsy=in->nsy;
+  out->iopt=in->iopt;
+  out->ascale=in->ascale;
+  out->bscale=in->bscale;
+  out->a0=in->a0;
+  out->b0=in->b0;
+  out->xdeg=in->xdeg;
+  out->ydeg=in->ydeg;
+  out->isday=in->isday;
+  out->ieday=in->ieday;
+  out->ismin=in->ismin;
+  out->iemin=in->iemin;
+  out->iyear=in->iyear;
+  out->iregion=in->iregion;
+  out->ipol=in->ipol;
+  out->nsx2=in->nsx2;
+  out->nsy2=in->nsy2;
+  out->non_size_x=in->non_size_x;  
+  out->non_size_y=in->non_size_y;
+  out->ascale2=in->ascale2;
+  out->bscale2=in->bscale2;
+  out->a02=in->a02;
+  out->b02=in->b02;
+  out->xdeg2=in->xdeg2;
+  out->ydeg2=in->ydeg2;
+  out->a_init=in->a_init;
+  out->ibeam=in->ibeam;
+  out->nits=in->nits;
+  out->median_flag=in->median_flag;
+  out->nout=in->nout;
+
+  return(0);  
+}
+
