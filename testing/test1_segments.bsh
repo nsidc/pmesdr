@@ -76,7 +76,7 @@ ls -1 ../sample_data/f13_r09999_tb_v7.dat > work_RSS/F1.lis
 ../src/prod/meas_combine_segs/meas_combine_segs work_RSS/stest_RSS.meta work_RSS work_RSS 1 1
 
 # create BYU .SIR-format bgi product files from dump files
-#../src/prod/meas_undump/meas_undump work_RSS/F131-Arc97-060-060.lis_dump1.nc work_RSS 0 1
+../src/prod/meas_undump/meas_undump work_RSS/F131-Arc97-060-060.lis_dump1.nc work_RSS 0 1
 #../src/prod/meas_undump/meas_undump work_RSS/F132-Arc97-060-060.lis_dump1.nc work_RSS 0 1
 #../src/prod/meas_undump/meas_undump work_RSS/F133-Arc97-060-060.lis_dump1.nc work_RSS 0 1
 #../src/prod/meas_undump/meas_undump work_RSS/F134-Arc97-060-060.lis_dump1.nc work_RSS 0 1
