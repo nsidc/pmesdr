@@ -1,0 +1,143 @@
+#!/bin/bash
+#
+# script to illustrate computing a full day's worth of data
+#
+# written by D.G. Long at BYU 13 Jun 2014
+
+# set environment variables that are required for meas_meta_setup
+meas_home="/auto/users/long/src/linux/measures"  # localization specific
+SIR_areas="$meas_home/ref/locs/"           # path to location of location files
+SIR_region="$meas_home/ref/regiondef1.dat" # path to regiondef1.dat
+export meas_home SIR_areas SIR_region
+
+# set destination and work areas
+WorkDir="$meas_home/testing/work3"
+DestDir="$meas_home/testing/work3/dest"
+
+# make sure directories exist
+if [ ! -d $WorkDir ]; then
+  mkdir -p $WorkDir  # if not, make it
+else  # if exists, clean contents
+#  rm -f $WorkDir/*
+fi
+if [ ! -d $DestDir ]; then
+  mkdir -p $DestDir  # if not, make it
+fi
+
+
+# pick a particular year and day range to process
+Year=1997\
+FirstDay=61
+LastDay=61
+echo "Processing $Year $FirstDay to $LastDay"
+
+# RSS or CSU
+SRC=RSS  # use RSS or CSU
+
+# set flag 1 to process BGI, 0 to not process BGI
+BGI=0  # no BGI
+
+#
+# define some arrays
+#
+
+# 2 character year string
+Syear=${Year:2:4}
+
+# regions
+Regions=(E2N E2S E2G)
+
+# Extensions
+Regions=(ave sir grd non)  # bgi
+
+# Types to create browse .gif images of
+Types=(a V p)  # i j C 
+
+#
+# for each day in day range
+#
+Day=$FirstDay
+while [ ${Day} -le ${LastDay} ]; do
+
+    # 3 character day string
+    dstr=$Day
+    if [ ${#dstr} -lt 3 ]; then
+	dstr=0$dstr
+    fi
+    if [ ${#dstr} -lt 3 ]; then
+	dstr=0$dstr
+    fi
+    echo "Processing $Year ($Syear) $Day ($dstr) of $FirstDay to $LastDay ..."
+
+# identify all the RSS files that cover a single day and create a listing file.  
+# On BYU MERS system this means using /auto/data/ssmi/RSS/RSSv07_database.dat 
+# to select the files for process for a single day -- need to include the last 
+# file of the previous day
+
+# for this example, we simplify this step
+    if [ $SRC -eq RSS ] ; then
+	ls -1 ../sample_data/RSS_JD061_1997/f13*.dat > $WorkDir/F$SSMI_$Year_$Day.lis
+    else
+	ls -1 ../sample_data/CSU_JD061_1997/CSU_SSMI_FCDR_*.nc > $WorkDir/F$SSMI_$Year_$Day.lis
+    fi
+
+# for each region to be processed, create meta files for this day
+    for Reg in ${Regions[*]}; do
+	echo "Processing region: $Reg"
+
+# create meta files for this region
+	../src/prod/meas_meta_make/meas_meta_make $WorkDir/$Reg_$Syear_$dstr.meta $SSMI ../ref/s2g/ssmi_mN.s2g $Day $Day $Year ../ref/$Reg.def $WorkDir/F_$Year_$Day.lis
+
+# Make setup files for region
+	if [ $SRC -eq RSS ] ; then
+	    ../src/prod/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $SSMI $WorkDir 0
+	else
+	    ../src/prod/meas_meta_setup_CSU $WorkDir/$Reg_$Syear_$dstr.meta $SSMI $WorkDir 0
+	fi
+
+# create intermediate dump files from setup files
+	Channels=$(seq 1 7)
+	for Ch in $Channels ; do
+	    echo "Doing SIR for channel F${SSMI}$ch"
+	    ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
+
+# create BYU .SIR-format product files from dump files
+	    ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $ProdkDir 0 1
+
+# generate browse .gif files from (selected) .SIR-format files
+	    for typ in ${Types[*]} ; do 
+		for Ext in ${Extensions[*]} ; do
+		    ../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif
+		done
+	    done
+
+# generate netcdf product files from dump files
+	    ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $ProdkDir 1 1
+
+# optinally process BGI
+	    if [ $BGI -eq 1 ] ; then
+# generate bgi dump file from setup file
+		../src/prod/meas_meta_sir/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
+
+# create BYU .SIR-format product files from dump file
+		../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $ProdkDir 0 1
+
+		typ=a
+		Ext=bgi
+# generate browse .gif files from (selected) .SIR-format files
+		../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif
+
+# create netcdf files from sir or bgi files
+		../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $ProdkDir 1 1
+	    done
+	done
+    done
+
+#
+# increment to next day
+#
+    let Day=$(( ${Day} + 1))
+done
+
+# (optionally) view browse .gif images
+eog $DestDir/*.gif
