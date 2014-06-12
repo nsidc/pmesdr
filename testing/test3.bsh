@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # script to illustrate computing a full day's worth of data
+# note: this script does not include segmented processing and does not do LTOD
 #
 # written by D.G. Long at BYU 13 Jun 2014
 
@@ -38,14 +39,14 @@ SRC=RSS  # use RSS or CSU
 BGI=0  # no BGI
 
 #
-# define some arrays
+# define some arrays used ton control the processing
 #
 
 # 2 character year string
 Syear=${Year:2:4}
 
 # regions
-Regions=(E2N E2S E2G)
+Regions=(E2N E2S E2T)
 
 # Extensions
 Regions=(ave sir grd non)  # bgi
