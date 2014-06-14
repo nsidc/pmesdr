@@ -65,7 +65,7 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS =  -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -I$(NETCDF4_INCDIR)
+CFLAGS =  -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -I$(NETCDF4_INCDIR) -I./
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_undump.c netcdf_write_prod.c netcdf_dump.c
