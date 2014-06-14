@@ -1,12 +1,6 @@
 Liens against this version of the MEASURES BYU Software
 
-v1: 14 Mar 2014
-
-Key changes from v0:
-  - stand alone compile for everything
-  - EASE2 added to projection code
-  - sir2gifs added to package
-  - sirtool added to package
+updated: 14 June 2014
 
 Issues and limitations:
 
@@ -19,13 +13,10 @@ General
 
  Optimum BG parameters not chosen
 
- Ability to write product files directly to netcdf w/o using sir intermediate file not 
-  implemented yet
 
 src/prod/
  sir2netcdf format not yet finalized
    - proj4 and gdaltranslate strings not implemented
- meas_meta_sir and meas_meta_bgi exihibit memory faults during program closure, but work fine
 
 src/sirlib/
   - proj4 and gdaltranslate strings not implemented
@@ -37,6 +28,3 @@ ref/
 
 scripts/
   no control scripts
-
-testing/
-  no formal regression test analysis
