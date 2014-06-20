@@ -1,0 +1,22 @@
+Notes on matlab SIR simulation
+David Long 
+14 Jun 2014
+
+The matlab script make_setup.m simulates TB measurements of an SSM/I 
+fly-over a synthetic image.  It calls sim_SIR.c which creates SIR and
+gridded images products from the measurements.  The simulation and
+processing are highly simplified in order to illustrate the process.
+
+Note that the synthetic image is low-pass filtered to meet the Nyquist
+sampling requirements for SIR reconstruction.
+
+Theory for the SIR algorithm is given in
+
+D.S. Early and D.G. Long, "Image Reconstruction and Enhanced Resolution 
+Imaging from Irregular Samples," IEEE Transactions on Geoscience and 
+Remote Sensing, Vol. 39, No. 2, pp. 291-302, 2001.
+
+D.G. Long and D.L. Daum, "Spatial Resolution Enhancement of SSM/I Data," 
+IEEE Transactions on Geoscience and Remote Sensing, Vol. 36, No. 2, 
+pp. 407-417, Mar. 1998. 
+
