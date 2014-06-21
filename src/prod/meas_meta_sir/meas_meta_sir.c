@@ -6,6 +6,7 @@
 
   Written by DGL at BYU 02/22/2014 + modified from ssmi_meta_sir3.c
   Revised by DGL at BYU 05/15/2015 + use intermediate dump file output
+  Revised by DGL at BYU 06/21/2015 + AVE start of SIR
 
 ******************************************************************/
 
@@ -17,7 +18,7 @@
 
 #include "sir3.h"
 
-#define VERSION 1.0
+#define VERSION 1.1
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
@@ -32,12 +33,13 @@
 
 /* some global variables and their default values */
 
-float a_init=180.0;           /* initial A (TB) value */
+float a_init=230.0;           /* initial A (TB) value */
 int   nits=30;                /* number of SIR iterations */
 char  sensor_in[40];          /* sensor description string */
 int   MAXFILL=1000;           /* maximum number of pixels in response */
 int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
+int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 
 /****************************************************************************/
 
@@ -815,10 +817,12 @@ done:
 	    *(sx+i) = anodata_Ia;
 	  }
 	  *(sxy+i) = *(tot+i); 
-	  if (*(sy+i) > 0) 
+	  if (*(sy+i) > 0)  /* first iteration, compute AVE */
 	    *(b_val+i) = *(b_val+i) / *(sy+i);
 	  else
 	    *(b_val+i) = anodata_A;
+	  if (AVE_INIT)
+	    *(a_val+i)=*(b_val+i); /* copy AVE to sir iteration buffer */
 	}
 	if (its+1 != nits) {          /* clean up */
 	  *(a_temp+i) = 0.0;
