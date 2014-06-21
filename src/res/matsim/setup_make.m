@@ -13,11 +13,16 @@
 %  sedond, create simulated response function for measurements
 %  third, define the final image size/resolution
 %  fourth, create a synthetic "truth" image
-%  fifth, generate simulated measurements from truth image and write to .setup file
-%
-% use sim_SIR.c to process the .setup file into GRD, SIR and AVE images
+%  fifth, generate simulated measurements from truth image and 
+%           write to .setup file
+%  sixth, use sim_SIR.c to process the .setup file into GRD, SIR and 
+%           AVE images for noisy and noise-free cases
+%  seventh, read resulting .SIR-formatted files, plot, and compute error
+%  eighth, generate .SIR file images versus iteration and create plots
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%RUN_SIR=0; % skip running external SIR programs when set to zero
+RUN_SIR=1; % run external SIR programs if set to one
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Step One:
@@ -28,13 +33,15 @@ swathwidth=1400;    % swath width in km
 scvel=7;            % s/c ground track velocity in km/sec
 rotrate=31.6/60;    % rotation vel in rot/sec
 srate=0.00844;      % sample rate in measurements/sec
-DeltaT=1.0;         % thermal noise STD (in K) for signal simulation
+DeltaT=2.0;         % thermal noise STD (in K) for signal simulation
 AntAzAngRange=180+[-51,51]; % angular range of swath
 rotrad=swathwidth/sin((AntAzAngRange(2)-180)*pi/180)/2;
+% set response threshold for SIR processing
+thres=0.001;
 
-% number of passes over target area (uncomment 1)
-%Npass=1;
-Npass=2;
+% number of passes over target area (uncomment one line)
+%Npass=1;  % single pass
+Npass=2;   % two passes
 %Npass=3;
 %Npass=4;
 
@@ -143,8 +150,6 @@ grd_size=25.0;              % nominal grd pixel size in km
 % set footprint measurement response size
 MajorAxis=max(footprint);
 MinorAxis=min(footprint);
-% set response threshold for SIR processing
-thres=0.001;
 
 % generate a centered local grid
 Ngrid=ceil(2*MajorAxis/sampspacing);
@@ -219,15 +224,15 @@ for i=floor(M/6):M
   true(i,1:floor(N/6))=200+i*(250-200)/(5*M/6);
 end
 
-% add some spots
+% add some warm spots
 const=250;
 true(M/2+20:M/2+30,N/2-40:N/2-30)=250;
 true(floor(2*M/3):floor(2*M/3)+10,floor(2*N/3)+20:floor(2*N/3)+30)=const;
-true(floor(2*M/3):floor(2*M/3)+8,floor(N/3)-8:floor(N/3))=const;
-true(floor(2*M/3):floor(2*M/3)+6,floor(N/2)-6:floor(N/2))=const;
+true(floor(2*M/3):floor(2*M/3)+ 8,floor(  N/3)- 8:floor(  N/3))=const;
+true(floor(2*M/3):floor(2*M/3)+ 6,floor(  N/2)- 6:floor(  N/2))=const;
 true(floor(M/6):floor(M/6)+8,floor(2*N/3)+10:floor(2*N/3)+18)=const;
-true(floor(M/6):floor(M/6)+6,floor(N/2)+10:floor(N/2)+16)=const;
-true(floor(M/6)+floor(M/6)+4,floor(N/3)+10:floor(N/3)+14)=const;
+true(floor(M/6):floor(M/6)+6,floor(  N/2)+10:floor(  N/2)+16)=const;
+true(floor(M/6):floor(M/6)+4,floor(  N/3)+10:floor(  N/3)+14)=const;
 
 % bandlimit true image to ensure Nyquist criterion is met for
 % sampling and reconstruction.  Multiple passes ensures out-of-band
@@ -242,7 +247,7 @@ true=abs(true);
 % display true image
 myfigure(4)
 colormap('gray')
-imagesc(true'); colorbar;
+imagesc(flipud(true')); colorbar;
 title('True image')
 axis off
 axis image
@@ -363,13 +368,18 @@ fclose(fid);
 % Step six:
 %  run external sir program
 %
-% noise-free
-cmd=sprintf('sim_SIR %s 0 0', outfile);
-system(cmd);
 
-% noisy
-cmd=sprintf('sim_SIR %s 0 1', outfile);
-system(cmd);
+if RUN_SIR
+
+  % noise-free
+  cmd=sprintf('sim_SIR %s 0 0', outfile);
+  system(cmd);
+
+  % noisy
+  cmd=sprintf('sim_SIR %s 0 1', outfile);
+  system(cmd);
+
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Step seven:
@@ -378,10 +388,10 @@ system(cmd);
 [tr h_t]=loadsir('true.sir');
 
 % noise-free
-[fAg h_fAg]=loadsir('simA2.grd');
-[fAn h_fAn]=loadsir('simA2.non');
-[fAa h_fAa]=loadsir('simA2.ave');
-[fAs h_fAs]=loadsir('simA2.sir');
+[fAg h_fAg]=loadsir('simA.grd');
+[fAn h_fAn]=loadsir('simA.non');
+[fAa h_fAa]=loadsir('simA.ave');
+[fAs h_fAs]=loadsir('simA.sir');
 
 % noisy
 [nAg h_nAg]=loadsir('simA2.grd');
@@ -400,7 +410,7 @@ system(cmd);
 % summarize results
 disp(' ');
 disp(sprintf('Footprint size: %f x %f   Passes: %d',footprint,Npass));
-disp(sprintf('SIR threshold: %f dB  Noise STD: %f K',10*log10(thres),DeltaT)  
+disp(sprintf('SIR threshold: %f dB  Noise STD: %f K',10*log10(thres),DeltaT));  
 disp(sprintf('Resolution: %f km/pix  Bandlimit: %f km',sampspacing,sampspacing/BL));
 disp(sprintf('Sample image size: %d x %d',M,N));
 disp(' ');
@@ -416,8 +426,7 @@ disp(sprintf('Noisy SIR  %5.2f  %5.2f  %5.2f',nAs_m,nAs_s,nAs_r));
 sc=[190 260];
 
 % plot various comparisons
-
-myfigure(7)
+myfigure(7) % noise-free
 colormap('gray')
 subplot(2,2,1)
 imagesc(tr,sc);colorbar;
@@ -441,8 +450,7 @@ axis off
 title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r));
 print -dpng NoiseFree.png
 
-
-myfigure(8)
+myfigure(8) % noisy
 colormap('gray')
 subplot(2,2,1)
 imagesc(tr,sc);colorbar;
@@ -453,17 +461,17 @@ subplot(2,2,2)
 imagesc(nAn,sc);colorbar;
 axis image
 axis off
-title(sprintf('sir %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r));
+title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r));
 subplot(2,2,3)
 imagesc(nAa,sc);colorbar;
 axis image
 axis off
-title(sprintf('ave %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r));
+title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r));
 subplot(2,2,4)
 imagesc(nAs,sc);colorbar;
 axis image
 axis off
-title(sprintf('sir %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r));
+title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r));
 print -dpng Noisy.png
 
 myfigure(9)
@@ -479,13 +487,182 @@ axis image
 axis off
 title('grd noisy');
 subplot(2,2,3)
-imagesc(fAg,sc);colorbar;
+imagesc(nAa,sc);colorbar;
 axis image
 axis off
-title('grd noise-free');
+title('ave noisy');
 subplot(2,2,4)
 imagesc(nAs,sc);colorbar;
 axis image
 axis off
 title('sir noisy');
 print -dpng grd.png
+
+if 1 % make large image plots
+  myfigure(20)
+  colormap('gray')
+  imagesc(tr,sc);colorbar; axis image; axis off; 
+  title('true'); print -dpng true.png
+  imagesc(fAn,sc);colorbar; axis image; axis off;
+  title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r)); print -dpng non_nf.png
+  imagesc(fAa,sc);colorbar; axis image; axis off;
+  title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r)); print -dpng ave_nf.png
+  imagesc(fAs,sc);colorbar; axis image; axis off
+  title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r)); print -dpng sir_nf.png
+  imagesc(nAn,sc);colorbar; axis image; axis off
+  title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r)); print -dpng non_noisy.png
+  imagesc(nAa,sc);colorbar; axis image; axis off
+  title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r)); print -dpng ave_noisy.png
+  imagesc(nAs,sc);colorbar; axis image; axis off
+  title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r)); print -dpng sir_noisy.png
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Step eight:
+%  generate SIR algorithm outputs versus iteration number
+%  read resulting files, and generate summary plots
+%
+
+maxiter=50;  % number of SIR iterations for this simulation
+Nom_iter=20; % nominal number of SIR iterations run 
+
+if RUN_SIR
+
+  % do this is a sub-directory to avoid cluttering up things
+  cpwd=pwd;
+  mkdir(cpwd,'work');
+  cd([cpwd,'/work']); 
+
+  % run noise-free SIR
+  cmd=sprintf('../sim_SIR ../%s 0 0 %d', outfile,maxiter);
+  system(cmd);
+
+  % run noisy SIR
+  cmd=sprintf('../sim_SIR ../%s 0 1 %d', outfile,maxiter);
+  system(cmd);
+
+  % return to directory
+  cd(cpwd)
+
+end
+
+f_m=zeros([1 maxiter]);
+n_m=zeros([1 maxiter]);
+d_m=zeros([1 maxiter]);
+f_s=zeros([1 maxiter]);
+n_s=zeros([1 maxiter]);
+d_s=zeros([1 maxiter]);
+f_r=zeros([1 maxiter]);
+n_r=zeros([1 maxiter]);
+d_r=zeros([1 maxiter]);
+
+% for each SIR iteration number, read in file and compute error
+% plot selected images
+myfigure(12);clf
+colormap('gray')
+ncnt=1;
+for iter=1:maxiter
+  fname=sprintf('work/simA_%d.sir',iter);
+  nname=sprintf('work/simA2_%d.sir',iter);
+  [fimg head]=loadsir(fname);
+  [nimg head]=loadsir(nname);
+  [f_m(iter),f_s(iter),f_r(iter)]=compute_stats(tr-fimg);
+  [n_m(iter),n_s(iter),n_r(iter)]=compute_stats(tr-nimg);
+  [d_m(iter),d_s(iter),d_r(iter)]=compute_stats(fimg-nimg);
+  if iter==1 | iter==10 | iter==20 | iter==30
+    subplot(4,2,2*(ncnt-1)+1)
+    imagesc(nimg,sc);colorbar;
+    axis image
+    axis off
+    title(sprintf('Noisy iter=%d',iter));
+    subplot(4,2,2*ncnt)
+    imagesc(fimg,sc);colorbar;
+    axis image
+    axis off
+    title(sprintf('N-F iter=%d',iter));
+    ncnt=ncnt+1;
+  end
+end
+print -dpng iterimage.png
+
+
+% inferred noise error for SIR vs iteration
+s_m=n_m-f_m;
+s_s=sqrt((n_s.^2-f_s.^2));
+s_r=sqrt(abs(n_r.^2-f_r.^2));
+% for AVE
+a_s=sqrt((nAa_s.^2-fAa_s.^2));
+a_r=sqrt((nAa_r.^2-fAa_r.^2));
+% for grd (non)
+g_s=sqrt((nAn_s.^2-fAn_s.^2));
+g_r=sqrt((nAn_r.^2-fAn_r.^2));
+
+% generate error plots
+myfigure(10)
+subplot(1,2,1)
+plot([0 60],[0 0],':k');
+hold on;plot(f_m,'b'); hold off
+hold on; plot(nAa_m,'k*'); hold off;
+hold on; plot(nAn_m,'c*'); hold off;
+hold on; plot(n_m,'r'); hold off;
+hold on; plot([Nom_iter Nom_iter],[-0.05 0.05],'--k'); hold off;
+xlabel('Iteration');
+ylabel('Mean error (K)');
+title('r=noisy b=noise-free k=AVE c=non')
+subplot(1,2,2)
+plot(10*log10(f_r),'b');
+hold on; plot(10*log10(n_r),'r'); hold off;
+hold on; plot(10*log10(nAa_r),'k*'); hold off;
+hold on; plot(10*log10(nAn_r),'c*'); hold off;
+hold on; plot(10*log10(s_r)+4,'g'); hold off;
+hold on; plot([Nom_iter Nom_iter],[3 8],'--k'); hold off;
+ylabel('RMS error (dB K)');
+%plot((f_r),'b');
+%hold on; plot((n_r),'r'); hold off;
+%ylabel('RMS error (K)');
+xlabel('Iteration');
+title('r=noisy b=noise-free g=noise+4 K=AVE c=non)')
+print -dpng iterate.png
+
+myfigure(11)
+plot(10*log10(f_r),s_r,'.')
+hold on;plot(10*log10(f_r(Nom_iter)),s_r(Nom_iter),'r*');hold off
+hold on;plot(10*log10(fAa_r),a_r,'g*');hold off
+hold on;plot(10*log10(fAn_r),g_r,'k*');hold off
+xlabel('RMS signal error (dB)')
+ylabel('RMS noise error');
+title(sprintf('fp=%dx%d DeltaT=%0.1f Np=%d (r=SIR, g=Ave, k=grd)',footprint,DeltaT,Npass));
+print -dpng sig.png
+
+
+% summarize results (again)
+disp(' ');
+disp(sprintf('Footprint size: %f x %f   Passes: %d',footprint,Npass));
+disp(sprintf('SIR threshold: %f dB  Noise STD: %f K',10*log10(thres),DeltaT));  
+disp(sprintf('Resolution: %f km/pix  Bandlimit: %f km',sampspacing,sampspacing/BL));
+disp(sprintf('Sample image size: %d x %d',M,N));
+disp(sprintf(' '));
+disp(sprintf('Case        Mean    STD    RMS'));
+disp(sprintf('N-F Non    %5.2f  %5.2f  %5.2f',fAn_m,fAn_s,fAn_r));
+disp(sprintf('N-F Ave    %5.2f  %5.2f  %5.2f',fAa_m,fAa_s,fAa_r));
+disp(sprintf('N-F SIR    %5.2f  %5.2f  %5.2f',fAs_m,fAs_s,fAs_r));
+disp(sprintf('Noisy Non  %5.2f  %5.2f  %5.2f',nAn_m,nAn_s,nAn_r));
+disp(sprintf('Noisy Ave  %5.2f  %5.2f  %5.2f',nAa_m,nAa_s,nAa_r));
+disp(sprintf('Noisy SIR  %5.2f  %5.2f  %5.2f',nAs_m,nAs_s,nAs_r));
+
+% and write to file
+fid=fopen('stats.txt','w');
+fprintf(fid,'Footprint size: %f x %f   Passes: %d\n',footprint,Npass);
+fprintf(fid,'SIR threshold: %f dB  Noise STD: %f K\n',10*log10(thres),DeltaT);  
+fprintf(fid,'Resolution: %f km/pix  Bandlimit: %f km\n',sampspacing,sampspacing/BL);
+fprintf(fid,'Sample image size: %d x %d\n',M,N);
+fprintf(fid,' \n');
+fprintf(fid,'Case        Mean    STD    RMS\n');
+fprintf(fid,'N-F Non    %5.2f  %5.2f  %5.2f\n',fAn_m,fAn_s,fAn_r);
+fprintf(fid,'N-F Ave    %5.2f  %5.2f  %5.2f\n',fAa_m,fAa_s,fAa_r);
+fprintf(fid,'N-F SIR    %5.2f  %5.2f  %5.2f\n',fAs_m,fAs_s,fAs_r);
+fprintf(fid,'Noisy Non  %5.2f  %5.2f  %5.2f\n',nAn_m,nAn_s,nAn_r);
+fprintf(fid,'Noisy Ave  %5.2f  %5.2f  %5.2f\n',nAa_m,nAa_s,nAa_r);
+fprintf(fid,'Noisy SIR  %5.2f  %5.2f  %5.2f\n',nAs_m,nAs_s,nAs_r);
+fclose(fid);
