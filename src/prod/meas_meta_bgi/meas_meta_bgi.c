@@ -7,6 +7,7 @@
 
   Written by DGL at BYU 02/25/2014 + modified from ssmi_meta_bgi.c
   Revised by DGL at BYU 05/16/2015 + use intermediate dump file output
+  Revised by DGL at BYU 06/21/2014 + modified gain thresholding and response rejection
 
 ******************************************************************/
 
@@ -22,7 +23,7 @@
 #include "nr.h"
 #include "nrutil.h"
 
-#define VERSION 1.0
+#define VERSION 1.1
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
@@ -47,7 +48,7 @@ int   HS=20;                  /* measurement headersize in bytes */
 double bgi_gamma=0.01*3.141562654;/* BGI gamma parameter */
 float delta2=1.0;                 /* BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor */
-short int ithres=0;               /* minimum gain threshold */
+float ithres=0;               /* minimum gain threshold */
 int Nsize=0;                      /* (built into the code) */
 float wscale=0.001;  /* pattern coversion factor int->float */
 
@@ -79,9 +80,9 @@ void eprintfc(char *s, char *a)
 
 /* function prototypes */
 
-void count_hits(int count, int fill_array[], short int response_array[], short int ithres, int cnt[], int *mdim, int nsx);
+void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx);
 
-void make_indx(int nmax, int count, int fill_array[], short int response_array[], short int ithres, char **indx, char * pointer);
+void make_indx(int nmax, int count, int fill_array[], short int response_array[], float ithres, char **indx, char * pointer);
 
 void Ferror(int i);
 
@@ -192,7 +193,7 @@ int main(int argc, char **argv)
     printf("   outpath  = output path\n");
     printf("   gamma    = BGI gamma parameter\n");
     printf("   delta2   = BGI delta2 (noise variance)\n");
-    printf("   ithres   = scaled gain threshold (thousandth's in normal space)\n");
+    printf("   ithres   = gain threshold (in normal space)\n");
     return(0);
   }
   file_in=argv[1];
@@ -206,11 +207,11 @@ int main(int argc, char **argv)
   strncpy(outpath,"./",250); /* default output path */  
 
   if (argc > 2) sscanf(argv[2],"%s",outpath);
-  if (argc > 3) sscanf(argv[2],"%f",&bgi_gamma);
-  if (argc > 4) sscanf(argv[3],"%f",&delta2);
-  if (argc > 5) sscanf(argv[4],"%f",&ithres);
+  if (argc > 3) sscanf(argv[3],"%lf",&bgi_gamma);
+  if (argc > 4) sscanf(argv[4],"%f",&delta2);
+  if (argc > 5) sscanf(argv[5],"%f",&ithres);
 
-  printf("BGI options: Nsize=%d omega=%f gamma=%f delta2=%d\n",Nsize, omega, bgi_gamma, delta2);
+  printf("BGI options: omega=%f gamma=%f delta2=%f gain thres=%f\n",omega, bgi_gamma, delta2, ithres);
 
   /* storage MUST be in ram for BGI processing */
   /* 
@@ -414,7 +415,7 @@ int main(int argc, char **argv)
    /* add string information */
    ncerr=add_string_nc(ncid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
    ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
-   sprintf(crproc,"BYU MERS:meas_meta_bgi v1.0 g=%f d2=%f thres=%f",bgi_gamma,delta2,ithres*wscale);
+   sprintf(crproc,"BYU MERS:meas_meta_bgi v1.0 g=%f d2=%f thres=%f",bgi_gamma,delta2,ithres);
    ncerr=add_string_nc(ncid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__); 
    (void) time(&tod);
    (void) strftime(crtime,28,"%X %x",localtime(&tod));
@@ -533,8 +534,8 @@ int main(int argc, char **argv)
         count = *((int *)   (store+8));
         ktime = *((int *)   (store+12));
         iadd  = *((int *)   (store+16));
-	if (HASAZANG)
-	  azang = *((float *) (store+20));
+	/* if (HASAZANG)
+	   azang = *((float *) (store+20)); */
 
 	if (count > MAXFILL) {
 	  printf("*** Count error %d  record %d\n",count,nrec);
@@ -624,7 +625,7 @@ int main(int argc, char **argv)
   nmax=0;
   for (i=0; i< nsize; i++)
     if (cnts[i] > nmax) nmax=cnts[i];
-  printf("\nMaximum hits above threshold: %d  max size: %d\n",nmax,mdim);
+  printf("\nMaximum hits above threshold: %d  max size: %d  thres %f\n",nmax,mdim, ithres);
   mdim = mdim * 2+1;
  
   /* BG processing */
@@ -695,8 +696,8 @@ int main(int argc, char **argv)
 	  count = *((int *)   (store+8));
 	  iadd  = *((int *)  (store+16));
 	  iadd = (iadd > 0 ? iadd : -iadd) -1;
-	  if (HASAZANG)
-	    azang = *((float *) (store+20));	
+	  /* if (HASAZANG)
+	     azang = *((float *) (store+20)); */
 
 	  store = store+HS;
 	  fill_array = (int *) store;
@@ -710,13 +711,14 @@ int main(int argc, char **argv)
 	  m++;
 	  v[m] = 0.0000001;  /* a very small, non-zero value */
 	  sum = 0.0;
-	  for (i=0; i < count; i++) {
-	    if (fill_array[i]-1 == its) 
-	      v[m] = weight_array[i]*wscale;
-	    sum += weight_array[i]*wscale;
-	  }
+	  for (i=0; i < count; i++) 
+	    if (fill_array[i]>0) {
+	      if (fill_array[i]-1 == its) 
+		v[m] = weight_array[i]*wscale;
+	      sum += weight_array[i]*wscale;
+	    }
 	  tb2[m] = tbval;
-	  v[m]=v[m]/sum;
+	  if (sum > 0.0) v[m]=v[m]/sum;
 	  u[m]=1.0;
 	
 	  ix0[m] = iadd % nsx;
@@ -725,14 +727,15 @@ int main(int argc, char **argv)
 	  for (i=0; i< mdim*mdim; i++)
 	    patarr[i*nmax+m-1]=0.0;
 	
-	  for (i=0; i < count; i++) {
-	    ix = (fill_array[i]-1) % nsx - ix0[m] + mdim2;
-	    iy = (fill_array[i]-1) / nsx - iy0[m] + mdim2;
-	    if (ix >= 0 && iy >= 0 && ix < mdim && iy < mdim)
-	      patarr[(iy*mdim+ix)*nmax+m-1]=weight_array[i]*wscale;
-	    else
-	      printf("*** patarr error %d %d %d  %d\n",i,ix,iy,its);
-	  }
+	  for (i=0; i < count; i++) 
+	    if (fill_array[i]>0) {
+	      ix = (fill_array[i]-1) % nsx - ix0[m] + mdim2;
+	      iy = (fill_array[i]-1) / nsx - iy0[m] + mdim2;
+	      if (ix >= 0 && iy >= 0 && ix < mdim && iy < mdim)
+		patarr[(iy*mdim+ix)*nmax+m-1]=weight_array[i]*wscale;
+	      else
+		printf("*** patarr error %d %d %d  %d\n",i,ix,iy,its);
+	    }
 	}
       }
 
@@ -821,6 +824,8 @@ int main(int argc, char **argv)
     } 
   }
 
+  printf("\nMaximum hits above threshold: %d  max size: %d  thres %f\n",nmax,mdim, ithres);
+
   if (median_flag) { /* median filter image */
     printf("Applying Median Filter to BG image result\n");    
     filter(a_val, 5, 0, nsx, nsy, a_temp, anodata_A);  /* 5x5 modified median filter */
@@ -871,16 +876,25 @@ int main(int argc, char **argv)
 
 /* ***************** support routines **************** */
 
-void count_hits(int count, int fill_array[], short int response_array[], short int ithres, int cnt[], int *mdim,int nsx)
+void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim,int nsx)
 {
   static int i,n,m,x,y,xx,yx,xn,yn;
+  int mpeak=-1;  
+
+  /* find peak response of measurement*/
+  for (i=0; i < count; i++) {      
+    m=response_array[i];
+    if (m > mpeak) mpeak=m;
+  }
+  /* compute (local) threshold based on peak response */
+  mpeak=ithres*mpeak;
 
   yx=xx=0;
   yn=xn=99999999;
   for (i=0; i < count; i++) {
     n=fill_array[i]-1;
     m=response_array[i];
-    if (m > ithres) {
+    if (m >= mpeak) {
       (cnt[n])++;
       x = n % nsx;
       y = n / nsx;
@@ -888,6 +902,9 @@ void count_hits(int count, int fill_array[], short int response_array[], short i
       yx = max(y,yx);
       xn = min(x,xn);
       yn = min(y,yn);
+    } else { /* mark resonses not to be used */
+      fill_array[i]=0;
+      response_array[i]=0.0;      
     }
   }
   x=xx-xn+1;
@@ -895,19 +912,29 @@ void count_hits(int count, int fill_array[], short int response_array[], short i
   *mdim=max(x,y);
 }
 
-void make_indx(int nmax, int count, int fill_array[], short int response_array[], short int ithres, char **indx, char *pointer)
+void make_indx(int nmax, int count, int fill_array[], short int response_array[], float ithres, char **indx, char *pointer)
 {
-  static int i,j,m,n;
-  
-  for (i=0; i < count; i++) {
-    n=fill_array[i]-1;
-    m=response_array[i];
-    if (m > ithres) {
-      j = 0;
-      while (j < nmax && indx[n*nmax+j] != NULL) j++;
-      if (j < nmax) indx[n*nmax+j]=pointer;
+  static int i,j,m,n,mpeak=-1;
+
+  /* find peak response of measurement*/
+  for (i=0; i < count; i++)
+    if (fill_array[i] > 0) {
+      m=response_array[i];
+      if (m > mpeak) mpeak=m;
     }
-  }  
+  /* compute (local) threshold based on peak response */
+  mpeak=ithres*mpeak;
+
+  for (i=0; i < count; i++) 
+    if (fill_array[i] > 0) {
+      n=fill_array[i]-1;
+      m=response_array[i];
+      if (m >= ithres) {
+	j = 0;
+	while (j < nmax && indx[n*nmax+j] != NULL) j++;
+	if (j < nmax) indx[n*nmax+j]=pointer;
+      }
+    }  
 }
 
 
@@ -1016,7 +1043,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
       *ktime = *((int *)   (store+12));
       *iadd  = *((int *)   (store+16));
       /* if (HASAZANG)
-       *azang = *((float *) (store+20)); */
+        *azang = *((float *) (store+20)); */
 
       /*
       printf("record %d %f %f %d %d %d\n",*nrec,*tbval,*ang,*count,*ktime,*iadd);
