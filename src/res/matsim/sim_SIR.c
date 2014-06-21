@@ -1,25 +1,29 @@
 /* (c) copyright 2003 David G. Long, Brigham Young University */
 /*
 
-   simplified SIR/SIRF program to compute SIR/SIRF image from simulated data
+   simplified radiometer SIR/SIRF program to compute a SIR/SIRF 
+   image from simulated data
 
    Written by DGL Feb. 22, 2003
     + modified from sea_meta_sir_egg4c.c
 */
 
-/* define various sirf and program parameters */
+/* define various SIR and program processing parameters */
 
-float a_init=150.0;           /* initial image A value */
+float a_init=230.0;           /* initial image A value */
 float meas_offset=0;          /* measurement offset */
-int   nits=30;                /* maximum number of SIR iterations */
+int   nits=20;                /* maximum number of SIR iterations */
+int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 
-/* both noisy and noise-free measurements are contained input file */
+/* normally, AVE_INIT is set to one.  For testing, it can be useful to
+   set it to zero to have SIR start with a constant to see how iterations
+   converge, which is slower */
 
-
+/* note: both noisy and noise-free measurements are contained the 
+   simplified simulated input file */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
-#define rnd(a) ((a) >= 0 ? floor((a)+0.5L) : ceil((a)-0.5L))
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -85,7 +89,7 @@ int main(int argc, char **argv)
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02, gsize;
   char fname[180];
 
-  char a_name[100], b_name[100], v_name[100], a_name_ave[100];
+  char a_name[100], b_name[100], v_name[100], a_name_ave[100], a2_name[100];
   char grd_aname[100], grd_vname[100], non_aname[100];
 
 /* SIR file header information */
@@ -119,17 +123,19 @@ int main(int argc, char **argv)
   int errors = 0;
   char title1[101];
 
-  int median_flag = 0;  /* default: no median filter in SIRF algorithm */
+  int median_flag = 0;  /* default: no median filter in SIR/SIRF algorithm */
+  int Niter = 0;
 
 /* begin program */  
 
   printf("BYU simplified SIR/SIRF program: C version 1.0\n");
   if (argc < 2) {
-    printf("\nusage: %s setup_in storage_option noise_flag\n\n",argv[0]);
+    printf("\nusage: %s setup_in storage_option noise_flag Ninter\n\n",argv[0]);
     printf(" input parameters:\n");
     printf("   setup_in        = input setup file\n");
     printf("   storage_option  = (0=mem only [def], 1=file only, 2=mem then file\n");
     printf("   noise_flag      = use (1=noisy [def], 0=noise-free) measurements\n");
+    printf("   Niter           = max interations [def=%d]  Dumps all iteration if provided\n",nits);
     return(0);
   }
 
@@ -150,6 +156,10 @@ int main(int argc, char **argv)
     printf(" Using noisy measurements\n");
   else
     printf(" Using noise-free measurements\n");
+
+  if (argc > 4) sscanf(argv[4],"%d",&Niter);
+  if (Niter > 0) nits=Niter;
+  printf(" Number of iterations: %d\n",nits);  
   
   /* open input .setup file */
 
@@ -575,7 +585,7 @@ int main(int argc, char **argv)
       /* compute AVE image during first iteration */
 
       if (its == 0) 
-	compute_ave(pow, count,(int *) store, (float *) store2);
+	compute_ave(pow, count, (int *) store, (float *) store2);
 
       store = store+4*count;
       store = store+4*count;
@@ -607,11 +617,13 @@ done:
 	  *(sxy+i) = *(tot+i);
 	  tmax = max(tmax, *(tot+i));
 	}
-	if (its == 0) {        /* first iteration */
+	if (its == 0) {        /* first iteration, compute AVE */
 	  if (*(sy+i) > 0) 
 	    *(b_val+i) = *(b_val+i) / *(sy+i);
 	  else
 	    *(b_val+i) = anodata_A;
+	  if (AVE_INIT)
+	    *(a_val+i)=*(b_val+i); /* copy AVE to sir iteration buffer */
 	}
 	amin = min(amin, *(a_val+i));
 	amax = max(amax, *(a_val+i));
@@ -665,7 +677,7 @@ done:
 
     /* output A files during iterations */
 
-    if ( ((its+1)% 5) == 0 || its+1 == nits) {
+    if ( Niter > 0 || its+1 == nits) {
 
       if (meas_offset != 0.0) {   /* shift A image before save */
 	for (i=0; i<nsize; i++)
@@ -673,23 +685,47 @@ done:
 	    *(a_val+i) = *(a_val+i) - meas_offset;
       }
 
-      sprintf(crproc,"BYU MERS:meta_sirf_sea_egg v4.1 Ai=%6.2f It=%d",a_init,its+1);
+      sprintf(crproc,"BYU MERS:meas_meta_sir Ai=%6.2f It=%d",a_init,its+1);
 
-      printf("\n");      
-      printf("Writing A output SIR file '%s'\n", a_name);
-      ierr = write_sir3(a_name, a_val, &nhead, nhtype, 
-			idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
-			ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
-			ia0_off, ib0_off, i0_sc,
-			ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
-			iregion, itype_A, iopt, ipol, ifreqhm, ispare1,
-			anodata_A, v_min_A, v_max_A, sensor, title, type_A, tag,
-			crproc, crtime, descrip, ldes, iaopt, nia);
-      if (ierr < 0) {
-	fprintf(stdout,"*** ERROR writing A output file ***\n");
-	errors++;
+      if (its+1 == nits) {  /* final product image */
+	printf("\n");      
+	printf("Writing A output SIR file '%s'\n", a_name);
+	ierr = write_sir3(a_name, a_val, &nhead, nhtype, 
+			  idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
+			  ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
+			  ia0_off, ib0_off, i0_sc,
+			  ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
+			  iregion, itype_A, iopt, ipol, ifreqhm, ispare1,
+			  anodata_A, v_min_A, v_max_A, sensor, title, type_A, tag,
+			  crproc, crtime, descrip, ldes, iaopt, nia);
+	if (ierr < 0) {
+	  fprintf(stdout,"*** ERROR writing A output file ***\n");
+	  errors++;
+	}
       }
 
+      if (Niter > 0) {  /* iteration image */
+	if (NOISY)
+	  sprintf(a2_name,"simA2_%d.sir",its+1);
+	else
+	  sprintf(a2_name,"simA_%d.sir",its+1);
+
+	printf("\n"); 
+	printf("Writing iteration %d A output SIR file '%s'\n", its+1, a2_name);
+	ierr = write_sir3(a2_name, a_val, &nhead, nhtype, 
+			  idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
+			  ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
+			  ia0_off, ib0_off, i0_sc,
+			  ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
+			  iregion, itype_A, iopt, ipol, ifreqhm, ispare1,
+			  anodata_A, v_min_A, v_max_A, sensor, title, type_A, tag,
+			  crproc, crtime, descrip, ldes, iaopt, nia);
+	if (ierr < 0) {
+	  fprintf(stdout,"*** ERROR writing output file ***\n");
+	  errors++;
+	}
+      }
+      
       if (meas_offset != 0.0 && its+1 != nits) {   /* shift A image back */
 	for (i=0; i<nsize; i++)
 	  if (*(a_val+i) > anodata_A)    /* update only hit pixels */

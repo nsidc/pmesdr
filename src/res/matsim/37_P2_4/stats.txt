@@ -1,0 +1,12 @@
+Footprint size: 28.000000 x 37.000000   Passes: 2
+SIR threshold: -30.000000 dB  Noise STD: 2.000000 K
+Resolution: 1.562500 km/pix  Bandlimit: 5.208333 km
+Sample image size: 896 x 448
+ 
+Case        Mean    STD    RMS
+N-F Non     0.00   3.36   3.36
+N-F Ave    -0.00   3.31   3.31
+N-F SIR    -0.00   2.79   2.79
+Noisy Non   0.00   3.51   3.51
+Noisy Ave  -0.01   3.35   3.35
+Noisy SIR  -0.00   3.04   3.04
