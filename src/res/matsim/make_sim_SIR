@@ -1,7 +1,7 @@
 #
-# compile script for meas_meta_make.c
+# compile script for sim_SIR.c
 #
-# written by DGL at BYU  4 Mar 2014
+# written by DGL at BYU 20 Jun 2014
 
 # with sir libraries 
 gcc -m64 -I../../sirlib/c/include sim_SIR.c -o sim_SIR -L../../sirlib/c -lcsir -lm
