@@ -2,7 +2,8 @@
 % (c) copyright 2014 David G. Long, Brigham Young Unversity
 %
 % simple 2D simulation driver code for simplified SIR algorithm implemenation
-% written by D. Long at BYU Jun 2014
+% written by D. Long at BYU 21 Jun 2014
+% revised by D. Long at BYU 23 Jun 2014 + compute all cases
 %
 % This is a simple simulation of how combining multiple measurements
 % with SIR can significantly improve the effective resolution of the
@@ -21,13 +22,54 @@
 %  eighth, generate .SIR file images versus iteration and create plots
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% set a flag useful for debugging
 %RUN_SIR=0; % skip running external SIR programs when set to zero
 RUN_SIR=1; % run external SIR programs if set to one
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Step One:
-% compute approximate sample locations for a simulated SSM/I-like single
-% channel radiometer
+% Step Zero:
+% set simulation parameters
+%
+workdir='./';
+
+% number of passes over target area (uncomment one line)
+%Npass=1;  % single pass
+Npass=2;   % two passes
+%Npass=3;
+%Npass=4;
+
+% choose one frequency channel to uncomment
+%chan=19; % 19 GHz channel
+%chan=22; % 22 GHz channel
+chan=37; % 37 GHz channel
+%chan=85; % 85 GHz channel (also alters sampling scheme)
+
+% Output image scaline (uncomment one line)
+%Nscale=1;           % output image scaling factor
+%Nscale=2;           % output image scaling factor
+Nscale=3;           % output image scaling factor
+%Nscale=4;           % output image scaling factor
+
+% set simulation options for looping
+
+% list of number of passes to process
+Npass_list=1:2;
+% list of channels to process
+chan_list=[19,37,85]; % 22 not included since similar to 19
+% list of scaling parameters to consider
+Nscale_list=2:4;
+
+% loop over simulation options
+for Npass=Npass_list
+  for chan=chan_list
+    ichan=find(chan_list,chan);
+    for Nscale=Nscale_list
+
+      disp(sprintf('Working on %d %d %d',Npass,chan,Nscale));
+
+%
+% set swath parameters
 %
 swathwidth=1400;    % swath width in km
 scvel=7;            % s/c ground track velocity in km/sec
@@ -36,20 +78,47 @@ srate=0.00844;      % sample rate in measurements/sec
 DeltaT=2.0;         % thermal noise STD (in K) for signal simulation
 AntAzAngRange=180+[-51,51]; % angular range of swath
 rotrad=swathwidth/sin((AntAzAngRange(2)-180)*pi/180)/2;
-% set response threshold for SIR processing
-thres=0.001;
+thres=0.001;        % set response threshold for output to .setup file
 
-% number of passes over target area (uncomment one line)
-%Npass=1;  % single pass
-Npass=2;   % two passes
-%Npass=3;
-%Npass=4;
+if Nscale < 3
+  Nom_iter=30;      % nominal number of SIR iterations to run 
+  maxiter=100;      % number of SIR iterations for this simulation
+else
+  Nom_iter=20;      % nominal number of SIR iterations to run 
+  maxiter=50;       % number of SIR iterations for this simulation
+end
+  
+switch chan
+  case 19 % 19 GHz channel
+    footprint=[43,69];   % effective 3dB footprint size 
+  case 22 % 22 GHz channel
+    footprint=[40,60];    % effective 3dB footprint size 
+  case 37 % 37 GHz channel
+    footprint=[28,37];    % effective 3dB footprint size 
+  case 85 % 85 GHz channel (has denser sampling than other channels)
+    footprint=[43,69];    % effective 3dB footprint size 
+    % the SSM/I 85 GHz channel has (effectively) a denser sampling, which
+    % can be simulated by doubling the spin rate and adjusting srate
+    rotrate=2*31.6/60;    % (effective) rotation vel in rot/sec
+    srate=0.00422;        % sample rate in measurements/sec
+  otherwise
+    disp('*** Invalid channel ***');
+    return;
+end
 
-% choose one channel to uncomment
-%footprint=[43,69]; % 19 GHz channel
-%footprint=[40,60]; % 22 GHz channel
-footprint=[28,37]; % 37 GHz channel
+% generate working directory name
+workdir=sprintf('Ch%d_P%d_Ns%d',chan,Npass,Nscale);
+cpwd=pwd();
+if exist(workdir,'dir') ~=7
+  mkdir(cpwd,workdir);
+end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Step One:
+% compute approximate sample locations for a simulated SSM/I-like single
+% channel radiometer
+
+% generate simulated sampling locations
 swathlen=swathwidth;  % swath length for simulation
 sec=(swathlen*2+swathwidth)/scvel; % seconds of data
 time=[0:srate:sec];     % time axis in sec
@@ -112,7 +181,7 @@ if 1   % show measurement locations
   xlabel('Cross-track distance (km)')
   ylabel('Along-track distance (km)')
   axis([0 swathwidth/2 0 swathlen])
-  print -dpng Boresite.png
+  print('-dpng',[workdir,'/boresite.png']);
 end
 
 % show measurements locations and swath density
@@ -134,7 +203,7 @@ title('Measurement density in 25 km X 25 km area')
 xlabel('Cross-track distance (km)')
 ylabel('Count')
 axis([0 500 0 10])
-print -dpng MeaslocDensity.png
+print('-dpng',[workdir,'/MeaslocDensity.png'])
 
 %disp('Measurement locations computed.  Hit return to continue...'); pause
 
@@ -143,7 +212,6 @@ print -dpng MeaslocDensity.png
 % create measurement responses
 
 % first define output resolution in km/pix
-Nscale=3;
 sampspacing=25.0/2^Nscale;  % sir, ave pixel resolution in km/pix
 grd_size=25.0;              % nominal grd pixel size in km
 
@@ -251,7 +319,7 @@ imagesc(flipud(true')); colorbar;
 title('True image')
 axis off
 axis image
-%print -dpng true.png
+%print('-dpng',[workdir,'/true.png']);
 
 %disp('True image created.  Hit return to continue...'); pause
 
@@ -263,7 +331,7 @@ true1=reshape(true,1,M*N);
 % for each measurement, write measurement and response to the .setup file
 
 % first, write the setup file header and true image to .setup file
-outfile='sir.setup';
+outfile=[workdir '/sir.setup'];
 disp(sprintf('Creating output file: %s',outfile));
 fid=fopen(outfile,'w');
 
@@ -370,15 +438,13 @@ fclose(fid);
 %
 
 if RUN_SIR
-
   % noise-free
-  cmd=sprintf('sim_SIR %s 0 0', outfile);
+  cmd=sprintf('sim_SIR %s 0 0 %d %s', outfile,Nom_iter,workdir);
   system(cmd);
 
   % noisy
-  cmd=sprintf('sim_SIR %s 0 1', outfile);
+  cmd=sprintf('sim_SIR %s 0 1 %d %s', outfile,Nom_iter,workdir);
   system(cmd);
-
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -409,7 +475,7 @@ end
 
 % summarize results
 disp(' ');
-disp(sprintf('Footprint size: %f x %f   Passes: %d',footprint,Npass));
+disp(sprintf('Channel: %d GHz  Footprint size: %f x %f   Passes: %d',chan,footprint,Npass));
 disp(sprintf('SIR threshold: %f dB  Noise STD: %f K',10*log10(thres),DeltaT));  
 disp(sprintf('Resolution: %f km/pix  Bandlimit: %f km',sampspacing,sampspacing/BL));
 disp(sprintf('Sample image size: %d x %d',M,N));
@@ -448,7 +514,7 @@ imagesc(fAs,sc);colorbar;
 axis image
 axis off
 title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r));
-print -dpng NoiseFree.png
+print('-dpng',[workdir,'/NoiseFree.png']);
 
 myfigure(8) % noisy
 colormap('gray')
@@ -472,7 +538,7 @@ imagesc(nAs,sc);colorbar;
 axis image
 axis off
 title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r));
-print -dpng Noisy.png
+print('-dpng',[workdir,'/Noisy.png']);
 
 myfigure(9)
 colormap('gray')
@@ -496,25 +562,25 @@ imagesc(nAs,sc);colorbar;
 axis image
 axis off
 title('sir noisy');
-print -dpng grd.png
+print('-dpng',[workdir,'/grd.png'])
 
 if 1 % make large image plots
   myfigure(20)
   colormap('gray')
   imagesc(tr,sc);colorbar; axis image; axis off; 
-  title('true'); print -dpng true.png
+  title('true'); print('-dpng',[workdir,'/true.png']);
   imagesc(fAn,sc);colorbar; axis image; axis off;
-  title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r)); print -dpng non_nf.png
+  title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r)); print('-dpng',[workdir,'/non_nf.png']);
   imagesc(fAa,sc);colorbar; axis image; axis off;
-  title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r)); print -dpng ave_nf.png
+  title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r)); print('-dpng',[workdir,'/ave_nf.png']);
   imagesc(fAs,sc);colorbar; axis image; axis off
-  title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r)); print -dpng sir_nf.png
+  title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r)); print('-dpng',[workdir,'/sir_nf.png']);
   imagesc(nAn,sc);colorbar; axis image; axis off
-  title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r)); print -dpng non_noisy.png
+  title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r)); print('-dpng',[workdir,'/non_noisy.png']);
   imagesc(nAa,sc);colorbar; axis image; axis off
-  title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r)); print -dpng ave_noisy.png
+  title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r)); print('-dpng',[workdir,'/ave_noisy.png']);
   imagesc(nAs,sc);colorbar; axis image; axis off
-  title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r)); print -dpng sir_noisy.png
+  title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r)); print('-dpng',[workdir,'/sir_noisy.png']);
 end
 
 
@@ -524,29 +590,17 @@ end
 %  read resulting files, and generate summary plots
 %
 
-maxiter=50;  % number of SIR iterations for this simulation
-Nom_iter=20; % nominal number of SIR iterations run 
-
 if RUN_SIR
-
-  % do this is a sub-directory to avoid cluttering up things
-  cpwd=pwd;
-  mkdir(cpwd,'work');
-  cd([cpwd,'/work']); 
-
   % run noise-free SIR
-  cmd=sprintf('../sim_SIR ../%s 0 0 %d', outfile,maxiter);
+  cmd=sprintf('sim_SIR %s 0 0 -%d %s', outfile,maxiter,workdir);
   system(cmd);
 
   % run noisy SIR
-  cmd=sprintf('../sim_SIR ../%s 0 1 %d', outfile,maxiter);
+  cmd=sprintf('sim_SIR %s 0 1 -%d %s', outfile,maxiter,workdir);
   system(cmd);
-
-  % return to directory
-  cd(cpwd)
-
 end
 
+% initial stat arrays
 f_m=zeros([1 maxiter]);
 n_m=zeros([1 maxiter]);
 d_m=zeros([1 maxiter]);
@@ -557,14 +611,14 @@ f_r=zeros([1 maxiter]);
 n_r=zeros([1 maxiter]);
 d_r=zeros([1 maxiter]);
 
-% for each SIR iteration number, read in file and compute error
+% for each SIR iteration number, read in file and compute error statistics
 % plot selected images
 myfigure(12);clf
 colormap('gray')
 ncnt=1;
 for iter=1:maxiter
-  fname=sprintf('work/simA_%d.sir',iter);
-  nname=sprintf('work/simA2_%d.sir',iter);
+  fname=sprintf('simA_%d.sir',iter);
+  nname=sprintf('simA2_%d.sir',iter);
   [fimg head]=loadsir(fname);
   [nimg head]=loadsir(nname);
   [f_m(iter),f_s(iter),f_r(iter)]=compute_stats(tr-fimg);
@@ -584,7 +638,7 @@ for iter=1:maxiter
     ncnt=ncnt+1;
   end
 end
-print -dpng iterimage.png
+print('-dpng',[workdir,'/iterimage.png']);
 
 
 % inferred noise error for SIR vs iteration
@@ -598,7 +652,7 @@ a_r=sqrt((nAa_r.^2-fAa_r.^2));
 g_s=sqrt((nAn_s.^2-fAn_s.^2));
 g_r=sqrt((nAn_r.^2-fAn_r.^2));
 
-% generate error plots
+% generate plots of error versus iteration
 myfigure(10)
 subplot(1,2,1)
 plot([0 60],[0 0],':k');
@@ -623,8 +677,9 @@ ylabel('RMS error (dB K)');
 %ylabel('RMS error (K)');
 xlabel('Iteration');
 title('r=noisy b=noise-free g=noise+4 K=AVE c=non)')
-print -dpng iterate.png
+print('-dpng',[workdir,'/iterate.png']);
 
+% generate plots of error convergence
 myfigure(11)
 plot(10*log10(f_r),s_r,'.')
 hold on;plot(10*log10(f_r(Nom_iter)),s_r(Nom_iter),'r*');hold off
@@ -632,13 +687,13 @@ hold on;plot(10*log10(fAa_r),a_r,'g*');hold off
 hold on;plot(10*log10(fAn_r),g_r,'k*');hold off
 xlabel('RMS signal error (dB)')
 ylabel('RMS noise error');
-title(sprintf('fp=%dx%d DeltaT=%0.1f Np=%d (r=SIR, g=Ave, k=grd)',footprint,DeltaT,Npass));
-print -dpng sig.png
+title(sprintf('%d fp=%dx%d DeltaT=%0.1f Np=%d (r=SIR, g=Ave, k=grd)',chan,footprint,DeltaT,Npass));
+print('-dpng',[workdir,'/sig.png']);
 
 
-% summarize results (again)
+% summarize results (again) for human operator
 disp(' ');
-disp(sprintf('Footprint size: %f x %f   Passes: %d',footprint,Npass));
+disp(sprintf('Channel: %d GHz  Footprint size: %f x %f   Passes: %d',chan,footprint,Npass));
 disp(sprintf('SIR threshold: %f dB  Noise STD: %f K',10*log10(thres),DeltaT));  
 disp(sprintf('Resolution: %f km/pix  Bandlimit: %f km',sampspacing,sampspacing/BL));
 disp(sprintf('Sample image size: %d x %d',M,N));
@@ -651,8 +706,10 @@ disp(sprintf('Noisy Non  %5.2f  %5.2f  %5.2f',nAn_m,nAn_s,nAn_r));
 disp(sprintf('Noisy Ave  %5.2f  %5.2f  %5.2f',nAa_m,nAa_s,nAa_r));
 disp(sprintf('Noisy SIR  %5.2f  %5.2f  %5.2f',nAs_m,nAs_s,nAs_r));
 
-% and write to file
+
+% and write summary statistics to file
 fid=fopen('stats.txt','w');
+fprintf(fid,'Channel: %d GHz  Footprint size: %f x %f   Passes: %d',chan,footprint,Npass);
 fprintf(fid,'Footprint size: %f x %f   Passes: %d\n',footprint,Npass);
 fprintf(fid,'SIR threshold: %f dB  Noise STD: %f K\n',10*log10(thres),DeltaT);  
 fprintf(fid,'Resolution: %f km/pix  Bandlimit: %f km\n',sampspacing,sampspacing/BL);
@@ -666,3 +723,8 @@ fprintf(fid,'Noisy Non  %5.2f  %5.2f  %5.2f\n',nAn_m,nAn_s,nAn_r);
 fprintf(fid,'Noisy Ave  %5.2f  %5.2f  %5.2f\n',nAa_m,nAa_s,nAa_r);
 fprintf(fid,'Noisy SIR  %5.2f  %5.2f  %5.2f\n',nAs_m,nAs_s,nAs_r);
 fclose(fid);
+
+
+end
+end
+end

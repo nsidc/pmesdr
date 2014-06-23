@@ -24,6 +24,7 @@ int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
+#define iabs(a)  ((a) < 0 ? -(a) : (a))
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -55,6 +56,7 @@ void compute_ave(float pow, int count, int fill_array[],
 void filter(float *val, int size, int opt, int nsx, int nsy, float
 	    *temp, float thres);
 
+char *addpath(char *outpath, char *name, char *temp);
 
 /* global array variables used for storing images*/
 
@@ -76,6 +78,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
+  char tstr[1000];  
 
   float latl, lonl, lath, lonh;
   char regname[11];
@@ -122,6 +125,7 @@ int main(int argc, char **argv)
   int storage = 2;
   int errors = 0;
   char title1[101];
+  char outpath[100]="./";  
 
   int median_flag = 0;  /* default: no median filter in SIR/SIRF algorithm */
   int Niter = 0;
@@ -135,7 +139,8 @@ int main(int argc, char **argv)
     printf("   setup_in        = input setup file\n");
     printf("   storage_option  = (0=mem only [def], 1=file only, 2=mem then file\n");
     printf("   noise_flag      = use (1=noisy [def], 0=noise-free) measurements\n");
-    printf("   Niter           = max interations [def=%d]  Dumps all iteration if provided\n",nits);
+    printf("   Niter           = max interations [def=%d] Negative writes each iteration\n",nits);
+    printf("   outpath         = output path (def=./)\n",nits);
     return(0);
   }
 
@@ -158,9 +163,12 @@ int main(int argc, char **argv)
     printf(" Using noise-free measurements\n");
 
   if (argc > 4) sscanf(argv[4],"%d",&Niter);
-  if (Niter > 0) nits=Niter;
+  if (Niter != 0) nits=iabs(Niter);
   printf(" Number of iterations: %d\n",nits);  
   
+  if (argc > 5) sprintf(outpath,"%s/",argv[5]);
+  printf(" Output path: %s\n",outpath);  
+
   /* open input .setup file */
 
   imf = fopen(file_in,"r"); 
@@ -313,7 +321,7 @@ int main(int argc, char **argv)
       pow   = *((float *) (store+8));
       azang = *((float *) (store+12));
       
-      if (count > 5000)
+      if (count > 12000)
 	printf("*** Count error %d  record %d\n",count,nrec);
 
       /*
@@ -492,7 +500,7 @@ int main(int argc, char **argv)
   v_max_A=old_amax;
 
   printf("Writing true A file '%s'\n", b_name);
-  ierr = write_sir3(b_name, b_val, &nhead, nhtype, 
+  ierr = write_sir3(addpath(outpath,b_name,tstr), b_val, &nhead, nhtype, 
 		    idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
 		    ia0_off, ib0_off, i0_sc,
@@ -661,7 +669,7 @@ done:
       }
 
       printf("	Writing A output AVE file '%s'\n", a_name_ave);
-      ierr = write_sir3(a_name_ave, b_val, &nhead, nhtype, 
+      ierr = write_sir3(addpath(outpath,a_name_ave, tstr), b_val, &nhead, nhtype, 
 			idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 			ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
 			ia0_off, ib0_off, i0_sc,
@@ -677,7 +685,7 @@ done:
 
     /* output A files during iterations */
 
-    if ( Niter > 0 || its+1 == nits) {
+    if ( Niter < 0 || its+1 == nits) {
 
       if (meas_offset != 0.0) {   /* shift A image before save */
 	for (i=0; i<nsize; i++)
@@ -690,7 +698,7 @@ done:
       if (its+1 == nits) {  /* final product image */
 	printf("\n");      
 	printf("Writing A output SIR file '%s'\n", a_name);
-	ierr = write_sir3(a_name, a_val, &nhead, nhtype, 
+	ierr = write_sir3(addpath(outpath,a_name, tstr), a_val, &nhead, nhtype, 
 			  idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 			  ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
 			  ia0_off, ib0_off, i0_sc,
@@ -704,7 +712,7 @@ done:
 	}
       }
 
-      if (Niter > 0) {  /* iteration image */
+      if (Niter < 0) {  /* iteration image */
 	if (NOISY)
 	  sprintf(a2_name,"simA2_%d.sir",its+1);
 	else
@@ -712,7 +720,7 @@ done:
 
 	printf("\n"); 
 	printf("Writing iteration %d A output SIR file '%s'\n", its+1, a2_name);
-	ierr = write_sir3(a2_name, a_val, &nhead, nhtype, 
+	ierr = write_sir3(addpath(outpath,a2_name, tstr), a_val, &nhead, nhtype, 
 			  idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 			  ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
 			  ia0_off, ib0_off, i0_sc,
@@ -817,7 +825,7 @@ done1:
 
   sprintf(title,"TB STD image of %s",regname);
   printf("Writing STD (V) output SIR file '%s'\n", v_name);
-  ierr = write_sir3(v_name, sxy, &nhead, nhtype, 
+  ierr = write_sir3(addpath(outpath, v_name, tstr), sxy, &nhead, nhtype, 
 		    idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
 		    ia0_off, ib0_off, i0_sc,
@@ -976,7 +984,7 @@ done3:
 
   sprintf(title,"Grid image of %s",regname);
   printf("Writing grid A output SIR file '%s'\n", grd_aname);
-  ierr = write_sir3(grd_aname, a_val, &nhead, nhtype, 
+  ierr = write_sir3(addpath(outpath,grd_aname, tstr), a_val, &nhead, nhtype, 
 		    idatatype, nsx2, nsy2, xdeg2, ydeg2, 
 		    ascale2, bscale2, a02, b02, 
 		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
@@ -992,7 +1000,7 @@ done3:
 
   sprintf(title,"Grid TB STD image of %s",regname);
   printf("Writing Grid STD (V) output SIR file '%s'\n", grd_vname);
-  ierr = write_sir3(grd_vname, sxy, &nhead, nhtype, 
+  ierr = write_sir3(addpath(outpath,grd_vname, tstr), sxy, &nhead, nhtype, 
 		    idatatype, nsx2, nsy2, xdeg2, ydeg2, 
 		    ascale2, bscale2, a02, b02, 
 		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
@@ -1029,7 +1037,7 @@ done3:
   
   sprintf(title,"Non-enhanced image of %s",regname);
   printf("Writing Non-enhanced A output SIR file '%s'\n", non_aname);
-  ierr = write_sir3(non_aname, sx, &nhead, nhtype, 
+  ierr = write_sir3(addpath(outpath,non_aname, tstr), sx, &nhead, nhtype, 
 		    idatatype, nsx, nsy, xdeg, ydeg, 
 		    ascale, bscale, a0, b0, 
 		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
@@ -1302,3 +1310,8 @@ int get_measurements(char *store, char *store2, float *pow, float *ang, int *cou
   return(-1);
 }
 
+char *addpath(char *outpath, char *name, char *temp)
+{ /* append path to name, return pointer to temp */
+  sprintf(temp,"%s/%s",outpath,name);
+  return(temp);  
+}
