@@ -60,6 +60,10 @@ chan_list=[19,37,85]; % 22 not included since similar to 19
 % list of scaling parameters to consider
 Nscale_list=2:4;
 
+%Npass_list=2;
+%chan_list=37;
+%Nscale_list=3;
+
 % loop over simulation options
 for Npass=Npass_list
   for chan=chan_list
@@ -451,19 +455,19 @@ end
 % Step seven:
 %  load and display image results
 %
-[tr h_t]=loadsir('true.sir');
+[tr h_t]=loadsir([workdir, '/true.sir']);
 
 % noise-free
-[fAg h_fAg]=loadsir('simA.grd');
-[fAn h_fAn]=loadsir('simA.non');
-[fAa h_fAa]=loadsir('simA.ave');
-[fAs h_fAs]=loadsir('simA.sir');
+[fAg h_fAg]=loadsir([workdir, '/simA.grd']);
+[fAn h_fAn]=loadsir([workdir, '/simA.non']);
+[fAa h_fAa]=loadsir([workdir, '/simA.ave']);
+[fAs h_fAs]=loadsir([workdir, '/simA.sir']);
 
 % noisy
-[nAg h_nAg]=loadsir('simA2.grd');
-[nAn h_nAn]=loadsir('simA2.non');
-[nAa h_nAa]=loadsir('simA2.ave');
-[nAs h_nAs]=loadsir('simA2.sir');
+[nAg h_nAg]=loadsir([workdir, '/simA2.grd']);
+[nAn h_nAn]=loadsir([workdir, '/simA2.non']);
+[nAa h_nAa]=loadsir([workdir, '/simA2.ave']);
+[nAs h_nAs]=loadsir([workdir, '/simA2.sir']);
 
 % compute error stats
 [fAn_m,fAn_s,fAn_r]=compute_stats(tr-fAn);
@@ -617,8 +621,8 @@ myfigure(12);clf
 colormap('gray')
 ncnt=1;
 for iter=1:maxiter
-  fname=sprintf('simA_%d.sir',iter);
-  nname=sprintf('simA2_%d.sir',iter);
+  fname=sprintf([workdir, '/simA_%d.sir'],iter);
+  nname=sprintf([workdir,'/simA2_%d.sir'],iter);
   [fimg head]=loadsir(fname);
   [nimg head]=loadsir(nname);
   [f_m(iter),f_s(iter),f_r(iter)]=compute_stats(tr-fimg);
@@ -708,7 +712,7 @@ disp(sprintf('Noisy SIR  %5.2f  %5.2f  %5.2f',nAs_m,nAs_s,nAs_r));
 
 
 % and write summary statistics to file
-fid=fopen('stats.txt','w');
+fid=fopen([workdir '/stats.txt'],'w');
 fprintf(fid,'Channel: %d GHz  Footprint size: %f x %f   Passes: %d',chan,footprint,Npass);
 fprintf(fid,'Footprint size: %f x %f   Passes: %d\n',footprint,Npass);
 fprintf(fid,'SIR threshold: %f dB  Noise STD: %f K\n',10*log10(thres),DeltaT);  
