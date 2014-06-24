@@ -8,7 +8,25 @@ gridded images products from the measurements.  The simulation and
 processing are highly simplified in order to illustrate the process.
 
 Note that the synthetic image is low-pass filtered to meet the Nyquist
-sampling requirements for SIR reconstruction.
+sampling requirements for SIR reconstruction.  
+
+The script simulates the locations and spatial response functions for
+single and multiple passes over a site.  It generates a simple "true"
+synthetic image, which is low pass filtered.  The code then simulates 
+both noisy and noise-free measurements as if they were collected over 
+the "true" image.  It then runs the sim_SIR.c program which computes 
+the SIR image estimate as well as AVE and non-enhanced, gridded images.  
+It the computes error statistics between the estimated and true images.
+A plot of the signal error and noise error versus iteration number is
+plotted.  This process is repeated for representative (19, 37, 85 GHz)
+SSM/I channels in order to select the best simulatin parameters.
+
+Note: due to the way the true image is re-generated for eadh different
+pixel resolution considered, the absolute error should not be compared
+between different pixel resolutions,  The error can be compared for
+different channels and number of iterations for a given pixel resolution,
+however. 
+
 
 Theory for the SIR algorithm is given in
 
@@ -20,3 +38,13 @@ D.G. Long and D.L. Daum, "Spatial Resolution Enhancement of SSM/I Data,"
 IEEE Transactions on Geoscience and Remote Sensing, Vol. 36, No. 2, 
 pp. 407-417, Mar. 1998. 
 
+
+The same setup file is the input to the Backus-Gilbert Inverstion (BGI)
+processing code sim_BGI.c.  This program creates a standard .bgi file 
+as well as a  median=filtered .bgi file.
+
+Theory for the BGI processing algorithm as implemented here is given in
+
+D.G. Long and D.L. Daum, "Spatial Resolution Enhancement of SSM/I Data," 
+IEEE Transactions on Geoscience and Remote Sensing, Vol. 36, No. 2, 
+pp. 407-417, Mar. 1998. 
