@@ -1,16 +1,17 @@
-/* (c) copyright 2003 David G. Long, Brigham Young University */
+/* (c) copyright 2014 David G. Long, Brigham Young University */
 /*
 
    simplified program to compute Backus-Gilbert Inversion (bgi) images from
    simulated setup files generated
 
    Written by DGL 21 Jun 2014
-    + modified from sea_meta_sir_egg4c.c
+   Revised by DGL 25 Jun 2014 + add output path
+
 */
 
 /* define various sirf and program parameters */
 
-float a_init=150.0;           /* initial image A value */
+float a_init=230.0;           /* initial image A value */
 float meas_offset=0;          /* measurement offset */
 
 /* both noisy and noise-free measurements are contained input file */
@@ -49,6 +50,7 @@ void stat_updates(float tbval, float ang, int count, int *fill_array, float *res
 
 void filter(float *val, int size, int mode, int nsx, int nsy, float *temp, float thres);
 
+char *addpath(char *outpath, char *name, char *temp);
 
 /* global array variables used for storing images*/
 
@@ -71,6 +73,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
+  char tstr[1000];  
 
   float latl, lonl, lath, lonh;
   char regname[11];
@@ -121,19 +124,21 @@ int main(int argc, char **argv)
   int storage = 2;
   int errors = 0;
   char title1[101];
+  char outpath[100]="./";  
 
 /* begin program */  
 
   printf("BYU simplified BGI program: C version 1.0\n");
   if (argc < 2) {
-    printf("\nusage: %s setup_in noise_flag gamma delta2 thres\n\n",argv[0]);
+    printf("\nusage: %s setup_in noise_flag gamma delta2 thres outpath\n\n",argv[0]);
     printf(" input parameters:\n");
     printf("   setup_in    = input setup file\n");
     printf("   noise_flag  = use (1=noisy [def], 0=noise-free) measurements\n");
     printf("   gamma       = BGI gamma parameter\n");
     printf("   delta2      = BGI delta2 (noise variance)\n");
     printf("   thres       = gain threshold\n");
-    return(0);
+    printf("   outpath     = output path (def=./)\n");
+   return(0);
   }
 
   file_in=argv[1];
@@ -150,6 +155,8 @@ int main(int argc, char **argv)
   if (argc > 3) sscanf(argv[3],"%f",&bgi_gamma);
   if (argc > 4) sscanf(argv[4],"%f",&delta2);
   if (argc > 5) sscanf(argv[5],"%f",&thres);
+  if (argc > 6) sprintf(outpath,"%s/",argv[6]);
+  printf(" Output path: %s\n",outpath);  
 
   printf("BGI options: omega=%f gamma=%f delta2=%f thres=%f\n",omega, bgi_gamma, delta2, thres);
 
@@ -470,7 +477,7 @@ int main(int argc, char **argv)
 
   if (0) {      
     printf("Writing true A file '%s'\n", b_name);
-    ierr = write_sir3(b_name, b_val, &nhead, nhtype, 
+    ierr = write_sir3(addpath(outpath,b_name, tstr), b_val, &nhead, nhtype, 
 		      idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 		      ixdeg_off, iydeg_off, ideg_sc, iscale_sc, 
 		      ia0_off, ib0_off, i0_sc,
@@ -696,7 +703,7 @@ int main(int argc, char **argv)
 
   printf("\n"); 
   printf("Writing A output BGI file '%s'\n", a_name);
-  ierr = write_sir3(a_name, a_val, &nhead, nhtype, 
+  ierr = write_sir3(addpath(outpath,a_name, tstr), a_val, &nhead, nhtype, 
 		    idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
 		    ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
@@ -720,7 +727,7 @@ int main(int argc, char **argv)
   sprintf(title,"BGI w/median image of %s",regname);
   printf("\n"); 
   printf("Writing median-filtered A output BGI file'%s'\n", a_name);
-  ierr = write_sir3(a_name, a_val, &nhead, nhtype, 
+  ierr = write_sir3(addpath(outpath, a_name, tstr), a_val, &nhead, nhtype, 
 		    idatatype, nsx, nsy, xdeg, ydeg, ascale, bscale, a0, b0, 
 		    ixdeg_off, iydeg_off, ideg_sc, iscale_sc, ia0_off, ib0_off, i0_sc,
 		    ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin, 
@@ -926,6 +933,11 @@ float median(float array[], int count)
   return(temp);
 }
 
+char *addpath(char *outpath, char *name, char *temp)
+{ /* append path to name, return pointer to temp */
+  sprintf(temp,"%s/%s",outpath,name);
+  return(temp);  
+}
 
 /****************************************************************************/
 

@@ -1,0 +1,304 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% (c) copyright 2014 David G. Long, Brigham Young Unversity
+%
+% Compute BGI tradeoffs
+% written by D. Long at BYU 25 Jun 2014
+%
+% This script should be run after the SIR tradeoff analysis in
+% setup_make.m  The script computes simulated BGI products for various
+% values of the BGI parameters to help choose the optimum values
+
+% general program flow:
+%  first, run the setup_make.m m script to create the input .setup files
+%  second, create BGI images for various values of gamma
+%  third, plots results
+%  fourth, compare to SIR results
+%
+% BGI computational load is quite high, so script runs slowly
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Step Zero:
+% set simulation parameters
+% setup_make.m should have already been run before using this scipt
+%
+
+% set default image parameters
+workdir='./';
+
+% number of passes over target area (uncomment one line)
+%Npass=1;  % single pass
+Npass=2;   % two passes
+%Npass=3;
+%Npass=4;
+
+% choose one frequency channel to uncomment
+%chan=19; % 19 GHz channel
+%chan=22; % 22 GHz channel
+chan=37; % 37 GHz channel
+%chan=85; % 85 GHz channel (also alters sampling scheme)
+
+% Output image scaline (uncomment one line)
+%Nscale=1;           % output image scaling factor
+%Nscale=2;           % output image scaling factor
+Nscale=3;           % output image scaling factor
+%Nscale=4;           % output image scaling factor
+
+% set simulation options for looping
+
+% list of number of passes to actually process
+Npass_list=1:2;
+% list of channels to process
+chan_list=[19,37,85]; % 22 not included since similar to 19
+% list of scaling parameters to consider
+Nscale_list=2:4;
+
+% over-ride for testing
+Npass_list=1;
+chan_list=37;
+Nscale_list=2;
+
+% loop over simulation run options
+for Npass=Npass_list
+  for chan=chan_list
+    for Nscale=Nscale_list
+      disp(sprintf('Working on Npass=%d Channel=%d Nscale=%d',Npass,chan,Nscale));
+  
+% set channel-specific parameters
+switch chan
+  case 19 % 19 GHz channel
+  case 22 % 22 GHz channel
+  case 37 % 37 GHz channel
+  case 85 % 85 GHz channel (has denser sampling than other channels)
+  otherwise
+    disp('*** Invalid channel ***');
+    return;
+end
+
+% generate working directory name
+workdir=sprintf('Ch%d_P%d_Ns%d',chan,Npass,Nscale);
+cpwd=pwd();
+if exist(workdir,'dir') ~=7
+  mkdir(cpwd,workdir);
+end
+
+outfile=[workdir '/sir.setup'];
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Step two:
+%  run external sir program
+%
+
+gam=0.9;
+noise_var=2.0^2;
+gainThres=0.125;
+
+% noise-free
+cmd=sprintf('sim_BGI %s 0 %f %f %f %s', outfile,gam,noise_var,gainThres,workdir);
+system(cmd);
+
+% noisy
+cmd=sprintf('sim_BGI %s 1 %f %f %f %s', outfile,gam,noise_var,gainThres,workdir);
+system(cmd);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Step seven:
+%  load and display image results
+%
+[tr h_t]=loadsir([workdir, '/true.sir']);
+
+% noise-free
+[fAg h_fAg]=loadsir([workdir, '/simA.grd']);
+[fAn h_fAn]=loadsir([workdir, '/simA.non']);
+[fAa h_fAa]=loadsir([workdir, '/simA.ave']);
+[fAs h_fAs]=loadsir([workdir, '/simA.sir']);
+[fAb h_fAb]=loadsir([workdir, '/simA.bgi']);
+[fMb h_fMb]=loadsir([workdir, '/simA_median.bgi']);
+
+% noisy
+[nAg h_nAg]=loadsir([workdir, '/simA2.grd']);
+[nAn h_nAn]=loadsir([workdir, '/simA2.non']);
+[nAa h_nAa]=loadsir([workdir, '/simA2.ave']);
+[nAs h_nAs]=loadsir([workdir, '/simA2.sir']);
+[nAb h_nAb]=loadsir([workdir, '/simA2.bgi']);
+[nMb h_nMb]=loadsir([workdir, '/simA2_median.bgi']);
+
+% compute error stats
+[fAn_m,fAn_s,fAn_r]=compute_stats(tr-fAn);
+[fAa_m,fAa_s,fAa_r]=compute_stats(tr-fAa);
+[fAs_m,fAs_s,fAs_r]=compute_stats(tr-fAs);
+[fAb_m,fAb_s,fAb_r]=compute_stats(tr-fAb);
+[fMb_m,fMb_s,fMb_r]=compute_stats(tr-fMb);
+[nAn_m,nAn_s,nAn_r]=compute_stats(tr-nAn);
+[nAa_m,nAa_s,nAa_r]=compute_stats(tr-nAa);
+[nAs_m,nAs_s,nAs_r]=compute_stats(tr-nAs);
+[nAb_m,nAb_s,nAb_r]=compute_stats(tr-nAb);
+[nMb_m,nMb_s,nMb_r]=compute_stats(tr-nMb);
+
+% summarize results
+disp(' ');
+disp(sprintf('Channel: %d GHz  Passes: %d  Nscale: %d',chan,Npass,Nscale));
+disp(' ');
+disp(sprintf('Case        Mean    STD    RMS'));
+disp(sprintf('N-F Non    %5.2f  %5.2f  %5.2f',fAn_m,fAn_s,fAn_r));
+disp(sprintf('N-F Ave    %5.2f  %5.2f  %5.2f',fAa_m,fAa_s,fAa_r));
+disp(sprintf('N-F SIR    %5.2f  %5.2f  %5.2f',fAs_m,fAs_s,fAs_r));
+disp(sprintf('N-F BGI    %5.2f  %5.2f  %5.2f',fAb_m,fAb_s,fAb_r));
+disp(sprintf('N-F BGM    %5.2f  %5.2f  %5.2f',fMb_m,fAb_s,fMb_r));
+disp(sprintf('Noisy Non  %5.2f  %5.2f  %5.2f',nAn_m,nAn_s,nAn_r));
+disp(sprintf('Noisy Ave  %5.2f  %5.2f  %5.2f',nAa_m,nAa_s,nAa_r));
+disp(sprintf('Noisy SIR  %5.2f  %5.2f  %5.2f',nAs_m,nAs_s,nAs_r));
+disp(sprintf('Noisy BGI  %5.2f  %5.2f  %5.2f',nAb_m,nAb_s,nAb_r));
+disp(sprintf('Noisy BGM  %5.2f  %5.2f  %5.2f',nMb_m,nMb_s,nMb_r));
+
+% write summary statistics to file
+fid=fopen([workdir '/stats2.txt'],'w');
+fprintf(fid,'Channel: %d GHz  Passes: %d  Nscale: %d\n',chan,Npass,Nscale);
+fprintf(fid,'\n');
+fprintf(fid,'Case        Mean    STD    RMS\n');
+fprintf(fid,'N-F Non    %5.2f  %5.2f  %5.2f\n',fAn_m,fAn_s,fAn_r);
+fprintf(fid,'N-F Ave    %5.2f  %5.2f  %5.2f\n',fAa_m,fAa_s,fAa_r);
+fprintf(fid,'N-F SIR    %5.2f  %5.2f  %5.2f\n',fAs_m,fAs_s,fAs_r);
+fprintf(fid,'N-F BGI    %5.2f  %5.2f  %5.2f\n',fAb_m,fAb_s,fAb_r);
+fprintf(fid,'N-F BGM    %5.2f  %5.2f  %5.2f\n',fMb_m,fAb_s,fMb_r);
+fprintf(fid,'Noisy Non  %5.2f  %5.2f  %5.2f\n',nAn_m,nAn_s,nAn_r);
+fprintf(fid,'Noisy Ave  %5.2f  %5.2f  %5.2f\n',nAa_m,nAa_s,nAa_r);
+fprintf(fid,'Noisy SIR  %5.2f  %5.2f  %5.2f\n',nAs_m,nAs_s,nAs_r);
+fprintf(fid,'Noisy BGI  %5.2f  %5.2f  %5.2f\n',nAb_m,nAb_s,nAb_r);
+fprintf(fid,'Noisy BGM  %5.2f  %5.2f  %5.2f\n',nMb_m,nMb_s,nMb_r);
+fclose(fid);
+
+% set color bar the same for all caes
+sc=[190 260];
+
+% plot various comparisons
+myfigure(7) % noise-free
+colormap('gray')
+subplot(3,2,1)
+imagesc(tr,sc);colorbar;
+axis image
+axis off
+title('true');
+subplot(3,2,2)
+imagesc(fAn,sc);colorbar;
+axis image
+axis off
+title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r));
+subplot(3,2,3)
+imagesc(fAa,sc);colorbar;
+axis image
+axis off
+title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r));
+subplot(3,2,4)
+imagesc(fAs,sc);colorbar;
+axis image
+axis off
+title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r));
+subplot(3,2,5)
+imagesc(fAb,sc);colorbar;
+axis image
+axis off
+title(sprintf('BGI N-F %0.2f %0.2f %0.2f',fAb_m,fAb_s,fAb_r));
+subplot(3,2,6)
+imagesc(fMb,sc);colorbar;
+axis image
+axis off
+title(sprintf('BGM N-F %0.2f %0.2f %0.2f',fMb_m,fMb_s,fMb_r));
+print('-dpng',[workdir,'/NoiseFree2.png']);
+
+myfigure(8) % noisy
+colormap('gray')
+subplot(3,2,1)
+imagesc(tr,sc);colorbar;
+axis image
+axis off
+title('true');
+subplot(3,2,2)
+imagesc(nAn,sc);colorbar;
+axis image
+axis off
+title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r));
+subplot(3,2,3)
+imagesc(nAa,sc);colorbar;
+axis image
+axis off
+title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r));
+subplot(3,2,4)
+imagesc(nAs,sc);colorbar;
+axis image
+axis off
+title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r));
+subplot(3,2,5)
+imagesc(nAb,sc);colorbar;
+axis image
+axis off
+title(sprintf('BGI noisy %0.2f %0.2f %0.2f',nAb_m,nAb_s,nAb_r));
+subplot(3,2,6)
+imagesc(nMb,sc);colorbar;
+axis image
+axis off
+title(sprintf('BGM noisy %0.2f %0.2f %0.2f',nMb_m,nMb_s,nMb_r));
+print('-dpng',[workdir,'/Noisy2.png']);
+
+myfigure(9)
+colormap('gray')
+subplot(3,2,1)
+imagesc(tr,sc);colorbar;
+axis image
+axis off
+title('true');
+subplot(3,2,2)
+imagesc(nAg,sc);colorbar;
+axis image
+axis off
+title('grd noisy');
+subplot(3,2,3)
+imagesc(nAa,sc);colorbar;
+axis image
+axis off
+title('ave noisy');
+subplot(3,2,4)
+imagesc(nAs,sc);colorbar;
+axis image
+axis off
+title('sir noisy');
+subplot(3,2,5)
+imagesc(nAb,sc);colorbar;
+axis image
+axis off
+title('BGI noisy')
+subplot(3,2,6)
+imagesc(nMb,sc);colorbar;
+axis image
+axis off
+title('BGM noisy')
+print('-dpng',[workdir,'/grd_comp2.png'])
+
+if 1 % make large image plots
+  myfigure(20)
+  colormap('gray')
+  imagesc(nAb,sc);colorbar; axis image; axis off
+  title(sprintf('BGI noisy %0.2f %0.2f %0.2f',nAb_m,nAb_s,nAb_r));
+  print('-dpng',[workdir,'/bgi_noisy.png']);
+  imagesc(nMb,sc);colorbar; axis image; axis off
+  title(sprintf('BGM noisy %0.2f %0.2f %0.2f',nMb_m,nMb_s,nMb_r));
+  print('-dpng',[workdir,'/bgm_noisy.png']);
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Step three:
+%  generate BG algorithm outputs versus gamma 
+%  read resulting files, and generate summary plots
+%
+
+
+% and write summary statistics to file
+
+
+end
+end
+end
