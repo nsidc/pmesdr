@@ -719,7 +719,7 @@ disp(sprintf('Noisy SIR  %5.2f  %5.2f  %5.2f',nAs_m,nAs_s,nAs_r));
 
 % and write summary statistics to file
 fid=fopen([workdir '/stats.txt'],'w');
-fprintf(fid,'Channel: %d GHz  Footprint size: %f x %f   Passes: %d',chan,footprint,Npass);
+fprintf(fid,'Channel: %d GHz  Footprint size: %f x %f   Passes: %d\n',chan,footprint,Npass);
 fprintf(fid,'Footprint size: %f x %f   Passes: %d\n',footprint,Npass);
 fprintf(fid,'SIR threshold: %f dB  Noise STD: %f K\n',10*log10(thres),DeltaT);  
 fprintf(fid,'Resolution: %f km/pix  Bandlimit: %f km\n',sampspacing,sampspacing/BL);

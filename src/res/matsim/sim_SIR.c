@@ -1,11 +1,11 @@
-/* (c) copyright 2003 David G. Long, Brigham Young University */
+/* (c) copyright 2014 David G. Long, Brigham Young University */
 /*
 
    simplified radiometer SIR/SIRF program to compute a SIR/SIRF 
    image from simulated data
 
    Written by DGL Feb. 22, 2003
-    + modified from sea_meta_sir_egg4c.c
+
 */
 
 /* define various SIR and program processing parameters */
@@ -134,13 +134,13 @@ int main(int argc, char **argv)
 
   printf("BYU simplified SIR/SIRF program: C version 1.0\n");
   if (argc < 2) {
-    printf("\nusage: %s setup_in storage_option noise_flag Ninter\n\n",argv[0]);
+    printf("\nusage: %s setup_in storage_option noise_flag Ninter outpath\n\n",argv[0]);
     printf(" input parameters:\n");
     printf("   setup_in        = input setup file\n");
     printf("   storage_option  = (0=mem only [def], 1=file only, 2=mem then file\n");
     printf("   noise_flag      = use (1=noisy [def], 0=noise-free) measurements\n");
     printf("   Niter           = max interations [def=%d] Negative writes each iteration\n",nits);
-    printf("   outpath         = output path (def=./)\n",nits);
+    printf("   outpath         = output path (def=./)\n");
     return(0);
   }
 
