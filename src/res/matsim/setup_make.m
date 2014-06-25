@@ -33,6 +33,8 @@ RUN_SIR=1; % run external SIR programs if set to one
 %
 workdir='./';
 
+% define the possible run cases
+
 % number of passes over target area (uncomment one line)
 %Npass=1;  % single pass
 Npass=2;   % two passes
@@ -53,25 +55,23 @@ Nscale=3;           % output image scaling factor
 
 % set simulation options for looping
 
-% list of number of passes to process
+% list of number of passes to actually process
 Npass_list=1:2;
 % list of channels to process
 chan_list=[19,37,85]; % 22 not included since similar to 19
 % list of scaling parameters to consider
 Nscale_list=2:4;
 
-%Npass_list=2;
-%chan_list=37;
+% over-ride for testing
+%Npass_list=1;
+%chan_list=[19,37];
 %Nscale_list=3;
 
-% loop over simulation options
+% loop over simulation run options
 for Npass=Npass_list
   for chan=chan_list
-    ichan=find(chan_list,chan);
     for Nscale=Nscale_list
-
-      disp(sprintf('Working on %d %d %d',Npass,chan,Nscale));
-
+      disp(sprintf('Working on Npass=%d Channel=%d Nscale=%d',Npass,chan,Nscale));
 %
 % set swath parameters
 %
@@ -84,14 +84,16 @@ AntAzAngRange=180+[-51,51]; % angular range of swath
 rotrad=swathwidth/sin((AntAzAngRange(2)-180)*pi/180)/2;
 thres=0.001;        % set response threshold for output to .setup file
 
+% set default number of iterations
 if Nscale < 3
-  Nom_iter=30;      % nominal number of SIR iterations to run 
+  Nom_iter=20;      % nominal number of SIR iterations to run 
   maxiter=100;      % number of SIR iterations for this simulation
 else
   Nom_iter=20;      % nominal number of SIR iterations to run 
   maxiter=50;       % number of SIR iterations for this simulation
 end
   
+% set channel-specific parameters
 switch chan
   case 19 % 19 GHz channel
     footprint=[43,69];   % effective 3dB footprint size 
@@ -100,7 +102,7 @@ switch chan
   case 37 % 37 GHz channel
     footprint=[28,37];    % effective 3dB footprint size 
   case 85 % 85 GHz channel (has denser sampling than other channels)
-    footprint=[43,69];    % effective 3dB footprint size 
+    footprint=[13,15];    % effective 3dB footprint size 
     % the SSM/I 85 GHz channel has (effectively) a denser sampling, which
     % can be simulated by doubling the spin rate and adjusting srate
     rotrate=2*31.6/60;    % (effective) rotation vel in rot/sec
@@ -253,6 +255,10 @@ if 1 % compute an example at a particular location and orientation
   myfigure(2);
   % show a sample measurement response
   imagesc(x,y,V); colorbar;
+  xlabel('km');ylabel('km')
+  title(sprintf('Chan: %d  Resolution: %0.4f km/pix  size: %dx%d km',chan,sampspacing,footprint));
+  print('-dpng',[workdir,'/MRF.png']);
+  drawnow
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -372,7 +378,7 @@ for i=1:nn
     % response function
     aresp=exp(-x1.*x1).*exp(-y1.*y1);
 
-    % plot response function
+    % plot response function fpr testing
     %myfigure(5)
     %imagesc(x,y,aresp);colorbar;
     %title(sprintf('Angle: %f',ang(i)));
@@ -566,7 +572,7 @@ imagesc(nAs,sc);colorbar;
 axis image
 axis off
 title('sir noisy');
-print('-dpng',[workdir,'/grd.png'])
+print('-dpng',[workdir,'/grd_comp.png'])
 
 if 1 % make large image plots
   myfigure(20)
