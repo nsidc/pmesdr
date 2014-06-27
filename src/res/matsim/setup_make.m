@@ -4,6 +4,7 @@
 % simple 2D simulation driver code for simplified SIR algorithm implemenation
 % written by D. Long at BYU 21 Jun 2014
 % revised by D. Long at BYU 23 Jun 2014 + compute all cases
+% revised by D. Long at BYU 27 Jun 2014 + increased (some) font sizes
 %
 % This is a simple simulation of how combining multiple measurements
 % with SIR can significantly improve the effective resolution of the
@@ -23,9 +24,17 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% set a flag useful for debugging
+% set flags useful for debugging
+%RUN_SETUP=0; % do not regenerate setup files
+RUN_SETUP=1; % generate setup files
 %RUN_SIR=0; % skip running external SIR programs when set to zero
 RUN_SIR=1; % run external SIR programs if set to one
+
+% set default paramaters that control font size when printing to improve figure readability
+set(0,'DefaultaxesFontName','Liberation Sans');
+set(0,'DefaultaxesFontSize',18);
+%set(0,'DefaulttextFontName','Liberation Sans');
+%set(0,'DefaulttextFontSize',12);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Step Zero:
@@ -194,9 +203,9 @@ end
 myfigure(1)
 h=subplot(2,1,2);
 plot(cross,along,'.')  % center positions
-title('Measurement locations')
-xlabel('Cross-track distance (km)')
-ylabel('Along-track distance (km)')
+%title('Measurement locations')
+xlabel('Cross-track dis (km)')
+ylabel('Along-track dis (km)')
 axis([0 swathwidth/2 0 swathlen])
 axis([0 500 0 100])
 grid on;
@@ -254,9 +263,9 @@ if 1 % compute an example at a particular location and orientation
 
   myfigure(2);
   % show a sample measurement response
-  imagesc(x,y,V); colorbar;
+  imagesc(x,y,V); h=colorbar; set(h,'FontSize',12);
   xlabel('km');ylabel('km')
-  title(sprintf('Chan: %d  Resolution: %0.4f km/pix  size: %dx%d km',chan,sampspacing,footprint));
+  h=title(sprintf('Chan: %d  Resolution: %0.4f km/pix  size: %dx%d km',chan,sampspacing,footprint)); set(h,'FontSize',12); 
   print('-dpng',[workdir,'/MRF.png']);
   drawnow
 end
@@ -325,7 +334,7 @@ true=abs(true);
 % display true image
 myfigure(4)
 colormap('gray')
-imagesc(flipud(true')); colorbar;
+imagesc(flipud(true')); h=colorbar; set(h,'FontSize',12);
 title('True image')
 axis off
 axis image
@@ -340,6 +349,7 @@ true1=reshape(true,1,M*N);
 % Step 5:
 % for each measurement, write measurement and response to the .setup file
 
+if RUN_SETUP
 % first, write the setup file header and true image to .setup file
 outfile=[workdir '/sir.setup'];
 disp(sprintf('Creating output file: %s',outfile));
@@ -380,7 +390,7 @@ for i=1:nn
 
     % plot response function fpr testing
     %myfigure(5)
-    %imagesc(x,y,aresp);colorbar;
+    %imagesc(x,y,aresp);h=colorbar; set(h,'FontSize',12);
     %title(sprintf('Angle: %f',ang(i)));
     %disp('pausing...');pause;
 
@@ -419,14 +429,14 @@ for i=1:nn
 	disp(sprintf('keep %d of %d: %f %f %d %d %d %d,%d',i,nn,z,z1,iadd,length(pointer),prod(size(X)),ia,ic));
 	myfigure(6)
 	subplot(1,2,1)
-	imagesc(x,y,aresp);colorbar;
-	title(sprintf('Angle: %f',mod(ang(i),360.0)));
+	imagesc(x,y,aresp);h=colorbar; set(h,'FontSize',12);
+	h=title(sprintf('Angle: %f',mod(ang(i),360.0))); set(h,'FontSize',12);
 	axis image
 	subplot(1,2,2)
 	bp=zeros(size(true));
 	bp(pointer)=aresp1/max(aresp1);
-	imagesc(bp);colorbar;
-	title(sprintf('max: %f',max(aresp1)));
+	imagesc(bp);h=colorbar; set(h,'FontSize',12); set(h,'FontSize',12);
+	h=title(sprintf('max: %f',max(aresp1)));
 	disp('pausing...');pause;
       end
 
@@ -441,6 +451,7 @@ disp(sprintf('wrote %d measurements', cnt));
 % close output file
 fclose(fid);
 
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Step six:
@@ -505,92 +516,92 @@ sc=[190 260];
 myfigure(7) % noise-free
 colormap('gray')
 subplot(2,2,1)
-imagesc(tr,sc);colorbar;
+imagesc(tr,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('true');
+h=title('true'); set(h,'FontSize',12);
 subplot(2,2,2)
-imagesc(fAn,sc);colorbar;
+imagesc(fAn,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r));
+h=title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r)); set(h,'FontSize',12);
 subplot(2,2,3)
-imagesc(fAa,sc);colorbar;
+imagesc(fAa,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r));
+h=title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r)); set(h,'FontSize',12);
 subplot(2,2,4)
-imagesc(fAs,sc);colorbar;
+imagesc(fAs,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r));
+h=title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r)); set(h,'FontSize',12);
 print('-dpng',[workdir,'/NoiseFree.png']);
 
 myfigure(8) % noisy
 colormap('gray')
 subplot(2,2,1)
-imagesc(tr,sc);colorbar;
+imagesc(tr,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('true');
+h=title('true'); set(h,'FontSize',12);
 subplot(2,2,2)
-imagesc(nAn,sc);colorbar;
+imagesc(nAn,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r));
+h=title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r)); set(h,'FontSize',12);
 subplot(2,2,3)
-imagesc(nAa,sc);colorbar;
+imagesc(nAa,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r));
+h=title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r)); set(h,'FontSize',12);
 subplot(2,2,4)
-imagesc(nAs,sc);colorbar;
+imagesc(nAs,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r));
+h=title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r)); set(h,'FontSize',12);
 print('-dpng',[workdir,'/Noisy.png']);
 
 myfigure(9)
 colormap('gray')
 subplot(2,2,1)
-imagesc(tr,sc);colorbar;
+imagesc(tr,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('true');
+h=title('true'); set(h,'FontSize',12);
 subplot(2,2,2)
-imagesc(nAg,sc);colorbar;
+imagesc(nAg,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('grd noisy');
+h=title('grd noisy'); set(h,'FontSize',12);
 subplot(2,2,3)
-imagesc(nAa,sc);colorbar;
+imagesc(nAa,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('ave noisy');
+h=title('ave noisy'); set(h,'FontSize',12);
 subplot(2,2,4)
-imagesc(nAs,sc);colorbar;
+imagesc(nAs,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('sir noisy');
+h=title('sir noisy'); set(h,'FontSize',12);
 print('-dpng',[workdir,'/grd_comp.png'])
 
 if 1 % make large image plots
   myfigure(20)
   colormap('gray')
-  imagesc(tr,sc);colorbar; axis image; axis off; 
-  title('true'); print('-dpng',[workdir,'/true.png']);
-  imagesc(fAn,sc);colorbar; axis image; axis off;
-  title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r)); print('-dpng',[workdir,'/non_nf.png']);
-  imagesc(fAa,sc);colorbar; axis image; axis off;
-  title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r)); print('-dpng',[workdir,'/ave_nf.png']);
-  imagesc(fAs,sc);colorbar; axis image; axis off
-  title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r)); print('-dpng',[workdir,'/sir_nf.png']);
-  imagesc(nAn,sc);colorbar; axis image; axis off
-  title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r)); print('-dpng',[workdir,'/non_noisy.png']);
-  imagesc(nAa,sc);colorbar; axis image; axis off
-  title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r)); print('-dpng',[workdir,'/ave_noisy.png']);
-  imagesc(nAs,sc);colorbar; axis image; axis off
-  title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r)); print('-dpng',[workdir,'/sir_noisy.png']);
+  imagesc(tr,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off; 
+  h=title('true'); set(h,'FontSize',12); print('-dpng',[workdir,'/true.png']);
+  imagesc(fAn,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off;
+  h=title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r)); set(h,'FontSize',12); print('-dpng',[workdir,'/non_nf.png']);
+  imagesc(fAa,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off;
+  h=title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r)); set(h,'FontSize',12); print('-dpng',[workdir,'/ave_nf.png']);
+  imagesc(fAs,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off
+  h=title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r)); set(h,'FontSize',12); print('-dpng',[workdir,'/sir_nf.png']);
+  imagesc(nAn,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off
+  h=title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r)); set(h,'FontSize',12); print('-dpng',[workdir,'/non_noisy.png']);
+  imagesc(nAa,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off
+  h=title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r)); set(h,'FontSize',12); print('-dpng',[workdir,'/ave_noisy.png']);
+  imagesc(nAs,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off
+  h=title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r)); set(h,'FontSize',12); print('-dpng',[workdir,'/sir_noisy.png']);
 end
 
 
@@ -635,16 +646,17 @@ for iter=1:maxiter
   [n_m(iter),n_s(iter),n_r(iter)]=compute_stats(tr-nimg);
   [d_m(iter),d_s(iter),d_r(iter)]=compute_stats(fimg-nimg);
   if iter==1 | iter==10 | iter==20 | iter==30
+    myfigure(12);
     subplot(4,2,2*(ncnt-1)+1)
-    imagesc(nimg,sc);colorbar;
+    imagesc(nimg,sc);h=colorbar; set(h,'FontSize',12);
     axis image
     axis off
-    title(sprintf('Noisy iter=%d',iter));
+    h=title(sprintf('Noisy iter=%d',iter)); set(h,'FontSize',12);
     subplot(4,2,2*ncnt)
-    imagesc(fimg,sc);colorbar;
+    imagesc(fimg,sc);h=colorbar; set(h,'FontSize',12);
     axis image
     axis off
-    title(sprintf('N-F iter=%d',iter));
+    h=title(sprintf('N-F iter=%d',iter)); set(h,'FontSize',12);
     ncnt=ncnt+1;
   end
 end
@@ -673,7 +685,7 @@ hold on; plot(n_m,'r'); hold off;
 hold on; plot([Nom_iter Nom_iter],[-0.05 0.05],'--k'); hold off;
 xlabel('Iteration');
 ylabel('Mean error (K)');
-title('r=noisy b=noise-free k=AVE c=non')
+h=title('r=noisy b=noise-free k=AVE c=non'); set(h,'FontSize',12);
 subplot(1,2,2)
 plot(10*log10(f_r),'b');
 hold on; plot(10*log10(n_r),'r'); hold off;
@@ -686,7 +698,7 @@ ylabel('RMS error (dB K)');
 %hold on; plot((n_r),'r'); hold off;
 %ylabel('RMS error (K)');
 xlabel('Iteration');
-title('r=noisy b=noise-free g=noise+4 K=AVE c=non)')
+h=title('r=noisy b=noise-free g=noise+4 K=AVE c=non)'); set(h,'FontSize',12);
 print('-dpng',[workdir,'/iterate.png']);
 
 % generate plots of error convergence
@@ -697,7 +709,7 @@ hold on;plot(10*log10(fAa_r),a_r,'g*');hold off
 hold on;plot(10*log10(fAn_r),g_r,'k*');hold off
 xlabel('RMS signal error (dB)')
 ylabel('RMS noise error');
-title(sprintf('%d fp=%dx%d DeltaT=%0.1f Np=%d (r=SIR, g=Ave, k=grd)',chan,footprint,DeltaT,Npass));
+h=title(sprintf('%d fp=%dx%d DeltaT=%0.1f Np=%d (r=SIR, g=Ave, k=grd)',chan,footprint,DeltaT,Npass)); set(h,'FontSize',12);
 print('-dpng',[workdir,'/sig.png']);
 
 

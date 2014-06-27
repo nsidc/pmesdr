@@ -34,10 +34,9 @@ float meas_offset=0;          /* measurement offset */
 #define REL_EOF   2           /* fseek relative to end of file */
 
 /* the following BG parameters are subjectively set */
-double bgi_gamma=0.01*3.141562654;/* def BGI gamma parameter */
+float bgi_gamma=0.01*3.141562654; /* def BGI gamma parameter */
 float delta2=1.0;                 /* def BGI assumed noise variance */
 float thres=0.125;                /* def minimum gain threshold */
-//float thres=0.45;                 /* def minimum gain threshold */
 float omega=0.001;                /* BGI scale factor */
 
 /* function prototypes */
