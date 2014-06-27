@@ -27,6 +27,11 @@ between different pixel resolutions,  The error can be compared for
 different channels and number of iterations for a given pixel resolution,
 however. 
 
+The script bgi_trades.m should be run AFTER setup_make.m and computes
+the BGI results.  It provides the data to choose the subjective BGI
+gamma parameter.  Note: BGI runs much slower than SIR and the script
+takes very long to run.
+
 
 Theory for the SIR algorithm is given in
 

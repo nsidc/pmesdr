@@ -3,6 +3,7 @@
 %
 % Compute BGI tradeoffs
 % written by D. Long at BYU 25 Jun 2014
+% revised by D. Long at BYU 27 Jun 2014 + increased (some) font sizes
 %
 % This script should be run after the SIR tradeoff analysis in
 % setup_make.m  The script computes simulated BGI products for various
@@ -18,11 +19,22 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% set a flag useful for debugging
+%RUN_BGI1=0;  % do not run external BGI programs if set to zero
+RUN_BGI1=1;  % run external BGI programs if set to one
+%RUN_BGI=0;  % do not run external BGI programs if set to zero
+RUN_BGI=1;  % run external BGI programs if set to one
+
+% set default paramaters that control font size when printing to improve figure readability
+set(0,'DefaultaxesFontName','Liberation Sans');
+set(0,'DefaultaxesFontSize',18);
+%set(0,'DefaulttextFontName','Liberation Sans');
+%set(0,'DefaulttextFontSize',12);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Step Zero:
 % set simulation parameters
 % setup_make.m should have already been run before using this scipt
-%
 
 % set default image parameters
 workdir='./';
@@ -55,9 +67,9 @@ chan_list=[19,37,85]; % 22 not included since similar to 19
 Nscale_list=2:4;
 
 % over-ride for testing
-Npass_list=1;
-chan_list=37;
-Nscale_list=2;
+Npass_list=[1 2];
+chan_list=85;
+Nscale_list=[2 3 4];
 
 % loop over simulation run options
 for Npass=Npass_list
@@ -91,18 +103,21 @@ outfile=[workdir '/sir.setup'];
 %  run external sir program
 %
 
-gam=0.9;
+gam=0.45;
 noise_var=2.0^2;
 gainThres=0.125;
 
-% noise-free
-cmd=sprintf('sim_BGI %s 0 %f %f %f %s', outfile,gam,noise_var,gainThres,workdir);
-system(cmd);
+if RUN_BGI1
+  % noise-free
+  cmd=sprintf('sim_BGI %s 0 %f %f %f %s', outfile,gam,noise_var,gainThres,workdir);
+  disp(cmd)
+  system(cmd);
 
-% noisy
-cmd=sprintf('sim_BGI %s 1 %f %f %f %s', outfile,gam,noise_var,gainThres,workdir);
-system(cmd);
-
+  % noisy
+  cmd=sprintf('sim_BGI %s 1 %f %f %f %s', outfile,gam,noise_var,gainThres,workdir);
+  disp(cmd)
+  system(cmd);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Step seven:
@@ -178,113 +193,113 @@ sc=[190 260];
 myfigure(7) % noise-free
 colormap('gray')
 subplot(3,2,1)
-imagesc(tr,sc);colorbar;
+imagesc(tr,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('true');
+h=title('true'); set(h,'FontSize',12);
 subplot(3,2,2)
-imagesc(fAn,sc);colorbar;
+imagesc(fAn,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r));
+h=title(sprintf('non N-F %0.2f %0.2f %0.2f',fAn_m,fAn_s,fAn_r)); set(h,'FontSize',12);
 subplot(3,2,3)
-imagesc(fAa,sc);colorbar;
+imagesc(fAa,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r));
+h=title(sprintf('ave N-F %0.2f %0.2f %0.2f',fAa_m,fAa_s,fAa_r)); set(h,'FontSize',12);
 subplot(3,2,4)
-imagesc(fAs,sc);colorbar;
+imagesc(fAs,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r));
+h=title(sprintf('sir N-F %0.2f %0.2f %0.2f',fAs_m,fAs_s,fAs_r)); set(h,'FontSize',12);
 subplot(3,2,5)
-imagesc(fAb,sc);colorbar;
+imagesc(fAb,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('BGI N-F %0.2f %0.2f %0.2f',fAb_m,fAb_s,fAb_r));
+h=title(sprintf('BGI N-F %0.2f %0.2f %0.2f',fAb_m,fAb_s,fAb_r)); set(h,'FontSize',12);
 subplot(3,2,6)
-imagesc(fMb,sc);colorbar;
+imagesc(fMb,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('BGM N-F %0.2f %0.2f %0.2f',fMb_m,fMb_s,fMb_r));
+h=title(sprintf('BGM N-F %0.2f %0.2f %0.2f',fMb_m,fMb_s,fMb_r)); set(h,'FontSize',12);
 print('-dpng',[workdir,'/NoiseFree2.png']);
 
 myfigure(8) % noisy
 colormap('gray')
 subplot(3,2,1)
-imagesc(tr,sc);colorbar;
+imagesc(tr,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('true');
+h=title('true');  set(h,'FontSize',12);
 subplot(3,2,2)
-imagesc(nAn,sc);colorbar;
+imagesc(nAn,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r));
+h=title(sprintf('non noisy %0.2f %0.2f %0.2f',nAn_m,nAn_s,nAn_r));  set(h,'FontSize',12);
 subplot(3,2,3)
-imagesc(nAa,sc);colorbar;
+imagesc(nAa,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r));
+h=title(sprintf('ave noisy %0.2f %0.2f %0.2f',nAa_m,nAa_s,nAa_r));  set(h,'FontSize',12);
 subplot(3,2,4)
-imagesc(nAs,sc);colorbar;
+imagesc(nAs,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r));
+h=title(sprintf('sir noisy %0.2f %0.2f %0.2f',nAs_m,nAs_s,nAs_r));  set(h,'FontSize',12);
 subplot(3,2,5)
-imagesc(nAb,sc);colorbar;
+imagesc(nAb,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('BGI noisy %0.2f %0.2f %0.2f',nAb_m,nAb_s,nAb_r));
+h=title(sprintf('BGI noisy %0.2f %0.2f %0.2f',nAb_m,nAb_s,nAb_r));  set(h,'FontSize',12);
 subplot(3,2,6)
-imagesc(nMb,sc);colorbar;
+imagesc(nMb,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title(sprintf('BGM noisy %0.2f %0.2f %0.2f',nMb_m,nMb_s,nMb_r));
+h=title(sprintf('BGM noisy %0.2f %0.2f %0.2f',nMb_m,nMb_s,nMb_r));  set(h,'FontSize',12);
 print('-dpng',[workdir,'/Noisy2.png']);
 
 myfigure(9)
 colormap('gray')
 subplot(3,2,1)
-imagesc(tr,sc);colorbar;
+imagesc(tr,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('true');
+h=title('true'); set(h,'FontSize',12);
 subplot(3,2,2)
-imagesc(nAg,sc);colorbar;
+imagesc(nAg,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('grd noisy');
+h=title('grd noisy'); set(h,'FontSize',12);
 subplot(3,2,3)
-imagesc(nAa,sc);colorbar;
+imagesc(nAa,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('ave noisy');
+h=title('ave noisy'); set(h,'FontSize',12);
 subplot(3,2,4)
-imagesc(nAs,sc);colorbar;
+imagesc(nAs,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('sir noisy');
+h=title('sir noisy'); set(h,'FontSize',12);
 subplot(3,2,5)
-imagesc(nAb,sc);colorbar;
+imagesc(nAb,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('BGI noisy')
+h=title('BGI noisy'); set(h,'FontSize',12);
 subplot(3,2,6)
-imagesc(nMb,sc);colorbar;
+imagesc(nMb,sc);h=colorbar; set(h,'FontSize',12);
 axis image
 axis off
-title('BGM noisy')
+h=title('BGM noisy'); set(h,'FontSize',12);
 print('-dpng',[workdir,'/grd_comp2.png'])
 
 if 1 % make large image plots
   myfigure(20)
   colormap('gray')
-  imagesc(nAb,sc);colorbar; axis image; axis off
-  title(sprintf('BGI noisy %0.2f %0.2f %0.2f',nAb_m,nAb_s,nAb_r));
+  imagesc(nAb,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off
+  h=title(sprintf('BGI noisy %0.2f %0.2f %0.2f',nAb_m,nAb_s,nAb_r)); set(h,'FontSize',12);
   print('-dpng',[workdir,'/bgi_noisy.png']);
-  imagesc(nMb,sc);colorbar; axis image; axis off
-  title(sprintf('BGM noisy %0.2f %0.2f %0.2f',nMb_m,nMb_s,nMb_r));
+  imagesc(nMb,sc);h=colorbar; set(h,'FontSize',12); axis image; axis off
+  h=title(sprintf('BGM noisy %0.2f %0.2f %0.2f',nMb_m,nMb_s,nMb_r)); set(h,'FontSize',12);
   print('-dpng',[workdir,'/bgm_noisy.png']);
 end
 
@@ -295,8 +310,127 @@ end
 %  read resulting files, and generate summary plots
 %
 
+% set list of gamma values to consider
+gamma_list=0.5*pi*[0 0.25 0.5 0.75 0.9 0.95 0.98 0.99 0.995 1.0];
+ngamma=length(gamma_list);
 
-% and write summary statistics to file
+% initial stat arrays
+fB_m=zeros([1 ngamma]);
+fM_m=zeros([1 ngamma]);
+fB_s=zeros([1 ngamma]);
+fM_s=zeros([1 ngamma]);
+fB_r=zeros([1 ngamma]);
+fM_r=zeros([1 ngamma]);
+nB_m=zeros([1 ngamma]);
+nM_m=zeros([1 ngamma]);
+nB_s=zeros([1 ngamma]);
+nM_s=zeros([1 ngamma]);
+nB_r=zeros([1 ngamma]);
+nM_r=zeros([1 ngamma]);
+
+myfigure(22);clf
+colormap('gray');
+
+for ig=1:ngamma
+  bgi_gamma=gamma_list(ig);
+  subworkdir=sprintf('%s/bgi_%f',workdir,bgi_gamma);
+  cpwd=pwd();
+  if exist(subworkdir,'dir') ~=7
+    mkdir(cpwd,subworkdir);
+  end  
+  
+  if RUN_BGI
+    % noise-free
+    cmd=sprintf('sim_BGI %s 0 %f %f %f %s', outfile,bgi_gamma,noise_var,gainThres,subworkdir);
+    disp(cmd)
+    system(cmd);
+
+    % noisy
+    cmd=sprintf('sim_BGI %s 1 %f %f %f %s', outfile,bgi_gamma,noise_var,gainThres,subworkdir);
+    disp(cmd)
+    system(cmd);
+  end
+
+  % read results and accumulate statistics
+  % noise-free
+  [fAb1 h_fAb1]=loadsir([subworkdir, '/simA.bgi']);
+  [fMb1 h_fMb1]=loadsir([subworkdir, '/simA_median.bgi']);
+
+  % noisy
+  [nAb1 h_nAb1]=loadsir([subworkdir, '/simA2.bgi']);
+  [nMb1 h_nMb1]=loadsir([subworkdir, '/simA2_median.bgi']);
+
+  % compute error stats
+  [fB_m(ig),fB_s(ig),fB_r(ig)]=compute_stats(tr-fAb1);
+  [fM_m(ig),fM_s(ig),fM_r(ig)]=compute_stats(tr-fMb1);
+  [nB_m(ig),nB_s(ig),nB_r(ig)]=compute_stats(tr-nAb1);
+  [nM_m(ig),nM_s(ig),nM_r(ig)]=compute_stats(tr-nMb1);
+
+  myfigure(22)
+  subplot(5,2,ig)
+  imagesc(nAb1,sc); h=colorbar; set(h,'FontSize',12); axis image; axis off
+  h=title(sprintf('BGI g=%f RMS=%0.2f',bgi_gamma/pi,nB_r(ig)));   set(h,'FontSize',12);
+  drawnow;
+
+  % write summary statistics to file
+  fid=fopen([subworkdir '/bgi_stats.txt'],'w');
+  fprintf(fid,'Channel: %d GHz  Passes: %d  Nscale: %d\n',chan,Npass,Nscale);
+  fprintf(fid,'BGI Gamma: %d \n',bgi_gamma);
+  fprintf(fid,'\n');
+  fprintf(fid,'Case        Mean    STD    RMS\n');
+  fprintf(fid,'N-F BGI    %5.2f  %5.2f  %5.2f\n',fB_m(ig),fB_s(ig),fB_r(ig));
+  fprintf(fid,'N-F BGM    %5.2f  %5.2f  %5.2f\n',fM_m(ig),fM_s(ig),fM_r(ig));
+  fprintf(fid,'Noisy BGI  %5.2f  %5.2f  %5.2f\n',nB_m(ig),nB_s(ig),nB_r(ig));
+  fprintf(fid,'Noisy BGM  %5.2f  %5.2f  %5.2f\n',nM_m(ig),nM_s(ig),nM_r(ig));
+  fclose(fid);
+  
+end
+print('-dpng',[workdir,'/bgi_images.png']);
+
+% inferred noise statistics
+sB_m=nB_m-fB_m;
+sM_m=nM_m-fM_m;
+sB_s=sqrt((nB_s.^2-fB_s.^2));
+sM_s=sqrt((nM_s.^2-fM_s.^2));
+sB_r=sqrt(abs(nB_r.^2-fB_r.^2));
+sM_r=sqrt(abs(nM_r.^2-fM_r.^2));
+
+% generate plots of error versus BGI gamma
+myfigure(30);clf
+subplot(1,2,1);
+plot([0 1.0],[0 0],':k');
+hold on;plot(2*gamma_list/pi,fB_m,'b'); hold off
+hold on;plot(2*gamma_list/pi,fM_m,'c'); hold off
+hold on; plot(2*gamma_list/pi,nB_m,'r'); hold off;
+hold on; plot(2*gamma_list/pi,nM_m,'g'); hold off;
+%%hold on; plot([Nom_iter Nom_iter],[-0.05 0.05],'--k'); hold off;
+xlabel('BG gamma''');
+ylabel('Mean error (K)');
+h=title('b=NF, c=NF med, r=Noisy, g=Noisy med'); set(h,'FontSize',12);
+subplot(1,2,2);
+plot(2*gamma_list/pi,10*log10(fB_r),'b');
+hold on; plot(2*gamma_list/pi,10*log10(fM_r),'c'); hold off;
+hold on; plot(2*gamma_list/pi,10*log10(nB_r),'r'); hold off;
+hold on; plot(2*gamma_list/pi,10*log10(nM_r),'g'); hold off;
+hold on; plot(2*gamma_list/pi,10*log10(sB_r)+4,'k'); hold off;
+hold on; plot(2*gamma_list/pi,10*log10(sM_r)+4,'m'); hold off;
+%%hold on; plot([Nom_iter Nom_iter],[3 8],'--k'); hold off;
+ylabel('RMS error (dB K)');
+xlabel('BG gamma''');
+h=title('b=NF, c=NF med, r=N, g=N med, k=sig, m=sig med'); set(h,'FontSize',12);
+print('-dpng',[workdir,'/bgi_gamma.png']);
+
+
+% generate plots of error
+myfigure(31)
+plot(10*log10(fB_r),sB_r,'b')
+hold on;plot(10*log10(fM_r),sM_r,'c');hold off
+hold on;plot(10*log10(nB_r),nB_r,'r');hold off
+hold on;plot(10*log10(nM_r),nM_r,'g');hold off
+xlabel('RMS signal error (dB)')
+ylabel('Noise RMS error');
+h=title(sprintf('Ch=%d Np=%d (b=NF BG, c=NF BG med, r=N BG, g=N BG med)',chan,Npass));  set(h,'FontSize',12);
+print('-dpng',[workdir,'/bgi_sig.png']);
 
 
 end
