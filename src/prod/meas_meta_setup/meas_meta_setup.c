@@ -10,6 +10,7 @@
   written by DGL at BYU  02/22/2014 + based on oscat_meta_setup_slice.c and ssmi_meta_setup_v7RSS.f
   revised by DGL at BYU  03/07/2014 + added EASE2 capability
   revised by DGL at BYU  04/11/2014 + added response debug output
+  revised by DGL at BYU  06/28/2014 + added RSS swath overlap reject
 
 ******************************************************************/
 
@@ -636,6 +637,12 @@ int main(int argc,char *argv[])
       /* check scan measurement quality */
       if ((quality_mask & d->IQUAL_FLAG[iscan]) != 0)
 	goto label_350; /* skip to next scan if data bad */
+
+#ifdef RSS
+      /* reject scans that are not part of current orbit (RSS only) */
+      if (d->ORBIT[iscan]-d->IORBIT < 0.0 || d->ORBIT[iscan]-d->IORBIT > 1.0)
+	goto label_350; /* skip to next scan */
+#endif
    
       //printf("scan %d of %d: %lf %d %d\n",iscan,nscans,d->ORBIT[iscan],d->IQUAL_FLAG[iscan],d->IORBIT);
  
