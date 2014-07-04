@@ -45,15 +45,13 @@ void count_hits(int count, int fill_array[], float response_array[], float thres
 
 void make_indx(int nmax, int count, int fill_array[], float response_array[], float thres, char **indx, char * pointer);
 
-void stat_updates(float tbval, float ang, int count, int *fill_array, float *response_array);
-
 void filter(float *val, int size, int mode, int nsx, int nsy, float *temp, float thres);
 
 char *addpath(char *outpath, char *name, char *temp);
 
 /* global array variables used for storing images*/
 
-float *a_val, *b_val, *a_temp, *sxy, *sx, *sx2, *sy, *tot;
+float *a_val, *b_val, *a_temp;
 int *cnts;
 
 /* other global variables */
@@ -266,14 +264,8 @@ int main(int argc, char **argv)
   b_val  = (float *) malloc(sizeof(float)*nsize);
   a_temp = (float *) malloc(sizeof(float)*nsize);
   cnts   = (int *) a_temp;  /* share storage space */
-  sxy    = (float *) malloc(sizeof(float)*nsize);
-  sx     = (float *) malloc(sizeof(float)*nsize);
-  sx2    = (float *) malloc(sizeof(float)*nsize);
-  sy     = (float *) malloc(sizeof(float)*nsize);
-  tot    = (float *) malloc(sizeof(float)*nsize);
 
-  if (a_val == NULL || b_val == NULL || a_temp == NULL || sxy == NULL
-      || sx == NULL || sx2 == NULL || sy == NULL || tot == NULL) {
+  if (a_val == NULL || b_val == NULL || a_temp == NULL) {
     fprintf(stdout,"*** ERROR: inadequate memory for image working storage %d\n",nsize);
     exit(-1);
   }
@@ -614,7 +606,7 @@ int main(int argc, char **argv)
 
 	/* compute z matrix */
 	for (i=1; i <= m; i++)
-	  for (j=1; j <= m; j++) {
+	  for (j=i; j <= m; j++) {
 	    dx = ix0[i] - ix0[j];
 	    dy = iy0[i] - iy0[j];
 	    z[i][j] = 0.0;
@@ -746,11 +738,6 @@ int main(int argc, char **argv)
   free(a_val);
   free(b_val);
   free(a_temp);
-  free(sxy);
-  free(sx);
-  free(sx2);
-  free(sy);
-  free(tot);
  
  return(errors);
 }
@@ -818,45 +805,6 @@ void make_indx(int nmax, int count, int fill_array[], float response_array[], fl
 	if (j < nmax) indx[n*nmax+j]=pointer;
       }
     }  
-}
-
-
-
-/* routine to compute variance and error from measurements */
-
-void stat_updates(float tbval, float ang, int count, int fill_array[],
-		  float response_array[])
-{
-  float ave, sigv;
-  float total=0.0, num=0.0;
-  int i, n;
-  float m;
-
-  /* compute forward projection of measurement */
-  
-  for (i=0; i < count; i++) {
-    n=fill_array[i];
-    m=response_array[i];
-    sigv = *(a_val+n-1);
-    total = total + m * sigv;
-    num = num + m;
-  }
-  if (num == 0) return;
-
-  /*  ave = 10.0 * log10( (double) (total/num)); */
-  ave =(double) (total/num);
-  
-
-  for (i=0; i < count; i++) {
-    n=fill_array[i];
-    m=response_array[i];
-    *(tot+n-1) = *(tot+n-1) + m;
-    sigv = (tbval - ave);      /* difference */
-    *(sx+n-1) = *(sx+n-1) + m * sigv;
-    *(sy+n-1) = *(sy+n-1) + m * sigv * sigv;
-  }
-
-  return;
 }
 
 
