@@ -8,6 +8,7 @@
   Written by DGL at BYU 02/25/2014 + modified from ssmi_meta_bgi.c
   Revised by DGL at BYU 05/16/2015 + use intermediate dump file output
   Revised by DGL at BYU 06/21/2014 + modified gain thresholding and response rejection
+  Revised by DGL at BYU 07/04/2014 + removed extra memory array allocations, reduced redundant computation of z
 
 ******************************************************************/
 
@@ -23,7 +24,7 @@
 #include "nr.h"
 #include "nrutil.h"
 
-#define VERSION 1.1
+#define VERSION 2.0
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
@@ -48,9 +49,9 @@ int   HS=20;                  /* measurement headersize in bytes */
 double bgi_gamma=0.01*3.141562654;/* BGI gamma parameter */
 float delta2=1.0;                 /* BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor */
-float ithres=0;               /* minimum gain threshold */
+float ithres=0;                   /* minimum gain threshold */
 int Nsize=0;                      /* (built into the code) */
-float wscale=0.001;  /* pattern coversion factor int->float */
+float wscale=0.001;  /* pattern scale coversion factor int->float */
 
 /****************************************************************************/
 
@@ -115,7 +116,7 @@ void check_err(const int stat, const int line, const char *file);
 
 /* global array variables used for storing images*/
 
-float *a_val, *b_val, *a_temp, *sxy, *sx, *sx2, *sy, *tot;
+float *a_val, *a_temp;
 int *cnts;
 
 /* other global variables */
@@ -174,7 +175,7 @@ int main(int argc, char **argv)
   int median_flag = 0;  /* default: no median filter */
   int ibeam = 0;
  
-  int nmax, mdim, mdim2, k, dx, dy, i1, j1;
+  int nmax, mdim, mdim2, mwork, k, dx, dy, i1, j1;
   int *ix0, *iy0, *ind;
   char **indx;
   float sum, *g, **z, **zc, *u, *v, *u1, *v1, *c, *work, *tb2, *ww, *patarr;
@@ -479,17 +480,10 @@ int main(int argc, char **argv)
   nsize = nsx * nsy;
   
   a_val  = (float *) malloc(sizeof(float)*nsize);
-  b_val  = (float *) malloc(sizeof(float)*nsize);
   a_temp = (float *) malloc(sizeof(float)*nsize);
   cnts   = (int *) a_temp;  /* share storage space */
-  sxy    = (float *) malloc(sizeof(float)*nsize);
-  sx     = (float *) malloc(sizeof(float)*nsize);
-  sx2    = (float *) malloc(sizeof(float)*nsize);
-  sy     = (float *) malloc(sizeof(float)*nsize);
-  tot    = (float *) malloc(sizeof(float)*nsize);
 
-  if (a_val == NULL || b_val == NULL || a_temp == NULL || sxy == NULL
-      || sx == NULL ||   sx2 == NULL ||     sy == NULL || tot == NULL) {
+  if (a_val == NULL || a_temp == NULL) {
      eprintf("*** ERROR: inadequate memory for image working storage\n");
      exit(-1);
   }
@@ -500,7 +494,7 @@ int main(int argc, char **argv)
 
    for (i=0; i < nsize; i++)
      cnts[i]=0;
-   mdim=0;
+   mwork=0;
 
   /* with storage allocated, copy file into memory if selected */
 
@@ -586,7 +580,7 @@ int main(int argc, char **argv)
 	   }
 	   if (keep == 1) {
 	     count_hits(count, (int *) last_store, (short int *) store, ithres, cnts, &m, nsx);
-	     if (m > mdim) mdim = m;
+	     if (m > mwork) mwork = m;
 	     if (count % 2 == 1) count=count+1;  /* ensure storage of next record on a 4byte word boundary */
 	     nbyte=nbyte+count*2;
 	     store=store+count*2;
@@ -625,8 +619,8 @@ int main(int argc, char **argv)
   nmax=0;
   for (i=0; i< nsize; i++)
     if (cnts[i] > nmax) nmax=cnts[i];
-  printf("\nMaximum hits above threshold: %d  max size: %d  thres %f\n",nmax,mdim, ithres);
-  mdim = mdim * 2+1;
+  printf("\nMaximum hits above threshold: %d  max size: %d  thres %f\n",nmax, mwork, ithres);
+  mdim = mwork * 2+1;
  
   /* BG processing */
 
@@ -743,7 +737,7 @@ int main(int argc, char **argv)
 
 	/* compute z matrix */
 	for (i=1; i <= m; i++)
-	  for (j=1; j <= m; j++) {
+	  for (j=i; j <= m; j++) {
 	    dx = ix0[i] - ix0[j];
 	    dy = iy0[i] - iy0[j];
 	    z[i][j] = 0.0;
@@ -862,13 +856,7 @@ int main(int argc, char **argv)
   /* free malloc'ed memory (not strictly necessary, but good to be explicit) */
   free(space);
   free(a_val);
-  free(b_val);
   free(a_temp);
-  free(sxy);
-  free(sx);
-  free(sx2);
-  free(sy);
-  free(tot);
 
   return(errors);
 }
