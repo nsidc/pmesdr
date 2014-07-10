@@ -1,4 +1,5 @@
-Channel: 37 GHz  Footprint size: 28.000000 x 37.000000   Passes: 2Footprint size: 28.000000 x 37.000000   Passes: 2
+Channel: 37 GHz  Footprint size: 28.000000 x 37.000000   Passes: 2
+Footprint size: 28.000000 x 37.000000   Passes: 2
 SIR threshold: -30.000000 dB  Noise STD: 2.000000 K
 Resolution: 1.562500 km/pix  Bandlimit: 5.208333 km
 Sample image size: 896 x 448
@@ -6,7 +7,7 @@ Sample image size: 896 x 448
 Case        Mean    STD    RMS
 N-F Non     0.00   3.36   3.36
 N-F Ave    -0.00   3.31   3.31
-N-F SIR    -0.00   2.79   2.79
+N-F SIR    -0.00   2.67   2.67
 Noisy Non   0.01   3.50   3.50
 Noisy Ave   0.01   3.33   3.33
-Noisy SIR   0.01   3.04   3.04
+Noisy SIR   0.01   3.24   3.24

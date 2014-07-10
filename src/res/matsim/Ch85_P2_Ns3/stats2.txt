@@ -1,0 +1,13 @@
+Channel: 85 GHz  Passes: 2  Nscale: 3
+
+Case        Mean    STD    RMS
+N-F Non    -0.01   3.66   3.66
+N-F Ave    -0.00   2.89   2.89
+N-F SIR    -0.00   2.28   2.28
+N-F BGI     0.01   2.67   2.67
+N-F BGM     0.01   2.67   2.62
+Noisy Non   0.01   3.72   3.72
+Noisy Ave   0.02   2.97   2.97
+Noisy SIR   0.01   3.52   3.52
+Noisy BGI   0.03   5.26   5.26
+Noisy BGM   0.02   4.49   4.49
