@@ -3,6 +3,7 @@
 %
 % simple 2D simulation driver code for simplified SIR algorithm implemenation
 % written by D. Long at BYU 12 Jul 2014 + based on setup_make.m
+% written by D. Long at BYU 17 Jul 2014 + to include plots of modified MRFs
 %
 % This simple simulation evaluates the sensitivity of SIR reconstruction
 % to the precision in knowing the measurement response function (MRF).
@@ -238,7 +239,7 @@ x=((1:Ngrid)-floor(Ngrid/2)-1)*sampspacing;
 y=((1:Ngrid)-floor(Ngrid/2)-1)*sampspacing;
 [X, Y]=meshgrid(x,y);
 
-if 0 % compute an example at a particular location and orientation
+if 1 % compute an example at a particular location and orientation
   x0=X(Ngrid/2+0.5,Ngrid/2+0.5);
   y0=Y(Ngrid/2+0.5,Ngrid/2+0.5);
   ang0=30*pi/180;
@@ -256,13 +257,64 @@ if 0 % compute an example at a particular location and orientation
   % truncate response
   V(V<thres)=0;
 
-  myfigure(2);
-  % show a sample measurement response
-  imagesc(x,y,V); h=colorbar; set(h,'FontSize',12);
-  xlabel('km');ylabel('km')
-  h=title(sprintf('Chan: %d  Resolution: %0.4f km/pix  size: %dx%d km',chan,sampspacing,footprint)); set(h,'FontSize',12); 
-  print('-dpng',[workdir,'/MRF.png']);
-  drawnow
+  if 0
+    myfigure(2);
+    % show a sample measurement response
+    imagesc(x,y,V); h=colorbar; set(h,'FontSize',12);
+    xlabel('km');ylabel('km')
+    h=title(sprintf('Chan: %d  Resolution: %0.4f km/pix  size: %dx%d km',chan,sampspacing,footprint)); set(h,'FontSize',12); 
+    print('-dpng',[workdir,'/MRF.png']);
+    drawnow
+  end
+
+  ncnt=1;
+  myfigure(22);clf
+  for icase=1:max_MRF_cases
+    V2=V;
+    mmax=max(max(V2));
+    switch icase
+      case 1 % do nothing
+	des='True';
+      case 2 % 3dB binary
+	ind=find(V2>0.5*mmax);
+	V2(:)=0;
+	V2(ind)=1;
+	des='-3dB binary';
+      case 3 % 6dB binary
+	ind=find(V2>0.25*mmax);
+	V2(:)=0;
+	V2(ind)=1;
+	des='-6dB binary';
+      case 4 % very large binary
+	V2(:)=1;
+	des='-30dB binary';
+      case 5 % truncated 3 dB
+	V2(V2<0.5*mmax)=0;
+	des='Truncated 3dB';
+      case 6 % truncated 6 dB
+	V2(V2<0.25*mmax)=0;
+	des='Truncated 3dB';
+      case 7 % square
+	V2=V2.^2;
+	des='Squared';
+      case 8 % square-root
+	V2=sqrt(V2);
+	des='Square root';
+      otherwise % do nothing
+	des='invalid case';
+    end
+    V2=V2/max(max(V2));
+
+    subplot(4,2,ncnt)    
+    imagesc(x,y,V2,[0 1]);h=colorbar; set(h,'FontSize',12);
+    xlabel('km');ylabel('km')
+    axis image
+    axis off
+    h=title(sprintf('case %d: %s',icase,des)); set(h,'FontSize',12);
+    drawnow;
+    ncnt=ncnt+1;
+  end
+  print('-dpng',[workdir,'/modified_MRF.png']);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
