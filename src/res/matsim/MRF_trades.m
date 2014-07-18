@@ -25,11 +25,13 @@
 
 % set flags useful for debugging
 RUN_SETUP=0; % do not regenerate setup files
-RUN_SETUP=1; % generate setup files
+%RUN_SETUP=1; % generate setup files
 RUN_SIR=0; % skip running external SIR programs when set to zero
-RUN_SIR=1; % run external SIR programs if set to one
+%RUN_SIR=1; % run external SIR programs if set to one
 RUN_SIR2=0; % skip running external SIR programs when set to zero
-RUN_SIR2=1; % run external SIR programs if set to one
+%RUN_SIR2=1; % run external SIR programs if set to one
+RUN_FRACT=0; % do not run external SIR for fractional power
+%RUN_FRACT=1; % do not run external SIR for fractional power
 
 % set default paramaters that control font size when printing to improve figure readability
 set(0,'DefaultaxesFontName','Liberation Sans');
@@ -397,9 +399,9 @@ true1=reshape(true,1,M*N);
 % Step 5:
 % for each measurement, write measurement and response to the .setup file
 
+outfile=[workdir '/sir.setup'];
 if RUN_SETUP
 % first, write the setup file header and true image to .setup file
-outfile=[workdir '/sir.setup'];
 disp(sprintf('Creating output file: %s',outfile));
 fid=fopen(outfile,'w');
 
@@ -692,13 +694,15 @@ for icase=1:max_MRF_cases
     mkdir(cpwd,workdir2);
   end
   outfile2=[workdir2 '/sir.setup'];
-  disp(sprintf('Creating output file: %s',outfile2));
   
   fname=[workdir2, '/simA.sir'];
   nname=[workdir2, '/simA2.sir'];
   
   % modify setup to simulate incorrect MRF
-  des=modify_setup(outfile, outfile2, icase);
+  if RUN_SIR2
+    disp(sprintf('Creating modified output file: %s',outfile2));
+    des=modify_setup(outfile, outfile2, icase);
+  end
   disp(sprintf('Case: %d %s',icase,des));
   
   if RUN_SIR2     % noise-free
@@ -781,6 +785,137 @@ ylabel('RMS difference (dB K)');
 xlabel('Case');
 h=title('r=Noisy  b=Noise-Free'); set(h,'FontSize',12);
 print('-dpng',[workdir,'/cases.png']);
+
+%
+% explore fractional power case versus SIR iteration number
+%
+icase=9;  % fractional power case
+
+fract_pow_list=[0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.5 3.0];
+nfract=length(fract_pow_list);
+maxiter=30;
+
+% initial stat arrays
+f_m=zeros([nfract maxiter]);
+n_m=zeros([nfract maxiter]);
+d_m=zeros([nfract maxiter]);
+s_m=zeros([nfract maxiter]);
+f_s=zeros([nfract maxiter]);
+n_s=zeros([nfract maxiter]);
+d_s=zeros([nfract maxiter]);
+s_s=zeros([nfract maxiter]);
+f_r=zeros([nfract maxiter]);
+n_r=zeros([nfract maxiter]);
+d_r=zeros([nfract maxiter]);
+s_r=zeros([nfract maxiter]);
+
+for ig=1:nfract
+  pow=fract_pow_list(ig);
+  subworkdir2=sprintf('%s/fract_%f',workdir2,pow);
+  cpwd2=pwd();
+  if exist(subworkdir2,'dir') ~=7
+    mkdir(cpwd2,subworkdir2);
+  end    
+  outfile2=[subworkdir2 '/sir.setup'];
+  
+  if RUN_FRACT
+    disp(sprintf('Creating modified output file: %s',outfile2));
+    % modify setup to simulate incorrect MRF
+    des=modify_setup(outfile, outfile2, icase, pow);
+  end
+  disp(sprintf('Case: %d %f %s',icase,pow,des));
+  
+  if RUN_FRACT
+    % run noise-free SIR
+    cmd=sprintf('sim_SIR %s 0 0 -%d %s', outfile2,maxiter,subworkdir2);
+    system(cmd);
+    
+    % run noisy SIR
+    cmd=sprintf('sim_SIR %s 0 1 -%d %s', outfile2,maxiter,subworkdir2);
+    system(cmd);
+  end
+  
+  % for each SIR iteration number, read in file and compute error statistics
+  % plot selected images
+  myfigure(121);clf
+  colormap('gray')
+  ncnt=1;
+  for iter=1:maxiter
+    fname=sprintf([subworkdir2, '/simA_%d.sir'],iter);
+    nname=sprintf([subworkdir2,'/simA2_%d.sir'],iter);
+    [fimg head]=loadsir(fname);
+    [nimg head]=loadsir(nname);
+    [f_m(ig,iter),f_s(ig,iter),f_r(ig,iter)]=compute_stats(tr-fimg);
+    [n_m(ig,iter),n_s(ig,iter),n_r(ig,iter)]=compute_stats(tr-nimg);
+    [d_m(ig,iter),d_s(ig,iter),d_r(ig,iter)]=compute_stats(fimg-nimg);
+    if iter==1 | iter==10 | iter==20 | iter==30
+      myfigure(121);
+      subplot(4,2,2*(ncnt-1)+1)
+      imagesc(nimg,sc);h=colorbar; set(h,'FontSize',12);
+      axis image
+      axis off
+      h=title(sprintf('Noisy iter=%d',iter)); set(h,'FontSize',12);
+      subplot(4,2,2*ncnt)
+      imagesc(fimg,sc);h=colorbar; set(h,'FontSize',12);
+      axis image
+      axis off
+      h=title(sprintf('N-F iter=%d',iter)); set(h,'FontSize',12);
+      ncnt=ncnt+1;
+    end
+  end
+  print('-dpng',[subworkdir2,'/iterimage.png']);
+  
+  % inferred noise error for SIR vs iteration
+  s_m(ig,:)=n_m(ig,:)-f_m(ig,:);
+  s_s(ig,:)=sqrt((n_s(ig,:).^2-f_s(ig,:).^2));
+  s_r(ig,:)=sqrt(abs(n_r(ig,:).^2-f_r(ig,:).^2));
+  
+  % generate plots of error versus iteration
+  myfigure(10)
+  subplot(1,2,1)
+  plot([0 maxiter],[0 0],':k');
+  hold on;plot(f_m(ig,:),'b'); hold off
+  hold on; plot(n_m(ig,:),'r'); hold off;
+  xlabel('Iteration');
+  ylabel('Mean error (K)');
+  h=title('r=noisy b=noise-free k=AVE c=non'); set(h,'FontSize',12);
+  subplot(1,2,2)
+  plot(10*log10(f_r(ig,:)),'b');
+  hold on; plot(10*log10(n_r(ig,:)),'r'); hold off;
+  hold on; plot(10*log10(s_r(ig,:))+4,'g'); hold off;
+  ylabel('RMS error (dB K)');
+  xlabel('Iteration');
+  h=title('r=noisy b=noise-free g=noise+4 K=AVE c=non)'); set(h,'FontSize',12);
+  print('-dpng',[subworkdir2,'/iterate.png']);
+  
+  % generate plots of error convergence
+  myfigure(11)
+  plot(10*log10(f_r(ig,:)),s_r(ig,:),'.')
+  xlabel('RMS signal error (dB)')
+  ylabel('RMS noise error');
+  h=title(sprintf('%d fp=%dx%d DeltaT=%0.1f Np=%d (r=SIR, g=Ave, k=grd)',chan,footprint,DeltaT,Npass)); set(h,'FontSize',12);
+  print('-dpng',[subworkdir2,'/sig.png']);
+
+  [min_err(ig) min_iter(ig)]=min(n_r(ig,:));
+  nom_err(ig)=n_r(ig,Nom_iter);
+  
+end
+
+% generate plots of error versus fractional power
+myfigure(30);clf
+plot(fract_pow_list,min_err)
+hold on; plot(fract_pow_list,nom_err,'r');hold off
+xlabel('Fractional Power');
+ylabel('RMS error (K)');
+title(sprintf('r=%d iterations  b=min error',Nom_iter)); 
+print('-dpng',[workdir2,'/fract_err.png']);
+
+myfigure(31);clf
+plot(fract_pow_list,min_iter)
+xlabel('Fractional Power');
+ylabel('Iteration');
+print('-dpng',[workdir2,'/fract_min.png']);
+
 
 
 end
