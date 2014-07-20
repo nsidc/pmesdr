@@ -4,6 +4,7 @@
 % Compute BGI tradeoffs
 % written by D. Long at BYU 25 Jun 2014
 % revised by D. Long at BYU 27 Jun 2014 + increased (some) font sizes
+% revised by D. Long at BYU 19 Jul 2014 + added more cases, regen option
 %
 % This script should be run after the SIR tradeoff analysis in
 % setup_make.m  The script computes simulated BGI products for various
@@ -20,10 +21,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % set a flag useful for debugging
-%RUN_BGI1=0;  % do not run external BGI programs if set to zero
-RUN_BGI1=1;  % run external BGI programs if set to one
-%RUN_BGI=0;  % do not run external BGI programs if set to zero
-RUN_BGI=1;  % run external BGI programs if set to one
+RUN_BGI1=0;  % nominal run do not run external BGI program if set to zero
+RUN_BGI1=1;  % nominal run external BGI program if set to one
+RUN_BGI=0;  % trade run do not run external BGI programs if set to zero
+RUN_BGI=1;  % trade run run external BGI programs if set to one
+REGEN_BGI=0; % use existing BGI trade output file if possible
+%REGEN_BGI=1; % force regeneration of BGI trade output files
 
 % set default paramaters that control font size when printing to improve figure readability
 set(0,'DefaultaxesFontName','Liberation Sans');
@@ -67,9 +70,9 @@ chan_list=[19,37,85]; % 22 not included since similar to 19
 Nscale_list=2:4;
 
 % over-ride for testing
-Npass_list=[1 2];
-chan_list=85;
-Nscale_list=[2 3 4];
+Npass_list=[2];
+chan_list=[37 85 19];
+Nscale_list=[3];
 
 % loop over simulation run options
 for Npass=Npass_list
@@ -103,7 +106,7 @@ outfile=[workdir '/sir.setup'];
 %  run external sir program
 %
 
-gam=0.45;
+gam=0.85;
 noise_var=2.0^2;
 gainThres=0.125;
 
@@ -311,7 +314,8 @@ end
 %
 
 % set list of gamma values to consider
-gamma_list=0.5*pi*[0 0.25 0.5 0.75 0.9 0.95 0.98 0.99 0.995 1.0];
+%gamma_list=0.5*pi*[0 0.25 0.5 0.75 0.9 0.95 0.98 0.99 0.995 1.0]; % orig
+gamma_list=0.5*pi*[0 0.1 0.15 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.65 0.75 0.85 0.9 0.95 0.98 0.99 0.995 1.0]; % extended
 ngamma=length(gamma_list);
 
 % initial stat arrays
@@ -335,20 +339,25 @@ for ig=1:ngamma
   bgi_gamma=gamma_list(ig);
   subworkdir=sprintf('%s/bgi_%f',workdir,bgi_gamma);
   cpwd=pwd();
-  if exist(subworkdir,'dir') ~=7
+  if exist(subworkdir,'dir') ~= 7
     mkdir(cpwd,subworkdir);
   end  
   
-  if RUN_BGI
-    % noise-free
-    cmd=sprintf('sim_BGI %s 0 %f %f %f %s', outfile,bgi_gamma,noise_var,gainThres,subworkdir);
-    disp(cmd)
-    system(cmd);
-
-    % noisy
-    cmd=sprintf('sim_BGI %s 1 %f %f %f %s', outfile,bgi_gamma,noise_var,gainThres,subworkdir);
-    disp(cmd)
-    system(cmd);
+  % see if particular case has already been run
+  if exist([subworkdir, '/simA.bgi'],'file') ~= 2 | REGEN_BGI == 1  
+    if RUN_BGI % optionally run external BGI program
+      % noise-free
+      cmd=sprintf('sim_BGI %s 0 %f %f %f %s', outfile,bgi_gamma,noise_var,gainThres,subworkdir);
+      disp(cmd)
+      system(cmd);
+      
+      % noisy
+      cmd=sprintf('sim_BGI %s 1 %f %f %f %s', outfile,bgi_gamma,noise_var,gainThres,subworkdir);
+      disp(cmd)
+      system(cmd);
+    end
+  else
+    disp(sprintf('Reusing result for %f',bgi_gamma));
   end
 
   % read results and accumulate statistics
@@ -366,11 +375,14 @@ for ig=1:ngamma
   [nB_m(ig),nB_s(ig),nB_r(ig)]=compute_stats(tr-nAb1);
   [nM_m(ig),nM_s(ig),nM_r(ig)]=compute_stats(tr-nMb1);
 
-  myfigure(22)
-  subplot(5,2,ig)
-  imagesc(nAb1,sc); h=colorbar; set(h,'FontSize',12); axis image; axis off
-  h=title(sprintf('BGI g=%f RMS=%0.2f',bgi_gamma/pi,nB_r(ig)));   set(h,'FontSize',12);
-  drawnow;
+  if mod(ig-1,2)==0
+    ig2=floor((ig-1)/2)+1;    
+    myfigure(22)
+    subplot(5,2,ig2)
+    imagesc(nAb1,sc); h=colorbar; set(h,'FontSize',12); axis image; axis off
+    h=title(sprintf('BGI g=%f RMS=%0.2f',bgi_gamma/pi,nB_r(ig)));   set(h,'FontSize',12);
+    drawnow;
+  end
 
   % write summary statistics to file
   fid=fopen([subworkdir '/bgi_stats.txt'],'w');
@@ -395,6 +407,9 @@ sM_s=sqrt((nM_s.^2-fM_s.^2));
 sB_r=sqrt(abs(nB_r.^2-fB_r.^2));
 sM_r=sqrt(abs(nM_r.^2-fM_r.^2));
 
+[nB_minval nB_minindex]=min(nB_r);
+[nM_minval nM_minindex]=min(nM_r);
+
 % generate plots of error versus BGI gamma
 myfigure(30);clf
 subplot(1,2,1);
@@ -403,33 +418,40 @@ hold on;plot(2*gamma_list/pi,fB_m,'b'); hold off
 hold on;plot(2*gamma_list/pi,fM_m,'c'); hold off
 hold on; plot(2*gamma_list/pi,nB_m,'r'); hold off;
 hold on; plot(2*gamma_list/pi,nM_m,'g'); hold off;
+hold on; plot(2*gamma_list(nB_minindex)/pi,nB_m(nB_minindex),'r*'); hold off;
+hold on; plot(2*gamma_list(nM_minindex)/pi,nM_m(nM_minindex),'g*'); hold off;
 %%hold on; plot([Nom_iter Nom_iter],[-0.05 0.05],'--k'); hold off;
 xlabel('BG gamma''');
 ylabel('Mean error (K)');
-h=title('b=NF, c=NF med, r=Noisy, g=Noisy med'); set(h,'FontSize',12);
+h=title('b=NF, c=NF med, r=N, g=Nmed'); set(h,'FontSize',12);
 subplot(1,2,2);
 plot(2*gamma_list/pi,10*log10(fB_r),'b');
 hold on; plot(2*gamma_list/pi,10*log10(fM_r),'c'); hold off;
 hold on; plot(2*gamma_list/pi,10*log10(nB_r),'r'); hold off;
 hold on; plot(2*gamma_list/pi,10*log10(nM_r),'g'); hold off;
+hold on; plot(2*gamma_list(nB_minindex)/pi,10*log10(nB_r(nB_minindex)),'r*'); hold off;
+hold on; plot(2*gamma_list(nM_minindex)/pi,10*log10(nM_r(nM_minindex)),'g*'); hold off;
 hold on; plot(2*gamma_list/pi,10*log10(sB_r)+4,'k'); hold off;
 hold on; plot(2*gamma_list/pi,10*log10(sM_r)+4,'m'); hold off;
 %%hold on; plot([Nom_iter Nom_iter],[3 8],'--k'); hold off;
 ylabel('RMS error (dB K)');
 xlabel('BG gamma''');
-h=title('b=NF, c=NF med, r=N, g=N med, k=sig, m=sig med'); set(h,'FontSize',12);
+h=title('b=NF, c=NFmed, r=N, g=Nmed, k=sig+4, m=sigmed+4'); set(h,'FontSize',12);
 print('-dpng',[workdir,'/bgi_gamma.png']);
-
 
 % generate plots of error
 myfigure(31)
-plot(10*log10(fB_r),sB_r,'b')
-hold on;plot(10*log10(fM_r),sM_r,'c');hold off
-hold on;plot(10*log10(nB_r),nB_r,'r');hold off
+%plot(10*log10(fB_r),sB_r,'b')
+%hold on;plot(10*log10(fM_r),sM_r,'c');hold off
+%hold on;plot(10*log10(nB_r),nB_r,'r');hold off
+plot(10*log10(nB_r),nB_r,'r')
 hold on;plot(10*log10(nM_r),nM_r,'g');hold off
+hold on;plot(10*log10(nB_r(nB_minindex)),nB_r(nB_minindex),'r*');hold off
+hold on;plot(10*log10(nM_r(nM_minindex)),nM_r(nM_minindex),'g*');hold off
 xlabel('RMS signal error (dB)')
 ylabel('Noise RMS error');
-h=title(sprintf('Ch=%d Np=%d (b=NF BG, c=NF BG med, r=N BG, g=N BG med)',chan,Npass));  set(h,'FontSize',12);
+%h=title(sprintf('Ch=%d Np=%d (b=NF BG, c=NF BG med, r=N BG, g=N BG med)',chan,Npass));  set(h,'FontSize',12);
+h=title(sprintf('Ch=%d Np=%d (r=N BG, g=N BG med)',chan,Npass));  set(h,'FontSize',12);
 print('-dpng',[workdir,'/bgi_sig.png']);
 
 
