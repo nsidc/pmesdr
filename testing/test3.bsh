@@ -27,7 +27,7 @@ fi
 
 
 # pick a particular year and day range to process
-Year=1997\
+Year=1997
 FirstDay=61
 LastDay=61
 echo "Processing $Year $FirstDay to $LastDay"
@@ -39,7 +39,7 @@ SRC=RSS  # use RSS or CSU
 BGI=0  # no BGI
 
 #
-# define some arrays used ton control the processing
+# define some arrays used to control the processing
 #
 
 # 2 character year string

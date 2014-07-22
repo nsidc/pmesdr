@@ -1,0 +1,200 @@
+#!/bin/bash
+#
+# script for a multi rev regression test for all regions and channels for SSM/I
+#
+# note: this script does not include segmented processing nor do LTOD processing
+#
+# written by D.G. Long at BYU 22 Jul 2014
+
+# set environment variables that are required for meas_meta_setup
+meas_home="/auto/users/long/src/linux/measures"  # localization specific
+SIR_areas="$meas_home/ref/locs/"           # path to location of location files
+SIR_region="$meas_home/ref/regiondef1.dat" # path to regiondef1.dat
+export meas_home SIR_areas SIR_region
+
+# define file types of output products
+#BYU_FORMAT=0  # BYU .SIR file format and .gif browse files not produced
+BYU_FORMAT=1  # BYU .SIR file format and .gif browse files produced
+
+NC_FORMAT=0 # NC formated product files not produced
+#NC_FORMAT=1 # NC formated product files produced
+
+# choose a particular SSMI
+SSMI=13
+
+# pick a particular year and day range to process
+Year=1997
+FirstDay=61
+LastDay=61
+echo "Processing $Year $FirstDay to $LastDay"
+
+# set flag 1 to process BGI, 0 to not process BGI
+#BGI=0  # skip BGI processing
+BGI=1  # include BGI processing
+
+#
+# define some arrays used to control the processing
+#
+
+# set source files RSS or CSU
+SRC_List=(RSS CSU)
+
+# 2 character year string
+Syear=${Year:2:4}
+
+# regions
+Regions=(E2N E2S E2T)
+
+# Extensions
+Extensions=(ave sir grd non)  # bgi
+
+# Types to create browse .gif images of
+Types=(a)  # V p i j C 
+
+#
+# For each source
+#
+for SRC in $SRC_List ; do
+
+  # set destination and work areas
+  WorkDir="$meas_home/testing/regress_$SRC"
+  DestDir="$meas_home/testing/regress_$SRC/dest"
+
+  echo "Working from source $SRC to $DestDir"
+
+  # make sure directories exist
+  if [ ! -d $WorkDir ]; then
+    mkdir -p $WorkDir  # if not, make it
+  #else  # if exists, clean contents
+    #rm -f $WorkDir/* 
+  fi
+
+  if [ ! -d $DestDir ]; then
+    mkdir -p $DestDir  # if not, make it
+  #else  # if exists, clean contents
+    #rm -f $DestDir/* 
+  fi
+
+#
+# for each day in day range
+#
+  Day=$FirstDay
+  while [ ${Day} -le ${LastDay} ]; do
+
+    # 3 character day string
+    dstr=$Day
+    if [ ${#dstr} -lt 3 ]; then
+	dstr=0$dstr
+    fi
+    if [ ${#dstr} -lt 3 ]; then
+	dstr=0$dstr
+    fi
+    echo "Processing $Year ($Syear) $Day ($dstr) of $FirstDay to $LastDay ..."
+
+# identify all the RSS files that cover a single day and create a listing file.  
+# On BYU MERS system this means using /auto/data/ssmi/RSS/RSSv07_database.dat 
+# to select the files for process for a single day -- need to include the last 
+# file of the previous day
+
+# for regression testing, we simplify this step to only two input files
+    if [ "$SRC" == "RSS" ] ; then
+	#ls -1 ../sample_data/RSS_JD061_1997/f13*.dat > $WorkDir/F$SSMI_$Year_$Day.lis
+	cp RSS_regress_list  $WorkDir/F$SSMI_$Year_$Day.lis
+    else
+	#ls -1 ../sample_data/CSU_JD061_1997/CSU_SSMI_FCDR_*.nc > $WorkDir/F$SSMI_$Year_$Day.lis
+	cp CSU_regress_list  $WorkDir/F$SSMI_$Year_$Day.lis
+    fi
+
+# for each region to be processed, create meta files for this day
+    for Reg in ${Regions[*]}; do
+	echo " "
+	echo "Processing region: $Reg"
+
+# create meta files for this region
+	echo "meta_make $Reg: ../src/prod/meas_meta_make/meas_meta_make $WorkDir/$Reg_$Syear_$dstr.meta $SSMI ../ref/s2g/ssmi_mN.s2g $Day $Day $Year ../ref/$Reg.def $WorkDir/F$SSMI_$Year_$Day.lis"
+	../src/prod/meas_meta_make/meas_meta_make $WorkDir/$Reg_$Syear_$dstr.meta $SSMI ../ref/s2g/ssmi_mN.s2g $Day $Day $Year ../ref/$Reg.def $WorkDir/F$SSMI_$Year_$Day.lis
+
+# Make setup files for region
+	echo " "
+	if [ "$SRC" == "RSS" ] ; then
+	    echo "RSS setup: ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0"
+	    ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
+	else
+	    echo "CSU setup: ../src/prod/meas_meta_setup/meas_meta_setup_CSU/meas_meta_setup_CSU $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0"
+	    ../src/prod/meas_meta_setup/meas_meta_setup_CSU/meas_meta_setup_CSU $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
+	fi
+
+# create intermediate dump files from setup files
+	Channels=$(seq 1 7)
+	for Ch in $Channels ; do
+	    echo " "
+	    echo "Doing SIR for channel F${SSMI}$ch ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir"
+	    ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
+
+	    if [ $BYU_FORMAT -eq 1 ] ; then # create BYU .SIR-format product files from dump files
+		echo " "
+		echo "BYU Undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 0 1"
+		../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 0 1
+
+# generate browse .gif files from (selected) .SIR-format files
+		for typ in ${Types[*]} ; do 
+		    for Ext in ${Extensions[*]} ; do
+			echo " "
+			echo "sir2gif $typ $Ext: ../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif"
+			../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif
+		    done
+		done
+	    else
+		echo ".gif browse product files not produced!"
+	    fi
+
+	    if [ $NC_FORMAT -eq 1 ] ; then # generate netcdf product files from dump files
+		echo " "
+		echo "NC undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 1 1"
+		../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 1 1
+	    else
+		echo "netcdf-formatted product files not produced!"
+	    fi
+
+# optinally process BGI
+	    if [ $BGI -eq 1 ] ; then
+# generate bgi dump file from setup file
+		echo " "
+		echo "BGI: ../src/prod/meas_meta_sir/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir"
+		../src/prod/meas_meta_sir/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
+
+		if [ $BYU_FORMAT -eq 1 ] ; then # create BYU .SIR-format product files from dump files
+		    echo "BGI BYU undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $DestDir 0 1"
+		    ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $DestDir 0 1
+
+		    typ=a
+		    Ext=bgi
+# generate browse .gif files from (selected) .SIR-format files
+		    echo " "
+		    echo "BGI sir2gif: ./src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif"
+		    ../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif
+		else
+		    echo "BGI .gif browse product files not produced!"
+		fi
+
+		if [ $NC_FORMAT -eq 1 ] ; then # generate netcdf product files from dump files
+		    echo " "
+		    echo "BGI undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $DestDir 1 1"
+		    ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $DestDir 1 1
+		else
+		    echo "BGI netcdf-formatted product files not produced!"
+		fi
+	    fi
+	done # end for channel
+    done # end for region
+
+#
+# increment to next day
+#
+    let Day=$(( ${Day} + 1 ))
+  done # end while day
+
+done # end for source
+
+# (optionally) view browse .gif images
+eog $DestDir/*.gif

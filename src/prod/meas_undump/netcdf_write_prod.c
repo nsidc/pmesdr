@@ -46,6 +46,20 @@ void check_ncerr(const int stat, const int line, const char *file) {
 }
 
 /********************************************************************/
+/* BYU SIR geomtry support routines */
+/********************************************************************/
+
+extern void ease2_map_info(int iopt, int isc, int ind, 
+			   double *map_equatorial_radius_m, 
+			   double *map_eccentricity, double *e2,
+			   double *map_reference_latitude, 
+			   double *map_reference_longitude, 
+			   double *map_second_reference_latitude,
+			   double *sin_phi1, double *cos_phi1, double *kz,
+			   double *map_scale, int *bcols, int *brows, 
+			   double *r0, double *s0, double *epsilon);
+
+/********************************************************************/
 /* internal routines */
 /********************************************************************/
 
@@ -242,6 +256,12 @@ int netcdf_write_single(char *outpath, char *filename, float *val, char *varname
 
   char local[]="./";
 
+  double map_equatorial_radius_m,map_eccentricity, e2,
+    map_reference_latitude, map_reference_longitude, 
+    map_second_reference_latitude, sin_phi1, cos_phi1, kz,
+    map_scale, r0, s0, epsilon;
+  int bcols, brows, ind, projt, nease;
+
   string_2[0]=(char *) malloc(22);
   string_2[1]=(char *) malloc(22);
   strcpy(string_2[0],"yyyy-mm-ddThh:mm:ssZ");
@@ -379,8 +399,38 @@ int netcdf_write_single(char *outpath, char *filename, float *val, char *varname
   case 8: // EASE2 grid north
   case 9: // EASE2 grid south
   case 10: // EASE2 grid cylindrical
-    printf("*** EASE2 projection is not supported by this code %d\n",iopt);
-    exit(-1);
+    printf("*** EASE2 projection is NOT fully supported by this code %d\n",iopt);
+    //exit(-1);
+
+    ind=0;  /* (bscale) 0=standard base resolution */
+    projt=iopt;
+    nease=ascale;    
+    printf("EASE2 parameters: proj=%d  nease=%d  ind=%d\n",projt,nease,ind);      
+    ease2_map_info(projt, nease, ind, &map_equatorial_radius_m, 
+		   &map_eccentricity, &e2,
+		   &map_reference_latitude, &map_reference_longitude, 
+		   &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
+		   &map_scale, &bcols, &brows, &r0, &s0, &epsilon);
+
+    semimajor_radius[0] = map_equatorial_radius_m;    
+    f[0]=sqrt(e2);
+
+// these need to be updated for EASE2
+    latitude_of_projection_origin[0] = ydeg;   // map_reference_latitude; ??
+    latitude_of_true_scale[0] = ydeg;          // map_reference_latitude; ??
+    longitude_of_projection_origin[0] = xdeg;  // map_reference_longitude; ??
+
+    xgrid_valid_range[0] = -(nsx/2)*map_scale;
+    xgrid_valid_range[1] =  (nsx/2)*map_scale;
+    ygrid_valid_range[0] = -(nsy/2)*map_scale;
+    ygrid_valid_range[1] =  (nsy/2)*map_scale;
+
+    //sprintf(pline,"PROJCS[\"Lambert Equal Area\",GEOGCS[\"unnamed ellipse\",DATUM[\"D_unknown\",SPHEROID[\"Unknown\",%11.3lf,%7.3lf]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",%18.16lf]],PROJECTION[\"Lambert_Equal_Area\"],PARAMETER[\"central_longitude\",%8.2lf],PARAMETER[\"central_meridian\",%8.2lf],PARAMETER[\"scale_factor\",%2.0lf],PARAMETER[\"false_easting\",%2.0lf],PARAMETER[\"false_northing\",%2.0lf],UNIT[\"Meter\",1, AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"3411\"]]",semimajor_radius[0],f[0],gres,latitude_of_projection_origin[0],longitude_of_projection_origin[0],scaling_factor[0],false_easting[0],false_northing[0]);
+    sprintf(pline,"*** NEED TO PUT IN EASE-2 PROJCS string");
+    
+    //sprintf(proj4text,"+proj=laea +lat_0=%lf +lon_0=%lf +k=1 +x_0=0 +y_0=0 +a=%11.3lf +rf=%11.3lf +units=m +no_defs -a_ullr %11.3lf %11.3lf %11.3lf %11.3lf",latitude_of_projection_origin[0],longitude_of_projection_origin[0],semimajor_radius[0],50000000.0,xgrid_valid_range[0],ygrid_valid_range[1],xgrid_valid_range[1],ygrid_valid_range[1]);
+    sprintf(proj4text,"*** NEED TO PUT IN EASE-2 proj4 string");
+
     break;
      
   case 11: // EASE1 grid north
@@ -409,6 +459,7 @@ int netcdf_write_single(char *outpath, char *filename, float *val, char *varname
   //printf("Output image size %d X %d\n",cols_len,rows_len);
 
   /* create output netcdf file and enter define mode to add header information */
+  printf("output filename %s\n",out_name);  
   stat = nc_create(out_name, NC_CLOBBER, &ncid); check_ncerr(stat,__LINE__,__FILE__);
 
   /* define dimensions */
