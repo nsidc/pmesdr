@@ -118,7 +118,7 @@ for SRC in $SRC_List ; do
 	echo " "
 	if [ "$SRC" == "RSS" ] ; then
 	    echo "RSS setup: ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0"
-	    ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
+#	    ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
 	else
 	    echo "CSU setup: ../src/prod/meas_meta_setup/meas_meta_setup_CSU/meas_meta_setup_CSU $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0"
 	    ../src/prod/meas_meta_setup/meas_meta_setup_CSU/meas_meta_setup_CSU $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
@@ -127,6 +127,7 @@ for SRC in $SRC_List ; do
 # create intermediate dump files from setup files
 	Channels=$(seq 1 7)
 	for Ch in $Channels ; do
+
 	    echo " "
 	    echo "Doing SIR for channel F${SSMI}$ch ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir"
 	    ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
@@ -156,12 +157,12 @@ for SRC in $SRC_List ; do
 		echo "netcdf-formatted product files not produced!"
 	    fi
 
-# optinally process BGI
+# optionally process BGI
 	    if [ $BGI -eq 1 ] ; then
 # generate bgi dump file from setup file
 		echo " "
 		echo "BGI: ../src/prod/meas_meta_sir/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir"
-		../src/prod/meas_meta_sir/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
+		../src/prod/meas_meta_bgi/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
 
 		if [ $BYU_FORMAT -eq 1 ] ; then # create BYU .SIR-format product files from dump files
 		    echo "BGI BYU undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $DestDir 0 1"
@@ -184,6 +185,10 @@ for SRC in $SRC_List ; do
 		else
 		    echo "BGI netcdf-formatted product files not produced!"
 		fi
+	    else
+		echo " "
+		echo "No BGI processing"
+		echo " "
 	    fi
 	done # end for channel
     done # end for region
