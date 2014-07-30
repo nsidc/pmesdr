@@ -849,10 +849,10 @@ done:
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
     if (its == 0) {  /* output AVE image */
-      if ( 0 != ( ncerr=add_float_array_nc(ncid,"ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
+      if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
 	errors++;
       } else {
-	eprintfc( "Dumped Tb (A) AVE '%s'\n", a_name_ave );
+	eprintfc( "\nDumped Tb (A) AVE '%s'\n", a_name_ave );
       }
     }
 
@@ -860,27 +860,27 @@ done:
   printf(" weight max --> %f Average weight: %.4f\n",tmax,total/nsize);
 
   /* output SIR image */
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"a_image",a_val,nsx,nsy,anodata_A ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"a_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
   } else {
-    eprintfc( "Dumped Tb (A) SIR '%s'\n", a_name );
+    eprintfc( "\nDumped Tb (A) SIR '%s'\n", a_name );
   }
 
   /* output other auxilary product images */
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
     errors++;
   } else {
     eprintfc( "Dumped Istd (I) SIR '%s'\n", i_name );
   }
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
     errors++;
   } else {
     eprintfc( "Dumped Iave (J) SIR '%s'\n", j_name );
   }
 
   /* this product is not produced for weighted SIR/SIRF
-     if ( 0 != ( ncerr=add_float_array_nc(ncid,"c_image",sxy,nsx,nsy,anodata_C ) ) ) {
+     if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"c_image",sxy,nsx,nsy,anodata_C ) ) ) {
      errors++;
      } else {
      eprintf( sprintf( "*** ERROR writing Cnt output ***\n" ) );
@@ -970,13 +970,13 @@ done1:
   printf(" Tb STD min   max --> %f %f\n",amin,amax);
   printf(" Tb ERR min   max --> %f %f\n",bmin,bmax);
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"v_image",sxy,nsx,nsy,anodata_V ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"v_image",sxy,nsx,nsy,anodata_V ) ) ) {
     errors++;
   } else {
     eprintfc( "Dumped Tb STD (V) SIR output '%s'\n", v_name );
   }
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"e_image",sx,nsx,nsy,anodata_E ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"e_image",sx,nsx,nsy,anodata_E ) ) ) {
     errors++;
   } else {
     eprintfc( "Dumped Tb err (E) SIR output '%s' \n", e_name );
@@ -1073,7 +1073,7 @@ done2:
   printf(" Time (postfilter) min   max --> %f %f\n",amin,amax);
   */
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"p_image",sxy,nsx,nsy,anodata_P ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"p_image",sxy,nsx,nsy,anodata_P ) ) ) {
     errors++;
   } else {
     eprintfc( "Dumped time output (P) SIR '%s'\n", p_name );
@@ -1223,37 +1223,37 @@ done3:
   printf(" Non-enhanced/Grid I  min   max --> %f %f\n",bmin,bmax);
   printf(" Non-enhanced/Grid C        max --> %.1f\n",tmax);
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_a_image",a_val,nsx2,nsy2,anodata_A ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_a_image",a_val,nsx2,nsy2,anodata_A ) ) ) {
     errors++;
   } else {
     eprintfc( "Dumped Grid TB (A) output '%s'\n", grd_aname );
   }
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
     errors++;
   } else { 
     eprintfc( "Dumped Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   }
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
     errors++;
   } else { 
     eprintfc( "Dumped Grid Istd (I) output '%s'\n", grd_iname );
   }
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
     errors++;
   } else { 
     eprintfc( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
   }
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
     errors++;
   } else {
     fprintf( stderr, "Dumped Grid Cnt (C) output '%s' %d\n", grd_cname, tmax );
   }
 
-  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
     errors++;
   } else { 
     eprintfc( "Dumped Grid time (P) '%s'\n", grd_pname );
@@ -1281,13 +1281,13 @@ done3:
 	}
     }
   
-    if ( 0 != ( ncerr=add_float_array_nc(ncid,"non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
       errors++;
     } else { 
       eprintfc( "Dumped Non-enhanced Tb (A) output '%s'\n", non_aname );
     }
 
-    if ( 0 != ( ncerr=add_float_array_nc(ncid,"non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
       errors++;
     } else { 
       eprintfc( "Dumped Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );

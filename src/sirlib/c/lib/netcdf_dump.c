@@ -305,7 +305,7 @@ int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float
   /* leave define mode so we can begin variable writing */
   stat = nc_enddef(ncid);  check_err(stat,__LINE__,__FILE__);
   /* write variable */
-  stat = nc_put_vara_float(ncid, var_id, wstart, wcount, val); 
+  stat = nc_put_vara_float(ncid, var_id, wstart, wcount, val); check_err(stat,__LINE__,__FILE__);
 
   return(stat);
 
