@@ -205,6 +205,8 @@ int main(int argc,char *argv[])
   }
   printf("\nAll done\n");
 
+  exit( 0 );
+
 }
 
   

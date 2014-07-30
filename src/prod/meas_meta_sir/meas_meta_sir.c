@@ -33,7 +33,7 @@
 
 /* some global variables and their default values */
 
-float a_init=230.0;           /* initial A (TB) value */
+float a_init=230.0;           /* initial A (TB) value, the mean expected TB (K) */
 int   nits=30;                /* number of SIR iterations */
 char  sensor_in[40];          /* sensor description string */
 int   MAXFILL=1000;           /* maximum number of pixels in response */
@@ -197,6 +197,7 @@ int main(int argc, char **argv)
   /* begin program */
 
   printf("BYU SSM/I meta SIR/SIRF program: C version %f\n",VERSION);
+  fprintf( stderr, "Value of ierr is %d\n", ierr );
 
   if (argc < 2) {
     printf("\nusage: %s setup_in outpath storage_option\n\n",argv[0]);
