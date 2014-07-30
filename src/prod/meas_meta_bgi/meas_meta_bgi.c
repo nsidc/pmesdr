@@ -17,6 +17,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <netcdf.h>
 
 #include "sir3.h"
 
@@ -159,7 +160,7 @@ int main(int argc, char **argv)
 
   time_t tod;
 
-  int its, irec, ierr, rcode, year, keep;
+  int its, irec, rcode, year, keep;
   float amin, amax;
 
   char a_name[100], info_name[100], line[100];
@@ -829,11 +830,10 @@ int main(int argc, char **argv)
   /* output image file */
 
   printf("\n"); 
-  printf("Writing A output BGI '%s'\n", a_name);
-  ncerr=add_float_array_nc(ncid,"bgi_image",a_val,nsx,nsy,anodata_A); check_err(ncerr, __LINE__,__FILE__);      
-  if (ierr != 0) {
-    eprintf("*	** ERROR writing A BGI output ***\n");
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"\nbgi_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
+  } else {
+    fprintf( stderr, "Dumped A BGI '%s'. \n", a_name );
   }
 
   ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
