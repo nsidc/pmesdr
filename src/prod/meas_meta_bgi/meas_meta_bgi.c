@@ -830,7 +830,7 @@ int main(int argc, char **argv)
   /* output image file */
 
   printf("\n"); 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"\nbgi_image",a_val,nsx,nsy,anodata_A ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"bgi_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
   } else {
     fprintf( stderr, "Dumped A BGI '%s'. \n", a_name );
