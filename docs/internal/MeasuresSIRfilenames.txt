@@ -68,9 +68,9 @@ and RCN = Reconstruction technique (3 chars):
 
     * sir = sir or sirf algorithm
     * bgi = Backus-Gilbert image algorithm
-    * ave = ave image algorithm
-    * non = nonenhanced enlarged grd image
-    * grd = gridded data image
+    * ave = ave image algorithm (weighted average)
+    * grd = gridded data image (drop-in-the-bucket average (not weighted))
+    * non = nonenhanced enlarged grd image 
     * lis = list information file (not distributed) 
 
 
