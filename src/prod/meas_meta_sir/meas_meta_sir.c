@@ -15,6 +15,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <netcdf.h>
 
 #include "sir3.h"
 
@@ -47,34 +48,29 @@ int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 /* some error print out shortcuts */
 
 void eprintf(char *s)
-{ /* print to both stdout and stderr to catch errors */
-  fprintf(stdout,s);
-  fflush(stdout);
+{ 
   fprintf(stderr,s);
   fflush(stderr);
+  return;
 }
 
 void eprintfi(char *s, int a)
-{ /* print to both stdout and stderr to catch errors */
-  fprintf(stdout,s,a);
-  fflush(stdout);
+{
   fprintf(stderr,s,a);
   fflush(stderr);
+  return;
 }
 
 void eprintfc(char *s, char *a)
-{ /* print to both stdout and stderr to catch errors */
-  fprintf(stdout,s,a);
-  fflush(stdout);
+{
   fprintf(stderr,s,a);
   fflush(stderr);
+  return;
 }
 
 void Ferror(int i)
 {
-  fprintf(stdout,"*** Error reading input file at %d ***\n",i);
   fprintf(stderr,"*** Error reading input file at %d ***\n",i);
-  fflush(stdout);
   fflush(stderr);
   return;
 }
@@ -170,7 +166,7 @@ int main(int argc, char **argv)
 
   time_t tod;
 
-  int its, irec, ierr, year, keep;  
+  int its, irec, year, keep;  
   float total, tmax;
   float amin, amax, bmin, bmax, weight, temp, old_amin, old_amax;
   float old_bmin, old_bmax, denom;
@@ -192,12 +188,12 @@ int main(int argc, char **argv)
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
-  
+
+  char *error_msg;
 
   /* begin program */
 
   printf("BYU SSM/I meta SIR/SIRF program: C version %f\n",VERSION);
-  fprintf( stderr, "Value of ierr is %d\n", ierr );
 
   if (argc < 2) {
     printf("\nusage: %s setup_in outpath storage_option\n\n",argv[0]);
@@ -853,11 +849,10 @@ done:
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
     if (its == 0) {  /* output AVE image */
-      printf("\nWriting Tb (A) AVE output '%s'\n", a_name_ave);
-      ncerr=add_float_array_nc(ncid,"ave_image",b_val,nsx,nsy,anodata_A); check_err(ncerr, __LINE__,__FILE__);      
-      if (ierr != 0) {
-	eprintf("*** ERROR writing A AVE output ***\n");
+      if ( 0 != ( ncerr=add_float_array_nc(ncid,"ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
 	errors++;
+      } else {
+	eprintfc( "Dumped Tb (A) AVE '%s'\n", a_name_ave );
       }
     }
 
@@ -865,34 +860,31 @@ done:
   printf(" weight max --> %f Average weight: %.4f\n",tmax,total/nsize);
 
   /* output SIR image */
-  printf("\nWriting Tb (A) SIR output '%s'\n", a_name);
-  ncerr=add_float_array_nc(ncid,"a_image",a_val,nsx,nsy,anodata_A); check_err(ncerr, __LINE__,__FILE__);      
-  if (ierr != 0) {
-    eprintf("*	** ERROR writing A SIR output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"a_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
+  } else {
+    eprintfc( "Dumped Tb (A) SIR '%s'\n", a_name );
   }
 
   /* output other auxilary product images */
-  printf("\nWriting Istd (I) SIR output '%s'\n", i_name);
-  ncerr=add_float_array_nc(ncid,"i_image",sx2,nsx,nsy,anodata_I); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr != 0) {
-    eprintf("*** ERROR writing Istd output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
     errors++;
+  } else {
+    eprintfc( "Dumped Istd (I) SIR '%s'\n", i_name );
   }
-  printf("Writing Iave (J) SIR output '%s'\n", j_name);
-  ncerr=add_float_array_nc(ncid,"j_image",sx,nsx,nsy,anodata_Ia); check_err(ncerr, __LINE__,__FILE__);
-  if (ierr != 0) {
-    eprintf("*** ERROR writing Istd output ***\n");
+
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
     errors++;
-    }
+  } else {
+    eprintfc( "Dumped Iave (J) SIR '%s'\n", j_name );
+  }
 
   /* this product is not produced for weighted SIR/SIRF
-  printf("Writing Cnt output '%s' %d\n", c_name, tmax);
-  ncerr=add_float_array_nc(ncid,"c_image",sxy,nsx,nsy,anodata_C); check_err(ncerr, __LINE__,__FILE__);
-  if (ierr != 0) {
-    eprintf("*** ERROR writing Istd output ***\n");
-    errors++;
-  }
+     if ( 0 != ( ncerr=add_float_array_nc(ncid,"c_image",sxy,nsx,nsy,anodata_C ) ) ) {
+     errors++;
+     } else {
+     eprintf( sprintf( "*** ERROR writing Cnt output ***\n" ) );
+     }
   */
 
 
@@ -978,21 +970,17 @@ done1:
   printf(" Tb STD min   max --> %f %f\n",amin,amax);
   printf(" Tb ERR min   max --> %f %f\n",bmin,bmax);
 
-  printf("Writing Tb STD (V) SIR output '%s'\n", v_name);
-  ncerr=add_float_array_nc(ncid,"v_image",sxy,nsx,nsy,anodata_V); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr != 0) {
-    eprintf("*** ERROR writing Tb STD (V) output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"v_image",sxy,nsx,nsy,anodata_V ) ) ) {
     errors++;
+  } else {
+    eprintfc( "Dumped Tb STD (V) SIR output '%s'\n", v_name );
   }
 
-  printf("Writing Tb err (E) SIR output '%s' \n", e_name);
-  ncerr=add_float_array_nc(ncid,"e_image",sx,nsx,nsy,anodata_E); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr < 0) {
-    eprintf("*** ERROR writing Tb err (E) output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"e_image",sx,nsx,nsy,anodata_E ) ) ) {
     errors++;
+  } else {
+    eprintfc( "Dumped Tb err (E) SIR output '%s' \n", e_name );
   }
-
-
 
 /* create time image */
 
@@ -1085,13 +1073,11 @@ done2:
   printf(" Time (postfilter) min   max --> %f %f\n",amin,amax);
   */
 
-  printf("Writing time output (P) SIR '%s'\n", p_name);
-  ncerr=add_float_array_nc(ncid,"p_image",sxy,nsx,nsy,anodata_P); check_err(ncerr, __LINE__,__FILE__);
-  if (ierr != 0) {
-    eprintf("*** ERROR writing time output (P) ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"p_image",sxy,nsx,nsy,anodata_P ) ) ) {
     errors++;
+  } else {
+    eprintfc( "Dumped time output (P) SIR '%s'\n", p_name );
   }
-
 
 /* create non-enhanced images
    these are grd images pixel replicated to be at the same 
@@ -1237,46 +1223,40 @@ done3:
   printf(" Non-enhanced/Grid I  min   max --> %f %f\n",bmin,bmax);
   printf(" Non-enhanced/Grid C        max --> %.1f\n",tmax);
 
-  printf("Writing Grid TB (A) output '%s'\n", grd_aname);
-  ncerr=add_float_array_nc(ncid,"grd_a_image",a_val,nsx2,nsy2,anodata_A); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr != 0) {
-    eprintf("*** ERROR writing grid output A ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_a_image",a_val,nsx2,nsy2,anodata_A ) ) ) {
     errors++;
+  } else {
+    eprintfc( "Dumped Grid TB (A) output '%s'\n", grd_aname );
   }
 
-  printf("Writing Grid Tb STD (V) output SIR '%s'\n", grd_vname);
-  ncerr=add_float_array_nc(ncid,"grd_v_image",sy,nsx2,nsy2,anodata_V); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr != 0) {
-    eprintf("*** ERROR writing Grid Tb (V) STD output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
     errors++;
+  } else { 
+    eprintfc( "Dumped Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   }
 
-  printf("Writing Grid Istd (I) output '%s'\n", grd_iname);
-  ncerr=add_float_array_nc(ncid,"grd_i_image",sx2,nsx2,nsy2,anodata_I); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr !=0) {
-    eprintf("*** ERROR writing Istd output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
     errors++;
+  } else { 
+    eprintfc( "Dumped Grid Istd (I) output '%s'\n", grd_iname );
   }
 
-  printf("Writing Grid Iave (J) output '%s'\n", grd_jname);
-  ncerr=add_float_array_nc(ncid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr != 0) {
-    eprintf("*** ERROR writing Istd output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
     errors++;
+  } else { 
+    eprintfc( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
   }
 
-  printf("Writing Grid Cnt (C) output '%s' %d\n", grd_cname, tmax);
-  ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr != 0) {
-    eprintf("*** ERROR writing Istd output ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
     errors++;
+  } else {
+    fprintf( stderr, "Dumped Grid Cnt (C) output '%s' %d\n", grd_cname, tmax );
   }
 
-  printf("Writing Grid time (P) '%s'\n", grd_pname);
-  ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P); check_err(ncerr, __LINE__,__FILE__);
-  if (ncerr != 0) {
-    eprintf("*** ERROR writing Grid time output (P) ***\n");
+  if ( 0 != ( ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
     errors++;
+  } else { 
+    eprintfc( "Dumped Grid time (P) '%s'\n", grd_pname );
   }
 
   if (CREATE_NON) {
@@ -1301,18 +1281,16 @@ done3:
 	}
     }
   
-    printf("Writing Non-enhanced Tb (A) output '%s'\n", non_aname);
-    ncerr=add_float_array_nc(ncid,"non_a_image",sx,nsx,nsy,anodata_A); check_err(ncerr, __LINE__,__FILE__);
-    if (ncerr != 0) {
-      eprintf("*** ERROR writing nonenhanced output A ***\n");
+    if ( 0 != ( ncerr=add_float_array_nc(ncid,"non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
       errors++;
+    } else { 
+      eprintfc( "Dumped Non-enhanced Tb (A) output '%s'\n", non_aname );
     }
 
-    printf("Writing Non-enhanced TbSTD (V) output SIR '%s'\n", non_vname);
-    ncerr=add_float_array_nc(ncid,"non_v_image",sx2,nsx,nsy,anodata_V); check_err(ncerr, __LINE__,__FILE__);
-    if (ncerr != 0) {
-      eprintf("*** ERROR writing Non-enhanced Tb (V) STD output ***\n");
+    if ( 0 != ( ncerr=add_float_array_nc(ncid,"non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
       errors++;
+    } else { 
+      eprintfc( "Dumped Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
     }
 
   }
