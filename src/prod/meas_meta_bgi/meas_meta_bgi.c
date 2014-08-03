@@ -9,6 +9,8 @@
   Revised by DGL at BYU 05/16/2015 + use intermediate dump file output
   Revised by DGL at BYU 06/21/2014 + modified gain thresholding and response rejection
   Revised by DGL at BYU 07/04/2014 + removed extra memory array allocations, reduced redundant computation of z
+  Revised by DGL at BYU 07/24/2014 + changed default parameter settings, measurements that span horizontal edge
+  Revised by DGL at BYU 08/02/2014 + folded in changes by Brodzik
 
 ******************************************************************/
 
@@ -47,10 +49,10 @@ int   HS=20;                  /* measurement headersize in bytes */
 
 /* the following BG parameters are subjectively set */
 
-double bgi_gamma=0.01*3.141562654;/* BGI gamma parameter */
-float delta2=1.0;                 /* BGI assumed noise variance */
-float omega=0.001;                /* BGI scale factor */
-float ithres=0;                   /* minimum gain threshold */
+double bgi_gamma=0.85*3.141562654;/* default BGI gamma parameter */
+float delta2=1.0;                 /* default BGI assumed noise variance */
+float omega=0.001;                /* BGI scale factor (fixed)*/
+float ithres=0.125;               /* default minimum gain threshold */
 int Nsize=0;                      /* (built into the code) */
 float wscale=0.001;  /* pattern scale coversion factor int->float */
 
@@ -724,7 +726,10 @@ int main(int argc, char **argv)
 	
 	  for (i=0; i < count; i++) 
 	    if (fill_array[i]>0) {
-	      ix = (fill_array[i]-1) % nsx - ix0[m] + mdim2;
+	      dx = (fill_array[i]-1) % nsx - ix0[m];
+	      if (dx < -nsx/2) dx=dx+nsx; /* handle measurements that span horizontal image edge */
+	      if (dx >  nsx/2) dx=dx-nsx; /* handle measurements that span horizontal image edge */
+	      ix = dx + mdim2;
 	      iy = (fill_array[i]-1) / nsx - iy0[m] + mdim2;
 	      if (ix >= 0 && iy >= 0 && ix < mdim && iy < mdim)
 		patarr[(iy*mdim+ix)*nmax+m-1]=weight_array[i]*wscale;
@@ -864,9 +869,9 @@ int main(int argc, char **argv)
 
 /* ***************** support routines **************** */
 
-void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim,int nsx)
+void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx)
 {
-  static int i,n,m,x,y,xx,yx,xn,yn;
+  register int i,n,m,x,y,xx,yx,xn,yn;
   int mpeak=-1;  
 
   /* find peak response of measurement*/
@@ -877,6 +882,7 @@ void count_hits(int count, int fill_array[], short int response_array[], float i
   /* compute (local) threshold based on peak response */
   mpeak=ithres*mpeak;
 
+  /* find minimum size bounding box */
   yx=xx=0;
   yn=xn=99999999;
   for (i=0; i < count; i++) {
@@ -890,13 +896,16 @@ void count_hits(int count, int fill_array[], short int response_array[], float i
       yx = max(y,yx);
       xn = min(x,xn);
       yn = min(y,yn);
-    } else { /* mark resonses not to be used */
+    } else { /* mark response values not to be used since they are below cutoff threshold */
       fill_array[i]=0;
       response_array[i]=0.0;      
     }
   }
-  x=xx-xn+1;
-  y=yx-yn+1;
+  if (xx-xn+1 < nsx/2) /* check horizontal measurement span */
+    x=xx-xn+1; /* horizontal span */
+  else
+    x=0;      /* do not consider horiznotal span of measurements that cross horizontal boundaries */
+  y=yx-yn+1;  /* vertical span */
   *mdim=max(x,y);
 }
 

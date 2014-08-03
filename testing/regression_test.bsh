@@ -13,12 +13,29 @@ SIR_region="$meas_home/ref/regiondef1.dat" # path to regiondef1.dat
 export meas_home SIR_areas SIR_region
 
 # define file types of output products
-#BYU_FORMAT=0  # BYU .SIR file format and .gif browse files not produced
-BYU_FORMAT=1  # BYU .SIR file format and .gif browse files produced
+BYU_FORMAT=0  # BYU .SIR file format and .gif browse files not produced
+BYU_FORMAT=1  # BYU .SIR file format and .gif browse files produced for testing
 
-NC_FORMAT=0 # NC formated product files not produced
+NC_FORMAT=0 # NC formated product files not produced for testing
 #NC_FORMAT=1 # NC formated product files produced
 
+# set flag 1 to process BGI, 0 to not process BGI
+BGI=0  # skip BGI processing for testing
+BGI=1  # include BGI processing
+# optionally specify BGI processing parameters (if one specified, all have to be)
+#BGI_gamma=2.670354
+#BGI_var=1.0 
+#BGI_gthres=0.125
+
+# for testing and debuging BGI code
+BGI_ONLY=0
+#BGI_ONLY=1  # for debugging, do ONLY BGI
+
+if [ $BGI_ONLY -eq 1 ]; then
+  BGI=1
+fi 
+
+#################
 # choose a particular SSMI
 SSMI=13
 
@@ -28,22 +45,20 @@ FirstDay=61
 LastDay=61
 echo "Processing $Year $FirstDay to $LastDay"
 
-# set flag 1 to process BGI, 0 to not process BGI
-#BGI=0  # skip BGI processing
-BGI=1  # include BGI processing
-
 #
 # define some arrays used to control the processing
 #
 
 # set source files RSS or CSU
 SRC_List=(RSS CSU)
+#SRC_List=(RSS)  # subset for testing
 
 # 2 character year string
 Syear=${Year:2:4}
 
 # regions
 Regions=(E2N E2S E2T)
+#Regions=(E2N E2T) # subset for testing
 
 # Extensions
 Extensions=(ave sir grd non)  # bgi
@@ -110,29 +125,31 @@ for SRC in $SRC_List ; do
 	echo " "
 	echo "Processing region: $Reg"
 
+	if [ $BGI_ONLY -ne 1 ]; then
 # create meta files for this region
-	echo "meta_make $Reg: ../src/prod/meas_meta_make/meas_meta_make $WorkDir/$Reg_$Syear_$dstr.meta $SSMI ../ref/s2g/ssmi_mN.s2g $Day $Day $Year ../ref/$Reg.def $WorkDir/F$SSMI_$Year_$Day.lis"
-	../src/prod/meas_meta_make/meas_meta_make $WorkDir/$Reg_$Syear_$dstr.meta $SSMI ../ref/s2g/ssmi_mN.s2g $Day $Day $Year ../ref/$Reg.def $WorkDir/F$SSMI_$Year_$Day.lis
+	 echo "meta_make $Reg: ../src/prod/meas_meta_make/meas_meta_make $WorkDir/$Reg_$Syear_$dstr.meta $SSMI ../ref/s2g/ssmi_mN.s2g $Day $Day $Year ../ref/$Reg_test.def $WorkDir/F$SSMI_$Year_$Day.lis"
+	 ../src/prod/meas_meta_make/meas_meta_make $WorkDir/$Reg_$Syear_$dstr.meta $SSMI ../ref/s2g/ssmi_mN.s2g $Day $Day $Year ../ref/$Reg\_test.def $WorkDir/F$SSMI_$Year_$Day.lis
 
 # Make setup files for region
-	echo " "
-	if [ "$SRC" == "RSS" ] ; then
+	 echo " "
+	 if [ "$SRC" == "RSS" ] ; then
 	    echo "RSS setup: ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0"
-#	    ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
-	else
+	    ../src/prod/meas_meta_setup/meas_meta_setup_RSS/meas_meta_setup_RSS $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
+	 else
 	    echo "CSU setup: ../src/prod/meas_meta_setup/meas_meta_setup_CSU/meas_meta_setup_CSU $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0"
 	    ../src/prod/meas_meta_setup/meas_meta_setup_CSU/meas_meta_setup_CSU $WorkDir/$Reg_$Syear_$dstr.meta $WorkDir 0
+	 fi
 	fi
-
 # create intermediate dump files from setup files
 	Channels=$(seq 1 7)
 	for Ch in $Channels ; do
 
 	    echo " "
-	    echo "Doing SIR for channel F${SSMI}$ch ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir"
-	    ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
+	    if [ $BGI_ONLY -ne 1 ]; then
+	     echo "Doing SIR for channel F${SSMI}$ch ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir"
+	     ../src/prod/meas_meta_sir/meas_meta_sir $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
 
-	    if [ $BYU_FORMAT -eq 1 ] ; then # create BYU .SIR-format product files from dump files
+	     if [ $BYU_FORMAT -eq 1 ] ; then # create BYU .SIR-format product files from dump files
 		echo " "
 		echo "BYU Undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 0 1"
 		../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 0 1
@@ -142,19 +159,20 @@ for SRC in $SRC_List ; do
 		    for Ext in ${Extensions[*]} ; do
 			echo " "
 			echo "sir2gif $typ $Ext: ../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif"
-			../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif
+#			../src/sir2gifs/sir2gifs -f../ref/s2g/ssmi.s2g $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext $DestDir/F${SSMI}$Ch-$typ-$Reg$Syear-$dstr-$dstr.$Ext.gif
 		    done
 		done
-	    else
+	     else
 		echo ".gif browse product files not produced!"
-	    fi
+	     fi
 
-	    if [ $NC_FORMAT -eq 1 ] ; then # generate netcdf product files from dump files
+	    if [ $NC_FORMAT -eq 1 ] ; then # generate netcdf product files from dump file s
 		echo " "
 		echo "NC undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 1 1"
 		../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump.nc $DestDir 1 1
-	    else
+	     else
 		echo "netcdf-formatted product files not produced!"
+	     fi
 	    fi
 
 # optionally process BGI
@@ -162,7 +180,7 @@ for SRC in $SRC_List ; do
 # generate bgi dump file from setup file
 		echo " "
 		echo "BGI: ../src/prod/meas_meta_sir/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir"
-		../src/prod/meas_meta_bgi/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir
+		../src/prod/meas_meta_bgi/meas_meta_bgi $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.setup $WorkDir $BGI_gamma $BGI_var $BGI_gthres
 
 		if [ $BYU_FORMAT -eq 1 ] ; then # create BYU .SIR-format product files from dump files
 		    echo "BGI BYU undump: ../src/prod/meas_undump/meas_undump $WorkDir/F${SSMI}$Ch-$Reg$Syear-$dstr-$dstr.lis_dump1.nc $DestDir 0 1"
@@ -198,8 +216,7 @@ for SRC in $SRC_List ; do
 #
     let Day=$(( ${Day} + 1 ))
   done # end while day
-
 done # end for source
 
 # (optionally) view browse .gif images
-eog $DestDir/*.gif
+#eog $DestDir/*.gif

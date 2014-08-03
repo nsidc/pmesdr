@@ -73,7 +73,7 @@ int define_var_short(int ncid, char *short_name, char *long_name, int rank, int 
 {
   int var_id, stat;
   /* printf("define_var_short %d name=%s dims=%d %d %d rank=%d\n",ncid,short_name,dims[0],dims[1],dims[2],rank); */
-  stat = nc_def_var(ncid, short_name, NC_SHORT, rank, dims, &var_id);  check_err1(stat,short_name,__LINE__,__FILE__);
+  stat = nc_def_var(ncid, short_name, NC_SHORT, rank, dims, &var_id); check_err1(stat,short_name,__LINE__,__FILE__);
   stat = nc_put_att_text(ncid, var_id, "long_name", strlen(long_name), long_name); check_err1(stat,short_name,__LINE__,__FILE__);
   stat = nc_put_att_float(ncid, var_id, "scale_factor", NC_FLOAT, 1, &scale); check_err1(stat,short_name,__LINE__,__FILE__);
   stat = nc_put_att_short(ncid, var_id, "offset", NC_SHORT, 1, &offset); check_err1(stat,short_name,__LINE__,__FILE__);
@@ -306,7 +306,7 @@ int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float
   /* leave define mode so we can begin variable writing */
   stat = nc_enddef(ncid);  check_err(stat,__LINE__,__FILE__);
   /* write variable */
-  stat = nc_put_vara_float(ncid, var_id, wstart, wcount, val);
+  stat = nc_put_vara_float(ncid, var_id, wstart, wcount, val); check_err(stat,__LINE__,__FILE__);
 
   return(stat);  
 }
