@@ -8,23 +8,6 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 
-#
-#	system libraries and include directories
-#
-ifeq ($(LOCALE),NSIDCsnow)
-  $(warning Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  HDF5_INCDIR = /usr/include
-else ifeq ($(LOCALE),NSIDCdev)
-  $(warning Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  HDF5_INCDIR = /usr/include
-else
-  $(warning Assuming default LOCALE=BYU)
-  NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-  HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-endif
-
 EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
 	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp \
 	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
@@ -39,7 +22,7 @@ MKDIR = mkdir -p
 RM = rm -fr
 
 CONFIG_CFLAGS = 
-CFLAGS = -Iinclude -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -m64 -O3 $(CONFIG_CFLAGS) 
+CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
 LDFLAGS = -L. -lcsir -lm
 
 all : $(EXES) $(LIB)
@@ -82,13 +65,12 @@ sir_ez_example : sir_ez_example.c libcsir.a
 	$(CC) $(CFLAGS) -osir_ez_example sir_ez_example.c $(LDFLAGS)
 
 # create static c routines library
-libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c lib/netcdf_dump.c
+libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c 
 	rm -f *.o
 	rm -f libcsir.a
 	$(CC) $(CFLAGS) -c lib/sir_io.c
 	$(CC) $(CFLAGS) -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -c lib/sir_geom.c
-	$(CC) $(CFLAGS) -c lib/netcdf_dump.c
 	$(AR)  ruv libcsir.a *.o
 	$(RM) *.o
 
@@ -96,30 +78,30 @@ clean :
 	$(RM) $(EXES) $(LIB) *.o
 
 tools/sir_modhead3 : tools/sir_modhead3.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sir_modhead3 tools/sir_modhead3.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sir_modhead3 tools/sir_modhead3.c $(LDFLAGS)
 
 tools/sir_remapper3 : tools/sir_remapper3.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sir_remapper3 tools/sir_remapper3.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sir_remapper3 tools/sir_remapper3.c $(LDFLAGS)
 
 tools/sir_util : tools/sir_util.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sir_util tools/sir_util.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sir_util tools/sir_util.c $(LDFLAGS)
 
 tools/sir_util2 : tools/sir_util2b.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sir_util2 tools/sir_util2b.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sir_util2 tools/sir_util2b.c $(LDFLAGS)
 
 tools/sirdiff : tools/sirdiff.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sirdiff tools/sirdiff.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sirdiff tools/sirdiff.c $(LDFLAGS)
 
 tools/sirdiff_mask : tools/sirdiff_mask.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sirdiff_mask tools/sirdiff_mask.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sirdiff_mask tools/sirdiff_mask.c $(LDFLAGS)
 
 tools/sirmask : tools/sirmask.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sirmask tools/sirmask.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sirmask tools/sirmask.c $(LDFLAGS)
 
 tools/sir_extractregion : tools/sir_extractregion.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sir_extractregion tools/sir_extractregion.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sir_extractregion tools/sir_extractregion.c $(LDFLAGS)
 
 tools/sir_stats : tools/sir_stats.c libcsir.a
-	$(CC) $(CFLAGS) -otools/sir_stats tools/sir_stats.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o tools/sir_stats tools/sir_stats.c $(LDFLAGS)
 
 
