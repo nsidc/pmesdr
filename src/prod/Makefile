@@ -47,11 +47,11 @@ else ifeq ($(LOCALE),NSIDCdev)
   ZLIB_LIBDIR = /usr/lib64
 else
   $(warning Assuming default LOCALE=BYU)
-  NETCDF4_INCDIR = /app/anaconda/include
-  NETCDF4_LIBDIR = /app/anaconda/lib
-  HDF5_INCDIR = /app/anaconda/include
-  HDF5_LIBDIR = /app/anaconda/lib
-  ZLIB_LIBDIR = /app/anaconda/lib
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_INCDIR = /usr/include
+  HDF5_LIBDIR = /usr/lib64
+  ZLIB_LIBDIR = /usr/lib64
 endif
 
 #
