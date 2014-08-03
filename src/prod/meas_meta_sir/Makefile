@@ -5,6 +5,8 @@
 # 2014-04-14 M. J. Brodzik 303-492-8263 brodzik@nsidc.org
 # National Snow & Ice Data Center, University of Colorado, Boulder
 # Copyright (C) 2014 Regents of University of Colorado and Brigham-Young University
+#
+# modified 2 Aug 2014 by DGL at BYU + netcdf_dump
 #========================================================================
 
 #------------------------------------------------------------------------
@@ -49,9 +51,9 @@ else ifeq ($(LOCALE),NSIDCdev)
   ZLIB_LIBDIR = /usr/lib64
 else
   $(warning Assuming default LOCALE=BYU)
-  NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
-  HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
-  ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_LIBDIR = /usr/lib64
+  ZLIB_LIBDIR = /usr/lib64
 endif
 
 #
@@ -61,12 +63,12 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS =  -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS)
+CFLAGS =  -I$(MEAS_INCDIR) -I../meas_undump -m64 $(CONFIG_CFLAGS)
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
-SRCS = meas_meta_sir.c 
-OBJS = meas_meta_sir.o 
-HDRS = $(MEAS_INCDIR)/sir3.h
+SRCS = meas_meta_sir.c ../meas_undump/netcdf_dump.c
+OBJS = meas_meta_sir.o netcdf_dump.o
+HDRS = $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
 BIN = meas_meta_sir
 
 RSSNPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
@@ -76,8 +78,11 @@ CSUE2NFILES = $(shell find $(TESTDIR)/setupCSU/e2n -type f -name "F*E2N*.setup")
 
 all : $(BIN)
 
-$(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS)
+$(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS) 
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+
+netcdf_dump.o : ../meas_undump/netcdf_dump.c 
+	$(CC) $(CFLAGS) -c -o $@ ../meas_undump/netcdf_dump.c
 
 install :
 	$(MKDIR) $(BINDIR)
