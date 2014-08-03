@@ -22,7 +22,7 @@
 #define prog_version 0.1 /* program version */
 #define prog_name "meas_meta_make"
 
-#define MAKEJOB 1 /* create job script if 1, do not create job script if 0 */
+#define MAKEJOB 0 /* create job script if 1, do not create job script if 0 */
 #define ENABLE_SYSTEM_CALL 1 /* enable system cal to make job executiable */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
