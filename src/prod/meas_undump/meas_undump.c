@@ -178,6 +178,7 @@ int main(int argc, char **argv)
   
   /* read input file header */
 
+  printf("Open input dump file %s\n",file_in);  
   ncerr=nc_open_file_read_head(file_in, &ncid, &nsx, &nsy, &iopt, 
 			       &ascale, &bscale, &a0, &b0, &xdeg, &ydeg, 
 			       &isday, &ieday, &ismin, &iemin, &iyear, 
@@ -190,6 +191,7 @@ int main(int argc, char **argv)
      printf("ERROR opening or reading input dump file: %s\n",argv[1]); 
      exit(-1);
   }
+  printf("Finished with file read\n");
 
   /* read other strings */
   ncerr=get_string_nc(ncid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
