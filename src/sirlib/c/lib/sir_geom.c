@@ -7,7 +7,8 @@
    DGL July 29, 2005 + modified and corrected EASE projection code
    DGL Feb 4, 2014 + added EASE2 grid projection
    DGL Feb 4, 2014 + added ease2sf
-   
+   DGL Aug 2, 2014 + modified EASE2T vertical dimension from 538 to 540
+
 */
 
 #include <stdlib.h>
@@ -679,7 +680,7 @@ void ease2_map_info(int iopt, int isc, int ind,
       default: /* EASE2_T25km.gpd */
 	base=25025.26000;
 	nx=1388;
-	ny=538;	
+	ny=540;  /* originally was 538 */	
       }
    }
 
