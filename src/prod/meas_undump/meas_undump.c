@@ -156,11 +156,12 @@ int main(int argc, char **argv)
     return(0);
   }
   file_in=argv[1];
+  printf("Input file name %s\n",file_in);  
 
   strncpy(outpath,"./",250); /* default output path */
   if (argc > 2) 
     sscanf(argv[2],"%s",outpath);
-  printf("Output path %s: ",outpath);
+  printf("Output path %s: \n",outpath);
 
   if (argc > 3) 
     sscanf(argv[3],"%d",&storage);
