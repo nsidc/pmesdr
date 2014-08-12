@@ -8,6 +8,7 @@
    DGL Feb 4, 2014 + added EASE2 grid projection
    DGL Feb 4, 2014 + added ease2sf
    DGL Aug 2, 2014 + modified EASE2T vertical dimension from 538 to 540
+   DGL Aug 12, 2014 + modified EASE2 global M25km base scale to 25025.26000
 
 */
 
@@ -585,7 +586,7 @@ void ease2_map_info(int iopt, int isc, int ind,
            project type    ind=0     ind=1            ind=3
 	      N          25000.0     30000.0         36000.0
               S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.2600081  M36032.220840584
+              T/M       T25025.26   M25025.26000   M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
@@ -668,7 +669,7 @@ void ease2_map_info(int iopt, int isc, int ind,
       *kz = *cos_phi1 / sqrt( 1.0 - *e2 * *sin_phi1 * *sin_phi1 );
       switch(ind) {
       case 1:  /* EASE2_M25km.gpd */
-	base=25025.2600081;
+	base=25025.26000;  /* removed 81 from end */
 	nx=1388;
 	ny=584;	
 	break;
@@ -736,7 +737,7 @@ void ease2sf(int iopt, float ascale, float bscale, float *fmap_scale,
            project type    ind=0     ind=1            ind=3
 	      N          25000.0     30000.0         36000.0
               S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.2600081  M36032.220840584
+              T/M       T25025.26   M25025.26000  M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
@@ -800,7 +801,7 @@ void ease2grid(int iopt, float alon, float alat,
            project type    ind=0     ind=1            ind=3
 	      N          25000.0     30000.0         36000.0
               S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.2600081  M36032.220840584
+              T/M       T25025.26   M25025.26000  M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
@@ -913,7 +914,7 @@ void iease2grid(int iopt, float *alon, float *alat,
            project type    ind=0     ind=1            ind=3
 	      N          25000.0     30000.0         36000.0
               S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.2600081  M36032.220840584
+              T/M       T25025.26   M25025.26000  M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
