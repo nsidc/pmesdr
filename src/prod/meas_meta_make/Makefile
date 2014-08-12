@@ -60,32 +60,34 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS)
 
-rss_nps :
-	$(RM) $(TESTDIR)/rss_nps
-	$(MKDIR) $(TESTDIR)/rss_nps
-	$(LS)  $(TOPDIR)/sample_data/f13_*_tb_v7.dat > $(TESTDIR)/rss_nps/F1RSS.lis
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_nps/npstest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/arctic.def $(TESTDIR)/rss_nps/F1RSS.lis
-
-rss_e2n :
+rss_ease :
+	$(RM) $(TESTDIR)/rss_e2s
+	$(MKDIR) $(TESTDIR)/rss_e2s
 	$(RM) $(TESTDIR)/rss_e2n
 	$(MKDIR) $(TESTDIR)/rss_e2n
-	$(LS)  $(TOPDIR)/sample_data/f13_r09999_tb_v7.dat > $(TESTDIR)/rss_e2n/F1RSS.lis
+	$(RM) $(TESTDIR)/rss_e2t
+	$(MKDIR) $(TESTDIR)/rss_e2t
+	$(LS)  $(TOPDIR)/sample_data/regression_test_data/f13*.dat > $(TESTDIR)/F1RSS.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S.def $(TESTDIR)/F1RSS.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TESTDIR)/rss_e2n/F1RSS.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N.def $(TESTDIR)/F1RSS.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T.def $(TESTDIR)/F1RSS.lis
 
-csu_nps :
-	$(RM) $(TESTDIR)/csu_nps
-	$(MKDIR) $(TESTDIR)/csu_nps
-	$(LS)  $(TOPDIR)/sample_data/CSU_SSMI* > $(TESTDIR)/csu_nps/F1CSU.lis
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_nps/npstest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/arctic.def $(TESTDIR)/csu_nps/F1CSU.lis
-
-csu_e2n :
+csu_ease :
 	$(RM) $(TESTDIR)/csu_e2n
 	$(MKDIR) $(TESTDIR)/csu_e2n
-	$(LS)  $(TOPDIR)/sample_data/CSU_SSMI* > $(TESTDIR)/csu_e2n/F1CSU.lis
+	$(RM) $(TESTDIR)/csu_e2s
+	$(MKDIR) $(TESTDIR)/csu_e2s
+	$(RM) $(TESTDIR)/csu_e2t
+	$(MKDIR) $(TESTDIR)/csu_e2t
+	$(LS)  $(TOPDIR)/sample_data/regression_test_data/CSU_SSMI* > $(TESTDIR)/F1CSU.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 60 60 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TESTDIR)/csu_e2n/F1CSU.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N.def $(TESTDIR)/F1CSU.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S.def $(TESTDIR)/F1CSU.lis
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta 13 \
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T.def $(TESTDIR)/F1CSU.lis
 
 
