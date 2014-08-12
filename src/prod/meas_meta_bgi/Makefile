@@ -71,10 +71,12 @@ OBJS = meas_meta_bgi.o netcdf_dump.o
 HDRS = nr.h nrutil.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
 BIN = meas_meta_bgi
 
-RSSNPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
+RSSE2SFILES = $(shell find $(TESTDIR)/setupRSS/e2s -type f -name "F*E2S*.setup")
 RSSE2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
-CSUNPSFILES = $(shell find $(TESTDIR)/setupCSU/nps -type f -name "F*Arc*.setup")
+RSSE2TFILES = $(shell find $(TESTDIR)/setupRSS/e2t -type f -name "F*E2T*.setup")
+CSUE2SFILES = $(shell find $(TESTDIR)/setupCSU/e2s -type f -name "F*E2S*.setup")
 CSUE2NFILES = $(shell find $(TESTDIR)/setupCSU/e2n -type f -name "F*E2N*.setup")
+CSUE2TFILES = $(shell find $(TESTDIR)/setupCSU/e2t -type f -name "F*E2T*.setup")
 
 all : $(BIN)
 
@@ -91,36 +93,45 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS)
 
-rss_nps :
-	$(RM) $(TESTDIR)/bgiRSS/nps
-	$(MKDIR) $(TESTDIR)/bgiRSS/nps
-	for file in $(RSSNPSFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/nps; \
-	done
-
-rss_e2n :
+rss_ease :
 	$(RM) $(TESTDIR)/bgiRSS/e2n
 	$(MKDIR) $(TESTDIR)/bgiRSS/e2n
 	for file in $(RSSE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2n; \
 	done
-
-csu_nps :
-	$(RM) $(TESTDIR)/bgiCSU/nps
-	$(MKDIR) $(TESTDIR)/bgiCSU/nps
-	for file in $(CSUNPSFILES); do \
+	$(RM) $(TESTDIR)/bgiRSS/e2s
+	$(MKDIR) $(TESTDIR)/bgiRSS/e2s
+	for file in $(RSSE2SFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/nps; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2s; \
+	done
+	$(RM) $(TESTDIR)/bgiRSS/e2t
+	$(MKDIR) $(TESTDIR)/bgiRSS/e2t
+	for file in $(RSSE2TFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2t; \
 	done
 
-csu_e2n :
+csu_ease :
 	$(RM) $(TESTDIR)/bgiCSU/e2n
 	$(MKDIR) $(TESTDIR)/bgiCSU/e2n
 	for file in $(CSUE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/e2n; \
 	done
+	$(RM) $(TESTDIR)/bgiCSU/e2s
+	$(MKDIR) $(TESTDIR)/bgiCSU/e2s
+	for file in $(CSUE2SFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/e2s; \
+	done
+	$(RM) $(TESTDIR)/bgiCSU/e2t
+	$(MKDIR) $(TESTDIR)/bgiCSU/e2t
+	for file in $(CSUE2TFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/e2t; \
+	done
+
 
 

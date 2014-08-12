@@ -66,14 +66,15 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS)
 
-rss_nps :
-	$(RM) $(TESTDIR)/setupRSS/nps
-	$(MKDIR) $(TESTDIR)/setupRSS/nps
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_nps/npstest_RSS.meta  $(TESTDIR)/setupRSS/nps 0
-
-rss_e2n :
+rss_ease :
 	$(RM) $(TESTDIR)/setupRSS/e2n
 	$(MKDIR) $(TESTDIR)/setupRSS/e2n
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 0
+	$(RM) $(TESTDIR)/setupRSS/e2s
+	$(MKDIR) $(TESTDIR)/setupRSS/e2s
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 0
+	$(RM) $(TESTDIR)/setupRSS/e2t
+	$(MKDIR) $(TESTDIR)/setupRSS/e2t
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 0
 
 

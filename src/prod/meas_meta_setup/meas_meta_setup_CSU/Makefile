@@ -83,14 +83,16 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS)
 
-csu_nps :
-	$(RM) $(TESTDIR)/setupCSU/nps
-	$(MKDIR) $(TESTDIR)/setupCSU/nps
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_nps/npstest_CSU.meta  $(TESTDIR)/setupCSU/nps 0
-
-csu_e2n :
+csu_ease :
 	$(RM) $(TESTDIR)/setupCSU/e2n
 	$(MKDIR) $(TESTDIR)/setupCSU/e2n
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 0
+	$(RM) $(TESTDIR)/setupCSU/e2s
+	$(MKDIR) $(TESTDIR)/setupCSU/e2s
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta  $(TESTDIR)/setupCSU/e2s 0
+	$(RM) $(TESTDIR)/setupCSU/e2t
+	$(MKDIR) $(TESTDIR)/setupCSU/e2t
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 0
+
 
 
