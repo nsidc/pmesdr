@@ -22,6 +22,7 @@ INSTALL = cp -f -p
 LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
+CP = cp
 
 #
 #       debug or optimization settings
@@ -67,13 +68,13 @@ rss_ease :
 	$(MKDIR) $(TESTDIR)/rss_e2n
 	$(RM) $(TESTDIR)/rss_e2t
 	$(MKDIR) $(TESTDIR)/rss_e2t
-	$(LS)  $(TOPDIR)/sample_data/regression_test_data/f13*.dat > $(TESTDIR)/F1RSS.lis
+	$(CP) $(TOPDIR)/testing/RSS_regress_list_NSIDC $(TESTDIR)/F1RSS.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S.def $(TESTDIR)/F1RSS.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TESTDIR)/F1RSS.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N.def $(TESTDIR)/F1RSS.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TESTDIR)/F1RSS.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T.def $(TESTDIR)/F1RSS.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TESTDIR)/F1RSS.lis
 
 csu_ease :
 	$(RM) $(TESTDIR)/csu_e2n
@@ -82,12 +83,12 @@ csu_ease :
 	$(MKDIR) $(TESTDIR)/csu_e2s
 	$(RM) $(TESTDIR)/csu_e2t
 	$(MKDIR) $(TESTDIR)/csu_e2t
-	$(LS)  $(TOPDIR)/sample_data/regression_test_data/CSU_SSMI* > $(TESTDIR)/F1CSU.lis
+	$(CP) $(TOPDIR)/testing/CSU_regress_list_NSIDC $(TESTDIR)/F1CSU.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N.def $(TESTDIR)/F1CSU.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TESTDIR)/F1CSU.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S.def $(TESTDIR)/F1CSU.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TESTDIR)/F1CSU.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T.def $(TESTDIR)/F1CSU.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TESTDIR)/F1CSU.lis
 
 
