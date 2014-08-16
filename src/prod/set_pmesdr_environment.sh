@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # set_pmesdr_environment.sh
 #
-#  This script is used by sourceing it ". /this/script/location/set_pmesdr_environment.sh"
+#  This script is used by sourcing it ". /this/script/location/set_pmesdr_environment.sh"
 #  By doing this, you set up the environment necessary for building and running the
 #  Passive Microwave ESDR system software.
 #

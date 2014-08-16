@@ -7,6 +7,7 @@
 #  requires prior installation of the fltk library
 #
 #  written D.G. Long 3/13/2014
+#  updated D.G. Long 8/16/2014 + remove duplicate files
 #
 #########################################################
 
@@ -27,7 +28,7 @@ FLTK_CXXFLAGS = `$(FLTK_CONFIG) --cxxflags`
 #FLTK_CONFIG = /auto/users/long/src/linux/fltk-1.3.2/bin/fltk-config
 #FLTK_INC      = `$(FLTK_CONFIG) --includedir`
 
-INC   = -I./
+INC   = -I./ -I../sirlib/c/include/
 
 OBJS  = libsirtool.o \
 	sir_io.o \
@@ -44,9 +45,9 @@ OBJS  = libsirtool.o \
 
 
 INCS  = libsirtool.h \
-	sir3.h \
+	../sirlib/c/include/sir3.h \
 	export.h \
-	sir_ez.h
+        ../sirlib/c/include/sir_ez.h
 
 all:	sirtool
 
@@ -62,14 +63,14 @@ libsirtool.o:  libsirtool.cpp $(INCS)
 export.o:  export.c
 	$(CC) -c $(CFLAGS) export.c $(INC) $(FLTK_CFLAGS) -o $@
 
-sir_io.o:  sir_io.c $(INCS)
-	$(CC) -c $(CFLAGS) sir_io.c $(INC) $(FLTK_CFLAGS) -o $@
+sir_io.o:  ../sirlib/c/lib/sir_io.c $(INCS)
+	$(CC) -c $(CFLAGS) ../sirlib/c/lib/sir_io.c $(INC) $(FLTK_CFLAGS) -o $@
 
-sir_geom.o:  sir_geom.c $(INCS)
-	$(CC) -c $(CFLAGS) sir_geom.c $(INC) $(FLTK_CFLAGS) -o $@
+sir_geom.o:  ../sirlib/c/lib/sir_geom.c $(INCS)
+	$(CC) -c $(CFLAGS) ../sirlib/c/lib/sir_geom.c $(INC) $(FLTK_CFLAGS) -o $@
 
-sir_ez.o:  sir_ez.c $(INCS)
-	$(CC) -c $(CFLAGS) sir_ez.c $(INC) $(FLTK_CFLAGS) -o $@
+sir_ez.o:  ../sirlib/c/lib/sir_ez.c $(INCS)
+	$(CC) -c $(CFLAGS) ../sirlib/c/lib/sir_ez.c $(INC) $(FLTK_CFLAGS) -o $@
 
 sir_plot.o:  sir_plot.c $(INCS)
 	$(CC) -c $(CFLAGS) sir_plot.c $(INC) $(FLTK_CFLAGS) -o $@

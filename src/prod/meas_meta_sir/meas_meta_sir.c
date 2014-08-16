@@ -5,8 +5,9 @@
   program to generate standard SIR products from .setup file
 
   Written by DGL at BYU 02/22/2014 + modified from ssmi_meta_sir3.c
-  Revised by DGL at BYU 05/15/2015 + use intermediate dump file output
-  Revised by DGL at BYU 06/21/2015 + AVE start of SIR
+  Revised by DGL at BYU 05/15/2014 + use intermediate dump file output
+  Revised by DGL at BYU 06/21/2014 + AVE start of SIR
+  Revised by DGL at BYU 08/16/2014 + revised error handling, optional INFOfile out
 
 ******************************************************************/
 
@@ -19,13 +20,16 @@
 
 #include "sir3.h"
 
-#define VERSION 1.1
+#define VERSION 1.2
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
 #define REL_BEGIN 0           /* fseek relative to end of file */
 
 #define CREATE_NON 1          /* set to 1 to create NON images, 0 to not create */
+
+#define INFOFILE 1            /* define to create info file, undefine to not create */
+#undef INFOFILE               /* do not create info file */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
@@ -45,7 +49,8 @@ int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 /****************************************************************************/
 
 
-/* some error print out shortcuts */
+/* some error print shortcuts 
+   errors output to stdout */
 
 void eprintf(char *s)
 { 
@@ -183,7 +188,7 @@ int main(int argc, char **argv)
 
   int storage = 0;
   long head_len;
-  int errors = 0;
+  int errors = 0, gerr;
   char polch;
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
@@ -752,8 +757,9 @@ int main(int argc, char **argv)
     
       if (storage == 1) { /* get measurement info from file */
 	store=space;
-	if (get_measurements(store, store2, &tbval, &ang, &count,
-			     &ktime, &iadd, &nrec)) {
+	gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);
+	if (gerr < 0) exit(-1);  /* fatal error */
+	if (gerr == 1) {         /* finished with all measurements */
 	  if (irec == 0) ncnt = nrec;  /* set count value */
 	  goto done;
 	}
@@ -851,8 +857,9 @@ done:
     if (its == 0) {  /* output AVE image */
       if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
 	errors++;
+	eprintfc("\nError dumping Tb (A) AVE '%s'\n", a_name_ave );
       } else {
-	eprintfc( "\nDumped Tb (A) AVE '%s'\n", a_name_ave );
+	printf( "\nDumped Tb (A) AVE '%s'\n", a_name_ave );
       }
     }
 
@@ -862,21 +869,24 @@ done:
   /* output SIR image */
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"a_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
+    eprintfc("\nError dumping Tb (A) SIR '%s'\n", a_name );
   } else {
-    eprintfc( "\nDumped Tb (A) SIR '%s'\n", a_name );
+    printf( "\nDumped Tb (A) SIR '%s'\n", a_name );
   }
 
   /* output other auxilary product images */
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
     errors++;
+    eprintfc("Error dumping Istd (I) SIR '%s'\n", i_name );
   } else {
-    eprintfc( "Dumped Istd (I) SIR '%s'\n", i_name );
+    printf( "Dumped Istd (I) SIR '%s'\n", i_name );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
     errors++;
+    eprintfc("Error dumping Iave (J) SIR '%s'\n", j_name );
   } else {
-    eprintfc( "Dumped Iave (J) SIR '%s'\n", j_name );
+    printf( "Dumped Iave (J) SIR '%s'\n", j_name );
   }
 
   /* this product is not produced for weighted SIR/SIRF
@@ -913,8 +923,9 @@ done:
     if (storage == 1) { /* get measurement info from file */
 
       store=space;
-      if (get_measurements(store, store2, &tbval, &ang, &count,
-			   &ktime, &iadd, &nrec)) goto done1;
+      gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);      
+      if (gerr < 0) exit(-1);  /* fatal error */
+      if (gerr==1) goto done1; /* finished with all measurements */
       
     } else {  /* get measurement info from memory */
 
@@ -972,14 +983,16 @@ done1:
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"v_image",sxy,nsx,nsy,anodata_V ) ) ) {
     errors++;
+    eprintfc("Error Dumping Tb STD (V) SIR output '%s'\n", v_name );
   } else {
-    eprintfc( "Dumped Tb STD (V) SIR output '%s'\n", v_name );
+    printf("Dumped Tb STD (V) SIR output '%s'\n", v_name );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"e_image",sx,nsx,nsy,anodata_E ) ) ) {
     errors++;
+    eprintfc("Error Dumping Tb err (E) SIR output '%s' \n", e_name );
   } else {
-    eprintfc( "Dumped Tb err (E) SIR output '%s' \n", e_name );
+    printf( "Dumped Tb err (E) SIR output '%s' \n", e_name );
   }
 
 /* create time image */
@@ -1006,8 +1019,9 @@ done1:
     if (storage == 1) { /* get measurement info from file */
 
       store=space;
-      if (get_measurements(store, store2, &tbval, &ang, &count,
-			   &ktime, &iadd, &nrec)) goto done2;
+      gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);
+      if (gerr < 0) exit(-1);  /* fatal error */
+      if (gerr==1) goto done2; /* finished with all measurements */
       
     } else {  /* get measurement info from memory */
 
@@ -1075,8 +1089,9 @@ done2:
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"p_image",sxy,nsx,nsy,anodata_P ) ) ) {
     errors++;
+    eprintfc("Error Dumped time output (P) SIR '%s'\n", p_name );
   } else {
-    eprintfc( "Dumped time output (P) SIR '%s'\n", p_name );
+    printf( "Dumped time output (P) SIR '%s'\n", p_name );
   }
 
 /* create non-enhanced images
@@ -1118,8 +1133,10 @@ done2:
 
     if (storage == 1) { /* get measurement info from file */
       store=space;
-      if (get_measurements(store, store2, &tbval, &ang, &count,
-			   &ktime, &iadd, &nrec)) goto done3;
+
+      gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);
+      if (gerr < 0) exit(-1);  /* fatal error */
+      if (gerr==1) goto done3; /* finished with all measurements */
       
     } else {  /* get measurement info from memory */
       tbval = *((float *) (store+0));
@@ -1225,38 +1242,44 @@ done3:
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_a_image",a_val,nsx2,nsy2,anodata_A ) ) ) {
     errors++;
+    eprintfc("Error Dumping Grid TB (A) output '%s'\n", grd_aname );
   } else {
-    eprintfc( "Dumped Grid TB (A) output '%s'\n", grd_aname );
+    printf( "Dumped Grid TB (A) output '%s'\n", grd_aname );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
     errors++;
+    eprintfc( "Error Dumping Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   } else { 
-    eprintfc( "Dumped Grid Tb STD (V) output SIR '%s'\n", grd_vname );
+    printf( "Dumped Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
     errors++;
+    eprintfc( "Error Dumping Grid Istd (I) output '%s'\n", grd_iname );
   } else { 
-    eprintfc( "Dumped Grid Istd (I) output '%s'\n", grd_iname );
+    printf( "Dumped Grid Istd (I) output '%s'\n", grd_iname );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
     errors++;
+    eprintfc( "Error Dumping Grid Iave (J) output '%s'\n", grd_jname );
   } else { 
-    eprintfc( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
+    printf( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
     errors++;
+    fprintf(stderr, "Error Dumping Grid Cnt (C) output '%s' %d\n", grd_cname, tmax );
   } else {
-    fprintf( stderr, "Dumped Grid Cnt (C) output '%s' %d\n", grd_cname, tmax );
+    printf( "Dumped Grid Cnt (C) output '%s' %d\n", grd_cname, tmax );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
     errors++;
+    eprintfc( "Error Dumping Grid time (P) '%s'\n", grd_pname );
   } else { 
-    eprintfc( "Dumped Grid time (P) '%s'\n", grd_pname );
+    printf( "Dumped Grid time (P) '%s'\n", grd_pname );
   }
 
   if (CREATE_NON) {
@@ -1283,14 +1306,16 @@ done3:
   
     if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
       errors++;
+      eprintfc( "Error Dumping Non-enhanced Tb (A) output '%s'\n", non_aname );
     } else { 
-      eprintfc( "Dumped Non-enhanced Tb (A) output '%s'\n", non_aname );
+      printf( "Dumped Non-enhanced Tb (A) output '%s'\n", non_aname );
     }
 
     if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
       errors++;
+      eprintfc( "Error Dumping Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
     } else { 
-      eprintfc( "Dumped Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
+      printf( "Dumped Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
     }
 
   }
@@ -1298,9 +1323,10 @@ done3:
   ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
   printf("\nFinished writing dump file: %s\n",inter_name);  
 
-  /* write out info file if processing is completed successfully */
-
   if (errors == 0) {
+    printf("No errors encountered\n");
+#ifdef INFOFILE
+    /* write out info file if processing is completed successfully */
     printf("Info file: %s\n",info_name);
     omf = fopen(info_name,"w"); 
     if (omf == NULL) {
@@ -1327,7 +1353,9 @@ done3:
       fprintf(omf,"GRD C output file: '%s'\n",grd_cname);
       fclose(omf);
     }
-  }
+#endif
+  } else
+    printf("Processing errors encountered\n");
   
   /* end of program */
   /* printf("De-allocating memory\n");  */
@@ -1608,7 +1636,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
       } else {
 	eprintfi(" *** fill_array storage error 3 *** %d\n", *nrec);
 	fprintf(stderr," *** fill_array storage error 3 *** %d %d %ld\n", *nrec,count,nspace);
-	exit(-1);
+	return(-1);
       }
 
       /* read response_array values */
@@ -1619,7 +1647,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
       } else {
 	eprintfi(" *** fill_array storage error 4 *** %d\n", *nrec);
 	fprintf(stderr," *** fill_array storage error 4 *** %d %ld\n",*nrec,nspace);
-	exit(-1);
+	return(-1);
       }
       (*nrec)++;
 	

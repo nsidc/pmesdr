@@ -8,6 +8,7 @@
    note: while fortran was well-tested, not all C program options
    have been fully tested
   Modified by DGL at BYU 3/07/2014 + added EASE2 capability
+  Modified by DGL at BYU 8/16/2014 + added error message when required environment variable not defined
 
 ******************************************************************/
 
@@ -19,11 +20,11 @@
 
 #include <sir3.h>
 
-#define prog_version 0.1 /* program version */
+#define prog_version 1.0 /* program version */
 #define prog_name "meas_meta_make"
 
 #define MAKEJOB 0 /* create job script if 1, do not create job script if 0 */
-#define ENABLE_SYSTEM_CALL 1 /* enable system cal to make job executiable */
+#define ENABLE_SYSTEM_CALL 1 /* enable system call to make job script executable */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
@@ -38,14 +39,16 @@ int nint(float r)
   return(ret_val);
 }
 
-
 #define TRUE 1
 #define FALSE 0
 
 /****************************************************************************/
 
 /* default location of the SIR standard region definition */
-char rname[] = "/auto/share/ref/regiondef1.dat";  /* file defining region codes */
+/* char rname[] = "/auto/share/ref/regiondef1.dat";*/  /* file defining region codes */
+char rname[] = "regiondef1.dat";  /* file defining region codes */
+
+/* these file names used only when creating .job files */
 char setup_name[] = "meas_meta_setup";            /* setup program path/name */
 char sirf_name[] = "meas_meta_sir";               /* SIR program path/name */
 
@@ -60,7 +63,7 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 int get_file_names(FILE *mout, int argc, int *argn, char *argv[]);
 
 
-/* map projection prototypes */
+/* declare specific map projection prototypes needed */
 
 extern void polster( float alon, float alat, float *x1, float *y1, float xlam, float slat);
 
@@ -78,6 +81,9 @@ extern void ease2_map_info(int iopt, int isc, int ind,
 			   double *r0, double *s0, double *epsilon);
 
 /****************************************************************************/
+/* note: program is designed to be run from command line OR interactively 
+*/
+
 
 int main(int argc,char *argv[])
 {
@@ -290,8 +296,10 @@ void getregdata(int regnum, int *iproj, int *dateline, float *latl, float *lonl,
 
   /* try to get environment variable */
   p=getenv("SIR_region");
-  if (p==NULL) 
+  if (p==NULL) {
+    printf("*** standard regions environment variable 'SIR_region' not defined!\n");    
     p=rname; /* use default if environment variable not available */
+  }  
 
   FILE *rid=fopen(p,"r");
   if (rid==NULL) {
@@ -373,6 +381,8 @@ void section_pixels(int isection, int *ix, int *iy, int nsect, int nt, float alp
   *nsy2=nsy;
   if (nsect == 1) return;
 
+
+  /* based on sectioning code, determine the dimensions of the image sectioning */
   if (nsect == 2) {
     nx=1;
     ny=2;

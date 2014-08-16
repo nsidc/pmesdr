@@ -11,6 +11,7 @@
   Revised by DGL at BYU 07/04/2014 + removed extra memory array allocations, reduced redundant computation of z
   Revised by DGL at BYU 07/24/2014 + changed default parameter settings, measurements that span horizontal edge
   Revised by DGL at BYU 08/02/2014 + folded in changes by Brodzik
+  Revised by DGL at BYU 08/16/2014 + revised error handling, optional INFOfile out
 
 ******************************************************************/
 
@@ -27,11 +28,14 @@
 #include "nr.h"
 #include "nrutil.h"
 
-#define VERSION 2.0
+#define VERSION 2.1
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
 #define REL_BEGIN 0           /* fseek relative to end of file */
+
+#define INFOFILE 1            /* define to create info file, undefine to not create */
+#undef INFOFILE               /* do not create info file */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
@@ -73,6 +77,7 @@ void eprintfi(char *s, int a)
   fprintf(stderr,s,a);
   fflush(stderr);
 }
+
 void eprintfc(char *s, char *a)
 { /* print to both stdout and stderr to catch errors */
   fprintf(stdout,s,a);
@@ -89,9 +94,6 @@ void count_hits(int count, int fill_array[], short int response_array[], float i
 void make_indx(int nmax, int count, int fill_array[], short int response_array[], float ithres, char **indx, char * pointer);
 
 void Ferror(int i);
-
-int get_measurements(char *store, char *store2, float *tbval, float *ang, int *count,
-		     int *ktime, int *iadd, int *nrec);
 
 void filter(float *val, int size, int opt, int nsx, int nsy, float
 	    *temp, float thres);
@@ -837,15 +839,18 @@ int main(int argc, char **argv)
   printf("\n"); 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"bgi_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
+    eprintfc("Error dumping A BGI '%s'. \n", a_name );
   } else {
-    fprintf( stderr, "Dumped A BGI '%s'. \n", a_name );
+    printf("Dumped A BGI '%s'. \n", a_name );
   }
 
   ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
   printf("\nFinished writing dump file: %s\n",inter_name);  
 
-  /* write out info file if processing successful */
   if (errors == 0) {
+    printf("No errors encountered\n");
+#ifdef INFOFILE
+    /* write out info file if processing is completed successfully */
     omf = fopen(info_name,"a"); 
     if (omf == NULL) {
       eprintfc("ERROR: cannot open info file: '%s'\n",info_name); 
@@ -854,7 +859,9 @@ int main(int argc, char **argv)
       fprintf(omf,"A output file: '%s'\n",a_name);
       fclose(omf);
     }
-  }
+#endif
+  } else
+    printf("Processing errors encountered\n");
   
   /* end of program */
 
@@ -1021,60 +1028,6 @@ void Ferror(int i)
   /* exit(-1); */
 }
 
-
-int get_measurements(char *store, char *store2, float *tbval, float *ang, int *count,
-		     int *ktime, int *iadd, int *nrec)
-{  /* returns the next set of measurement from the file */
-  int dumb, flag=1;
-  
-  while (flag == 1) {
-    if (fread(&dumb, sizeof(int), 1, imf) != 0) {  /* fortran record header */
-      /*	   read	 (50,err=500,end=500) tbval,ang,count,ktime,iadd
-		   read (50,err=500,end=500) (fill_array(i),i=1,count)   */
-      if (fread(store, sizeof(char), HS, imf) != HS) Ferror(200);
-      if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(201); /* fortran 
-								record trailer */
-      *tbval   = *((float *) (store+0));
-      *ang   = *((float *) (store+4));
-      *count = *((int *)   (store+8));
-      *ktime = *((int *)   (store+12));
-      *iadd  = *((int *)   (store+16));
-      /* if (HASAZANG)
-        *azang = *((float *) (store+20)); */
-
-      /*
-      printf("record %d %f %f %d %d %d\n",*nrec,*tbval,*ang,*count,*ktime,*iadd);
-      */
-
-      /* read fill_array pixel indices */
-      if (*count * 4 < nspace) {
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(210); 
-	if (fread(store, sizeof(int), *count, imf) != *count) Ferror(211);
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(212);
-      } else {
-	fprintf(stdout," *** fill_array storage error 3 *** %d %ld\n",*nrec,nspace);
-	fprintf(stderr," *** fill_array storage error 3 *** %d %ld\n",*nrec,nspace);
-	exit(-1);
-      }
-
-      /* read response_array values */
-      if (*count * 2 < nspace) {
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(2101); 
-	if (fread(store2, sizeof(short int), *count, imf) != *count) Ferror(2111);
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(2121);
-      } else {
-	fprintf(stdout," *** fill_array storage error 4 *** %d %ld\n",*nrec,nspace);
-	fprintf(stderr," *** fill_array storage error 4 *** %d %ld\n",*nrec,nspace);
-	exit(-1);
-      }
-      (*nrec)++;
-	
-      if (*tbval < 340.0 && *tbval > 50.0) return(0);
-    } else      /* end of file (or file err) encountered */
-      return(1);
-  }
-  return(0);
-}
 
 
 void no_trailing_blanks(char *s)
