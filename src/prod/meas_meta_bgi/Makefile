@@ -24,6 +24,10 @@ CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
 RM = rm -fr
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+endif
 
 #
 #       debug or optimization settings
@@ -49,6 +53,11 @@ else ifeq ($(LOCALE),NSIDCdev)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
+else ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6/netcdf4/4.3.2/hdf5/1.8.13/hdf4/4.2.10/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/lib
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.8/intel/13.0.0/lib
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
