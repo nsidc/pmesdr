@@ -23,6 +23,11 @@ LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+endif
+
 
 #
 #       debug or optimization settings

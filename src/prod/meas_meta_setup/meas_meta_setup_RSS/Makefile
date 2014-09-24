@@ -25,7 +25,10 @@ INSTALL = cp -f -p
 LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
-
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+endif
 #
 #       debug or optimization settings
 #       these may be things that are machine-specific

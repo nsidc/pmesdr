@@ -20,6 +20,10 @@ CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
 RM = rm -fr
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+endif
 
 CONFIG_CFLAGS = 
 CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
