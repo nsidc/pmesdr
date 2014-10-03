@@ -33,7 +33,15 @@ endif
 #       debug or optimization settings
 #       these may be things that are machine-specific
 #
-CONFIG_CFLAGS = -O3
+CONFIG_CFLAGS = -m64 -O3
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CONFIG_FLAGS = 
+endif
+ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+endif
 
 #
 #	system libraries
@@ -55,9 +63,14 @@ else ifeq ($(LOCALE),NSIDCdev)
   ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6/netcdf4/4.3.2/hdf5/1.8.13/hdf4/4.2.10/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/lib
-  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/lib
-  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.8/intel/13.0.0/lib
+  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
+else ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
@@ -72,7 +85,14 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS =  -I$(MEAS_INCDIR) -I../meas_undump -m64 $(CONFIG_CFLAGS)
+CFLAGS =  -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump 
+else ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -g -debug all
+endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_sir.c ../meas_undump/netcdf_dump.c
