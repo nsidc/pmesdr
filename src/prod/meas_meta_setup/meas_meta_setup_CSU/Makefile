@@ -25,12 +25,16 @@ RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CC = icc
+else ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  CC = icc
 endif
 #
 #       debug or optimization settings
 #       these may be things that are machine-specific
 #
-CONFIG_CFLAGS = -O3
+CONFIG_CFLAGS = -O3 -m64
+
 
 #
 #	system libraries
@@ -49,11 +53,18 @@ ifeq ($(LOCALE),NSIDCsnow)
   ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  NETCDF4_INCDIR = /curc/tools/x_86_64/rh6/netcdf4/4.3.2/hdf5/1.8.13/hdf4/4.2.10/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/include
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6/netcdf4/4.3.2/hdf5/1.8.13/hdf4/4.2.10/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/lib
-  HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/include
-  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/intel/13.0.0/lib
-  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.8/intel/13.0.0/lib
+  NETCDF4_INCDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
+  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
+else ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
+  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
@@ -70,7 +81,14 @@ MEAS_INCDIR = ../../../sirlib/c/include
 MEAS_LIBDIR = ../../../sirlib/c
 LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS)
+CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) 
+else ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g -debug all
+endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = ../meas_meta_setup.c

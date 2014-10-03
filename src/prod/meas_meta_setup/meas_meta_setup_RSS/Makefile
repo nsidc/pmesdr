@@ -33,7 +33,14 @@ endif
 #       debug or optimization settings
 #       these may be things that are machine-specific
 #
-CONFIG_CFLAGS = -O3
+CONFIG_CFLAGS = -O3 -m64
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CONFIG_CFLAGS = 
+else ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+endif
 
 #
 #	system libraries
@@ -46,7 +53,14 @@ SYSLIBS = -lm
 MEAS_INCDIR = ../../../sirlib/c/include
 MEAS_LIBDIR = ../../../sirlib/c
 LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
-CFLAGS = -D'RSS=1' -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS)
+CFLAGS = -D'RSS=1' $(CONFIG_CFLAGS) -I$(MEAS_INCDIR) 
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CFLAGS = -D'RSS=1' -I$(MEAS_INCDIR) 
+else ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  CFLAGS = -D'RSS=1' -I$(MEAS_INCDIR) -g -debug all
+endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = ../meas_meta_setup.c

@@ -27,6 +27,15 @@ endif
 
 CONFIG_CFLAGS = 
 CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CFLAGS = -Iinclude $(CONFIG_CFLAGS) 
+endif
+ifeq ($(LOCALE),JANUSdebug)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+  CFLAGS = -Iinclude $(CONFIG_CFLAGS) -g -debug all
+endif
 LDFLAGS = -L. -lcsir -lm
 
 all : $(EXES) $(LIB)
