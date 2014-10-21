@@ -13,7 +13,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef JANUSicc
+#include <mathimf.h>
+#else
 #include <math.h>
+#endif
 #include <string.h>
 #include <time.h>
 #include <netcdf.h>

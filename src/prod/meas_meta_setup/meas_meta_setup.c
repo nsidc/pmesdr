@@ -11,13 +11,18 @@
   revised by DGL at BYU  03/07/2014 + added EASE2 capability
   revised by DGL at BYU  04/11/2014 + added response debug output
   revised by DGL at BYU  06/28/2014 + added RSS swath overlap reject
+  revised by MAH at NSIDC 10/10/2014 - directives for Intel math library
 
 ******************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef JANUSicc
+#include <mathimf.h>
+#else
 #include <math.h>
+#endif
 
 #include <sir3.h>
 

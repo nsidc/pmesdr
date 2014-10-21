@@ -23,20 +23,25 @@ RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CC = icc
+  AR = xiar
 endif
 
 CONFIG_CFLAGS = 
+ARFLAGS = ruv
 CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
+LDFLAGS = -L. -lcsir -lm
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -Iinclude $(CONFIG_CFLAGS) 
+  CFLAGS = -Iinclude -O3 -ipo -no-prec-div -xHost $(CONFIG_CFLAGS) 
+  LDFLAGS = -L. -lcsir -lm 
+  ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSdebug)
   $(warning Build location: $(LOCALE))
   CC = icc
   CFLAGS = -Iinclude $(CONFIG_CFLAGS) -g -debug all
 endif
-LDFLAGS = -L. -lcsir -lm
+
 
 all : $(EXES) $(LIB)
 
@@ -84,7 +89,7 @@ libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(CC) $(CFLAGS) -c lib/sir_io.c
 	$(CC) $(CFLAGS) -c lib/sir_ez.c
 	$(CC) $(CFLAGS) -c lib/sir_geom.c
-	$(AR)  ruv libcsir.a *.o
+	$(AR) $(ARFLAGS) libcsir.a *.o
 	$(RM) *.o
 
 clean :
