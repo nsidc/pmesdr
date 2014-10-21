@@ -47,15 +47,15 @@ else ifeq ($(LOCALE),NSIDCdev)
   ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  NETCDF4_INCDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  NETCDF4_INCDIR = $(shell nc-config --includedir)
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
   HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
   HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
   ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
 else ifeq ($(LOCALE),JANUSdebug)
   $(warning Build location: $(LOCALE))
-  NETCDF4_INCDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  NETCDF4_INCDIR = $(shell nc-config --includedir)
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
   HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
   HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
   ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib

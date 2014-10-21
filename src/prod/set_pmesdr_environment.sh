@@ -22,3 +22,11 @@ export SIR_areas=$PMESDR_TOP_DIR/ref/locs
 export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
 export RSS_path=$PMESDR_TOP_DIR/ref
 
+#
+# test to see if this is being run on Janus, in which case you have modules to load before building
+#
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  module load slurm
+  module load netcdf/netcdf4-4.3_hdf5-1.8.11_hdf4-4.2.9_szip-2.1_zlib-1.2.78_jpeglib-8d_intel-13.0.0
+fi
+

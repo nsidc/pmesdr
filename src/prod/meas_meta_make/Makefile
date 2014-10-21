@@ -53,11 +53,11 @@ LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
 CFLAGS = -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
+  CFLAGS = -D'JANUSicc=1' -I$(MEAS_INCDIR) -O3 -ipo -no-prec-div -xHost $(CONFIG_CFLAGS)
 endif
 ifeq ($(LOCALE),JANUSdebug)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g -debug all
+  CFLAGS = -I$(MEAS_INCDIR) -D'JANUSicc=1' $(CONFIG_CFLAGS) -g -debug all
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 

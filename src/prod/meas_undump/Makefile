@@ -1,4 +1,3 @@
-
 #========================================================================
 # Makefile for meas_undump utility
 #
@@ -63,14 +62,14 @@ else ifeq ($(LOCALE),NSIDCdev)
   ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  NETCDF4_INCDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  NETCDF4_INCDIR = $(shell nc-config --includedir)
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
   HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
   HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
   ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
 else ifeq ($(LOCALE),JANUSdebug)
-  NETCDF4_INCDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  NETCDF4_INCDIR = $(shell nc-config --includedir)
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
   HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
   HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
   ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
@@ -92,7 +91,7 @@ LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 CFLAGS =  -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -I$(NETCDF4_INCDIR) -I./
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I./ 
+  CFLAGS = -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I./ -O3 -ipo -no-prec-div -xHost 
 else ifeq ($(LOCALE),JANUSdebug)
   $(warning Build location: $(LOCALE))
   CFLAGS = -I$(NETCDF4_INCDIR) -I$(MEAS_INCDIR) -I./ -g -debug all
@@ -103,11 +102,6 @@ SRCS = meas_undump.c netcdf_write_prod.c netcdf_dump.c
 OBJS = meas_undump.o netcdf_write_prod.o netcdf_dump.o
 HDRS = $(MEAS_INCDIR)/sir3.h
 BIN = meas_undump
-
-RSSNPSFILES = $(shell find $(TESTDIR)/setupRSS/nps -type f -name "F*Arc*.setup")
-RSSE2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
-CSUNPSFILES = $(shell find $(TESTDIR)/setupCSU/nps -type f -name "F*Arc*.setup")
-CSUE2NFILES = $(shell find $(TESTDIR)/setupCSU/e2n -type f -name "F*E2N*.setup")
 
 all : $(BIN)
 

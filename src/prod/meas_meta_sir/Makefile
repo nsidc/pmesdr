@@ -63,12 +63,12 @@ else ifeq ($(LOCALE),NSIDCdev)
   ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
   HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
   ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
 else ifeq ($(LOCALE),JANUSdebug)
   $(warning Build location: $(LOCALE))
-  NETCDF4_LIBDIR = /curc/tools/x_86_64/rh6//netcdf4/4.3/hdf5/1.8.11/hdf4/4.2.9/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
   HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
   ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
 else
@@ -88,7 +88,7 @@ LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 CFLAGS =  -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump 
+  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -no-prec-div -xHost 
 else ifeq ($(LOCALE),JANUSdebug)
   $(warning Build location: $(LOCALE))
   CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -g -debug all
