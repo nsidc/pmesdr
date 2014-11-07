@@ -27,9 +27,9 @@ ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CC = icc
 endif
-ifeq ($(LOCALE),JANUSdebug)
+ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CC = icc
+  CC = gcc
 endif
 
 
@@ -53,11 +53,11 @@ LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
 CFLAGS = -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(MEAS_INCDIR) -O3 -ipo -no-prec-div -xHost $(CONFIG_CFLAGS)
+  CFLAGS = -D'JANUSicc=1' -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g # -xHost -no-prec-div -Zp8
 endif
-ifeq ($(LOCALE),JANUSdebug)
+ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -D'JANUSicc=1' $(CONFIG_CFLAGS) -g -debug all
+  CFLAGS = -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) 
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
@@ -89,6 +89,9 @@ rss_ease :
 ifeq ($(LOCALE),JANUSicc)
 	$(CP) $(TOPDIR)/testing/RSS_regress_list_JANUS $(TESTDIR)/F1RSS.lis
 endif
+ifeq ($(LOCALE),JANUSgcc)
+	$(CP) $(TOPDIR)/testing/RSS_regress_list_JANUS $(TESTDIR)/F1RSS.lis
+endif
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta 13 \
 	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TESTDIR)/F1RSS.lis
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta 13 \
@@ -105,6 +108,9 @@ csu_ease :
 	$(MKDIR) $(TESTDIR)/csu_e2t
 	$(CP) $(TOPDIR)/testing/CSU_regress_list_NSIDC $(TESTDIR)/F1CSU.lis
 ifeq ($(LOCALE),JANUSicc)
+	$(CP) $(TOPDIR)/testing/CSU_regress_list_JANUS $(TESTDIR)/F1CSU.lis
+endif
+ifeq ($(LOCALE),JANUSgcc)
 	$(CP) $(TOPDIR)/testing/CSU_regress_list_JANUS $(TESTDIR)/F1CSU.lis
 endif
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 \
