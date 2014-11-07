@@ -8,10 +8,10 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 
-EXES = csirexample viewsirhead csir_locmap csir_dump csir_dump_small \
-	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp \
-	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
-	tools/sirdiff tools/sirdiff_mask tools/sir_extractregion tools/sirmask tools/sir_stats
+EXES = csirexample # viewsirhead csir_locmap csir_dump csir_dump_small # \
+#	sir2byte sir2gif sir2gif_ez sir_ez_example sir2bmp \
+#	tools/sir_modhead3 tools/sir_remapper3 tools/sir_util tools/sir_util2 \
+#	tools/sirdiff tools/sirdiff_mask tools/sir_extractregion tools/sirmask tools/sir_stats
 LIB = libcsir.a
 
 
@@ -32,18 +32,18 @@ CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS)
 LDFLAGS = -L. -lcsir -lm
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -Iinclude -O3 -ipo -no-prec-div -xHost $(CONFIG_CFLAGS) 
+  CFLAGS = -Iinclude  $(CONFIG_CFLAGS) -O3 -ipo -g # -xHost -no-prec-div -Zp8
   LDFLAGS = -L. -lcsir -lm 
   ARFLAGS = crs
 endif
-ifeq ($(LOCALE),JANUSdebug)
+ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CC = icc
-  CFLAGS = -Iinclude $(CONFIG_CFLAGS) -g -debug all
+  CC = gcc
+  CFLAGS = -Iinclude $(CONFIG_CFLAGS)
 endif
 
 
-all : $(EXES) $(LIB)
+all :  $(LIB) $(EXES)
 
 install :
 	$(MKDIR) $(BINDIR)

@@ -51,7 +51,7 @@
 
 float a_init=180.0;           /* initial A (TB) value */
 int   nits=30;                /* number of SIR iterations */
-char  sensor_in[40];          /* sensor description string */
+char  sensor_in[41];          /* sensor description string */
 int   MAXFILL=1000;           /* maximum number of pixels in response */
 int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[150], tstr[350];
+  char outpath[251];
 
   float latl, lonl, lath, lonh;
   char regname[11], *s;
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 
   int nsx, nsy, ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin;
   int iregion, ipol, iopt;  
-  char pol, sensor[41], crproc[101], crtime[29];
+  char pol, crproc[101], crtime[29];
   float xdeg, ydeg, ascale, bscale, a0, b0;
 
   time_t tod;
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
   int its, irec, rcode, year, keep;
   float amin, amax;
 
-  char a_name[100], info_name[100], line[100];
+  char a_name[101], info_name[101], line[100];
 
   char inter_name[250];
   int ncid, ncerr;
@@ -359,7 +359,7 @@ int main(int argc, char **argv)
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
        //wscale=1.0/atoi(++x);
-       printf("Wscale %d\n",wscale);
+       printf("Wscale %f\n",wscale);
      }
 
      if (strstr(line,"Sensor") != NULL) {
@@ -424,8 +424,8 @@ int main(int argc, char **argv)
 				 Nfiles_out); check_err(ncerr, __LINE__,__FILE__);
 
    /* add string information */
-   ncerr=add_string_nc(ncid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"Region_name",regname,11); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,41); check_err(ncerr, __LINE__,__FILE__);
    sprintf(crproc,"BYU MERS:meas_meta_bgi v1.0 g=%f d2=%f thres=%f",bgi_gamma,delta2,ithres);
    ncerr=add_string_nc(ncid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__); 
    (void) time(&tod);
@@ -440,7 +440,7 @@ int main(int argc, char **argv)
    sprintf(a_name,"%s.bgi",line);
 
    /* add product file names */
-   ncerr=add_string_nc(ncid,"bgi_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"bgi_name",a_name,101); check_err(ncerr, __LINE__,__FILE__);
 
 
    head_len = ftell(imf);
