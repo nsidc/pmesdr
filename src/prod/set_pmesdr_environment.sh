@@ -24,9 +24,19 @@ export RSS_path=$PMESDR_TOP_DIR/ref
 
 #
 # test to see if this is being run on Janus, in which case you have modules to load before building
+# Also test to see which compiler on Janus is to be used
 #
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   module load slurm
-  module load netcdf/netcdf4-4.3_hdf5-1.8.11_hdf4-4.2.9_szip-2.1_zlib-1.2.78_jpeglib-8d_intel-13.0.0
+  if [[ "$COMPILER" == "gcc" ]]; then
+    echo "gcc compiler"
+    module unload netcdf/netcdf4-4.3_hdf5-1.8.11_hdf4-4.2.9_szip-2.1_zlib-1.2.78_jpeglib-8d_intel-13.0.0
+    module load netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeglib-9a_openmpi-1.8.2_gcc-4.9.1
+  fi
+  if [[ "$COMPILER" == "icc" ]]; then
+    echo "icc compiler"
+    module load netcdf/netcdf4-4.3_hdf5-1.8.11_hdf4-4.2.9_szip-2.1_zlib-1.2.78_jpeglib-8d_intel-13.0.0
+    module unload netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeglib-9a_openmpi-1.8.2_gcc-4.9.1
+  fi   
 fi
 

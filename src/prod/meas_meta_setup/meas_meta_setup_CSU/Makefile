@@ -25,9 +25,9 @@ RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CC = icc
-else ifeq ($(LOCALE),JANUSdebug)
+else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CC = icc
+  CC = gcc
 endif
 #
 #       debug or optimization settings
@@ -58,11 +58,13 @@ else ifeq ($(LOCALE),JANUSicc)
   HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
   HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
   ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
-else ifeq ($(LOCALE),JANUSdebug)
+else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
-  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
-  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
+  NETCDF4_INCDIR = $(shell nc-config --includedir)
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
+  HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/gcc/4.9.1/include
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/gcc/4.9.1/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.8/gcc/4.9.1/lib
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
@@ -82,10 +84,10 @@ LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'CSU=1' -D'JANUSicc=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -no-prec-div -xHost
-else ifeq ($(LOCALE),JANUSdebug)
+  CFLAGS = -D'CSU=1' -D'JANUSicc=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g # -xHost -no-prec-div -Zp8 # 
+else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'CSU=1' -D'JANUSicc=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g -debug all
+  CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR)
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 

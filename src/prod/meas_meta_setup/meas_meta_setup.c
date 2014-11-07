@@ -129,7 +129,7 @@ typedef struct { /* BYU region information storage */
   float sav_ydeg[NSAVE],    sav_xdeg[NSAVE];
   int   sav_ipolar[NSAVE];
   int   sav_ibeam[NSAVE],   sav_regnum[NSAVE];
-  char  sav_regname[NSAVE][10], sav_fname2[NSAVE][180];
+  char  sav_regname[NSAVE][11], sav_fname2[NSAVE][180];
   int   sav_dateline[NSAVE],sav_ascdes[NSAVE];
   float sav_tsplit1[NSAVE], sav_tsplit2[NSAVE];
   float sav_km[NSAVE];  
@@ -486,7 +486,7 @@ int main(int argc,char *argv[])
 				     save_area.sav_xdeg[iregion],   save_area.sav_ydeg[iregion],
 				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion],
 				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion]);
-    printf("Region %d of %d: nominal km/pixel=%f\n",iregion,save_area.sav_km[iregion]);
+    printf("Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
   }
   
   /* pre-compute pixel locations for each region */
@@ -1077,7 +1077,7 @@ int main(int argc,char *argv[])
 
 	label_3400:; /* end of regions loop */
 	}
-      label_3401:; /* end of measurements loop */
+      /*      label_3401:; /* end of measurements loop */
       }
       
     label_350:; /* end of scan loop */
@@ -1106,8 +1106,7 @@ int main(int argc,char *argv[])
 	printf("*** DAY RANGE IS NOT FINISHED ***\n");
       printf("End of day period reached %d %d  %d\n",iday,dend,irev);
     }
-
-  label_1050:;               /* input file loop */
+               /* input file loop */
     printf("Done with setup records %d %d\n",irec,krec);
   }
 
@@ -1163,7 +1162,7 @@ FILE * get_meta(char *mname, char *outpath,
   int dateline;
   char fname2[180];
   char outname[350];
-  char sensor[41]="SSMI something";
+  char sensor[40]="SSMI something";
   int ibeam, ninst=0;  
 
   int flag, flag_out, flag_region, flag_section, flag_files;
@@ -1359,7 +1358,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 	    if (strstr(line,"Region_name") != NULL) {
 	      x = strchr(line,'=');
-	      strncpy(regname,++x,40);
+	      strncpy(regname,++x,10);
 	    }      
       
 	    if (strstr(line,"Polarization") != NULL) {
@@ -1551,7 +1550,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      printf("  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): %d\n",asc_des);
 		      printf("  Grid size: %f %f  Span: %f %f\n",xdeg,ydeg,aorglat,aorglon);
 		      printf("  Scales: %f %f   Origin: %f %f\n",ascale,bscale,a0,b0);
-		      printf("  GRD image size: %d %d  Size: %f %f\n",nsx2,nsy2,non_size_x,non_size_y);
+		      printf("  GRD image size: %d %d  Size: %d %d\n",nsx2,nsy2,non_size_x,non_size_y);
 		      printf("  GRD image span: %f %f  Orig: %f %f\n",xdeg2,ydeg2,a02,b02);		      
 		      printf("  GRD image scale: %f %f\n",ascale2,bscale2);		      
 		      /*printf("  Egg response threshold %f  Flat %d\n",*response_threshold,*flatten); */
@@ -1722,7 +1721,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," Response_Multiplier=%d",RESPONSEMULT);
+		      sprintf(lin," Response_Multiplier=%f",RESPONSEMULT);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
@@ -1761,7 +1760,7 @@ FILE * get_meta(char *mname, char *outpath,
 			  }
 		      }
 		    }
-		    printf("Done with setup header for image\n",iregion,ireg);
+		    printf("Done with setup header for image\n");
 
 		    /* save region information */
 		    if (flag_out) {
