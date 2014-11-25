@@ -28,6 +28,8 @@ ifeq ($(LOCALE),JANUSicc)
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   CC = gcc
+  BINDIR = $(TOPDIR)/bin_gcc
+  TESTDIR = $(TOPDIR)/JANUStest
 endif
 #
 #       debug or optimization settings
@@ -84,10 +86,10 @@ LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'CSU=1' -D'JANUSicc=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g # -xHost -no-prec-div -Zp8 # 
+  CFLAGS = -D'CSU=1' -D'JANUSicc=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR)
+  CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 

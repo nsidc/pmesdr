@@ -32,14 +32,16 @@ CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS)
 LDFLAGS = -L. -lcsir -lm
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -Iinclude  $(CONFIG_CFLAGS) -O3 -ipo -g # -xHost -no-prec-div -Zp8
+  CFLAGS = -Iinclude  $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
   LDFLAGS = -L. -lcsir -lm 
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   CC = gcc
-  CFLAGS = -Iinclude $(CONFIG_CFLAGS)
+  BINDIR = $(TOPDIR)/bin_gcc
+  TESTDIR = $(TOPDIR)/JANUStest
+  CFLAGS = -Iinclude $(CONFIG_CFLAGS) -g
 endif
 
 
