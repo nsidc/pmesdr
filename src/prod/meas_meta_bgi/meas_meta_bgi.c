@@ -58,7 +58,7 @@ int   HS=20;                  /* measurement headersize in bytes */
 
 /* the following BG parameters are subjectively set */
 
-double bgi_gamma=0.85*3.141562654;/* default BGI gamma parameter */
+double bgi_gamma=0.85*3.1415926535;/* default BGI gamma parameter */
 float delta2=1.0;                 /* default BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor (fixed)*/
 float ithres=0.125;               /* default minimum gain threshold */
@@ -146,15 +146,15 @@ int main(int argc, char **argv)
 
   float latl, lonl, lath, lonh;
   char regname[11], *s;
-  int dumb, nrec, ncnt, i, j, n, m, ii, iii, nsize;
+  int dumb, nrec, ncnt, i, j, m, nsize;
   long int nls, nbyte;
   float ratio;
   char *space, *store, *store2, *last_store;
-  float tbval, ang, azang=0.0;
-  int count, ktime, iadd, end_flag;
+  float tbval;
+  int count, iadd, end_flag;
   char *x;
   int irecords;
-  int non_size_x, non_size_y, nsx2, nsy2, ix, iy, nsize2;
+  int non_size_x, non_size_y, nsx2, nsy2, ix, iy;
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
  /* define no-data values */
@@ -162,15 +162,15 @@ int main(int argc, char **argv)
 
   int Nfiles_out=1;  
 
-  int nsx, nsy, ioff_A, iscale_A, iyear, isday, ismin, ieday, iemin;
+  int nsx, nsy, iyear, isday, ismin, ieday, iemin;
   int iregion, ipol, iopt;  
-  char pol, crproc[101], crtime[29];
+  char crproc[101], crtime[29];
   float xdeg, ydeg, ascale, bscale, a0, b0;
 
   time_t tod;
 
-  int its, irec, rcode, year, keep;
-  float amin, amax;
+  int its, irec, keep;
+  float amin;
 
   char a_name[101], info_name[101], line[100];
 
@@ -180,7 +180,6 @@ int main(int argc, char **argv)
   int storage = 0;
   long head_len;
   int errors = 0;
-  char polch;
 
   int median_flag = 0;  /* default: no median filter */
   int ibeam = 0;
@@ -188,7 +187,7 @@ int main(int argc, char **argv)
   int nmax, mdim, mdim2, mwork, k, dx, dy, i1, j1;
   int *ix0, *iy0, *ind;
   char **indx;
-  float sum, *g, **z, **zc, *u, *v, *u1, *v1, *c, *work, *tb2, *ww, *patarr;
+  float sum, **z, **zc, *u, *v, *u1, *v1, *c, *work, *tb2, *patarr;
   float p,value1, value2;
   int *fill_array;
   short int *weight_array;
@@ -333,7 +332,7 @@ int main(int argc, char **argv)
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
-       a_init=atof(++x);
+       a_init= (float)( atof(++x) );
        //printf("A_initialization of %f\n",a_init);
      }
 
@@ -472,13 +471,13 @@ int main(int argc, char **argv)
    buffer array for file reading */
 
   if (storage == 1) {
-    nspace = 4096;  /* should be adequate for all fill_array sizes */
-    space = (char *) malloc(sizeof(int)*nspace/4);
+    nspace = 14000;  /* should be adequate for all fill_array sizes */
+    space = (char *) malloc(sizeof(char)*nspace);
     if (space == NULL) {
       eprintf("*** Inadequate memory for temp storage 1\n");
       exit(-1);
     }
-    store2 = (char *) malloc(sizeof(int)*nspace/2);
+    store2 = (char *) malloc(sizeof(char)*nspace);
     if (store2 == NULL) {
       eprintf("*** Inadequate memory for temp storage 2\n");
       exit(-1);
@@ -534,9 +533,9 @@ int main(int argc, char **argv)
         if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
 
         tbval = *((float *) (store+0));
-        ang   = *((float *) (store+4));
+        /* ang   = *((float *) (store+4));  */
         count = *((int *)   (store+8));
-        ktime = *((int *)   (store+12));
+	/*        ktime = *((int *)   (store+12)); */
         iadd  = *((int *)   (store+16));
 	/* if (HASAZANG)
 	   azang = *((float *) (store+20)); */
@@ -616,7 +615,7 @@ int main(int argc, char **argv)
 
 /* print measurement file storage requirements */
 
-    ratio=100.0 * (float) nbyte / (float) nls;
+    ratio=100.0f * (float) nbyte / (float) nls;
     printf("  Input file read into ram\n");
     printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
 	   nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
@@ -762,9 +761,9 @@ int main(int argc, char **argv)
 		if (ix > 0 && iy > 0 && ix <= mdim && iy <= mdim)
 		  sum = sum + patarr[((j1-1)*mdim+i1-1)*nmax+i-1]*patarr[((iy-1)*mdim+ix-1)*nmax+j-1];
 	      } 
-	    z[i][j] = sum * cos(bgi_gamma);
+	    z[i][j] = sum * ( cos((float)bgi_gamma) );
 
-	    if (i == j) z[i][j] =  z[i][j] + omega * sin(bgi_gamma) * delta2;
+	    if (i == j) z[i][j] =  z[i][j] + omega * ( sin((float)bgi_gamma) ) * delta2;
 	    z[j][i] = z[i][j];
 	    /*	    printf("in z %d %d %d %d %f %f\n",i,j,dx,dy,sum*cos(bgi_gamma),z[dx,dy]); */
 	  }
@@ -809,7 +808,7 @@ int main(int argc, char **argv)
 
       /* compute work vector */
 	for (i=1; i <= m; i++)
-	  work[i] = cos(bgi_gamma)*v[i] + u[i] * (1.0 - cos(bgi_gamma) * value1)/value2;
+	  work[i] = (( cos((float)bgi_gamma) )*v[i]) + (u[i] * (1.0 - (( cos((float)bgi_gamma) ) * value1)))/value2;
       
       /* solve linear system z c = work [compute z^-1 work]  (destroyed in process) */
 	lubksb(zc,m,ind,work);
@@ -1016,7 +1015,7 @@ float median(float array[], int count)
     temp=0.0;
     for (i=count/2-1; i <= count/2+3; i++)
       temp=temp+array[i-1];
-    temp=temp/5.0;
+    temp=temp/5.0f;
   }
   return(temp);
 }
@@ -1093,7 +1092,7 @@ void ludcmp(float **a, int n, int *indx, float *d)
 		for (j=1;j<=n;j++)
 			if ((temp=fabs(a[i][j])) > big) big=temp;
 		if (big == 0.0) nrerror("Singular matrix in routine ludcmp");
-		vv[i]=1.0/big;
+		vv[i]=1.0f/big;
 	}
 	for (j=1;j<=n;j++) {
 		for (i=1;i<j;i++) {
@@ -1124,7 +1123,7 @@ void ludcmp(float **a, int n, int *indx, float *d)
 		indx[j]=imax;
 		if (a[j][j] == 0.0) a[j][j]=TINY;
 		if (j != n) {
-			dum=1.0/(a[j][j]);
+			dum=1.0f/(a[j][j]);
 			for (i=j+1;i<=n;i++) a[i][j] *= dum;
 		}
 	}

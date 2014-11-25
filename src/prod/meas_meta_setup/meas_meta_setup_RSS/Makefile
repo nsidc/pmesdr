@@ -40,6 +40,8 @@ ifeq ($(LOCALE),JANUSicc)
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   CC = gcc
+  BINDIR = $(TOPDIR)/bin_gcc
+  TESTDIR = $(TOPDIR)/JANUStest
 endif
 
 #
@@ -56,10 +58,10 @@ LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
 CFLAGS = -D'RSS=1' $(CONFIG_CFLAGS) -I$(MEAS_INCDIR) 
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(MEAS_INCDIR) -O3 -ipo -g # -xHost -no-prec-div -Zp8 # 
+  CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -I$(MEAS_INCDIR) 
+  CFLAGS = -D'RSS=1' -I$(MEAS_INCDIR) -g
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 

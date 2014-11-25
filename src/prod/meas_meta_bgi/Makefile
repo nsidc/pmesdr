@@ -41,6 +41,8 @@ endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   CC = gcc
+  BINDIR = $(TOPDIR)/bin_gcc
+  TESTDIR = $(TOPDIR)/JANUStest
 endif
 
 #
@@ -88,10 +90,10 @@ LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g # -xHost -no-prec-div -Zp8
+  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks # -Zp8
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump 
+  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -g
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
