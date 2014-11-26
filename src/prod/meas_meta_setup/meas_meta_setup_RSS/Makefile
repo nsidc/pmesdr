@@ -41,7 +41,7 @@ CONFIG_CFLAGS = -O3 -m64
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CONFIG_CFLAGS = 
-else 
+endif 
 
 #
 #	system libraries
