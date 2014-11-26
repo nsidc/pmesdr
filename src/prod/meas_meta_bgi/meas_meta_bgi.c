@@ -471,13 +471,14 @@ int main(int argc, char **argv)
    buffer array for file reading */
 
   if (storage == 1) {
-    nspace = 14000;  /* should be adequate for all fill_array sizes */
-    space = (char *) malloc(sizeof(char)*nspace);
+    nspace = 4096;  /* should be adequate for all fill_array sizes */
+    space = (char *) malloc(sizeof(int)*nspace/4);
+
     if (space == NULL) {
       eprintf("*** Inadequate memory for temp storage 1\n");
       exit(-1);
     }
-    store2 = (char *) malloc(sizeof(char)*nspace);
+    store2 = (char *) malloc(sizeof(int)*nspace/2);
     if (store2 == NULL) {
       eprintf("*** Inadequate memory for temp storage 2\n");
       exit(-1);
@@ -764,6 +765,7 @@ int main(int argc, char **argv)
 	    z[i][j] = sum * ( cos((float)bgi_gamma) );
 
 	    if (i == j) z[i][j] =  z[i][j] + omega * ( sin((float)bgi_gamma) ) * delta2;
+
 	    z[j][i] = z[i][j];
 	    /*	    printf("in z %d %d %d %d %f %f\n",i,j,dx,dy,sum*cos(bgi_gamma),z[dx,dy]); */
 	  }
