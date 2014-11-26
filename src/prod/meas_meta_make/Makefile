@@ -14,6 +14,10 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
+ifeq ($(LOCALE),JANUSgcc)
+  BINDIR = $(TOPDIR)/bin_gcc
+  TESTDIR = $(TOPDIR)/JANUStest
+endif
 #
 #	commands
 #
@@ -27,13 +31,6 @@ ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CC = icc
 endif
-ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
-  CC = gcc
-  BINDIR = $(TOPDIR)/bin_gcc
-  TESTDIR = $(TOPDIR)/JANUStest
-endif
-
 
 #
 #       debug or optimization settings
