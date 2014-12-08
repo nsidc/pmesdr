@@ -51,14 +51,14 @@
 
 float a_init=180.0;           /* initial A (TB) value */
 int   nits=30;                /* number of SIR iterations */
-char  sensor_in[41];          /* sensor description string */
+char  sensor_in[40];          /* sensor description string */
 int   MAXFILL=1000;           /* maximum number of pixels in response */
 int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
 
 /* the following BG parameters are subjectively set */
 
-double bgi_gamma=0.85*3.1415926535;/* default BGI gamma parameter */
+double bgi_gamma=0.85*3.141562654;/* default BGI gamma parameter */
 float delta2=1.0;                 /* default BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor (fixed)*/
 float ithres=0.125;               /* default minimum gain threshold */
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[251];
+  char outpath[150];
 
   float latl, lonl, lath, lonh;
   char regname[11], *s;
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
   int its, irec, keep;
   float amin;
 
-  char a_name[101], info_name[101], line[100];
+  char a_name[100], info_name[100], line[100];
 
   char inter_name[250];
   int ncid, ncerr;
@@ -332,7 +332,7 @@ int main(int argc, char **argv)
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
-       a_init= (float)( atof(++x) );
+       a_init=  atof(++x) ;
        //printf("A_initialization of %f\n",a_init);
      }
 
@@ -423,8 +423,8 @@ int main(int argc, char **argv)
 				 Nfiles_out); check_err(ncerr, __LINE__,__FILE__);
 
    /* add string information */
-   ncerr=add_string_nc(ncid,"Region_name",regname,11); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,41); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
    sprintf(crproc,"BYU MERS:meas_meta_bgi v1.0 g=%f d2=%f thres=%f",bgi_gamma,delta2,ithres);
    ncerr=add_string_nc(ncid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__); 
    (void) time(&tod);
@@ -439,7 +439,7 @@ int main(int argc, char **argv)
    sprintf(a_name,"%s.bgi",line);
 
    /* add product file names */
-   ncerr=add_string_nc(ncid,"bgi_name",a_name,101); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(ncid,"bgi_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
 
 
    head_len = ftell(imf);
@@ -616,7 +616,7 @@ int main(int argc, char **argv)
 
 /* print measurement file storage requirements */
 
-    ratio=100.0f * (float) nbyte / (float) nls;
+    ratio=100.0 * (float) nbyte / (float) nls;
     printf("  Input file read into ram\n");
     printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
 	   nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
@@ -762,9 +762,9 @@ int main(int argc, char **argv)
 		if (ix > 0 && iy > 0 && ix <= mdim && iy <= mdim)
 		  sum = sum + patarr[((j1-1)*mdim+i1-1)*nmax+i-1]*patarr[((iy-1)*mdim+ix-1)*nmax+j-1];
 	      } 
-	    z[i][j] = sum * ( cos((float)bgi_gamma) );
+	    z[i][j] = sum * cos(bgi_gamma) ;
 
-	    if (i == j) z[i][j] =  z[i][j] + omega * ( sin((float)bgi_gamma) ) * delta2;
+	    if (i == j) z[i][j] =  z[i][j] + omega *  sin(bgi_gamma)  * delta2;
 
 	    z[j][i] = z[i][j];
 	    /*	    printf("in z %d %d %d %d %f %f\n",i,j,dx,dy,sum*cos(bgi_gamma),z[dx,dy]); */
@@ -810,7 +810,7 @@ int main(int argc, char **argv)
 
       /* compute work vector */
 	for (i=1; i <= m; i++)
-	  work[i] = (( cos((float)bgi_gamma) )*v[i]) + (u[i] * (1.0 - (( cos((float)bgi_gamma) ) * value1)))/value2;
+	  work[i] =  cos(bgi_gamma) *v[i] + u[i] * (1.0 - cos(bgi_gamma)  * value1)/value2;
       
       /* solve linear system z c = work [compute z^-1 work]  (destroyed in process) */
 	lubksb(zc,m,ind,work);
@@ -1017,7 +1017,7 @@ float median(float array[], int count)
     temp=0.0;
     for (i=count/2-1; i <= count/2+3; i++)
       temp=temp+array[i-1];
-    temp=temp/5.0f;
+    temp=temp/5.0;
   }
   return(temp);
 }
@@ -1094,7 +1094,7 @@ void ludcmp(float **a, int n, int *indx, float *d)
 		for (j=1;j<=n;j++)
 			if ((temp=fabs(a[i][j])) > big) big=temp;
 		if (big == 0.0) nrerror("Singular matrix in routine ludcmp");
-		vv[i]=1.0f/big;
+		vv[i]=1.0/big;
 	}
 	for (j=1;j<=n;j++) {
 		for (i=1;i<j;i++) {
@@ -1125,7 +1125,7 @@ void ludcmp(float **a, int n, int *indx, float *d)
 		indx[j]=imax;
 		if (a[j][j] == 0.0) a[j][j]=TINY;
 		if (j != n) {
-			dum=1.0f/(a[j][j]);
+			dum=1.0/(a[j][j]);
 			for (i=j+1;i<=n;i++) a[i][j] *= dum;
 		}
 	}
