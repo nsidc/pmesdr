@@ -47,7 +47,7 @@ gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeg
 
 # Determine the LOCALE, a function of host and compiler.
 # Janus needs to load compiler-specific modules before building
-if [[ "$HOSTNAME" == *[Jj]"anus"* ]]; then
+if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
   module load slurm
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
