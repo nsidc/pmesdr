@@ -58,7 +58,7 @@ int   HS=20;                  /* measurement headersize in bytes */
 
 /* the following BG parameters are subjectively set */
 
-double bgi_gamma=2.6703282559 /*0.85*3.141562654;/* default BGI gamma parameter */
+double bgi_gamma=2.6703282559;    /*0.85*3.141562654;/* default BGI gamma parameter */
 float delta2=1.0;                 /* default BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor (fixed)*/
 float ithres=0.125;               /* default minimum gain threshold */
