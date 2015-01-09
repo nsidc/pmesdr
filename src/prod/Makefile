@@ -90,6 +90,7 @@ all install clean:
 	    'NETCDF4_LIBDIR=$(NETCDF4_LIBDIR)'	\
 	    'HDF5_INCDIR=$(HDF5_INCDIR)'	\
 	    'HDF5_LIBDIR=$(HDF5_LIBDIR)'	\
-	    'ZLIB_LIBDIR=$(ZLIB_LIBDIR)'	\
-	  ) done
+	    'ZLIB_LIBDIR=$(ZLIB_LIBDIR)'        \
+	  ) || exit 1; \
+	done
 
