@@ -110,7 +110,7 @@ install :
 	$(INSTALL) $(BIN) $(BINDIR)
 
 clean :
-	$(RM) $(BIN) $(OBJS)
+	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
 
 csu_ease :
 	$(RM) $(TESTDIR)/setupCSU/e2n

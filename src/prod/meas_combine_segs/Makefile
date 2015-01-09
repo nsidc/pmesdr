@@ -96,7 +96,7 @@ install :
 	$(INSTALL) $(BIN) $(BINDIR)
 
 clean :
-	$(RM) $(BIN) $(OBJS)
+	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
 
 rss_nps :
 	$(RM) $(TESTDIR)/sirRSS/nps

@@ -95,7 +95,7 @@ libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(RM) *.o
 
 clean :
-	$(RM) $(EXES) $(LIB) *.o
+	$(RM) $(EXES) $(LIB) *.o $(BINDIR)/$(EXES)
 
 tools/sir_modhead3 : tools/sir_modhead3.c libcsir.a
 	$(CC) $(CFLAGS) -o tools/sir_modhead3 tools/sir_modhead3.c $(LDFLAGS)

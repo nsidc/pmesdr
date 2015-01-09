@@ -77,6 +77,6 @@ install :
 	$(INSTALL) $(BIN) $(BINDIR)
 
 clean :
-	$(RM) $(BIN) $(OBJS)
+	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
 
 
