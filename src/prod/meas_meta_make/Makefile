@@ -14,10 +14,7 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
-ifeq ($(LOCALE),JANUSgcc)
-  BINDIR = $(TOPDIR)/bin_gcc
-  TESTDIR = $(TOPDIR)/JANUStest
-endif
+
 #
 #	commands
 #

@@ -15,9 +15,6 @@
 # PMESDR_TOPDIR should be the location you check the git repo out at
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
-ifeq ($(LOCALE),JANUSgcc)
-  BINDIR = $(TOPDIR)/bin_gcc
-endif
 
 #
 #	commands

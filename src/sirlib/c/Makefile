@@ -20,28 +20,23 @@ CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
 RM = rm -fr
-ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
-  CC = icc
-  AR = xiar
-endif
 
 CONFIG_CFLAGS = 
 ARFLAGS = ruv
 CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
 LDFLAGS = -L. -lcsir -lm
-ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
-  CFLAGS = -Iinclude  $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
-  LDFLAGS = -L. -lcsir -lm 
-  ARFLAGS = crs
-endif
+
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CC = gcc
-  BINDIR = $(TOPDIR)/bin_gcc
-  TESTDIR = $(TOPDIR)/JANUStest
   CFLAGS = -Iinclude $(CONFIG_CFLAGS) -g
+endif
+
+ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  CC = icc
+  AR = xiar
+  CFLAGS = -Iinclude  $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  ARFLAGS = crs
 endif
 
 
