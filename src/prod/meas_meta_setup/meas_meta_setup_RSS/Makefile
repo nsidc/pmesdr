@@ -21,6 +21,7 @@ TESTDIR = $(TOPDIR)/NSIDCtest
 #	commands
 #
 CC = gcc
+CD = cd
 INSTALL = cp -f -p
 LS = ls -1
 MKDIR = mkdir -p
@@ -83,12 +84,27 @@ clean :
 rss_ease :
 	$(RM) $(TESTDIR)/setupRSS/e2n
 	$(MKDIR) $(TESTDIR)/setupRSS/e2n
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 0
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 0	\
+	)
 	$(RM) $(TESTDIR)/setupRSS/e2s
 	$(MKDIR) $(TESTDIR)/setupRSS/e2s
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 0
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 0	\
+	)
 	$(RM) $(TESTDIR)/setupRSS/e2t
 	$(MKDIR) $(TESTDIR)/setupRSS/e2t
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 0
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 0	\
+	)
 
+# the input file list in the .meta file has pathnames relative to the directory
+# from which the program is called - i.e. cd to the $(TOPDIR)/sample_data directory before invoking
+# the application
+rss_quick :
+	$(RM) $(TESTDIR)/setupRSS/e2n
+	$(MKDIR) $(TESTDIR)/setupRSS/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 0	\
+	)
 

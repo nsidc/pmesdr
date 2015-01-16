@@ -139,6 +139,14 @@ rss_ease :
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2t; \
 	done
 
+rss_quick :
+	$(RM) $(TESTDIR)/sirRSS/e2n
+	$(MKDIR) $(TESTDIR)/sirRSS/e2n
+	for file in $(RSSE2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2n; \
+	done
+
 csu_ease :
 	$(RM) $(TESTDIR)/sirCSU/e2n
 	$(MKDIR) $(TESTDIR)/sirCSU/e2n

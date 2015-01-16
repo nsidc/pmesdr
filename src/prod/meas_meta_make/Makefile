@@ -19,6 +19,7 @@ TESTDIR = $(TOPDIR)/NSIDCtest
 #	commands
 #
 CC = gcc
+CD = cd
 INSTALL = cp -f -p
 LS = ls -1
 MKDIR = mkdir -p
@@ -81,19 +82,23 @@ rss_ease :
 	$(MKDIR) $(TESTDIR)/rss_e2n
 	$(RM) $(TESTDIR)/rss_e2t
 	$(MKDIR) $(TESTDIR)/rss_e2t
-	$(CP) $(TOPDIR)/testing/RSS_regress_list_NSIDC $(TESTDIR)/F1RSS.lis
-ifeq ($(LOCALE),JANUSicc)
-	$(CP) $(TOPDIR)/testing/RSS_regress_list_JANUS $(TESTDIR)/F1RSS.lis
-endif
-ifeq ($(LOCALE),JANUSgcc)
-	$(CP) $(TOPDIR)/testing/RSS_regress_list_JANUS $(TESTDIR)/F1RSS.lis
-endif
+	$(CD) $(TOPDIR)/sample_data
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TESTDIR)/F1RSS.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/RSS_regress_list
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TESTDIR)/F1RSS.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/RSS_regress_list
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TESTDIR)/F1RSS.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/RSS_regress_list
+
+# the list of files to be processed (held in RSS_regress_list) must be relative to the directory
+# from which the program is called - i.e. cd to the $(TOPDIR)/sample_data directory before invoking
+# the application
+rss_quick :
+	$(RM) $(TESTDIR)/rss_e2n
+	$(MKDIR) $(TESTDIR)/rss_e2n
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta 13 	\
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/RSS_regress_list		
 
 csu_ease :
 	$(RM) $(TESTDIR)/csu_e2n
@@ -102,18 +107,12 @@ csu_ease :
 	$(MKDIR) $(TESTDIR)/csu_e2s
 	$(RM) $(TESTDIR)/csu_e2t
 	$(MKDIR) $(TESTDIR)/csu_e2t
-	$(CP) $(TOPDIR)/testing/CSU_regress_list_NSIDC $(TESTDIR)/F1CSU.lis
-ifeq ($(LOCALE),JANUSicc)
-	$(CP) $(TOPDIR)/testing/CSU_regress_list_JANUS $(TESTDIR)/F1CSU.lis
-endif
-ifeq ($(LOCALE),JANUSgcc)
-	$(CP) $(TOPDIR)/testing/CSU_regress_list_JANUS $(TESTDIR)/F1CSU.lis
-endif
+	$(CD) $(TOPDIR)/sample_data
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TESTDIR)/F1CSU.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/CSU_regress_list
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TESTDIR)/F1CSU.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta 13 \
-	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TESTDIR)/F1CSU.lis
+	         $(TOPDIR)/ref/s2g/ssmi_mN.s2g 61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
 
 
