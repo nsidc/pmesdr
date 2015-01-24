@@ -11,39 +11,54 @@ Copyright (C) 2015 Regents of University of Colorado and Brigham-Young Universit
 '''
 from nose.tools import assert_equals
 from cetb_utilities import compare_cetb_files
+from cetb_utilities import compare_cetb_directories
 
 test_file = 'test_data/test.nc'
 small_difference_file = 'test_data/test_small_diffs.nc'
 big_difference_file = 'test_data/test_big_diffs.nc'
+dir_orig = 'test_data'
+dir_copy = 'test_data_copy'
+dir_bad_copy = 'test_data_bad_copy'
 
 # If compare_cetb_files returns 0, it means the files are the "same"
 # If compare_cetb_files returns 1, it means the files are not the "same"
 def test_same_file():
     assert_equals( compare_cetb_files( test_file, test_file,
                                        verbose=True ), 
-                   0 )
+                   True )
 
 def test_big_difference_file():
     assert_equals( compare_cetb_files( test_file, big_difference_file,
                                        verbose=True ),
-                   1 )
+                   False )
 
 def test_small_difference_file():
     assert_equals( compare_cetb_files( test_file, small_difference_file,
                                        verbose=True ),
-                   1 )
+                   False )
 
 def test_small_difference_wtolerance_fail():
     assert_equals( compare_cetb_files( test_file, small_difference_file,
                                        verbose=True,
                                        tolerance=0.05 ), 
-                   1 )
+                   False )
 
 def test_small_difference_wtolerance_pass():
     assert_equals( compare_cetb_files( test_file, small_difference_file,
                                        verbose=True,
                                        tolerance=0.1 ), 
-                   0 )
+                   True )
+
+def test_compare_directories():
+    assert_equals( compare_cetb_directories( dir_orig, dir_copy,
+                                             verbose=True ),
+                   True )
+                   
+def test_compare_different_directories():
+    assert_equals( compare_cetb_directories( dir_orig, dir_bad_copy,
+                                             verbose=True ),
+                   False )
+                   
 
     
 
