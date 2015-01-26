@@ -19,6 +19,7 @@ TESTDIR = $(TOPDIR)/NSIDCtest
 #	commands
 #
 CC = gcc
+CD = cd
 INSTALL = cp -f -p
 MKDIR = mkdir -p
 RM = rm -fr
