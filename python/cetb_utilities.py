@@ -14,6 +14,7 @@ from netCDF4 import Dataset
 import inspect
 import numpy as np
 import glob
+import os
 
 def compare_cetb_directories( dir1, dir2, verbose=False, tolerance=0 ):
     """
@@ -28,6 +29,11 @@ def compare_cetb_directories( dir1, dir2, verbose=False, tolerance=0 ):
         print "> " + this_program + ": dir2: " + dir2
         print "> " + this_program + ": tolerance: " + str( tolerance )
 
+    if not os.path.isdir( dir1 ) or not os.path.isdir( dir2 ):
+        if ( verbose ):
+            print "> " + this_program + ": One or both directories not found."
+        return False
+
     # Read the files in dir1 and the files in dir2
     list1 = sorted( glob.glob( dir1 + "/*.nc" ) )
     list2 = sorted( glob.glob( dir2 + "/*.nc" ) )
@@ -36,16 +42,29 @@ def compare_cetb_directories( dir1, dir2, verbose=False, tolerance=0 ):
     # If we have the same number of files in each directory, we will
     # just compare them, in order.  (We may need to make this smarter later.)
     if len( list1 ) != len( list2 ):
+        if ( verbose ):
+            print "> " + this_program + ": Number of files in the directories differs."
         return False
 
+    if 0 == len( list1 ):
+        if ( verbose ):
+            print "> " + this_program + ": Empty directories."
+        return False
+    
     for i in np.arange( len( list1 ) ):
-        if not compare_cetb_files( list1[ i ], list2[ i ], verbose=verbose ):
-            print "These files aren't the same! "
+
+        if not ( os.path.basename( list1[ i ] ) == os.path.basename( list2[ i ] ) ):
+            if ( verbose ):
+                print "> " + this_program + ": Filenames differ: " + list1[ i ] + " " + list2[ i ]
+            return False
+            
+        if not compare_cetb_files( list1[ i ], list2[ i ], verbose=verbose, tolerance=tolerance ):
+            if ( verbose ):
+                print "> " + this_program + ": Directories differ."
             return False
 
-    if verbose:
-        print "All files match."
-        
+    if ( verbose ):
+        print "> " + this_program + ": All files match."
     return True
     
 def compare_cetb_files( file1, file2, verbose=False, tolerance=0 ):
@@ -75,12 +94,18 @@ def compare_cetb_files( file1, file2, verbose=False, tolerance=0 ):
     # If the arrays are equal, we are done
     # If they are not, then check for differences less than |tolerance|
     if ( np.array_equal( image1, image2 ) ):
+        if ( verbose ):
+            print "> " + this_program + ": a_image data are identical."
         return True
     else:
         diff = abs( image2 - image1 )
         if ( np.max( diff ) <= abs( tolerance ) ):
+            if ( verbose ):
+                print "> " + this_program + ": a_image data are within tolerance."
             return True
         else:
+            if ( verbose ):
+                print "> " + this_program + ": a_image data differ."
             return False
 
 
