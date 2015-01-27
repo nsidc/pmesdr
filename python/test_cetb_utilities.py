@@ -22,6 +22,8 @@ dir_copy = 'test_cetb_utilities_data/test_data_copy'
 dir_one_file = 'test_cetb_utilities_data/test_data_bad_copy'
 dir_small_diffs = 'test_cetb_utilities_data/test_data_small_diffs'
 dir_big_diffs = 'test_cetb_utilities_data/test_data_big_diffs'
+dir_3files_1diff = 'test_cetb_utilities_data/test_data_3files_1different'
+dir_3files_1diff_name = 'test_cetb_utilities_data/test_data_3files_1different_name'
 
 # If compare_cetb_files returns 0, it means the files are the "same"
 # If compare_cetb_files returns 1, it means the files are not the "same"
@@ -83,6 +85,16 @@ def test_compare_dirs_wtolerance_fail():
     assert_equals( compare_cetb_directories( dir_one_file, dir_small_diffs,
                                              verbose=True,
                                              tolerance=0.05 ), 
+                   False )
+
+def test_compare_dirs_3files_1different():
+    assert_equals( compare_cetb_directories( dir_orig, dir_3files_1diff,
+                                             verbose=True ),
+                   False )
+
+def test_compare_dirs_3files_1different_name():
+    assert_equals( compare_cetb_directories( dir_orig, dir_3files_1diff_name,
+                                             verbose=True ),
                    False )
 
     
