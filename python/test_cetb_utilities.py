@@ -13,14 +13,15 @@ from nose.tools import assert_equals
 from cetb_utilities import compare_cetb_files
 from cetb_utilities import compare_cetb_directories
 
-test_file = 'test_data/test.nc'
-small_difference_file = 'test_data/test_small_diffs.nc'
-big_difference_file = 'test_data/test_big_diffs.nc'
-dir_orig = 'test_data'
-dir_copy = 'test_data_copy'
-dir_one_file = 'test_data_bad_copy'
-dir_small_diffs = 'test_data_small_diffs'
-dir_big_diffs = 'test_data_big_diffs'
+test_file = 'test_cetb_utilities_data/test_data/test.nc'
+small_difference_file = 'test_cetb_utilities_data/test_data/test_small_diffs.nc'
+big_difference_file = 'test_cetb_utilities_data/test_data/test_big_diffs.nc'
+
+dir_orig = 'test_cetb_utilities_data/test_data'
+dir_copy = 'test_cetb_utilities_data/test_data_copy'
+dir_one_file = 'test_cetb_utilities_data/test_data_bad_copy'
+dir_small_diffs = 'test_cetb_utilities_data/test_data_small_diffs'
+dir_big_diffs = 'test_cetb_utilities_data/test_data_big_diffs'
 
 # If compare_cetb_files returns 0, it means the files are the "same"
 # If compare_cetb_files returns 1, it means the files are not the "same"
@@ -57,7 +58,8 @@ def test_nonexistent_directories():
                    False )
 
 def test_empty_directories():
-    assert_equals( compare_cetb_directories( "test_empty1", "test_empty2",
+    assert_equals( compare_cetb_directories( "test_cetb_utilities_data/test_empty1",
+                                             "test_cetb_utilities_data/test_empty2",
                                              verbose=True ),
                    False )
     
