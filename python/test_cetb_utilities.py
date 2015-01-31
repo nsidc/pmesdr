@@ -25,78 +25,96 @@ dir_big_diffs = 'test_cetb_utilities_data/test_data_big_diffs'
 dir_3files_1diff = 'test_cetb_utilities_data/test_data_3files_1different'
 dir_3files_1diff_name = 'test_cetb_utilities_data/test_data_3files_1different_name'
 
-# If compare_cetb_files returns 0, it means the files are the "same"
-# If compare_cetb_files returns 1, it means the files are not the "same"
+verbose = False
+
+# Unit tests for compare_directories
+# If compare_cetb_files returns True, it means the files are the "same"
+# If compare_cetb_files returns False, it means the files are not the "same"
 def test_same_file():
     assert_equals( compare_cetb_files( test_file, test_file,
-                                       verbose=True ), 
+                                       verbose=verbose ), 
                    True )
 
 def test_big_difference_file():
     assert_equals( compare_cetb_files( test_file, big_difference_file,
-                                       verbose=True ),
+                                       verbose=verbose ),
                    False )
 
 def test_small_difference_file():
     assert_equals( compare_cetb_files( test_file, small_difference_file,
-                                       verbose=True ),
+                                       verbose=verbose ),
                    False )
 
 def test_small_difference_wtolerance_fail():
     assert_equals( compare_cetb_files( test_file, small_difference_file,
-                                       verbose=True,
+                                       verbose=verbose,
                                        tolerance=0.05 ), 
                    False )
 
 def test_small_difference_wtolerance_pass():
     assert_equals( compare_cetb_files( test_file, small_difference_file,
-                                       verbose=True,
+                                       verbose=verbose,
                                        tolerance=0.1 ), 
                    True )
 
+def test_statistics_output():
+    assert_equals( compare_cetb_files( test_file, small_difference_file,
+                                       statistics=True,
+                                       tolerance=0.1 ), 
+                   True )
+
+# Unit tests for compare_directories
 def test_nonexistent_directories():
     assert_equals( compare_cetb_directories( "bogusdir1", "bogusdir2", 
-                                             verbose=True ),
+                                             verbose=verbose ),
                    False )
 
 def test_empty_directories():
     assert_equals( compare_cetb_directories( "test_cetb_utilities_data/test_empty1",
                                              "test_cetb_utilities_data/test_empty2",
-                                             verbose=True ),
+                                             verbose=verbose ),
                    False )
     
 def test_compare_directories():
     assert_equals( compare_cetb_directories( dir_orig, dir_copy,
-                                             verbose=True ),
+                                             verbose=verbose ),
                    True )
                    
 def test_compare_different_directories():
     assert_equals( compare_cetb_directories( dir_orig, dir_one_file,
-                                             verbose=True ),
+                                             verbose=verbose ),
                    False )
 
 def test_compare_dirs_wtolerance_pass():
     assert_equals( compare_cetb_directories( dir_one_file, dir_small_diffs,
-                                             verbose=True,
+                                             verbose=verbose,
                                              tolerance=0.1 ), 
                    True )
 
 def test_compare_dirs_wtolerance_fail():
     assert_equals( compare_cetb_directories( dir_one_file, dir_small_diffs,
-                                             verbose=True,
+                                             verbose=verbose,
+                                             statistics=True,
                                              tolerance=0.05 ), 
                    False )
 
 def test_compare_dirs_3files_1different():
     assert_equals( compare_cetb_directories( dir_orig, dir_3files_1diff,
-                                             verbose=True ),
+                                             statistics=True,
+                                             verbose=verbose ),
                    False )
 
 def test_compare_dirs_3files_1different_name():
     assert_equals( compare_cetb_directories( dir_orig, dir_3files_1diff_name,
-                                             verbose=True ),
+                                             verbose=verbose ),
                    False )
 
+def test_dir_statistics():
+    assert_equals( compare_cetb_directories( dir_orig, dir_3files_1diff_name,
+                                             statistics=True, 
+                                             verbose=verbose ),
+                   False )
+    
     
 
     

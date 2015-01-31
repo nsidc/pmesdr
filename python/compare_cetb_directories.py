@@ -11,18 +11,22 @@ import sys
 import getopt
 
 def usage():
-    print "compare_cetb_directories [-h] [-t tolerance] dir1 dir2"
-    print "compare_cetb_directories [--help] [--tolerance=tolerance] dir1 dir2"
+    print "compare_cetb_directories [-h] [-s] [-t tolerance] [-v] dir1 dir2"
+    print "compare_cetb_directories [--help] [--statistics] [--tolerance=tolerance] [--verbose] dir1 dir2"
     print "  compares files in each directory"
     print "  -h : print usage message"
+    print "  -s : print file/difference statistics to stderr"
     print "  -t tolerance : to within tolerance (default=0.0)"
+    print "  -v : verbose output"
 
 def main( argv ):
 
+    statistics = False
     tolerance = 0.0
+    verbose = False
     
     try:
-        opts, args = getopt.getopt( argv, "ht:", [ "tolerance="] )
+        opts, args = getopt.getopt( argv, "hst:v", [ "tolerance=" ] )
     except getopt.GetoptError:
         usage()
         sys.exit( 2 )
@@ -31,8 +35,12 @@ def main( argv ):
         if opt in ( "-h", "--help"):
             usage()
             sys.exit( 2 )
+        elif opt in ( "-s", "--statistics" ):
+            statistics = True
         elif opt in ( "-t", "--tolerance" ):
             tolerance = arg
+        elif opt in ( "-v", "--verbose" ):
+            verbose = True
 
     if 2 != len( args ):
         print "Requires 2 directories."
@@ -40,7 +48,8 @@ def main( argv ):
         sys.exit( 2 )
 
     if ( compare_cetb_directories( args[ 0 ], args[ 1 ],
-                                   verbose=True,
+                                   verbose=verbose,
+                                   statistics=statistics,
                                    tolerance=tolerance ) ):
         sys.exit( 0 )
     else:
