@@ -33,8 +33,7 @@ def compare_cetb_directories( dir1, dir2, statistics=False, tolerance=0, verbose
     tolerance = float( tolerance )
 
     if not os.path.isdir( dir1 ) or not os.path.isdir( dir2 ):
-        if ( verbose ):
-            sys.stderr.write( "> " + this_program + ": One or both directories not found.\n" )
+        sys.stderr.write( "\n" + this_program + ": One or both directories not found.\n" )
         return False
 
     # Read the files in dir1 and the files in dir2
@@ -45,13 +44,11 @@ def compare_cetb_directories( dir1, dir2, statistics=False, tolerance=0, verbose
     # If we have the same number of files in each directory, we will
     # just compare them, in order.  (We may need to make this smarter later.)
     if len( list1 ) != len( list2 ):
-        if ( verbose ):
-            sys.stderr.write( "> " + this_program + ": Number of files in the directories differs.\n" )
+        sys.stderr.write( "\n" + this_program + ": Number of files in the directories differs.\n" )
         return False
 
     if 0 == len( list1 ):
-        if ( verbose ):
-            sys.stderr.write( "> " + this_program + ": Empty directories.\n" )
+        sys.stderr.write( "\n" + this_program + ": Empty directories.\n" )
         return False
 
     all_files_OK = True
@@ -66,11 +63,10 @@ def compare_cetb_directories( dir1, dir2, statistics=False, tolerance=0, verbose
             sys.stderr.write( "\n" + this_program + ": Files differ:\n\t" + list1[ i ] + "\n\t" + list2[ i ] + "\n" )
             all_files_OK = False
 
-    if verbose:
-        if not all_files_OK:
-            sys.stderr.write( "> " + this_program + ": Directories differ.\n" )
-        else:
-            sys.stderr.write( "> " + this_program + ": All files match.\n" )
+    if not all_files_OK:
+        sys.stderr.write( "\n" + this_program + ": Directories differ.\n" )
+    elif verbose:
+        sys.stderr.write( "> " + this_program + ": All files match.\n" )
 
     return all_files_OK
     
