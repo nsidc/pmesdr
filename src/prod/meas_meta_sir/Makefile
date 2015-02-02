@@ -17,6 +17,7 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
+COMPAREDIR = /projects/PMESDR/pmesdr_regression_data/201409/quick/sirRSS/e2n/
 
 #
 #	commands
@@ -24,6 +25,7 @@ TESTDIR = $(TOPDIR)/NSIDCtest
 CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
+PYTHON = python
 RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
@@ -146,6 +148,9 @@ rss_quick :
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2n; \
 	done
+
+rss_quick_validate :
+	$(PYTHON) compare_cetb_directories.py $(COMPAREDIR) $(TESTDIR)/sirRSS/e2
 
 csu_ease :
 	$(RM) $(TESTDIR)/sirCSU/e2n
