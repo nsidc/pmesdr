@@ -64,7 +64,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
   module list
 elif [[ "$HOSTNAME" == "snow"* ]]; then
     export LOCALE=NSIDCsnow
-elif [[ "$HOSTNAME" == *"dev"* ]]; then
+elif [[ "$HOSTNAME" == "brodzik" ]]; then
     export LOCALE=NSIDCdev
 else
     export LOCALE=BYU
