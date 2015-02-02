@@ -17,8 +17,8 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
-COMPAREDIR = /projects/PMESDR/pmesdr_regression_data/201409/quick/sirRSS/e2n/
-COMPARE_TOLERANCE = 0.001
+COMPAREDIR = /projects/PMESDR/pmesdr_regression_data/201409/
+COMPARE_TOLERANCE = 0.01
 
 #
 #	commands
@@ -142,6 +142,14 @@ rss_ease :
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2t; \
 	done
 
+rss_ease_validate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirRSS/e2s $(TESTDIR)/sirRSS/e2s
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirRSS/e2t $(TESTDIR)/sirRSS/e2t
+
 rss_quick :
 	$(RM) $(TESTDIR)/sirRSS/e2n
 	$(MKDIR) $(TESTDIR)/sirRSS/e2n
@@ -151,7 +159,8 @@ rss_quick :
 	done
 
 rss_quick_validate :
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py -t $(COMPARE_TOLERANCE) $(COMPAREDIR) $(TESTDIR)/sirRSS/e2n
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
 
 csu_ease :
 	$(RM) $(TESTDIR)/sirCSU/e2n

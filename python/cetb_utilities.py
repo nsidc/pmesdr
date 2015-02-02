@@ -65,8 +65,8 @@ def compare_cetb_directories( dir1, dir2, statistics=False, tolerance=0, verbose
 
     if not all_files_OK:
         sys.stderr.write( "\n" + this_program + ": Directories differ.\n" )
-    elif verbose:
-        sys.stderr.write( "> " + this_program + ": All files match.\n" )
+    else:
+        sys.stderr.write( "\n" + this_program + ": All files match.\n" )
 
     return all_files_OK
     
@@ -123,7 +123,7 @@ def dump_image_statistics( filename, image ):
     Dumps statistics on this image to stderr:
     filename: min, max, mean, stddev
     """
-    sys.stderr.write( '{0}:\n\tmin={1:6.2f} max={2:6.2f} mean={3:6.2f} std={4:6.2f}\n'
+    sys.stderr.write( '{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f}\n'
                       .format( filename, np.min( image ), np.max( image ), np.mean( image ), np.std( image ) ) )
     
     return
@@ -136,7 +136,7 @@ def dump_diff_statistics( diff, tolerance ):
     absdiff = abs( diff )
     num_diffs = len( absdiff[ absdiff > tolerance ] )
 
-    sys.stderr.write( '{0}:\n\tmin={1:6.2f} max={2:6.2f} mean={3:6.2f} std={4:6.2f} num[|diff|>{5:.6f}]={6:8d}\n'
+    sys.stderr.write( '{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f} num[|diff|>{5:.6f}]={6:8d}\n'
                       .format( "difference", np.min( diff ), np.max( diff ), np.mean( diff ), np.std( diff ), tolerance, num_diffs ) )
     
     return
