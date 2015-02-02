@@ -150,7 +150,7 @@ rss_quick :
 	done
 
 rss_quick_validate :
-	$(PYTHON) compare_cetb_directories.py $(COMPAREDIR) $(TESTDIR)/sirRSS/e2
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(COMPAREDIR) $(TESTDIR)/sirRSS/e2
 
 csu_ease :
 	$(RM) $(TESTDIR)/sirCSU/e2n
