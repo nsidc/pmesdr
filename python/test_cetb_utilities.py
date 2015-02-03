@@ -72,7 +72,7 @@ def test_bgi_file():
 def test_bgi_diff_files():
     assert_equals( compare_cetb_files( bgi_file, bgi_diffs_file,
                                        exclude_out_of_range=True, 
-                                       statistics=True ),
+                                       statistics=False ),
                    True )
     
 # **************************************************************************************   

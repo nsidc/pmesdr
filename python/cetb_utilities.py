@@ -35,7 +35,7 @@ def compare_cetb_directories( dir1, dir2,
         sys.stderr.write( "> " + this_program + ": dir1: " + dir1 + "\n" )
         sys.stderr.write( "> " + this_program + ": dir2: " + dir2 + "\n" )
         sys.stderr.write( "> " + this_program + ": tolerance: " + str( tolerance ) + "\n" )
-        sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + exclude_out_of_range + "\n" )
+        sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + str( exclude_out_of_range ) + "\n" )
 
     tolerance = float( tolerance )
 
@@ -107,7 +107,7 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         sys.stderr.write( "> " + this_program + ": file1: " + file1 + "\n" )
         sys.stderr.write( "> " + this_program + ": file2: " + file2 + "\n" )
         sys.stderr.write( "> " + this_program + ": tolerance: " + str( tolerance ) + "\n" )
-        sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + exclude_out_of_range + "\n" )
+        sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + str( exclude_out_of_range ) + "\n" )
 
     # cetb nc files can either have "a_image" or "bgi_image" variables (but
     # not both).  Figure out which variable name is in the first file, and
@@ -141,7 +141,11 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         sys.stderr.write( "\n" )
         dump_image_statistics( file1, image1 )
         dump_image_statistics( file2, image2 )
-        dump_diff_statistics( image1, image2, tolerance, exclude_out_of_range=exclude_out_of_range )
+
+    image1, image2, diff = filter_images( image1, image2, diff, exclude_out_of_range )
+
+    if statistics:
+        dump_diff_statistics( image1, image2, diff, tolerance, exclude_out_of_range=exclude_out_of_range )
         
     # If the arrays are equal, we are done
     # If they are not, then check for differences less than |tolerance|
@@ -169,44 +173,51 @@ def dump_image_statistics( filename, image ):
     
     return
 
-def dump_diff_statistics( image1, image2, tolerance, exclude_out_of_range=False ):
+def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, tolerance, exclude_out_of_range=False ):
     """
     Dumps statistics on difference image to stderr:
     diff: min, max, mean, stddev
     """
-    
-    diff = image2 - image1
-    image1_copy = image1.copy()
-    image2_copy = image2.copy()
-    
+    my_image1 = filtered_image1
+    my_image2 = filtered_image2
+    my_diff = filtered_diff
     if ( exclude_out_of_range ):
-        min_TB = 50.0
-        max_TB = 350.0
-        diff = diff[ ( min_TB < image1 ) & ( image1 < max_TB ) & ( min_TB < image2 ) & ( image2 < max_TB ) ]
-        image1_copy = image1_copy[ ( min_TB < image1 ) & ( image1 < max_TB ) & ( min_TB < image2 ) & ( image2 < max_TB ) ]
-        image2_copy = image2_copy[ ( min_TB < image1 ) & ( image1 < max_TB ) & ( min_TB < image2 ) & ( image2 < max_TB ) ]
         label = "(inside(50,350))"
     else:
         label = ""
         
-    absdiff = abs( diff )
+    absdiff = abs( my_diff )
     num_diffs = len( absdiff[ absdiff > tolerance ] )
 
     sys.stderr.write( '{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f} num[|diff|>{5:.6f}]={6:8d} {7}\n'
-                      .format( "difference", np.min( diff ), np.max( diff ), np.mean( diff ), np.std( diff ), tolerance, num_diffs, label ) )
+                      .format( "difference", np.min( my_diff ), np.max( my_diff ),
+                               np.mean( my_diff ), np.std( my_diff ), tolerance, num_diffs, label ) )
 
     if ( 0 < num_diffs ):
-        diff = diff[ absdiff > tolerance ]
-        image1_copy = image1_copy[ absdiff > tolerance ]
-        image2_copy = image2_copy[ absdiff > tolerance ]
+        my_diff = my_diff[ absdiff > tolerance ]
+        my_image1 = my_image1[ absdiff > tolerance ]
+        my_image2 = my_image2[ absdiff > tolerance ]
         for i in np.arange( num_diffs ):
             sys.stderr.write( '{0:d}\tdiff={1:8.4f} img1={2:8.4f} img2={3:8.4f}\n'
-                              .format( i, diff[ i ], image1_copy[ i ], image2_copy[ i ] ) )
-
-            
+                              .format( i, my_diff[ i ], my_image1[ i ], my_image2[ i ] ) )
     
     return
 
+
+def filter_images( image1, image2, diff, exclude_out_of_range=False, verbose=False ):
+
+    if ( exclude_out_of_range ):
+        if ( verbose ):
+            sys.stderr.write( "> Excluding out of range values...\n" )
+        min_TB = 50.0
+        max_TB = 350.0
+        idx = ( min_TB < image1 ) & ( image1 < max_TB ) & ( min_TB < image2 ) & ( image2 < max_TB )
+        diff = diff[ idx ]
+        image1 = image1[ idx ]
+        image2 = image2[ idx ]
+
+    return image1, image2, diff
+    
 
 
 
