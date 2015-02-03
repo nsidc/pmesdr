@@ -10,6 +10,8 @@
   Modified by DGL at BYU 3/07/2014 + added EASE2 capability
   Modified by DGL at BYU 8/16/2014 + added error message when required environment variable not defined
   Modified by MAH at NSIDC 10/10/2014 - compile directive for Intel math library
+  Modified by DGL at BYU 1/18/2015 + modified local time for LTOD, name scheme
+  Modified by MAH at NSIDC 01/20/2015 - added DGL's changes into meas_meta_make.c for repo
 
 ******************************************************************/
 
@@ -25,11 +27,11 @@
 
 #include <sir3.h>
 
-#define prog_version 1.0 /* program version */
+#define prog_version 1.2 /* program version */
 #define prog_name "meas_meta_make"
 
 #define MAKEJOB 0 /* create job script if 1, do not create job script if 0 */
-#define ENABLE_SYSTEM_CALL 1 /* enable system call to make job script executable */
+#define ENABLE_SYSTEM_CALL 0 /* enable system call to make job script executable */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
@@ -569,7 +571,7 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
   int err=0;  
   int negg=2; /* only do eggs */
   int sections=FALSE, nsection;
-  char fnamel[1000], regname[11], reg[4], cpol, sen, cegg[4];
+  char fnamel[1000], regname[11], reg[4], cpol, sen, cegg, chan;
   char TF[]={'F', 'T'};
   int dstart, dend, year, mstart, mend;
   float a_init, a_offset, b_init, b_weight, angle_ref, response_threshold;
@@ -1409,12 +1411,15 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       }
             
       /* write LTOD split time to file */
+      /* note: tsplit values not 0 & 12 require more than one UTC as daily input */   
       if (iasc > 2) {
+	/* northern hemisphere */
 	tsplit1=0.0;
 	tsplit2=12.0;
+	/* southern hemisphere, use slightly different numbers */
 	if (regnum==100 || regnum == 206 || /* Ant, SAm */
 	    regnum==208 || regnum == 214 || /* SAf, Aus */
-	    regnum==213) { /* Ind */
+	    regnum==213 || regnum == 309)  { /* Ind, E2S */
 	  tsplit1=0.0;
 	  tsplit2=12.0;
 	}
@@ -1422,15 +1427,18 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 	fprintf(mout,"   Local_time_split2=%16.9f\n", tsplit2);
       }
   
-      /* create the full set of BYU naming standard file names -- wheither used or not */
+      /* create the full set of BYU naming standard file names -- whether used or not */
       iy=(year % 100);
-      cpol=(char) (ibeam+48);
-      sprintf(cegg,"%0.2d ",F_num);
-      cegg[2]='\0';      
-      sen='F';      
+      sen='F';      /* F=ssmi, A=AMSRE, R=SMMR, I=SSMIS */
+      if (F_num < 10.0) /* code the sensor number for SSMI and SSMIS */
+	cegg=(char) (F_num+48);  /* 0...9 */
+      else
+	cegg=(char) (F_num-10+65); /* A...Z */
+      chan=(char) (ibeam+48);
+      cpol='b';  /* both asc and desc (all data) used */
 
-      /* modify file name if ascending/descending or morn/even only.  Unfortunately, by 
-	 the naming convention the modification overwrites part of the instrument ID */
+      /* modify file name if LTOD ascending/descending or morn/even */
+
       if (iasc != 0) {
 	cpol='a';  /* asc */
 	if (iasc==2) cpol='d'; /* desc */
@@ -1440,51 +1448,51 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       }
 
       if (isection > 0){ /* subsection names */
-	sprintf(setname,"%c%2s%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.setup",sen,cegg,cpol,reg,iy,dstart,dend,nsection,isection);
-	sprintf(lisname,"%c%2s%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.lis",sen,cegg,cpol,reg,iy,dstart,dend,nsection,isection);
-	sprintf(a_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(b_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(i_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'I',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(j_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'J',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(c_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'C',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(p_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'p',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(v_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'V',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(e_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'E',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(aa_name,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,nsection,isection,"ave");
-	sprintf(bb_name,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,nsection,isection,"ave");
-	sprintf(non_aname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,nsection,isection,"non");
-	sprintf(non_bname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,nsection,isection,"non");
-	sprintf(non_vname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'V',reg,iy,dstart,dend,nsection,isection,"non");
-	sprintf(grd_aname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_bname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_vname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'V',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_iname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'I',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_jname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'J',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_cname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'C',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_pname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,cpol,'p',reg,iy,dstart,dend,nsection,isection,"grd");
+	sprintf(setname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend,nsection,isection);
+	sprintf(lisname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.lis",sen,cegg,chan,cpol,reg,iy,dstart,dend,nsection,isection);
+	sprintf(a_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(b_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(i_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(j_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(c_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(p_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(v_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(e_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'E',reg,iy,dstart,dend,nsection,isection,"sir");
+	sprintf(aa_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"ave");
+	sprintf(bb_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"ave");
+	sprintf(non_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"non");
+	sprintf(non_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"non");
+	sprintf(non_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,nsection,isection,"non");
+	sprintf(grd_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"grd");
+	sprintf(grd_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"grd");
+	sprintf(grd_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,nsection,isection,"grd");
+	sprintf(grd_iname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,nsection,isection,"grd");
+	sprintf(grd_jname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,nsection,isection,"grd");
+	sprintf(grd_cname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,nsection,isection,"grd");
+	sprintf(grd_pname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,nsection,isection,"grd");
       } else { /* section names */
-	sprintf(setname,"%c%2s%c-%3s%0.2d-%0.3d-%0.3d.setup",sen,cegg,cpol,reg,iy,dstart,dend);
-	sprintf(lisname,"%c%2s%c-%3s%0.2d-%0.3d-%0.3d.lis",sen,cegg,cpol,reg,iy,dstart,dend);
-	sprintf(a_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,"sir");
-	sprintf(b_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,"sir");
-	sprintf(i_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'I',reg,iy,dstart,dend,"sir");
-	sprintf(j_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'J',reg,iy,dstart,dend,"sir");
-	sprintf(c_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'C',reg,iy,dstart,dend,"sir");
-	sprintf(p_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'p',reg,iy,dstart,dend,"sir");
-	sprintf(v_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'V',reg,iy,dstart,dend,"sir");
-	sprintf(e_name, "%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'E',reg,iy,dstart,dend,"sir");
-	sprintf(aa_name,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,"ave");
-	sprintf(bb_name,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,"ave");
-	sprintf(non_aname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,"non");
-	sprintf(non_bname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,"non");
-	sprintf(non_vname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'V',reg,iy,dstart,dend,"non");
-	sprintf(grd_aname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'a',reg,iy,dstart,dend,"grd");
-	sprintf(grd_bname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'b',reg,iy,dstart,dend,"grd");
-	sprintf(grd_vname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'V',reg,iy,dstart,dend,"grd");
-	sprintf(grd_iname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'I',reg,iy,dstart,dend,"grd");
-	sprintf(grd_jname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'J',reg,iy,dstart,dend,"grd");
-	sprintf(grd_cname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'C',reg,iy,dstart,dend,"grd");
-	sprintf(grd_pname,"%c%2s%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,cpol,'p',reg,iy,dstart,dend,"grd");
+	sprintf(setname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend);
+	sprintf(lisname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.lis",sen,cegg,chan,cpol,reg,iy,dstart,dend);
+	sprintf(a_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"sir");
+	sprintf(b_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"sir");
+	sprintf(i_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"sir");
+	sprintf(j_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"sir");
+	sprintf(c_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"sir");
+	sprintf(p_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"sir");
+	sprintf(v_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"sir");
+	sprintf(e_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'E',reg,iy,dstart,dend,"sir");
+	sprintf(aa_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"ave");
+	sprintf(bb_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"ave");
+	sprintf(non_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"non");
+	sprintf(non_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"non");
+	sprintf(non_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"non");
+	sprintf(grd_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"grd");
+	sprintf(grd_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"grd");
+	sprintf(grd_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"grd");
+	sprintf(grd_iname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"grd");
+	sprintf(grd_jname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"grd");
+	sprintf(grd_cname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"grd");
+	sprintf(grd_pname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"grd");
       }
 
       /* save *-a-*.sir, .ave names for job script */

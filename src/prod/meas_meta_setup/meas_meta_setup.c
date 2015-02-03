@@ -11,7 +11,11 @@
   revised by DGL at BYU  03/07/2014 + added EASE2 capability
   revised by DGL at BYU  04/11/2014 + added response debug output
   revised by DGL at BYU  06/28/2014 + added RSS swath overlap reject
-  revised by MAH at NSIDC 10/10/2014 - directives for Intel math library
+  revised by MAH at NSIDC 10/10/2014 + directives for Intel math library
+  revised by DGL at BYU  01/19/2015 + changed LTOD logic
+  revised by MAH at NSIDC 01/20/2015 + added DGL's changes in by hand
+  revised by DGL at BYU  01/27/2015 + updated convert_time and morn LTOD
+  revised by MAH at NSIDC 01/30/2015 + added DGL's changes in by hand
 
 ******************************************************************/
 
@@ -26,7 +30,7 @@
 
 #include <sir3.h>
 
-#define prog_version 0.2 /* program version */
+#define prog_version 0.3 /* program version */
 #define prog_name "meas_meta_setup"
 
 /* This code can read and process several different data sets.  To change data sets
@@ -100,10 +104,11 @@ void no_trailing_blanks(char *s)
 
 void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
 { /* convert ascii time tag into year, day, hour, minute */
-  float mins;  
-  sscanf(time_tag,"%4d-%3dT%2d:%2f6.3",iyear,iday,ihour,&mins);
-  *imin=nint(mins);  
-  return;
+  int imon, mday;
+  float secs;
+  /* '19970600301015123.150300 '1997 1 3 60 1 51 23 */
+  sscanf(time_tag,"%4d%3d%2d%2d%2d%2d%7.4f",iyear,iday,&imon,&mday,ihour,imin,&secs);
+  return;                                                                                                                 
 }
 
 int isleapyear(int year) 
@@ -667,7 +672,7 @@ int main(int argc,char *argv[])
       if (iasc >= 3 && iasc <= 5) { /* if local time of day discrimination is used */
 	if (dstart < dend) { /* if dosen't cross year boundary */
 	  if (iyear != year) goto label_350; /* skip further processing of this scan */
-	  if (iday < dstart) goto label_350; /* skip further processing of this scan */
+	  if ( iday < dstart - 1 ) goto label_350; /* skip further processing of this scan */
 	}
       } else {
 	if (iyear != year) goto label_350; /* skip further processing of this scan */
@@ -852,26 +857,16 @@ int main(int argc,char *argv[])
 	  /* if a local-time-of-day image, compute the local time and see if it fits within LTOD window.
 	     Note: data may be next UTC day */
 
-	  /* TODO: fix the LTOD logic */
-	  if (iasc >= 3 && iasc <= 5) { /* calculate the local time */
-	    ctime = cx *4.0+imin+ktime;
-	    lata=(lath+latl)/2.0;
-	    if (lata >= 0.0) { /* if region is in the Northern hemisphere */
-	      if (iasc == 3) { /* morning */
-		if (ctime < tsplit1 || ctime >= tsplit2) goto label_3400;
-	      } else if (iasc == 5) { /* midday */
-		if (ctime < (34*60) || ctime >= (42*60)) goto label_3400;
-	      } else /* evening */
-		if (ctime < (18*60) || ctime >= (26*60)) goto label_3400;
-	    } else {                 /* otherwise, in the Southern hemisphere */
-	      if (iasc == 3) { /* morning */
-		if (ctime < (30*60) || ctime >= (38*60)) goto label_3400;
-	      } else if (iasc == 5) { /* Tandem/Quikscat midday */
-		if (ctime < (14*60) || ctime >= (22*60)) goto label_3400;
-	      } else /* evening */
-		if (ctime < (22*60) || ctime >= (30*60)) goto label_3400;
-	    }
-	  }
+	  if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
+	    ctime = cx *4.0 + ktime; /* calculate the local time of day in minutes */
+	    if (iasc == 3) { /* morning */
+	      if (ctime < tsplit1+(24*60) || ctime > tsplit2+(24*60)) goto label_3400;
+	      } else if (iasc == 5) { /* midday -- not used */
+	      // if (ctime < (34*60) || ctime >= (42*60)) goto label_3400;
+	      } else /* iasc==4 evening */
+	      if (ctime <= tsplit2 || ctime >= tsplit1+(24*60)) goto label_3400;
+	  } 
+
 
 	  if (dateline) { /* convert lon to ascending order */
 	    if (lonl < 0.0) lonl=lonl+360.0;
@@ -1171,7 +1166,7 @@ FILE * get_meta(char *mname, char *outpath,
 
   char *s, *x;
   int z, nsection, isection, cnt;
-  float tsplit1,tsplit2;
+  float tsplit1=1.0, tsplit2=13.0;
 
   iregion=0;
   ireg=0;
@@ -1507,6 +1502,16 @@ FILE * get_meta(char *mname, char *outpath,
 		    nsx2=atoi(++x);
 		  }
 
+                  if (strstr(line,"Local_time_split1") != NULL) {
+		    x = strchr(line,'=');
+		    tsplit1=atof(++x);
+		  }
+
+		  if (strstr(line,"Local_time_split2") != NULL) {
+		    x = strchr(line,'=');
+		    tsplit2=atof(++x);
+		  }
+
 		  if (strstr(line,"Grid_size_y") != NULL) {
 		    x = strchr(line,'=');
 		    nsy2=atoi(++x);
@@ -1555,8 +1560,9 @@ FILE * get_meta(char *mname, char *outpath,
 		      printf("  GRD image scale: %f %f\n",ascale2,bscale2);		      
 		      /*printf("  Egg response threshold %f  Flat %d\n",*response_threshold,*flatten); */
 		      printf("  Median filter %d  Ref Inc angle %f\n",*median_flag,*angle_ref);
-		      printf("  Incidence angle correction %d  b_correct %f\n\n",*inc_correct,*b_correct); 
-
+		      printf("  Incidence angle correction %d  b_correct %f\n",*inc_correct,*b_correct); 
+                      printf("  Time split: %f %f\n\n",tsplit1,tsplit2);
+		      
 		      /* open output setup file for this section of this region */
 		      sprintf(outname,"%s/%s",outpath,fname2);		      
 		      a->reg_lu[iregion-1]=fopen(outname,"wb");
