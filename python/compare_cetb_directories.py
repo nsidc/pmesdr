@@ -11,9 +11,10 @@ import sys
 import getopt
 
 def usage():
-    print "compare_cetb_directories [-h] [-s] [-t tolerance] [-v] dir1 dir2"
-    print "compare_cetb_directories [--help] [--statistics] [--tolerance=tolerance] [--verbose] dir1 dir2"
+    print "compare_cetb_directories [-e ] [-h] [-s] [-t tolerance] [-v] dir1 dir2"
+    print "compare_cetb_directories [--exclude_out_of_range] [--help] [--statistics] [--tolerance=tolerance] [--verbose] dir1 dir2"
     print "  compares files in each directory"
+    print "  -e : exclude out-of-range [50.,350.] temperature values"
     print "  -h : print usage message"
     print "  -s : print file/difference statistics to stderr"
     print "  -t tolerance : to within tolerance (default=0.0)"
@@ -21,18 +22,21 @@ def usage():
 
 def main( argv ):
 
+    exclude_out_of_range = False
     statistics = False
     tolerance = 0.0
     verbose = False
     
     try:
-        opts, args = getopt.getopt( argv, "hst:v", [ "tolerance=" ] )
+        opts, args = getopt.getopt( argv, "ehst:v", [ "tolerance=" ] )
     except getopt.GetoptError:
         usage()
         sys.exit( 2 )
 
     for opt, arg in opts:
-        if opt in ( "-h", "--help"):
+        if opt in ( "-e", "--exclude_out_of_range" ):
+            exclude_out_of_range = True
+        elif opt in ( "-h", "--help"):
             usage()
             sys.exit( 2 )
         elif opt in ( "-s", "--statistics" ):
@@ -48,6 +52,7 @@ def main( argv ):
         sys.exit( 2 )
 
     if ( compare_cetb_directories( args[ 0 ], args[ 1 ],
+                                   exclude_out_of_range=exclude_out_of_range, 
                                    verbose=verbose,
                                    statistics=statistics,
                                    tolerance=tolerance ) ):

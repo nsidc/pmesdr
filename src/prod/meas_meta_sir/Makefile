@@ -17,8 +17,9 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
-COMPAREDIR = /projects/PMESDR/pmesdr_regression_data/201409/
-COMPARE_TOLERANCE = 0.01
+COMPAREDIR = /projects/PMESDR/pmesdr_regression_data/20150202/
+#COMPARE_TOLERANCE = 0.01 # this tolerance should work for BYU regression, 0.0 works for NSIDCsnow
+COMPARE_TOLERANCE = 0.0
 
 #
 #	commands

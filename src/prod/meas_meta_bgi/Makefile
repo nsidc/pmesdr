@@ -16,6 +16,10 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
+COMPAREDIR = /projects/PMESDR/pmesdr_regression_data/20150202/
+# this tolerance should work for BYU regression for n and t only (s is much bigger), 0.0 works for NSIDCsnow
+#COMPARE_TOLERANCE = 0.01 
+COMPARE_TOLERANCE = 0.0
 
 #
 #	commands
@@ -137,6 +141,14 @@ rss_ease :
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2t; \
 	done
+
+rss_ease_validate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2s $(TESTDIR)/bgiRSS/e2s
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2t $(TESTDIR)/bgiRSS/e2t
 
 rss_quick :
 	$(RM) $(TESTDIR)/bgiRSS/e2n
