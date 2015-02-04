@@ -49,7 +49,7 @@ gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeg
 # Janus needs to load compiler-specific modules before building
 if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
   module load slurm
-  module load anaconda
+  module load python/anaconda-2.1.0
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
     module unload $icc_netcdf
@@ -63,6 +63,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
     export LOCALE=JANUSicc
   fi
   module list
+  export PATH=~/.conda/envs/pmesdr/bin:$PATH
 elif [[ "$HOSTNAME" == "snow"* ]]; then
     export LOCALE=NSIDCsnow
     # Initialize the virtualenv that was built for running on snow
