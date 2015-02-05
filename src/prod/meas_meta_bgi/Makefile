@@ -158,6 +158,11 @@ rss_quick :
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2n; \
 	done
 
+rss_quick_valdate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
+
+
 csu_ease :
 	$(RM) $(TESTDIR)/bgiCSU/e2n
 	$(MKDIR) $(TESTDIR)/bgiCSU/e2n
