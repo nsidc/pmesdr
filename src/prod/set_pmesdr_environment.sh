@@ -40,6 +40,7 @@ export meas_home=$PMESDR_TOP_DIR
 export SIR_areas=$PMESDR_TOP_DIR/ref/locs
 export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
 export RSS_path=$PMESDR_TOP_DIR/ref
+export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/20150203
 
 # netCDF libraries are different, depending on compiler
 icc_netcdf=netcdf/netcdf4-4.3_hdf5-1.8.11_hdf4-4.2.9_szip-2.1_zlib-1.2.78_jpeglib-8d_intel-13.0.0
@@ -49,7 +50,6 @@ gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeg
 # Janus needs to load compiler-specific modules before building
 if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
   module load slurm
-  module load python/anaconda-2.1.0
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
     module unload $icc_netcdf
@@ -63,15 +63,10 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
     export LOCALE=JANUSicc
   fi
   module list
-  export PATH=~/.conda/envs/pmesdr/bin:$PATH
 elif [[ "$HOSTNAME" == "snow"* ]]; then
     export LOCALE=NSIDCsnow
-    # Initialize the virtualenv that was built for running on snow
-    . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
-elif [[ "$HOSTNAME" == "brodzik" ]]; then
+elif [[ "$HOSTNAME" == *"dev"* ]]; then
     export LOCALE=NSIDCdev
-    # Initialize the virtualenv that was built for running on snow
-    . ~brodzik/.virtual_envs/pmesdr/bin/activate
 else
     export LOCALE=BYU
 fi # endif janus
