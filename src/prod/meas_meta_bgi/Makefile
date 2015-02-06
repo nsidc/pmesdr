@@ -146,8 +146,8 @@ rss_ease :
 rss_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2s $(TESTDIR)/bgiRSS/e2s
+#	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+#		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2s $(TESTDIR)/bgiRSS/e2s
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2t $(TESTDIR)/bgiRSS/e2t
 
