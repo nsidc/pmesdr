@@ -158,7 +158,7 @@ int main(int argc, char **argv)
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
  /* define no-data values */
-  float anodata_A=100.0;
+  float anodata_A=0.0;
 
   int Nfiles_out=1;  
 
