@@ -27,6 +27,7 @@ COMPARE_TOLERANCE = 0.0
 CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
+PYTHON = python
 RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
