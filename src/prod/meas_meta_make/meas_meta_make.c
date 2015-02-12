@@ -64,8 +64,8 @@ char sirf_name[] = "meas_meta_sir";               /* SIR program path/name */
 /* function prototypes */
 
 
-int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[], 
-		     char *mname, int F_num, char *s2g);
+int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[], 
+		     char *mname, int F_num );
 
 int get_file_names(FILE *mout, int argc, int *argn, char *argv[]);
 
@@ -95,7 +95,7 @@ extern void ease2_map_info(int iopt, int isc, int ind,
 int main(int argc,char *argv[])
 {
  
-  char mname[256], line[1024], s2g[256];  
+  char mname[256], line[1024];  
   time_t tod;
   char ltime[29];
   int argn=1;
@@ -182,20 +182,8 @@ int main(int argc,char *argv[])
     jout=NULL;
   }
   
-  /* get s2g argument */
-  if (argn > argc || argv[argn] == NULL) {
-    printf("Enter s2g file name: (blank=NONE)");
-    fgets(line,sizeof(line),stdin);
-    sscanf(line,"%s",s2g);
-  } else
-    sscanf(argv[argn],"%s",s2g);
-  printf("S2G name: %s \n",s2g);
-  argn++;
-  if (strncmp(s2g,"NONE",4)==0) s2g[0]='\0';
-  if (strncmp(s2g,"none",4)==0) s2g[0]='\0';
-
   /* get rest of input region parameters and write to file */
-  get_region_parms(mout,jout,argc,&argn,argv,mname,F_num,s2g);
+  get_region_parms( mout,jout,argc,&argn,argv,mname,F_num );
 
   /* get list of input files and save to file */
   get_file_names(mout,argc,&argn,argv);
@@ -563,8 +551,8 @@ int get_prompt_larg(int argc, int *argn, char *argv[], char *prompt, int deflt)
 
 /* routine that reads the input args and generates region definitions */
 
-int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[], 
-		      char *mname, int F_num, char *s2g)
+int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[], 
+		      char *mname, int F_num )
 {
   /* define meta regions and file sections  and write to meta and job files */
 
@@ -1593,12 +1581,6 @@ int get_region_parms(FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     fprintf(jout,"  clean_setup %s >%s.clean.out\n",fname,fname);
     fprintf(jout,"  echo ""clean_setup completed""\n");
 
-    for (iregion=1; iregion<=nregions; iregion++) {
-      //fprintf(jout,"  echo ""Running sir2gif on %s""\n", name_store2(iregion));
-      //fprintf(jout,"  sir2gif -f%s %s > %s.gif_out2\n", S2G,name_store2(iregion),name_store2(iregion));
-      //fprintf(jout,"  echo ""Running sir2gif on %s""\n", name_store(iregion));
-      //fprintf(jout,"  sir2gif -f%s %s > %s.gif_out\n", S2G,name_store(iregion),name_store(iregion));
-    }
     fprintf(jout," else\n");
     fprintf(jout,"  echo ""*** job failed due to failure of one or more SIRFs""\n");
     fprintf(jout," fi\n");
