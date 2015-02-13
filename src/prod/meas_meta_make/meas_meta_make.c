@@ -72,11 +72,6 @@ int get_file_names(FILE *mout, int argc, int *argn, char *argv[]);
 
 /* declare specific map projection prototypes needed */
 
-extern void polster( float alon, float alat, float *x1, float *y1, float xlam, float slat);
-
-extern void lambert1(float lat, float lon, float *x, float *y, 
-		     float orglat, float orglon, int iopt);
-
 extern void ease2_map_info(int iopt, int isc, int ind, 
 			   double *map_equatorial_radius_m, 
 			   double *map_eccentricity, double *e2,
@@ -106,7 +101,7 @@ int main(int argc,char *argv[])
   
   printf("MEaSures Meta_Make Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
 
-  if (argc < 2) {
+  if (argc < 8) {
     printf("\nusage: %s meta_name platform start_day stop_day year def in_list\n\n",argv[0]);
     printf(" input parameters:\n");
     printf("   meta_name   = meta file output name\n");
@@ -116,6 +111,7 @@ int main(int argc,char *argv[])
     printf("   year        = year input\n");
     printf("   def         = region def file \n");
     printf("   in_list     = name of input file containing list of swath files\n\n");
+    exit (-1);
   }
 
   /* get local time/date */
@@ -123,22 +119,12 @@ int main(int argc,char *argv[])
   (void) strftime(ltime,28,"%X %x",localtime(&tod));
 
   /* get meta file name */
-  if (argn > argc || argv[argn] == NULL) {
-    printf("Enter output meta file name:");
-    fgets(line,sizeof(line),stdin);
-    sscanf(line,"%s",mname);
-  } else
-    sscanf(argv[argn],"%s",mname);
+  sscanf(argv[argn],"%s",mname);
   printf("\nMetafile name: %s \n",mname);
   argn++;  
 
   /* get satellite number */
-  if (argn > argc || argv[argn] == NULL) {
-    printf("Enter platform name or number: (e.g. SSMI F13) ");
-    fgets(line,sizeof(line),stdin);
-    sscanf(line,"%s",platform);
-  } else
-    sscanf(argv[argn],"%s",platform);
+  sscanf(argv[argn],"%s",platform);
   argn++;
   /* decode platform number */
   sscanf(platform,"SSMI F%2d",&F_num);
@@ -283,151 +269,6 @@ void getregdata(int regnum, int *iproj, int *dateline, float *latl, float *lonl,
 
   fclose(rid);
   return;  
-}
-
-
-void section_pixels(int isection, int *ix, int *iy, int nsect, int nt, float alpha, 
-		    int nsx, int nsy, int non_size, int *nsx2,int *nsy2,
-		    int *ix1, int *iy1, int *ix2, int *iy2, 
-		    int *jx1, int *jy1, int *jx2, int *jy2)
-{
-  /*
-       computes the pixel locations of sectioned images
-
-       inputs:
-        isection: section number (1...nsect)
-        nsect:    number of sections (valid values: 1,2,3,4,6,8,9,12,15,16,18,20)
-        nt:       sectioning code (0=vertical orientation,1=horizontal)
-        alpha:    overlap ratio
-        nsx,nsy:  image size in pixels
-        non_size: number of grid pixels/image pixel
-
-       outputs:
-        ix,iy:    lower-left corner of the isection'th image
-        nsx2,nsy2: image size for isection'th image
-        ix1..iy2: lower-left,upper right corner of useful pixels of section
-        jx1..jy2: lower-left,upper right corner of section in final image
-  */
-  int nx,ny,n;
-  int inx,iny,nx1,ny1,nay,nax;
-
-  *ix=1;
-  *iy=1;
-  *ix1=1;			/* section pixel range */
-  *iy1=1;
-  *ix2=nsx;
-  *iy2=nsy;
-  *jx1=1;			/* destination pixel range */
-  *jy1=1;
-  *jx2=nsx;
-  *jy2=nsy;
-  *nsx2=nsx;
-  *nsy2=nsy;
-  if (nsect == 1) return;
-
-
-  /* based on sectioning code, determine the dimensions of the image sectioning */
-  if (nsect == 2) {
-    nx=1;
-    ny=2;
-  } else if (nsect == 3) {
-    nx=1;
-    ny=3;
-  } else if (nsect == 4) {
-    nx=2;
-    ny=2;
-  } else if (nsect == 6) {
-    nx=2;
-    ny=3;
-  } else if (nsect == 8) {
-    nx=2;
-    ny=4;
-  } else if (nsect == 9) {
-    nx=3;
-    ny=3;
-  } else if (nsect == 12) {
-    nx=3;
-    ny=4;
-  } else if (nsect == 15) {
-    nx=3;
-    ny=5;
-  } else if (nsect == 16) {
-    nx=4;
-    ny=4;
-  } else if (nsect == 18) {
-    nx=6;
-    ny=3;
-  } else if (nsect == 20) {
-    nx=4;
-    ny=5;
-  } else {
-    printf("*** ERROR: invalid number of sections %d\n",nsect);
-    nsect=1;
-    return;
-  }
-
-  if (isection > nsect) {
-    printf("*** ERROR: invalid sectioning %d\n",isection,nsect);
-    return;
-  }
-
-  if (nt==1) { /* horizontal orientaion rather than vertical */
-    n=nx;
-    nx=ny;
-    ny=n;
-  }
-
-  inx=((isection-1) % nx)+1;
-  iny=((isection-1) / nx)+1;
-  
-  ny1=nsy/ny;
-  if (non_size*(ny1/non_size) != ny1) 
-    ny1=non_size*(1+ny1/non_size);
-  nay=alpha*nsy;
-  nay=non_size*(nay/non_size);
-
-  if (nx >1) {
-    nx1=nsx/nx;
-    if (non_size*(nx1/non_size) < nx1) 
-      nx1=non_size*(1+nx1/non_size);
-    if (nx*nx1 < nsx) 
-      nx1=nx1+non_size;
-    n=alpha*nsx;
-    nax=non_size*(n/non_size);
-    if (nax < n)
-      nax=nax+non_size;
-    *nsx2=nx1+nax;
-    if (inx != 1 && inx != nx) 
-      *nsx2=*nsx2+nax;
-    *jx1=(inx-1)*nx1+1;
-    *jx2=min(inx*nx1,nsx);
-    *ix1=nax+1;
-    if (inx==1) *ix1=1;
-    *ix=*jx1-*ix1+1;
-    *ix2=*ix1+nx1-1;
-  }
-
-  if (ny > 1) {
-    ny1=nsy/ny;
-    if (non_size*(ny1/non_size) < ny1)
-      ny1=non_size*(1+ny1/non_size);
-    if (ny*ny1 < nsy)
-      ny1=ny1+non_size;
-    n=alpha*nsy;
-    nay=non_size*(n/non_size);
-   if (nay < n)
-     nay=nay+non_size;
-   *nsy2=ny1+nay;
-   if (iny != 1 && iny != ny) 
-     *nsy2=*nsy2+nay;
-   *jy1=(iny-1)*ny1+1;
-   *jy2=min(iny*ny1,nsy);
-   *iy1=nay+1;
-   if (iny == 1) *iy1=1;
-   *iy=*jy1-*iy1+1;
-   *iy2=*iy1+ny1-1;
-  }
-  return;
 }
 
 /* utility routines */
@@ -616,8 +457,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     strncpy(regname,"Custom",10);
     if (regnum > 0) { /* use region definition from standard region definition file */
       getregdata(regnum,&iproj,&dateline,&latl,&lonl,&lath,&lonh,regname);
-      if (regnum >= 100 && regnum < 110) poleflag=2; /* south pole regions */
-      if (regnum >= 110 && regnum < 120) poleflag=1; /* north pole regions */
       if (((regnum >= 0) && (regnum < 100)) || (regnum >= 120)) poleflag=0; /* non-polar area */
       printf("Region name: '%s'  Def Proj %d  Dateline %d\n",regname,iproj,dateline);
     } else {
@@ -674,11 +513,7 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     case  8:  /* ease2 grid N */
     case  9:  /* ease2 grid S */
     case 10:  /* ease2 grid T */
-      if (pfile) {
-	fscanf(pid,"%d",&nease);
-      } else {
-	nease=get_prompt_iarg(argc,argn,argv,"Enter EASE grid resolution factor: (0..5) ",4);
-      }
+      fscanf(pid,"%d",&nease);
       /* projt=regnum-300; */  /* for standard projection coding in putsir */
 
       /* define projection parameters for particular EASE2 case */
@@ -704,135 +539,23 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       aorglat=ydeg;
       break;
 
-    case 11:  /* ease grid north */
-    case 12:  /* ease grid south */
-    case 13:  /* ease grid cylindrical */
-      fscanf(pid,"%d",&nease);
-      projt=regnum-300;  /* for standard projection coding in putsir */
-
-      switch(projt) {
-      case 11:  /* ease grid north */
-	nsx=720*powf(2., (4-nease))+1;
-	nsy=720*powf(2., (4-nease))+1;
-	ascale=2.0 * (double) 6371.228/((double) 25.067525*pow((double)2.0,(nease-4)));
-	bscale=(double) 25.067525*pow((double) 2.0, (nease-4));
-	xdeg=360.0*powf(2., (4-nease));
-	ydeg=360.0*powf(2., (4-nease));
-	a0=-xdeg;
-	b0=-ydeg;
-	xdim = 10*nint((nsx/ascale+10.)/10.);
-	ydim = 10*nint((nsy/bscale+10.)/10.);
-	aorglon=xdeg;
-	aorglat=ydeg;
-	break;
-
-      case 12:  /* ease grid south */
-	nsx=720*powf(2., (4-nease))+1;
-	nsy=720*powf(2., (4-nease))+1;
-	ascale=2.0*(double)6371.228/((double)25.067525*pow((double)2.0,(nease-4)));
-	bscale=(double)25.067525*pow((double)2.0,(nease-4));
-	xdeg=360.0*powf(2., (4-nease));
-	ydeg=360.0*powf(2., (4-nease));
-	a0=-xdeg;
-	b0=-ydeg;
-	xdim = 10*nint((nsx/ascale+10.)/10.);
-	ydim = 10*nint((nsy/bscale+10.)/10.);
-	aorglon=xdeg;
-	aorglat=ydeg;
-	break;
-
-      case 13:  /* ease grid cylindrical */
-	nsx=1382*powf(2.,(4-nease))+1;
-	nsy= 586*powf(2.,(4-nease));
-	ascale=(double)6371.228/((double)25.067525*pow((double)2.0,(nease-4)));
-	bscale=(double) 25.067525*pow((double) 2.0, (nease-4));
-	xdeg=691.0*powf(2.,(4-nease));
-	ydeg=292.5*powf(2.,(4-nease));
-	a0=-xdeg;
-	b0=-ydeg;
-	xdim = 10*nint((nsx/ascale+10.)/10.);
-	ydim = 10*nint((nsy/bscale+10.)/10.);
-	aorglon=xdeg;
-	aorglat=ydeg;
-	break;
-
-      default: /* should not occur! */
-	break;	
-      }
-      break;
-      
     default:
       fprintf(stderr,"*** Error selecting projection type %d ***\n", projt);
       exit(-1);      
-      break;
     }
   
-    /* make map dimensions an even integer divisible by both the
-       grid size and sectioning write */
-  
-    if (projt != 0 && projt < 8) {      
-      printf("Region geometry (in km): (raw computations)  proj=%d\n",projt);
-      printf("  upper-most y %f\n",umosty);
-      printf("  lower-most y %f\n",lmosty);
-      printf("  right-most x %f\n",rmostx);
-      printf("  left-most  x %f\n",lmostx);
-    }
-    
-    if (projt < 8) {  /* don't need this code section for EASE1/2 */
-      temp = (lmostx-100.)/100.;
-      lmostx = nint(temp)*100.;
-      temp = (rmostx+100.)/100.;
-      rmostx = nint(temp)*100.;
-      temp = (lmosty-100.)/100.;
-      lmosty = nint(temp)*100.;
-      temp = (umosty+100.)/100.;
-      umosty = nint(temp)*100.;
-      if (projt != 0) {      
-	printf("Region geometry (in km): (after smoothed dimensioning)\n");
-	printf("  upper-most y %f\n",umosty);
-	printf("  lower-most y %f\n",lmosty);
-	printf("  right-most x %f\n",rmostx);
-	printf("  left-most  x %f\n",lmostx);
-	/* lower left corner */
-	a0 = lmostx;
-	b0 = lmosty;
-	/* image dimensions */
-	xdim = abs(lmostx)+abs(rmostx);
-	ydim = abs(lmosty)+abs(umosty);
-	/* pixel size */
-	if ((projt==1)||(projt==2)) {
-	  nsy = 10*nint((ydim*bscale+10.)/10.);
-	  nsx = 10*nint((xdim*ascale+10.)/10.);
-	} else if (projt == 5) {
-	  nsy = 10*nint((ydim/bscale+10.)/10.);
-	  nsx = 10*nint((ydim/ascale+10.)/10.);
-	}
-	/* origin */
-	xdeg=aorglon;
-	ydeg=aorglat;
-      }
-    }
-      
     /* land/sea flag */
     toil=3;    /* flags not used */
     fprintf(mout,"  Toil_flag=%2d\n",toil);
   
     /* select ascending/descending data */
     iasc=0;
-    if (pfile) {
-      fscanf(pid,"%d",&iasc);
-    } else {
-      iasc=get_prompt_iarg(argc,argn,argv,"Enter AscDesc flag (0=all,1=asc,2=dsc,3=morn,4=eve)",0);
-    }
+    fscanf(pid,"%d",&iasc);
     printf("Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) %d\n",iasc);
     fprintf(mout,"  AscDesc_flag=%2d\n",iasc);
 
     /* SSM/I SPECIAL: select beam [channel] (selects frequency and polarization for SSMI) */
-    if (pfile) {
-      fscanf(pid,"%d",&ibeam);
-    } else {
-      ibeam=get_prompt_iarg(argc,argn,argv,"Select beam (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H) ",4);
-    }
+    fscanf(pid,"%d",&ibeam);
     printf("Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): %d\n",ibeam);
     ipolar=0;   /* h pol */
     if (ibeam==1 || ibeam==3 || ibeam==4 || ibeam==6) ipolar=1; /* v pol */
@@ -846,18 +569,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 
     /* SSM/I SPECIAL: reset projection size to coarser for lower resolution beams */
     if (ibeam < 6) {
-      if (projt==1 || projt==2) {  /* lambert */
-	ascale = 1./8.9;    /* 8.9 km/pixel (ers-1) */
-	bscale=ascale;
-	nsy = 10*nint((ydim*bscale+10.)/10.);
-	nsx = 10*nint((xdim*ascale+10.)/10.);
-      }
-      if (projt==5) {              /* polar stereographic */
-	ascale=8.9;
-	bscale=ascale;
-	nsy = 10*nint((ydim/bscale+10.)/10.);
-	nsx = 10*nint((ydim/ascale+10.)/10.);
-      }
       if (projt==8 || projt==9 || projt==10) { /* EASE2 */
 	printf("Resizing for low channel number %d\n",ibeam);	
 	ascale=ascale-1;
@@ -894,11 +605,7 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 
     /* optionally section region in to smaller images for processing.  They will be recombined later */
     nsection=0;
-    if (pfile) {
-      fscanf(pid,"%d",&nsection);
-    } else {
-      nsection=get_prompt_iarg(argc,argn,argv,"Enter number of sections/pattern parameter (0=no sectioning) ",1);
-    }
+    fscanf(pid,"%d",&nsection);
     if (nsection==1) nsection=0;
     printf("Sectioning code: %d\n",nsection);
     fprintf(mout,"  Sectioning_code=%d\n",nsection);
@@ -922,87 +629,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       fprintf(mout,"  Begin_section_description\n");
       fprintf(mout,"  Section_id=%d\n",isection);
 
-      if (isection > 0) {
-	/* recompute projection information based on sectioning */
-	ascale=ascale_s;
-	bscale=bscale_s;
-	a0=a0_s;
-	b0=b0_s;
-	xdeg=xdeg_s;
-	ydeg=ydeg_s;
-	nsx=nsx_s;
-	nsy=nsy_s;
-
-	/* compute pixel locations for sectioning */
-	section_pixels(isection, &ix, &iy, nsect, nt, 0.1, nsx, nsy, non_size,
-		       &nsx2, &nsy2, &ix1, &iy1,  &ix2,  &iy2, &jx1, &jy1,  &jx2,  &jy2);
-
-	/* compute section projection info */
-	switch(projt) {
-	case 0: /* lat/lon */
-	  a02=(ix-1)*xdim/(float)nsx+a0;
-	  b02=(iy-1)*ydim/(float)nsy+b0;
-	  xdeg2=(float)nsx2*xdeg/(float)nsx;
-	  ydeg2=(float)nsy2*ydeg/(float)nsy;
-	  ascale2=xdeg2/(float)nsx2;
-	  bscale2=ydeg2/(float)nsy2;
-	  break;
-
-	case 1: /* lambert */
-	case 2:
-	  a02=(ix-1)/ascale+a0;
-	  b02=(iy-1)/bscale+b0;
-	  xdeg2=xdeg;
-	  ydeg2=ydeg;
-	  ascale2=ascale;
-	  bscale2=bscale;
-	  break;
-
-	case 5: /* polar ster */
-	  a02=(ix-1)*ascale+a0;
-	  b02=(iy-1)*bscale+b0;
-	  xdeg2=xdeg;
-	  ydeg2=ydeg;
-	  ascale2=ascale;
-	  bscale2=bscale;
-	  break;
-
-	case  8: /* ease2 grid */
-	case  9:
-	case 10:
-	  a02=a0+(ix-1.0);
-	  b02=b0+(iy-1.0);
-	  xdeg2=xdeg;
-	  ydeg2=ydeg;
-	  ascale2=ascale;
-	  bscale2=bscale;
-	  break;
-
-	case 11: /* ease1 grid */
-	case 12:
-	case 13:
-	  a02=a0+(ix-1.0);
-	  b02=b0+(iy-1.0);
-	  xdeg2=xdeg;
-	  ydeg2=ydeg;
-	  ascale2=ascale;
-	  bscale2=bscale;
-	  break;
-	}
-
-	aorglon=xdeg2;
-	aorglat=ydeg2;
-	nsx=nsx2;
-	nsy=nsy2;
-	a0=a02;
-	b0=b02;
-	xdim=nsx/ascale;
-	ydim=nsy/bscale;
-	if (projt==5) {
-	  xdim=nsx*ascale;
-	  ydim=nsy*bscale;
-	}
-      }
 
       printf("\nSectioning: (x,y) %d %d\n",isection,nsect);
 
@@ -1018,8 +644,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       fprintf(mout,"   Projection_dim_y=%d\n",ydim);
       fprintf(mout,"   Image_size_x=%d\n", nsx);
       fprintf(mout,"   Image_size_y=%d\n", nsy);
-      if (isection > 0)
-	fprintf(mout,"   Section_loc_pixels=%d %d %d %d %d %d %d %d\n",ix1,iy1,ix2,iy2,jx1,jy1,jx2,jy2);
 
       /* generate parameters for non-enhanced gridded images */
       nsx2=nsx/non_size;
@@ -1028,17 +652,8 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 	fprintf(stderr,"*** WARNING: non grid size %d ' does not evenly divide image size %d %d\n",non_size,nsx,nsy);
       ascale2=ascale;
       bscale2=bscale;
-      if (projt==0||projt==1|| projt==2) {/* rect, lambert */
-	ascale2=ascale/non_size;
-	bscale2=bscale/non_size;
-      } else if (projt==5) { /* polar stereographic */
-	ascale2=ascale*non_size;
-	bscale2=bscale*non_size;
-      } else if (projt==8 || projt==9 || projt==10) { /* EASE2 */
+      if (projt==8 || projt==9 || projt==10) { /* EASE2 */
 	ascale2=ascale-2;
-      } else if (projt==11 || projt==12 || projt==13) { /* EASE1 */
-	ascale2=ascale/4;
-	bscale2=bscale/4;
       } else {
 	nsx2=nsx;
 	nsy2=nsy;
@@ -1067,65 +682,9 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       fprintf(mout,"   Grid_projection_offset_y=%16.9f\n", b0);
       fprintf(mout,"   Grid_projection_scale_x=%16.9f\n", ascale2);
       fprintf(mout,"   Grid_projection_scale_y=%16.9f\n", bscale2);
-      if (isection>0)
-	fprintf(mout,"   Section_grd_pixels=%d %d %d %d %d %d %d %d\n", ix1g,iy1g,ix2g,iy2g,jx1g,jy1g,jx2g,jy2g);
 	      
       /* for this region, generate standard product data file names abreviation */
       switch(regnum) {
-      case 100:
-	strncpy(reg,"Ant",4);
-	break;
-      case 110:
-	strncpy(reg,"Arc",4);
-	break;
-      case 112:
-	strncpy(reg,"NHe",4);
-	break;
-      case 202:
-	strncpy(reg,"Grn",4);
-	break;
-      case 203:
-	strncpy(reg,"Ala",4);
-	break;
-      case 204:
-	strncpy(reg,"CAm",4);
-	break;
-      case 205:
-	strncpy(reg,"NAm",4);
-	break;
-      case 206:
-	strncpy(reg,"SAm",4);
-	break;
-      case 207:
-	strncpy(reg,"NAf",4);
-	break;
-      case 208:
-	strncpy(reg,"SAf",4);
-	break;
-      case 209:
-	strncpy(reg,"Sib",4);
-	break;
-      case 210:
-	strncpy(reg,"Eur",4);
-	break;
-      case 211:
-	strncpy(reg,"SAs",4);
-	break;
-      case 212:
-	strncpy(reg,"ChJ",4);
-	break;
-      case 213:
-	strncpy(reg,"Ind",4);
-	break;
-      case 214:
-	strncpy(reg,"Aus",4);
-	break;
-      case 256:
-	strncpy(reg,"Ber",4);
-	break;
-      case 307:
-	strncpy(reg,"E2M",4);
-	break;
       case 308:
 	strncpy(reg,"E2N",4);
 	break;
@@ -1134,15 +693,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 	break;
       case 310:
 	strncpy(reg,"E2T",4);
-	break;
-      case 311:
-	strncpy(reg,"EaN",4);
-	break;
-      case 312:
-	strncpy(reg,"EaS",4);
-	break;
-      case 313:
-	strncpy(reg,"EsG",4);
 	break;
       default:
 	strncpy(reg,regname,3);
@@ -1157,9 +707,7 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 	tsplit1=0.0;
 	tsplit2=12.0;
 	/* southern hemisphere, use slightly different numbers */
-	if (regnum==100 || regnum == 206 || /* Ant, SAm */
-	    regnum==208 || regnum == 214 || /* SAf, Aus */
-	    regnum==213 || regnum == 309)  { /* Ind, E2S */
+	if ( regnum == 309 )  { /* E2S */
 	  tsplit1=0.0;
 	  tsplit2=12.0;
 	}
@@ -1187,111 +735,88 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 	if (iasc==5) cpol='n'; /* noon/night */
       }
 
-      if (isection > 0){ /* subsection names */
-	sprintf(setname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend,nsection,isection);
-	sprintf(lisname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.lis",sen,cegg,chan,cpol,reg,iy,dstart,dend,nsection,isection);
-	sprintf(a_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(b_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(i_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(j_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(c_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(p_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(v_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(e_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'E',reg,iy,dstart,dend,nsection,isection,"sir");
-	sprintf(aa_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"ave");
-	sprintf(bb_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"ave");
-	sprintf(non_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"non");
-	sprintf(non_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"non");
-	sprintf(non_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,nsection,isection,"non");
-	sprintf(grd_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_iname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_jname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_cname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,nsection,isection,"grd");
-	sprintf(grd_pname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d-s%0.3d-%0.2d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,nsection,isection,"grd");
-      } else { /* section names */
-	sprintf(setname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend);
-	sprintf(lisname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.lis",sen,cegg,chan,cpol,reg,iy,dstart,dend);
-	sprintf(a_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"sir");
-	sprintf(b_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"sir");
-	sprintf(i_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"sir");
-	sprintf(j_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"sir");
-	sprintf(c_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"sir");
-	sprintf(p_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"sir");
-	sprintf(v_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"sir");
-	sprintf(e_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'E',reg,iy,dstart,dend,"sir");
-	sprintf(aa_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"ave");
-	sprintf(bb_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"ave");
-	sprintf(non_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"non");
-	sprintf(non_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"non");
-	sprintf(non_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"non");
-	sprintf(grd_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"grd");
-	sprintf(grd_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"grd");
-	sprintf(grd_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"grd");
-	sprintf(grd_iname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"grd");
-	sprintf(grd_jname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"grd");
-	sprintf(grd_cname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"grd");
-	sprintf(grd_pname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"grd");
-      }
-
+     /* section names */
+      sprintf(setname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend);
+      sprintf(lisname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.lis",sen,cegg,chan,cpol,reg,iy,dstart,dend);
+      sprintf(a_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"sir");
+      sprintf(b_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"sir");
+      sprintf(i_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"sir");
+      sprintf(j_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"sir");
+      sprintf(c_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"sir");
+      sprintf(p_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"sir");
+      sprintf(v_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"sir");
+      sprintf(e_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'E',reg,iy,dstart,dend,"sir");
+      sprintf(aa_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"ave");
+      sprintf(bb_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"ave");
+      sprintf(non_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"non");
+      sprintf(non_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"non");
+      sprintf(non_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"non");
+      sprintf(grd_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"grd");
+      sprintf(grd_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"grd");
+      sprintf(grd_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"grd");
+      sprintf(grd_iname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"grd");
+      sprintf(grd_jname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"grd");
+      sprintf(grd_cname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"grd");
+      sprintf(grd_pname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"grd");
+      
       /* save *-a-*.sir, .ave names for job script */
       //name_store(iregion)=a_name;      
       //name_store2(iregion)=aa_name;
-      
+    
       /* write out product names to meta file */
-      printf("Output setup file:%s\n",setname);
-      printf("Output A file:    %s\n",a_name);
-      //printf("Output B file:    %s\n",b_name(1:length(b_name)));
-      printf("Output C file:    %s\n",c_name);
-      printf("Output I file:    %s\n",i_name);
-      printf("Output J file:    %s\n",j_name);
-      printf("Output P file:    %s\n",p_name);
-      printf("Output E file:    %s\n",e_name);
-      printf("Output V file:    %s\n",v_name);
-      printf("Output A ave file:%s\n",aa_name);
+    printf("Output setup file:%s\n",setname);
+    printf("Output A file:    %s\n",a_name);
+    //printf("Output B file:    %s\n",b_name(1:length(b_name)));
+    printf("Output C file:    %s\n",c_name);
+    printf("Output I file:    %s\n",i_name);
+    printf("Output J file:    %s\n",j_name);
+    printf("Output P file:    %s\n",p_name);
+    printf("Output E file:    %s\n",e_name);
+    printf("Output V file:    %s\n",v_name);
+    printf("Output A ave file:%s\n",aa_name);
       //printf("Output B ave file:%s\n",bb_name);
-      printf("Output A non file:%s\n",non_aname);
+    printf("Output A non file:%s\n",non_aname);
       //printf("Output B non file:%s\n",non_bname);
-      printf("Output V non file:%s\n",non_vname);
-      printf("Output A grd file:%s\n",grd_aname);
+    printf("Output V non file:%s\n",non_vname);
+    printf("Output A grd file:%s\n",grd_aname);
       //printf("Output B grd file:%s\n",grd_bname);
-      printf("Output V grd file:%s\n",grd_vname);
-      printf("Output I grd file:%s\n",grd_iname);
-      printf("Output J grd file:%s\n",grd_jname);
-      printf("Output C grd file:%s\n",grd_cname);
-      printf("Output P grd file:%s\n",grd_pname);
-      printf("Output lis file:  %s\n",lisname);
+    printf("Output V grd file:%s\n",grd_vname);
+    printf("Output I grd file:%s\n",grd_iname);
+    printf("Output J grd file:%s\n",grd_jname);
+    printf("Output C grd file:%s\n",grd_cname);
+    printf("Output P grd file:%s\n",grd_pname);
+    printf("Output lis file:  %s\n",lisname);
 
-      fprintf(mout,"  Setup_file=%s\n",setname);
-      fprintf(mout,"  Begin_product_file_names\n");
-      fprintf(mout,"   SIRF_A_file=%s\n",a_name);
+    fprintf(mout,"  Setup_file=%s\n",setname);
+    fprintf(mout,"  Begin_product_file_names\n");
+    fprintf(mout,"   SIRF_A_file=%s\n",a_name);
       //fprintf(mout,"   SIRF_B_file=%s\n",b_name);
-      fprintf(mout,"   SIRF_C_file=%s\n",c_name);
-      fprintf(mout,"   SIRF_I_file=%s\n",i_name);
-      fprintf(mout,"   SIRF_J_file=%s\n",j_name);
-      fprintf(mout,"   SIRF_E_file=%s\n",e_name);
-      fprintf(mout,"   SIRF_V_file=%s\n",v_name);
-      fprintf(mout,"   SIRF_P_file=%s\n",p_name);
-      fprintf(mout,"   AVE_A_file=%s\n",aa_name);
+    fprintf(mout,"   SIRF_C_file=%s\n",c_name);
+    fprintf(mout,"   SIRF_I_file=%s\n",i_name);
+    fprintf(mout,"   SIRF_J_file=%s\n",j_name);
+    fprintf(mout,"   SIRF_E_file=%s\n",e_name);
+    fprintf(mout,"   SIRF_V_file=%s\n",v_name);
+    fprintf(mout,"   SIRF_P_file=%s\n",p_name);
+    fprintf(mout,"   AVE_A_file=%s\n",aa_name);
       //fprintf(mout,"   AVE_B_file=%s\n",bb_name);
-      fprintf(mout,"   GRD_A_file=%s\n",grd_aname);
+    fprintf(mout,"   GRD_A_file=%s\n",grd_aname);
       //fprintf(mout,"   GRD_B_file=%s\n",grd_bname);
-      fprintf(mout,"   GRD_V_file=%s\n",grd_vname);
-      fprintf(mout,"   GRD_I_file=%s\n",grd_iname);
-      fprintf(mout,"   GRD_J_file=%s\n",grd_jname);
-      fprintf(mout,"   GRD_C_file=%s\n",grd_cname);
-      fprintf(mout,"   GRD_P_file=%s\n",grd_pname);
-      fprintf(mout,"   NON_A_file=%s\n",non_aname);
+    fprintf(mout,"   GRD_V_file=%s\n",grd_vname);
+    fprintf(mout,"   GRD_I_file=%s\n",grd_iname);
+    fprintf(mout,"   GRD_J_file=%s\n",grd_jname);
+    fprintf(mout,"   GRD_C_file=%s\n",grd_cname);
+    fprintf(mout,"   GRD_P_file=%s\n",grd_pname);
+    fprintf(mout,"   NON_A_file=%s\n",non_aname);
       //fprintf(mout,"   NON_B_file=%s\n",non_bname);
-      fprintf(mout,"   NON_V_file=%s\n",non_vname);
-      fprintf(mout,"   Info_file=%s\n",lisname);
-      fprintf(mout,"  End_product_file_names\n");
+    fprintf(mout,"   NON_V_file=%s\n",non_vname);
+    fprintf(mout,"   Info_file=%s\n",lisname);
+    fprintf(mout,"  End_product_file_names\n");
 
       /* add SIRF commands to job script */
-      fprintf(mout," End_section_description\n");
-      ircnt++;
-    }   /* end section loop */
+    fprintf(mout," End_section_description\n");
+    ircnt++;
+    }
+    /* end section loop */
 
     fprintf(mout," End_region_description\n");
   }      /* end region loop */
