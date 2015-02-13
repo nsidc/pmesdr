@@ -563,8 +563,10 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     fprintf(mout,"  Beam_index=%d\n", ibeam);
 
     /* SSM/I SPECIAL:set number of iterations based on channel number */
-    nits=20;
-    if (ibeam>=4) nits=30;
+    /* read number iterations from .def file */
+    fscanf( pid, "%d", &nits );
+    //    nits=20;
+    // if (ibeam>=4) nits=30;
     fprintf(mout," Max_iterations=%d\n", nits);
 
     /* SSM/I SPECIAL: reset projection size to coarser for lower resolution beams */
@@ -605,8 +607,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 
     /* optionally section region in to smaller images for processing.  They will be recombined later */
     nsection=0;
-    fscanf(pid,"%d",&nsection);
-    if (nsection==1) nsection=0;
     printf("Sectioning code: %d\n",nsection);
     fprintf(mout,"  Sectioning_code=%d\n",nsection);
     if (nsection > 0) sections=TRUE;
