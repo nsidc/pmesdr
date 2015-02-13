@@ -17,11 +17,11 @@ region id number for region 1 (308,309,310)
 EASE grid resolution factor for region 1 (1,2)
 asc/desc/LTOD flag for region 1 (0=all,1=asc,2=dsc,3=morn,4=eve)
 beam number for region 1 (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H)
-sectioning parameter for region 1 (0=no sectioning)
+number of SIR iterations for this channel
 region id number for region 2 (308,309,310)
 EASE grid resolution factor for region 2 (1,2)
 asc/desc/LTOD flag for region 2 (0=all,1=asc,2=dsc,3=morn,4=eve)
 beam number for region 2 (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H)
-sectioning parameter for region 2 (0=no sectioning)
+number of SIR iterations for this channel
 ...
 0 (end of file flag)
