@@ -553,7 +553,7 @@ int main(int argc, char **argv)
            if not, new values will be stored over old values */
 
 	keep=0;
-	if (tbval < 340.0 && tbval > 50.0) { 
+	if (tbval < 350.0 && tbval > 50.0) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
