@@ -772,10 +772,11 @@ int main(int argc, char **argv)
 	for (i=1; i <= m; i++)
 	  sum = sum + work[i] * tb2[i];
 	a_val[its] = sum;
-	/*	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
+	/* set data to 600.0 if it is OOR */
+       	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
 	  a_val[its] = 600.0;
 	}
-	*/
+	
 	/*
 	printf("one %d %d  %f %f %f\n",its,m,sum,value1,value2);
 	for (i=1; i <= m; i++)
