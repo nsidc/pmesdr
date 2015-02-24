@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 # set_pmesdr_environment.sh
 #
-# usage: set_pmesdr_environment.sh or set_pmesdr_environment.sh -c gcc
-#   Sets environment up for gcc compiler
-# usage: set_pmesdr_environment.sh -c icc
-#   Sets environment up for icc (Intel supercomputer) compiler
+# usage: set_pmesdr_environment.sh or set_pmesdr_environment.sh [-a][-c gcc]
+#   -a : For janus gcc compiler only, load anaconda python (default is do not load)
+#   -c gcc : Sets environment up for gcc compiler
+#   -c icc : Sets environment up for icc compiler
 #
 #  This script is used by sourcing it ". /this/script/location/set_pmesdr_environment.sh"
 #  By doing this, you set up the environment necessary for building and running the
@@ -19,11 +19,15 @@
 
 # Parse command line
 compiler=gcc
-set -- $(getopt c: "$@")
+do_anaconda=0
+set -- $(getopt ac: "$@")
 while [ $# -gt 0 ]
 do
     case "$1" in
-    (-c) compiler="$2";;
+    (-c)
+	    compiler="$2";;
+    (-a)
+	    do_anaconda=1;;
     (*) break;;
     esac
     shift
@@ -49,22 +53,33 @@ gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeg
 # Determine the LOCALE, a function of host and compiler.
 # Janus needs to load compiler-specific modules before building
 if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
+    
   module load slurm
-  module load python/anaconda-2.1.0
+  
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
     module unload $icc_netcdf
     module load $gcc_netcdf
     export LOCALE=JANUSgcc
+    if [[ $do_anaconda == 1 ]]; then
+	module load python/anaconda-2.1.0
+	export PATH=~/.conda/envs/pmesdr/bin:$PATH
+    else
+	module unload python/anaconda-2.1.0
+    fi
   fi
+  
   if [[ "$compiler" == "icc" ]]; then
     echo "Setting netcdf for the icc compiler"
+    module load python/anaconda-2.1.0
     module unload $gcc_netcdf
     module load $icc_netcdf
     export LOCALE=JANUSicc
+    export PATH=~/.conda/envs/pmesdr/bin:$PATH
   fi
+  
   module list
-  export PATH=~/.conda/envs/pmesdr/bin:$PATH
+  
 elif [[ "$HOSTNAME" == "snow"* ]]; then
     export LOCALE=NSIDCsnow
     # Initialize the virtualenv that was built for running on snow
