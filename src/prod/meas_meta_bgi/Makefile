@@ -20,6 +20,9 @@ COMPAREDIR = $(PMESDR_REGRESS_DIR)
 # this tolerance should work for BYU regression for n and t only (s is much bigger), 0.0 works for NSIDCsnow
 #COMPARE_TOLERANCE = 0.01 
 COMPARE_TOLERANCE = 0.0
+EXCLUDE_OOR = -e
+# this excludes out of range data from the comparison and is needed to "smooth" the transition to a single
+#   bad value for bgi out-of-range data - that value is currently set to 600.0
 
 #
 #	commands
@@ -27,6 +30,7 @@ COMPARE_TOLERANCE = 0.0
 CC = gcc
 INSTALL = cp -f -p
 MKDIR = mkdir -p
+PYTHON = python
 RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
@@ -143,11 +147,11 @@ rss_ease :
 	done
 
 rss_ease_validate :
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
 		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
 		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2s $(TESTDIR)/bgiRSS/e2s
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
 		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiRSS/e2t $(TESTDIR)/bgiRSS/e2t
 
 rss_quick :
@@ -157,6 +161,11 @@ rss_quick :
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2n; \
 	done
+
+rss_quick_validate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
+
 
 csu_ease :
 	$(RM) $(TESTDIR)/bgiCSU/e2n

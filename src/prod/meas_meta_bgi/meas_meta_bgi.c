@@ -58,7 +58,7 @@ int   HS=20;                  /* measurement headersize in bytes */
 
 /* the following BG parameters are subjectively set */
 
-double bgi_gamma=2.6703282559;    /*0.85*3.141562654;/* default BGI gamma parameter */
+double bgi_gamma=2.6703537554;    /*0.85*3.1415926535;/* default BGI gamma parameter */
 float delta2=1.0;                 /* default BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor (fixed)*/
 float ithres=0.125;               /* default minimum gain threshold */
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
  /* define no-data values */
-  float anodata_A=100.0;
+  float anodata_A=0.0;
 
   int Nfiles_out=1;  
 
@@ -177,7 +177,6 @@ int main(int argc, char **argv)
   char inter_name[250];
   int ncid, ncerr;
 
-  int storage = 0;
   long head_len;
   int errors = 0;
 
@@ -196,7 +195,7 @@ int main(int argc, char **argv)
 
   printf("BYU SSM/I meta BG program: C version %f\n",VERSION);
 
-  if (argc < 2) {
+  if (argc < 3) {
     printf("\nusage: %s setup_in outpath gamma delta2 ithres\n\n",argv[0]);
     printf(" input parameters:\n");
     printf("   setup_in = input setup file\n");
@@ -204,7 +203,7 @@ int main(int argc, char **argv)
     printf("   gamma    = BGI gamma parameter\n");
     printf("   delta2   = BGI delta2 (noise variance)\n");
     printf("   ithres   = gain threshold (in normal space)\n");
-    return(0);
+    return(-1);
   }
   file_in=argv[1];
 
@@ -222,18 +221,6 @@ int main(int argc, char **argv)
   if (argc > 5) sscanf(argv[5],"%f",&ithres);
 
   printf("BGI options: omega=%f gamma=%f delta2=%f gain thres=%f\n",omega, bgi_gamma, delta2, ithres);
-
-  /* storage MUST be in ram for BGI processing */
-  /* 
-  if (argc > 5) sscanf(argv[5],"%d",&storage);
-  printf("Storage option %d: ",storage);
-  if (storage == 1)
-    printf(" File only\n");
-  else if (storage == 2)
-    printf(" Memory then File\n");
-  else
-    printf(" Memory only\n");
-  */  
 
   /* get input file size */
   fseek(imf, 0L, REL_EOF);
@@ -342,13 +329,6 @@ int main(int argc, char **argv)
        printf("Beam code %d\n",ibeam);
      }
 
-     /* not needed or used for BGI processing */
-     if (strstr(line,"Max_iterations") != NULL) {
-       x = strchr(line,'=');
-       nits=atoi(++x);
-       //printf("Max iterations of %d\n",nits);
-     }
-
      if (strstr(line,"Max_Fill") != NULL) {
        x = strchr(line,'=');
        MAXFILL=atoi(++x);
@@ -450,41 +430,14 @@ int main(int argc, char **argv)
 
 /* header read completed, now determine how much program memory to allocate */
 
-  if (storage != 1) { /* allocate memory storage space for measurements */
-    nspace = nls * file_savings;/* space to allocate for measurement storage */
-    printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
-    space = (char *) malloc(sizeof(char)*nspace);
-    if (space == NULL) {
+  nspace = nls * file_savings;/* space to allocate for measurement storage */
+  printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
+  space = (char *) malloc(sizeof(char)*nspace);
+  if (space == NULL) {
       eprintf("*** Inadequate memory for data file storage\n");
-      if (storage == 2) {
-	eprintf("*** BGI code can not use multiple file option\n\n");
-	exit(-1);	
-      } else
-	exit(-1);
-      storage = 1;  /* force use of file */
-      eprintf("*** BGI code can not use multiple file option\n\n");
       exit(-1);
-    }
   }
 
-/* if program is to be run with file storage (storage=1), allocate working 
-   buffer array for file reading */
-
-  if (storage == 1) {
-    nspace = 4096;  /* should be adequate for all fill_array sizes */
-    space = (char *) malloc(sizeof(int)*nspace/4);
-
-    if (space == NULL) {
-      eprintf("*** Inadequate memory for temp storage 1\n");
-      exit(-1);
-    }
-    store2 = (char *) malloc(sizeof(int)*nspace/2);
-    if (store2 == NULL) {
-      eprintf("*** Inadequate memory for temp storage 2\n");
-      exit(-1);
-    }
-  }
-  
 /* allocate storage space for image and working array */
 
   nsize = nsx * nsy;
@@ -508,16 +461,16 @@ int main(int argc, char **argv)
 
   /* with storage allocated, copy file into memory if selected */
 
-  if (storage != 1) {   /* read measurement file into memory, 
+  /* read measurement file into memory, 
 			   storing only essential information  */
 
-    nrec = 0;         /* number of meaurements in file */
-    ncnt = 0;         /* number of useable measurements */
-    nbyte = 0;        /* file size in bytes */
-    store=space;      /* storage pointer */
+  nrec = 0;         /* number of meaurements in file */
+  ncnt = 0;         /* number of useable measurements */
+  nbyte = 0;        /* file size in bytes */
+  store=space;      /* storage pointer */
   
-    printf("Begin setup file copy into memory\n");
-    while (fread(&dumb, sizeof(int), 1, imf) != 0) {
+  printf("Begin setup file copy into memory\n");
+  while (fread(&dumb, sizeof(int), 1, imf) != 0) {
 
     /*	   read (50,err=500,end=500) tbval,ang,count,ktime,iadd,azi
 	   read (50,err=500,end=500) (fill_array(i),i=1,count)
@@ -553,7 +506,7 @@ int main(int argc, char **argv)
            if not, new values will be stored over old values */
 
 	keep=0;
-	if (tbval < 340.0 && tbval > 50.0) { 
+	if (tbval < 350.0 && tbval > 50.0) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -611,17 +564,16 @@ int main(int argc, char **argv)
      }
     }
   label:
-    fclose(imf);
+  fclose(imf);
 
 
 /* print measurement file storage requirements */
 
-    ratio=100.0 * (float) nbyte / (float) nls;
-    printf("  Input file read into ram\n");
-    printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
-	   nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
-  }
-   fflush(stdout);
+  ratio=100.0 * (float) nbyte / (float) nls;
+  printf("  Input file read into ram\n");
+  printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
+	 nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
+  fflush(stdout);
 
 
   /* determine maximum hits */
@@ -675,7 +627,7 @@ int main(int argc, char **argv)
     store = store+4*count;
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
-}
+  }
 
   printf("Index array created %d %d\n",nsize,ncnt);
   
@@ -820,6 +772,11 @@ int main(int argc, char **argv)
 	for (i=1; i <= m; i++)
 	  sum = sum + work[i] * tb2[i];
 	a_val[its] = sum;
+	/* set data to 600.0 if it is OOR */
+       	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
+	  a_val[its] = 600.0;
+	}
+	
 	/*
 	printf("one %d %d  %f %f %f\n",its,m,sum,value1,value2);
 	for (i=1; i <= m; i++)

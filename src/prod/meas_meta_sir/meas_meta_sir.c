@@ -158,7 +158,7 @@ int main(int argc, char **argv)
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
   /* define no-data values */
-  float anodata_A=100.0;
+  float anodata_A=0.0;
   float anodata_C=-1.0;  
   float anodata_I=-1.0;
   float anodata_Ia=0.0;
@@ -646,7 +646,7 @@ int main(int argc, char **argv)
            if not, new values will be stored over old values */
 
 	keep=0;
-	if (tbval < 340.0 && tbval > 50.0) { 
+	if (tbval < 350.0 && tbval > 50.0) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -1655,7 +1655,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
       }
       (*nrec)++;
 	
-      if (*tbval < 340.0 && *tbval > 50.0) return(0);
+      if (*tbval < 350.0 && *tbval > 50.0) return(0);
     } else      /* end of file (or file err) encountered */
       return(1);
   }
