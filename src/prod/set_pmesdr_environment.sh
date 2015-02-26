@@ -52,7 +52,7 @@ gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeg
 
 # Determine the LOCALE, a function of host and compiler.
 # Janus needs to load compiler-specific modules before building
-if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
+if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
     
   module load slurm
   
@@ -79,15 +79,19 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" ]]; then
   fi
   
   module list
+
+  export PMESDR_COMPARE_TOLERANCE=0.001
   
 elif [[ "$HOSTNAME" == "snow"* ]]; then
     export LOCALE=NSIDCsnow
     # Initialize the virtualenv that was built for running on snow
     . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
+    export PMESDR_COMPARE_TOLERANCE=0.0    
 elif [[ "$HOSTNAME" == "brodzik" ]]; then
     export LOCALE=NSIDCdev
     # Initialize the virtualenv that was built for running on snow
     . ~brodzik/.virtual_envs/pmesdr/bin/activate
+    export PMESDR_COMPARE_TOLERANCE=0.0
 else
     export LOCALE=BYU
 fi # endif janus
