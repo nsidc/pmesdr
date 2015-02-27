@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash -l
 # set_pmesdr_environment.sh
 #
 # usage: set_pmesdr_environment.sh or set_pmesdr_environment.sh [-a][-c gcc]

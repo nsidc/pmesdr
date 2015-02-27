@@ -8,7 +8,6 @@
 
 
 cd ${PMESDR_TOP_DIR}/src/prod
-git pull
 make clean
 make all
 make install
