@@ -62,6 +62,11 @@ else ifeq ($(LOCALE),NSIDCdev)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
+else ifeq ($(LOCALE),dev.int.nsidc.org)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_LIBDIR = /usr/lib
+  HDF5_LIBDIR = /usr/lib
+  ZLIB_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = $(shell nc-config --libs)
