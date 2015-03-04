@@ -44,7 +44,8 @@ export meas_home=$PMESDR_TOP_DIR
 export SIR_areas=$PMESDR_TOP_DIR/ref/locs
 export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
 export RSS_path=$PMESDR_TOP_DIR/ref
-export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/20150224
+regression_yyyymmdd=20150224
+export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
 # netCDF libraries are different, depending on compiler
 icc_netcdf=netcdf/netcdf4-4.3_hdf5-1.8.11_hdf4-4.2.9_szip-2.1_zlib-1.2.78_jpeglib-8d_intel-13.0.0
@@ -83,22 +84,30 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
   export PMESDR_COMPARE_TOLERANCE=0.001
   
 elif [[ "$HOSTNAME" == "snow"* ]]; then
-    export LOCALE=NSIDCsnow
-    # Initialize the virtualenv that was built for running on snow
-    . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
-    export PMESDR_COMPARE_TOLERANCE=0.0    
+
+  export LOCALE=NSIDCsnow
+  # Initialize the virtualenv that was built for running on snow
+  . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
+  export PMESDR_COMPARE_TOLERANCE=0.0    
+
 elif [[ "$HOSTNAME" == "brodzik" ]]; then
-    export LOCALE=NSIDCdev
-    # Initialize the virtualenv that was built for running on snow
-    . ~brodzik/.virtual_envs/pmesdr/bin/activate
-    export PMESDR_COMPARE_TOLERANCE=0.0
+
+  export LOCALE=NSIDCdev
+  # Initialize the virtualenv that was built for running on snow
+  . ~brodzik/.virtual_envs/pmesdr/bin/activate
+  export PMESDR_COMPARE_TOLERANCE=0.0
+
 elif [[ `hostname -d` == "dev.int.nsidc.org" ]]; then
-    export LOCALE=dev.int.nsidc.org
-    # Initialize the virtualenv that was built for running on snow
-    #. ~brodzik/.virtual_envs/pmesdr/bin/activate
-    export PMESDR_COMPARE_TOLERANCE=0.0
+
+  export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
+  export LOCALE=dev.int.nsidc.org
+  export PATH=/opt/anaconda/bin:$PATH
+  export PMESDR_COMPARE_TOLERANCE=0.01
+
 else
-    export LOCALE=BYU
+
+  export LOCALE=BYU
+
 fi # endif janus
 
-echo "PMESDR system LOCALE=$LOCALE, ready to make the system."
+echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."
