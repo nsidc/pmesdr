@@ -133,5 +133,11 @@ csu_ease :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 0	\
 	)
 
+csu_quick :
+	$(RM) $(TESTDIR)/setupCSU/e2n
+	$(MKDIR) $(TESTDIR)/setupCSU/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 0	\
+	)
 
 

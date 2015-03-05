@@ -171,7 +171,6 @@ rss_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
 		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
 
-
 csu_ease :
 	$(RM) $(TESTDIR)/bgiCSU/e2n
 	$(MKDIR) $(TESTDIR)/bgiCSU/e2n
@@ -191,6 +190,26 @@ csu_ease :
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/e2t; \
 	done
+
+csu_ease_validate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiCSU/e2n $(TESTDIR)/bgiCSU/e2n
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiCSU/e2s $(TESTDIR)/bgiCSU/e2s
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/bgiCSU/e2t $(TESTDIR)/bgiCSU/e2t
+
+csu_quick :
+	$(RM) $(TESTDIR)/bgiCSU/e2n
+	$(MKDIR) $(TESTDIR)/bgiCSU/e2n
+	for file in $(CSUE2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/e2n; \
+	done
+
+csu_quick_validate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/bgiCSU/e2n $(TESTDIR)/bgiCSU/e2n
 
 
 
