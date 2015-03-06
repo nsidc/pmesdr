@@ -9,7 +9,7 @@
 #  This script is used by sourcing it ". /this/script/location/set_pmesdr_environment.sh"
 #  By doing this, you set up the environment necessary for building and running the
 #  Passive Microwave ESDR system software.
-#  When this script is finished, the bash environment variables 
+#  When this script is finished, the bash environment variables
 #  that are used by our Makefiles and system processing will be set.
 #
 # 2014-04-15 M. J. Brodzik 303-492-8263 brodzik@nsidc.org
@@ -54,9 +54,9 @@ gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeg
 # Determine the LOCALE, a function of host and compiler.
 # Janus needs to load compiler-specific modules before building
 if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
-    
+
   module load slurm
-  
+
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
     module unload $icc_netcdf
@@ -69,7 +69,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
 	module unload python/anaconda-2.1.0
     fi
   fi
-  
+
   if [[ "$compiler" == "icc" ]]; then
     echo "Setting netcdf for the icc compiler"
     module load python/anaconda-2.1.0
@@ -78,17 +78,17 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
     export LOCALE=JANUSicc
     export PATH=~/.conda/envs/pmesdr/bin:$PATH
   fi
-  
+
   module list
 
   export PMESDR_COMPARE_TOLERANCE=0.001
-  
+
 elif [[ "$HOSTNAME" == "snow"* ]]; then
 
   export LOCALE=NSIDCsnow
   # Initialize the virtualenv that was built for running on snow
   . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
-  export PMESDR_COMPARE_TOLERANCE=0.0    
+  export PMESDR_COMPARE_TOLERANCE=0.0
 
 elif [[ "$HOSTNAME" == "brodzik" ]]; then
 
@@ -97,7 +97,7 @@ elif [[ "$HOSTNAME" == "brodzik" ]]; then
   . ~brodzik/.virtual_envs/pmesdr/bin/activate
   export PMESDR_COMPARE_TOLERANCE=0.0
 
-elif [[ `hostname -d` == "dev.int.nsidc.org" ]]; then
+elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
   export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
   export LOCALE=dev.int.nsidc.org

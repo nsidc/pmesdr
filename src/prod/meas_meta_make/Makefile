@@ -115,4 +115,11 @@ csu_ease :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta 13 \
 	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
 
+csu_quick :
+	$(RM) $(TESTDIR)/csu_e2n
+	$(MKDIR) $(TESTDIR)/csu_e2n
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
+
 

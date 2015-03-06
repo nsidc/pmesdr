@@ -188,3 +188,23 @@ csu_ease :
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2t; \
 	done
 
+csu_ease_validate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirCSU/e2s $(TESTDIR)/sirCSU/e2s
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirCSU/e2t $(TESTDIR)/sirCSU/e2t
+
+csu_quick :
+	$(RM) $(TESTDIR)/sirCSU/e2n
+	$(MKDIR) $(TESTDIR)/sirCSU/e2n
+	for file in $(CSUE2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2n; \
+	done
+
+csu_quick_validate :
+	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
+		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
+
