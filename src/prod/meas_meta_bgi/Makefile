@@ -20,7 +20,7 @@ COMPAREDIR = $(PMESDR_REGRESS_DIR)
 # this tolerance should work for BYU regression for n and t only (s is much bigger), 0.0 works for NSIDCsnow
 #COMPARE_TOLERANCE = 0.01 
 COMPARE_TOLERANCE = $(PMESDR_COMPARE_TOLERANCE)
-EXCLUDE_OOR = -e
+EXCLUDE_OOR =
 # this excludes out of range data from the comparison and is needed to "smooth" the transition to a single
 #   bad value for bgi out-of-range data - that value is currently set to 600.0
 
