@@ -45,7 +45,7 @@ else ifeq ($(LOCALE),NSIDCdev)
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
-else ifeq ($(LOCALE),dev.int.nsidc.org)
+else ifeq ($(LOCALE),int.nsidc.org)
   $(warning Build location: $(LOCALE))
   NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib

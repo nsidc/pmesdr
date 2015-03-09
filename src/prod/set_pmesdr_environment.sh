@@ -100,7 +100,7 @@ elif [[ "$HOSTNAME" == "brodzik" ]]; then
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
   export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
-  export LOCALE=dev.int.nsidc.org
+  export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
 
