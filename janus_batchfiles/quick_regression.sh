@@ -30,7 +30,6 @@ echo 'running setup'
 make rss_quick
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_sir
 make rss_quick
-echo ${HOSTNAME}
 make rss_quick_validate
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
 make rss_quick
