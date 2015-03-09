@@ -1,4 +1,3 @@
-
 #========================================================================
 # Makefile for meas_meta_sir utility
 #
@@ -62,7 +61,7 @@ else ifeq ($(LOCALE),NSIDCdev)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
-else ifeq ($(LOCALE),dev.int.nsidc.org)
+else ifeq ($(LOCALE),int.nsidc.org)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib
   HDF5_LIBDIR = /usr/lib
@@ -106,12 +105,12 @@ OBJS = meas_meta_sir.o netcdf_dump.o
 HDRS = $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
 BIN = meas_meta_sir
 
-RSSE2SFILES = $(shell find $(TESTDIR)/setupRSS/e2s -type f -name "F*E2S*.setup")
-RSSE2NFILES = $(shell find $(TESTDIR)/setupRSS/e2n -type f -name "F*E2N*.setup")
-RSSE2TFILES = $(shell find $(TESTDIR)/setupRSS/e2t -type f -name "F*E2T*.setup")
-CSUE2SFILES = $(shell find $(TESTDIR)/setupCSU/e2s -type f -name "F*E2S*.setup")
-CSUE2NFILES = $(shell find $(TESTDIR)/setupCSU/e2n -type f -name "F*E2N*.setup")
-CSUE2TFILES = $(shell find $(TESTDIR)/setupCSU/e2t -type f -name "F*E2T*.setup")
+RSSE2SFILES = $(wildcard $(TESTDIR)/setupRSS/e2s/F*E2S*.setup)
+RSSE2NFILES = $(wildcard $(TESTDIR)/setupRSS/e2n/F*E2N*.setup)
+RSSE2TFILES = $(wildcard $(TESTDIR)/setupRSS/e2t/F*E2T*.setup)
+CSUE2SFILES = $(wildcard $(TESTDIR)/setupCSU/e2s/F*E2S*.setup)
+CSUE2NFILES = $(wildcard $(TESTDIR)/setupCSU/e2n/F*E2N*.setup)
+CSUE2TFILES = $(wildcard $(TESTDIR)/setupCSU/e2t/F*E2T*.setup)
 
 all : $(BIN)
 
@@ -131,22 +130,34 @@ clean :
 rss_ease :
 	$(RM) $(TESTDIR)/sirRSS/e2n
 	$(MKDIR) $(TESTDIR)/sirRSS/e2n
+ifeq ($(RSSE2NFILES),)
+	$(error	No setup files found)
+else
 	for file in $(RSSE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2n; \
 	done
+endif
 	$(RM) $(TESTDIR)/sirRSS/e2s
 	$(MKDIR) $(TESTDIR)/sirRSS/e2s
+ifeq ($(RSSE2SFILES),)
+	$(error	No setup files found)
+else
 	for file in $(RSSE2SFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2s; \
 	done
+endif
 	$(RM) $(TESTDIR)/sirRSS/e2t
 	$(MKDIR) $(TESTDIR)/sirRSS/e2t
+ifeq ($(RSSE2TFILES),)
+	$(error	No setup files found)
+else
 	for file in $(RSSE2TFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2t; \
 	done
+endif
 
 rss_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
@@ -159,10 +170,14 @@ rss_ease_validate :
 rss_quick :
 	$(RM) $(TESTDIR)/sirRSS/e2n
 	$(MKDIR) $(TESTDIR)/sirRSS/e2n
+ifeq ($(RSSE2NFILES),)
+	$(error	No setup files found)
+else
 	for file in $(RSSE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2n; \
 	done
+endif
 
 rss_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
@@ -171,22 +186,34 @@ rss_quick_validate :
 csu_ease :
 	$(RM) $(TESTDIR)/sirCSU/e2n
 	$(MKDIR) $(TESTDIR)/sirCSU/e2n
+ifeq ($(CSUE2NFILES),)
+	$(error	No setup files found)
+else
 	for file in $(CSUE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2n; \
 	done
+endif
 	$(RM) $(TESTDIR)/sirCSU/e2s
 	$(MKDIR) $(TESTDIR)/sirCSU/e2s
+ifeq ($(CSUE2SFILES),)
+	$(error	No setup files found)
+else
 	for file in $(CSUE2SFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2s; \
 	done
+endif
 	$(RM) $(TESTDIR)/sirCSU/e2t
 	$(MKDIR) $(TESTDIR)/sirCSU/e2t
+ifeq ($(CSUE2TFILES),)
+	$(error	No setup files found)
+else
 	for file in $(CSUE2TFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2t; \
 	done
+endif
 
 csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
@@ -199,10 +226,14 @@ csu_ease_validate :
 csu_quick :
 	$(RM) $(TESTDIR)/sirCSU/e2n
 	$(MKDIR) $(TESTDIR)/sirCSU/e2n
+ifeq ($(CSUE2NFILES),)
+	$(error	No setup files found)
+else
 	for file in $(CSUE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2n; \
 	done
+endif
 
 csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
