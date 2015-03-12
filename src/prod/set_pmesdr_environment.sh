@@ -68,6 +68,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
     else
 	module unload python/anaconda-2.1.0
     fi
+    export PMESDR_COMPARE_TOLERANCE=0.01
   fi
 
   if [[ "$compiler" == "icc" ]]; then
@@ -77,11 +78,12 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
     module load $icc_netcdf
     export LOCALE=JANUSicc
     export PATH=~/.conda/envs/pmesdr/bin:$PATH
+    export PMESDR_COMPARE_TOLERANCE=0.01
   fi
 
   module list
 
-  export PMESDR_COMPARE_TOLERANCE=0.001
+
 
 elif [[ "$HOSTNAME" == "snow"* ]]; then
 
@@ -100,7 +102,7 @@ elif [[ "$HOSTNAME" == "brodzik" ]]; then
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
   export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
-  export LOCALE=dev.int.nsidc.org
+  export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
 
