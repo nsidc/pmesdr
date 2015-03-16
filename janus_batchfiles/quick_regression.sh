@@ -16,7 +16,11 @@
 
 # Select the janus QOS 
 #SBATCH --qos=janus
-
+#
+# Set the system up to notify upon completion
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mhardman@nsidc.org,brodzik@nsidc.org
+#
 # The following commands will be executed when this script is run.
 
 source ${PMESDR_TOP_DIR}/src/prod/set_pmesdr_environment.sh -a
@@ -24,16 +28,40 @@ cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_make
 pwd
 echo 'running make'
 make rss_quick
+if [ $? -ne 0 ]; then
+  echo 'rss_quick make failed'
+  exit -1
+fi
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup/meas_meta_setup_RSS
 pwd
 echo 'running setup'
 make rss_quick
+if [ $? -ne 0 ]; then
+  echo 'rss_quick setup failed'
+  exit -1
+fi
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_sir
 make rss_quick
+if [ $? -ne 0 ]; then
+  echo 'rss_quick SIR failed'
+  exit -1
+fi
 make rss_quick_validate
+if [ $? -ne 0 ]; then
+  echo 'rss_quick SIR validate failed'
+  exit -1
+fi
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
 make rss_quick
+if [ $? -ne 0 ]; then
+  echo 'rss_quick BGI failed'
+  exit -1
+fi
 make rss_quick_validate
+if [ $? -ne 0 ]; then
+  echo 'rss_quick BGI validate failed'
+  exit -1
+fi
 
 
 # End of example job shell script
