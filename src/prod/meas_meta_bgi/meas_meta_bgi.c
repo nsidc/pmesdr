@@ -57,6 +57,9 @@ int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
 
 /* the following BG parameters are subjectively set */
+/* note that delta2 is not independent of bgi_gamma, but as long as it is not too far (within a few deg**2)
+   from the true noise variance it can be held constant and bgi_gamma can be adjusted and will take care of
+   any deviations in delta2 */
 
 double bgi_gamma=2.6703537554;    /*0.85*3.1415926535;/* default BGI gamma parameter */
 float delta2=1.0;                 /* default BGI assumed noise variance */
