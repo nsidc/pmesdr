@@ -51,7 +51,7 @@
 
 #define NSAVE 50            /* maximum number of regions to output */
 #define MAXFILL 2000        /* maximum number of pixels in response function */
-#define RESPONSEMULT 1000.0 /* response multiplier */
+#define RESPONSEMULT 1000   /* response multiplier */
 #define HASAZIMUTHANGLE 1   /* include azimuth angle in output setup file if 1, 
 			       set to 0 to not include az ang (smaller file) */
 #define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
@@ -968,7 +968,6 @@ int main(int argc,char *argv[])
 		sum=ssmi_response(x_rel,y_rel,theta,thetai,ibeam);
 
 		if (sum > response_threshold) {
-		  sum=powf(10.0,0.1*sum);  /* convert gain to normal space */
 		  if (flatten) sum=1.0;    /* optionally flatten response */
 		  fill_array[count]=iadd1; /* address of pixel */
 		  response_array[count]=(short int) nint(sum*RESPONSEMULT); /* quantized response */
