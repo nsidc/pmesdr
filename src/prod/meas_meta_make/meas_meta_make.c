@@ -556,9 +556,9 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 
     /* SSM/I SPECIAL: select beam [channel] (selects frequency and polarization for SSMI) */
     fscanf(pid,"%d",&ibeam);
-    printf("Beam index (1=19V,2=19H,3=22V,4=37V,5=37H,6=85V,7=85H): %d\n",ibeam);
+    printf("Beam index (1=19H,2=19V,3=22V,4=37H,5=37V,6=85H,7=85V): %d\n",ibeam);
     ipolar=0;   /* h pol */
-    if (ibeam==1 || ibeam==3 || ibeam==4 || ibeam==6) ipolar=1; /* v pol */
+    if (ibeam==2 || ibeam==3 || ibeam==5 || ibeam==7) ipolar=1; /* v pol */
     fprintf(mout,"  Polarization=%d\n",ipolar);
     fprintf(mout,"  Beam_index=%d\n", ibeam);
 
