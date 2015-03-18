@@ -293,7 +293,7 @@ void timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *i
 void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
 
 float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0);
+	     float ascale, float bscale, float a0, float b0, int *stat);
 
 void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
@@ -305,6 +305,8 @@ int main(int argc,char *argv[])
   region_save save_area;
 
   int nscans, lrev=0;
+
+  int ret_status;
 
   char fname[250], mname[250];
   char line[1025], outpath[250];
@@ -467,7 +469,11 @@ int main(int argc,char *argv[])
     save_area.sav_km[iregion]=km2pix(&dlon,&dlat,save_area.sav_projt[iregion],
 				     save_area.sav_xdeg[iregion],   save_area.sav_ydeg[iregion],
 				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion],
-				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion]);
+				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion], &ret_status);
+    if ( ret_status != 1 ) {
+      printf( "Region %d not recognized\n", iregion );
+      exit ( -1 );
+    }
     printf("Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
   }
   
@@ -2393,7 +2399,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 /* *********************************************************************** */
 
 float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0)
+	     float ascale, float bscale, float a0, float b0, int *stat)
 { 
   /*
     determine the approximate "nominal" conversion coefficients for
@@ -2437,10 +2443,12 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     *x=1./(map_scale*0.001); /* km/pixel rather than m/pixel */
     *y=1./(map_scale*0.001);
     r= 1./(map_scale*0.001);
+    *stat = 1;
     break;
   default: /* unknown transformation type */
     *x=0.0;
     *y=0.0;
+    *stat = 0;
   }
   return(r);
 }
