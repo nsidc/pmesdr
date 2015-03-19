@@ -306,7 +306,7 @@ int main(int argc,char *argv[])
 
   int nscans, lrev=0;
 
-  int ret_status;
+  int ret_status=1;
 
   char fname[250], mname[250];
   char line[1025], outpath[250];
@@ -471,7 +471,7 @@ int main(int argc,char *argv[])
 				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion],
 				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion], &ret_status);
     if ( ret_status != 1 ) {
-      printf( "Region %d not recognized\n", iregion );
+      fprintf( stderr, "km2pix: fatal error in routine\n" );
       exit ( -1 );
     }
     printf("Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
@@ -2418,6 +2418,9 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     nominal scale factors x,y in pixels/km where x is horizontal and
     y is vertical.  function output r is the rms of x and y.
 
+    stat is a returned status variable - set to 1 upon success and to 0 upon failure
+    a failure will terminate the application upon returning to the main{}
+
   */
 
   float radearth=6378.135;       /* radius of the earth in km */
@@ -2428,6 +2431,8 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
     map_scale, r0, s0, epsilon;
   int bcols, brows, nease, ind;
+
+  *stat = 1;  /* success return is the default */
   
   switch(iopt) {
   case  8: /* EASE2 N */
@@ -2443,12 +2448,12 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     *x=1./(map_scale*0.001); /* km/pixel rather than m/pixel */
     *y=1./(map_scale*0.001);
     r= 1./(map_scale*0.001);
-    *stat = 1;
     break;
   default: /* unknown transformation type */
     *x=0.0;
     *y=0.0;
     *stat = 0;
+    fprintf( stderr, "Unknown transformation type - %d projection\n", iopt );
   }
   return(r);
 }

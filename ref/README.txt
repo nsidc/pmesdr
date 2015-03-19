@@ -33,7 +33,3 @@ asc/desc/LTOD flag for the region (0=all,1=asc,2=dsc,3=morn,4=eve)
 beam number for region (1=19H, 2=19V, 3=22V, 4=37H, 5=37V, 6=85H, 7=85V) - this is for SSMI/I
 number of SIR iterations for this channel
 
-The end of file flag is not required, but may be put at the end of the full set of region definitions
-There should be no blank lines in the .def file
-
-0 (end of file flag)

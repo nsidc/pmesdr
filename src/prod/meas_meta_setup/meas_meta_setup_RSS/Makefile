@@ -51,7 +51,7 @@ SYSLIBS = -lm
 MEAS_INCDIR = ../../../sirlib/c/include
 MEAS_LIBDIR = ../../../sirlib/c
 LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
-CFLAGS = -D'RSS=1' $(CONFIG_CFLAGS) -g -I$(MEAS_INCDIR) 
+CFLAGS = -D'RSS=1' $(CONFIG_CFLAGS) -I$(MEAS_INCDIR) 
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
