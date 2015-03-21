@@ -4,7 +4,7 @@ regiondef1.dat       General region definition file
 
 SSMI/I .def files:
 
- EASE2N_test1ch.def  EASE2-N single channel (separated lotd) def file for E2N - used for rss_quick and csu_quick targets
+ EASE2N_test1ch.def  EASE2-N single channel (separated ltod) def file for E2N - used for rss_quick and csu_quick targets
  E2N_test.def          EASE2-N for E2N 
  E2S_test.def          EASE2-S for E2S 
  E2T_test.def          EASE2-S for E2T 
@@ -23,12 +23,12 @@ after the first line there will be 5 lines per region e.g. if the first line is 
 the lines defining each region are:-
     region id
     resolution factor
-    asc/des/lotd flag
+    asc/des/ltod flag
     beam number
     SIR iterations
 
 region id numbers (308,309,310) - corresponding to EASE2N, EASE2S, EASE2T
-EASE grid resolution factor for the region (1, 2, 3, 4) - power of 2 divided into 25km - factor 1 = 25 km, factor 2 = 12.5 km, 3 = 6.25 km etc
+EASE grid resolution factor for the region (1, 2, 3, 4) - power of 2 divided into 25km - factor 1 = 25 km, factor 2 = 12.5 km, 3 = 6.25 km etc.  This resolution is specified, by channel, in the white paper BGI vs SIR located in bitbucket at https://bitbucket.org/nsidc/measures-pmesdr/
 asc/desc/LTOD flag for the region (0=all,1=asc,2=dsc,3=morn,4=eve)
 beam number for region (1=19H, 2=19V, 3=22V, 4=37H, 5=37V, 6=85H, 7=85V) - this is for SSMI/I
 number of SIR iterations for this channel

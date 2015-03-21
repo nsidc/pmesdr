@@ -471,7 +471,7 @@ int main(int argc,char *argv[])
 				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion],
 				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion], &ret_status);
     if ( ret_status != 1 ) {
-      fprintf( stderr, "km2pix: fatal error in routine\n" );
+      fprintf( stderr, "meas_meta_setup: fatal error in routine\n" );
       exit ( -1 );
     }
     printf("Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
@@ -2453,7 +2453,7 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     *x=0.0;
     *y=0.0;
     *stat = 0;
-    fprintf( stderr, "Unknown transformation type - %d projection\n", iopt );
+    fprintf( stderr, "km2pix: Unknown transformation type - %d region id\n", iopt );
   }
   return(r);
 }
