@@ -293,7 +293,7 @@ void timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *i
 void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
 
 float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0);
+	     float ascale, float bscale, float a0, float b0, int *stat);
 
 void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
@@ -305,6 +305,8 @@ int main(int argc,char *argv[])
   region_save save_area;
 
   int nscans, lrev=0;
+
+  int ret_status=1;
 
   char fname[250], mname[250];
   char line[1025], outpath[250];
@@ -404,37 +406,24 @@ int main(int argc,char *argv[])
     printf("   meta_in     = input meta file\n");
     printf("   outpath     = output path\n");
     printf("   singlefile  = for testing, specify a single file. Use zero for all \n\n");
+    exit (-1);
   }
  
 
   /* get input meta file name */
-  if (argv[1] == NULL) {
-    printf("Enter output meta file name:");
-    fgets(line,sizeof(line),stdin);
-    sscanf(line,"%s",mname);
-  } else
-    sscanf(argv[1],"%s",mname);
+  sscanf(argv[1],"%s",mname);
   printf("\nMetafile name: %s \n",mname);
 
   /* get output path */
-  if (argv[2] == NULL) {
-    printf("Enter output path:");
-    fgets(line,sizeof(line),stdin);
-    sscanf(line,"%s",outpath);
-  } else
-    sscanf(argv[2],"%s",outpath);
+  sscanf(argv[2],"%s",outpath);
   printf("\nOutput path: %s \n",outpath);
 
   /* optionally get the number of a single file to process from the input list in the meta file
      this is only needed when debugging*/
   nfile_select=0;
-  if (argv[3] == NULL) {
-    //printf("Selected L1B file to use [0=all]: ");
-    //fgets(line,sizeof(line),stdin);
-    //sscanf(line,"%d",&nfile_select);
-  } else
+  if (argv[3] != NULL) {
     sscanf(argv[3],"%d",&nfile_select);
-
+  }
 
   /* get meta_file region information and open output files */
   file_id = get_meta(mname, outpath, &dstart, &dend, &mstart, &mend, &year,
@@ -451,16 +440,6 @@ int main(int argc,char *argv[])
   /* convert response threshold from dB to normal space */
   response_threshold=pow(10.,0.1*response_threshold);  
  
-#ifdef DEBUG_RESPONSE
-  resp_debug=fopen(debug_response_out_name,"w");
-  if (resp_debug == NULL) {
-    fprintf(stderr,"*** could not open debug output file for response\n");
-    exit(-1);
-  }
-  printf("\n** Opened debug output response file %s\n\n",debug_response_out_name);
-  fprintf(resp_debug,"%f\n",response_threshold);  
-#endif
-
   /* set some sensor-specific constants */
   nbeams=7;          /* number of beams */     
   scan_ang=102.0;    /* azimuth angle of the scan from left measurement to right measurement at subsat point */
@@ -490,7 +469,11 @@ int main(int argc,char *argv[])
     save_area.sav_km[iregion]=km2pix(&dlon,&dlat,save_area.sav_projt[iregion],
 				     save_area.sav_xdeg[iregion],   save_area.sav_ydeg[iregion],
 				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion],
-				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion]);
+				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion], &ret_status);
+    if ( ret_status != 1 ) {
+      fprintf( stderr, "meas_meta_setup: fatal error in routine\n" );
+      exit ( -1 );
+    }
     printf("Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
   }
   
@@ -1125,9 +1108,7 @@ int main(int argc,char *argv[])
   return(0); /* successful termination */
 }
 
-
 /* *********************************************************************** */
-
 
 FILE * get_meta(char *mname, char *outpath, 
 		int *dstart, int *dend, int *mstart, int *mend, int *year, 
@@ -1658,20 +1639,6 @@ FILE * get_meta(char *mname, char *outpath,
 		      sprintf(lin," A offset value=%f",a_offset);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-
-		      /* this records are scatterometer-only 
-		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," B_init=%f",b_init);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
-		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-
-		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," B weight=%f",b_weight);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
-		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      */
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
@@ -2432,7 +2399,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 /* *********************************************************************** */
 
 float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0)
+	     float ascale, float bscale, float a0, float b0, int *stat)
 { 
   /*
     determine the approximate "nominal" conversion coefficients for
@@ -2451,6 +2418,9 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     nominal scale factors x,y in pixels/km where x is horizontal and
     y is vertical.  function output r is the rms of x and y.
 
+    stat is a returned status variable - set to 1 upon success and to 0 upon failure
+    a failure will terminate the application upon returning to the main{}
+
   */
 
   float radearth=6378.135;       /* radius of the earth in km */
@@ -2461,34 +2431,10 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
     map_scale, r0, s0, epsilon;
   int bcols, brows, nease, ind;
+
+  *stat = 1;  /* success return is the default */
   
   switch(iopt) {
-  case -1: /* image only (can't transform!) */
-    *x=1.0;
-    *y=1.0;
-    break;
-  case 0: /* lat/lon projection */
-    if (b0 > 0.0) {
-      r=sqrt((ascale*ascale+bscale*bscale)/2.0) * 180.0/(PI*radearth*sin(b0*DTR));
-      *x=ascale * 180.0/(PI*radearth*sin(b0*DTR));
-      *y=bscale * 180.0/(PI*radearth*sin(b0*DTR));
-    } else {
-      r=sqrt((ascale*ascale+bscale*bscale)/2.0) * 180.0/(PI*radearth);
-      *x=ascale * 180.0/(PI*radearth);
-      *y=bscale * 180.0/(PI*radearth);
-    }
-    break;
-  case 1: /* Lambert */
-  case 2: /* Lambert */
-    *x=ascale;
-    *y=bscale;
-    r=sqrt((*x * *x + *y * *y)*0.5);
-    break;
-  case 5: /* polar stereographic */
-    *x=1./ascale;
-    *y=1./bscale;
-    r=sqrt((*x * *x + *y * *y)*0.5);
-    break;
   case  8: /* EASE2 N */
   case  9: /* EASE2 S */
   case 10: /* EASE2 T */
@@ -2503,21 +2449,11 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     *y=1./(map_scale*0.001);
     r= 1./(map_scale*0.001);
     break;
-  case 11: /* EASE1 N grid */
-  case 12: /* EASE1 S grid */
-  case 13: /* EASE1 M grid */
-    if (iopt == 13) {
-      *x=1./(bscale*sin(30.0*DTR));
-      *y=1./(bscale*sin(30.0*DTR));
-    } else {
-      *x=1./(bscale*sin(45.0*DTR));
-      *y=1./(bscale*sin(45.0*DTR));
-    }
-    r=sqrt((*x * *x + *y * *y)*0.5);
-    break;
   default: /* unknown transformation type */
     *x=0.0;
     *y=0.0;
+    *stat = 0;
+    fprintf( stderr, "km2pix: Unknown transformation type - %d region id\n", iopt );
   }
   return(r);
 }
@@ -2528,37 +2464,6 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
   /* print standard projection information */
 
   switch(iopt) {
-   case -1:
-     fprintf(omf,"  Rectangular image-only projection: \n");
-     fprintf(omf,"   Xspan,  Yspan:  %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   Xscale, Yscale: %f , %f\n",ascale,bscale);
-     fprintf(omf,"   Xorg,   Yorg:   %f , %f\n",a0,b0);
-     break;
-
-   case 0:
-     fprintf(omf,"  Rectangular Lat/Long projection: \n");
-     fprintf(omf,"   Size (deg):     %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   Lon, Lat scale: %f , %f (pix/deg)\n",ascale,bscale);
-     fprintf(omf,"   Offsets:        %f , %f\n",a0,b0);
-     break;
-
-   case 2:
-     fprintf(omf,"  Lambert form: (local radius)\n");
-   case 1:
-     if (iopt==1) fprintf(omf,"  Lambert projection: (fixed radius)\n");
-     fprintf(omf,"   Center point:      %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   Lon, Lat scale:    %f , %f (km/pix)\n",1./ascale,1./bscale);
-     fprintf(omf,"   Lower-Left Corner: %f , %f\n",a0,b0);
-     break;
-     break;
-
-   case 5:
-     fprintf(omf,"  Polar sterographic form: \n");
-     fprintf(omf,"   Center Lon,Lat:    %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   X,Y scales:        %f , %f (km/pix)\n",ascale,bscale);
-     fprintf(omf,"   Lower-Left Corner: %f , %f\n",a0,b0);
-     break;
-
    case  8:
    case  9:
      fprintf(omf,"  EASE2 polar azimuthal form: \n");
@@ -2571,21 +2476,6 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
      fprintf(omf,"  EASE2 cylindrical form: \n");
      fprintf(omf,"   Map center (col,row): %f , %f\n",xdeg,ydeg);
      fprintf(omf,"   Scale factor, ind:    %f , %f\n",ascale,bscale);
-     fprintf(omf,"   Map origin (col,row): %f , %f\n",a0,b0);
-     break;
-
-   case 11:
-   case 12:
-     fprintf(omf,"  EASE1 polar azimuthal form: \n");
-     fprintf(omf,"   Map center (col,row): %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   A,B scales:           %f , %f\n",ascale,bscale);
-     fprintf(omf,"   Map origin (col,row): %f , %f\n",a0,b0);
-     break;
-
-   case 13:
-     fprintf(omf,"  EASE1 cylindrical form: \n");
-     fprintf(omf,"   Map center (col,row): %f , %f\n",xdeg,ydeg);
-     fprintf(omf,"   A,B scales:           %f , %f\n",ascale,bscale);
      fprintf(omf,"   Map origin (col,row): %f , %f\n",a0,b0);
      break;
 
