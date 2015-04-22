@@ -4,15 +4,15 @@
 
 #
 # Set the name of the job
-#SBATCH -J quick_regression
+#SBATCH -J daily_regression
 
 #
 # Set a walltime for the job. The time format is HH:MM:SS - In this case we run for 5 minutes.
 
-#SBATCH --time=00:15:00
+#SBATCH --time=02:15:00
 
 # Set the output file and embed the job number in the filename
-#SBATCH -o output/quick_regression-%j.out
+#SBATCH -o output/daily_regression-%j.out
 
 # Select the janus QOS 
 #SBATCH --qos=janus
@@ -27,72 +27,72 @@ source ${PMESDR_TOP_DIR}/src/prod/set_pmesdr_environment.sh -a
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_make
 pwd
 echo 'running make'
-make rss_quick
+make rss_ease
 if [ $? -ne 0 ]; then
-  echo 'rss_quick make failed'
+  echo 'rss_ease make failed'
   exit -1
 fi
-make csu_quick
+make csu_ease
 if [ $? -ne 0 ]; then
-  echo 'csu_quick make failed'
+  echo 'csu_ease make failed'
   exit -1
 fi
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup/meas_meta_setup_RSS
 pwd
 echo 'running setup'
-make rss_quick
+make rss_ease
 if [ $? -ne 0 ]; then
-  echo 'rss_quick setup failed'
+  echo 'rss_ease setup failed'
   exit -1
 fi
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup/meas_meta_setup_CSU
 pwd
 echo 'running setup'
-make csu_quick
+make csu_ease
 if [ $? -ne 0 ]; then
-  echo 'csu_quick setup failed'
+  echo 'csu_ease setup failed'
   exit -1
 fi
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_sir
-make rss_quick
+make rss_ease
 if [ $? -ne 0 ]; then
-  echo 'rss_quick SIR failed'
+  echo 'rss_ease SIR failed'
   exit -1
 fi
-make rss_quick_validate
+make rss_ease_validate
 if [ $? -ne 0 ]; then
-  echo 'rss_quick SIR validate failed'
+  echo 'rss_ease SIR validate failed'
   exit -1
 fi
-make csu_quick
+make csu_ease
 if [ $? -ne 0 ]; then
-  echo 'csu_quick SIR failed'
+  echo 'csu_ease SIR failed'
   exit -1
 fi
-make csu_quick_validate
+make csu_ease_validate
 if [ $? -ne 0 ]; then
-  echo 'csu_quick SIR validate failed'
+  echo 'csu_ease SIR validate failed'
   exit -1
 fi
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
-make rss_quick
+make rss_ease
 if [ $? -ne 0 ]; then
-  echo 'rss_quick BGI failed'
+  echo 'rss_ease BGI failed'
   exit -1
 fi
-make rss_quick_validate
+make rss_ease_validate
 if [ $? -ne 0 ]; then
-  echo 'rss_quick BGI validate failed'
+  echo 'rss_ease BGI validate failed'
   exit -1
 fi
-make csu_quick
+make csu_ease
 if [ $? -ne 0 ]; then
-  echo 'csu_quick BGI failed'
+  echo 'csu_ease BGI failed'
   exit -1
 fi
-make csu_quick_validate
+make csu_ease_validate
 if [ $? -ne 0 ]; then
-  echo 'csu_quick BGI validate failed'
+  echo 'csu_ease BGI validate failed'
   exit -1
 fi
 

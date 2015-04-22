@@ -90,7 +90,7 @@ elif [[ "$HOSTNAME" == "snow"* ]]; then
   export LOCALE=NSIDCsnow
   # Initialize the virtualenv that was built for running on snow
   . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
-  export PMESDR_COMPARE_TOLERANCE=0.0
+  export PMESDR_COMPARE_TOLERANCE=0.01
 
 elif [[ "$HOSTNAME" == "brodzik" ]]; then
 
