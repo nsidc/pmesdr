@@ -1162,8 +1162,8 @@ done2:
     if (iadd > 0) {            /* skip out-of-area measurements */
 
       /* compute location of measurement within lo-res grid */
-      ix = (iadd-1) % nsx;
-      iy = (iadd-1) / nsx;
+      ix = (iadd) % nsx;
+      iy = (iadd) / nsx;
       ix = ix / non_size_x;
       iy = iy / non_size_y;
       iadd = nsx2*iy+ix; 
