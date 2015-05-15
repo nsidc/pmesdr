@@ -597,8 +597,8 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 
     /* set grid image size parameters */
     non_size=5;  /* number of enhanced resolution pixels/non-enhanced pixels */
-    if (projt>7) /* handle EASE differently */
-      non_size=4;
+    if (projt>7) /* handle EASE differently - non-enhanced size is always 25 km grid */
+      non_size=(1 << (nease-1) );
  
     if (non_size*(nsx/non_size) != nsx || non_size*(nsy/non_size) != nsy) {
       fprintf(stderr,"*** warning: non grid size parameter %d does not evenly divide image size: %d %d\n",non_size,nsx,nsy);
