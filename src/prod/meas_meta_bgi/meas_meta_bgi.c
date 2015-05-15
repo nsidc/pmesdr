@@ -618,9 +618,10 @@ int main(int argc, char **argv)
   patarr = (float *) malloc(sizeof(float)*mdim*mdim*nmax);
   ix0 = (int *) malloc(sizeof(int)*(nmax+1));
   iy0 = (int *) malloc(sizeof(int)*(nmax+1));
-  if (indx == NULL || z == NULL || u == NULL || v == NULL || c == NULL
-      || zc == NULL || u1 == NULL || v1 == NULL || ind == NULL || aveweights == NULL
-      || work == NULL || tb2 == NULL || patarr == NULL || ix0 == NULL || iy0 == NULL) {
+  if (indx == NULL || z == NULL || zc == NULL || u == NULL
+      || u1 == NULL || v == NULL || aveweights == NULL || v1 == NULL
+      || ind == NULL || adds == NULL || work == NULL || c == NULL
+      || tb2 == NULL || patarr == NULL || ix0 == NULL || iy0 == NULL) {
     printf("*** error allocating BGI work arrays \n");
     exit(-1);
   }
@@ -721,11 +722,12 @@ int main(int argc, char **argv)
 
 	/* check for measurements at the same (quantized) center location and average */
 	dx=0;
-	for (i=1; i <= m; i++)
-	  for (j=i+1; j <= m; j++)
+	for (i=1; i <= m; i++) {
+	  for (j=i+1; j <= m; j++) {
 	    if (adds[i]==adds[j]) dx++;
+	  }
+	}
 	if (dx > 0) { /* duplicated location measurement(s) */
-	  //printf(" duplicated measurement(s) %d %d\n",dx,m);
 	  dx = 0;
 	  for (i=1; i <= m; i++) {
 	    if (adds[i] > -1) {
