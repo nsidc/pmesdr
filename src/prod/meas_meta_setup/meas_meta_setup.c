@@ -16,6 +16,7 @@
   revised by MAH at NSIDC 01/20/2015 + added DGL's changes in by hand
   revised by DGL at BYU  01/27/2015 + updated convert_time and morn LTOD
   revised by MAH at NSIDC 01/30/2015 + added DGL's changes in by hand
+  further revision are tracked in bitbucket and not via this comment list MAH 05/15/15
 
 ******************************************************************/
 
