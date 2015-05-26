@@ -18,7 +18,8 @@ import os
 import sys
 
 def compare_cetb_directories( dir1, dir2,
-                              exclude_out_of_range=False, statistics=False, tolerance=0, verbose=False ):
+                              exclude_out_of_range=False, statistics=False, tolerance=0,
+                              max_diff_pixels=0, verbose=False ):
     """
     Compares 2 CETB output directories, by matching up filenames in each one,
     and calling compare_cetb_files on the pairs.
@@ -27,6 +28,10 @@ def compare_cetb_directories( dir1, dir2,
     exclude_out_of_range : default is False
          when this keyword is set, any pixel locations outside the interval
          [ 50.0, 350.0 ] Kelvins are ignored.
+
+    max_diff_pixels : default is 0
+         when this keyword is set the data will match as long as there are fewer
+         than max_diff_pixels different pixels in each file in the directory
     
     """
     this_program = inspect.stack()[ 0 ][ 3 ]
@@ -36,8 +41,10 @@ def compare_cetb_directories( dir1, dir2,
         sys.stderr.write( "> " + this_program + ": dir2: " + dir2 + "\n" )
         sys.stderr.write( "> " + this_program + ": tolerance: " + str( tolerance ) + "\n" )
         sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + str( exclude_out_of_range ) + "\n" )
+        sys.stderr.write( "> " + this_program + ": max_diff_pixels: " + str( max_diff_pixels ) + "\n" )
 
     tolerance = float( tolerance )
+    max_diff_pixels = int( max_diff_pixels )
 
     if not os.path.isdir( dir1 ) or not os.path.isdir( dir2 ):
         sys.stderr.write( "\n" + this_program + ": One or both directories not found.\n" )
@@ -68,7 +75,8 @@ def compare_cetb_directories( dir1, dir2,
             
         if not compare_cetb_files( list1[ i ], list2[ i ],
                                    exclude_out_of_range=exclude_out_of_range,
-                                   statistics=statistics, tolerance=tolerance, verbose=verbose ):
+                                   statistics=statistics, tolerance=tolerance,
+                                   max_diff_pixels=max_diff_pixels, verbose=verbose ):
             sys.stderr.write( "\n" + this_program + ": Files differ:\n\t" + list1[ i ] + "\n\t" + list2[ i ] + "\n" )
             all_files_OK = False
 
@@ -80,12 +88,13 @@ def compare_cetb_directories( dir1, dir2,
     return all_files_OK
     
 def compare_cetb_files( file1, file2, exclude_out_of_range=False,
-                        statistics=False, tolerance=0, verbose=False ):
+                        statistics=False, tolerance=0, max_diff_pixels=0, verbose=False ):
     """
     status = compare_cetb_files( file1, file2,
                                  exclude_out_of_range=False,
                                  statistics=False,
                                  tolerance=0,
+                                 max_diff_pixels=0,
                                  verbose=False )
     
     Compares 2 CETB files.
@@ -107,6 +116,7 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         sys.stderr.write( "> " + this_program + ": file1: " + file1 + "\n" )
         sys.stderr.write( "> " + this_program + ": file2: " + file2 + "\n" )
         sys.stderr.write( "> " + this_program + ": tolerance: " + str( tolerance ) + "\n" )
+        sys.stderr.write( "> " + this_program + ": max_diff_pixels: " + str( max_diff_pixels ) + "\n" )
         sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + str( exclude_out_of_range ) + "\n" )
 
     # cetb nc files can either have "a_image" or "bgi_image" variables (but
@@ -149,6 +159,7 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         
     # If the arrays are equal, we are done
     # If they are not, then check for differences less than |tolerance|
+    # Finally check for fewer than max_diff_pixels different
     if ( np.array_equal( image1, image2 ) ):
         if ( verbose ):
             sys.stderr.write( "> " + this_program + ": " + var_name + " data are identical.\n" )
@@ -158,6 +169,11 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         if ( np.max( absdiff ) <= abs( tolerance ) ):
             if ( verbose ):
                 sys.stderr.write( "> " + this_program + ": " + var_name + " data are within tolerance.\n" )
+            return True
+        elif ( (len( absdiff[ absdiff > abs( tolerance ) ] )) <= max_diff_pixels ):
+            if ( verbose ):
+                sys.stderr.write( "> " + this_program + ": " + var_name + " fewer than "
+                                  + str( max_diff_pixels ) + " are different.\n")
             return True
         else:
             sys.stderr.write( "\n" + this_program + ": " + var_name + " data differ.\n" )
