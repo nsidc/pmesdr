@@ -13,5 +13,3 @@ src/      source code for production and display
 testing/  directory of testing code and data files
 
 make_exes compiles key program
-
-
