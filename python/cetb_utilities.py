@@ -109,6 +109,10 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
          when this keyword is set, any pixel locations outside the interval
          [ 50.0, 350.0 ] Kelvins are ignored.
     
+    max_diff_pixels : default is 0
+         when this keyword is set the data will match as long as there are fewer
+         than max_diff_pixels different pixels in each file in the directory
+    
     """
     this_program = inspect.stack()[ 0 ][ 3 ]
     if ( verbose ):

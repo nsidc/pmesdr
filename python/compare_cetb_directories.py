@@ -12,7 +12,8 @@ import getopt
 
 def usage():
     print "compare_cetb_directories [-e ] [-h] [-s] [-t tolerance] [-m max_diff_pixels] [-v] dir1 dir2"
-    print "compare_cetb_directories [--exclude_out_of_range] [--help] [--statistics] [--tolerance=tolerance] [--max_diff_pixels=max_diff_pixels] [--verbose] dir1 dir2"
+    print "compare_cetb_directories [--exclude_out_of_range] [--help] [--statistics] \
+    [--tolerance=tolerance] [--max_diff_pixels=max_diff_pixels] [--verbose] dir1 dir2"
     print "  compares files in each directory"
     print "  -e : exclude out-of-range [50.,350.] temperature values"
     print "  -h : print usage message"
