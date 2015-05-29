@@ -19,12 +19,13 @@
 #
 # First check for compiler environment variable - cmd line args will override
 #
-compiler=gcc
+compiler=icc
 do_anaconda=0
 
-if [[ "$PMESDR_compiler" != "" ]]; then
-    compiler="$PMESDR_compiler"
+if [[ "$PMESDR_COMPILER" != "" ]]; then
+    compiler="$PMESDR_COMPILER"
 fi
+
 #
 # Parse command line
 set -- $(getopt ac: "$@")
@@ -39,6 +40,15 @@ do
     esac
     shift
 done
+#
+# test and then set the $PMESDR_COMPILER environment variable 
+#
+if [[ "$compiler" != "gcc" ]] && [[ "$compiler" != "icc" ]]; then
+    echo "PMESDR_COMPILER must be 'icc' or 'gcc' - cannot be set to " $compiler
+    exit -1
+fi
+
+export PMESDR_COMPILER=$compiler
 
 # Grab the full path to this script, regardless of where it is called from.
 export PMESDR_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
