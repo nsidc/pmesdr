@@ -16,10 +16,17 @@
 # National Snow & Ice Data Center, University of Colorado, Boulder
 # Copyright (C) 2014 Regents of University of Colorado and Brigham-Young University
 #========================================================================
-
-# Parse command line
+#
+# First check for compiler environment variable - cmd line args will override
+#
 compiler=gcc
 do_anaconda=0
+
+if [[ "$PMESDR_compiler" != "" ]]; then
+    compiler="$PMESDR_compiler"
+fi
+#
+# Parse command line
 set -- $(getopt ac: "$@")
 while [ $# -gt 0 ]
 do
@@ -112,4 +119,4 @@ else
 
 fi # endif janus
 
-echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."
+echo "PMESDR system LOCALE=$LOCALE, COMPILER=$compiler, ready to use the PMESDR system."
