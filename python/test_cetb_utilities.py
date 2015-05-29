@@ -75,6 +75,18 @@ def test_bgi_diff_files():
                                        statistics=False ),
                    True )
     
+def test_small_difference_wmax_diff_pixel_fail():
+    assert_equals( compare_cetb_files( test_file, small_difference_file,
+                                       verbose=verbose,
+                                       max_diff_pixels=0 ), 
+                   False )
+
+def test_small_difference_wmax_diff_pixel_pass():
+    assert_equals( compare_cetb_files( test_file, small_difference_file,
+                                       verbose=verbose,
+                                       max_diff_pixels=1 ), 
+                   True )
+
 # **************************************************************************************   
 # Unit tests for compare_directories
 #
