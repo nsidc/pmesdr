@@ -16,10 +16,18 @@
 # National Snow & Ice Data Center, University of Colorado, Boulder
 # Copyright (C) 2014 Regents of University of Colorado and Brigham-Young University
 #========================================================================
-
-# Parse command line
-compiler=gcc
+#
+# First check for compiler environment variable - cmd line args will override
+#
+compiler=icc
 do_anaconda=0
+
+if [[ "$PMESDR_COMPILER" != "" ]]; then
+    compiler="$PMESDR_COMPILER"
+fi
+
+#
+# Parse command line
 set -- $(getopt ac: "$@")
 while [ $# -gt 0 ]
 do
@@ -32,6 +40,15 @@ do
     esac
     shift
 done
+#
+# test and then set the $PMESDR_COMPILER environment variable 
+#
+if [[ "$compiler" != "gcc" ]] && [[ "$compiler" != "icc" ]]; then
+    echo "PMESDR_COMPILER must be 'icc' or 'gcc' - cannot be set to " $compiler
+    exit -1
+fi
+
+export PMESDR_COMPILER=$compiler
 
 # Grab the full path to this script, regardless of where it is called from.
 export PMESDR_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -56,6 +73,8 @@ gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeg
 if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
 
   module load slurm
+  export PMESDR_COMPARE_TOLERANCE=0.25
+  export MAX_DIFF_PIXELS=10
 
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
@@ -68,7 +87,6 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
     else
 	module unload python/anaconda-2.1.0
     fi
-    export PMESDR_COMPARE_TOLERANCE=0.01
   fi
 
   if [[ "$compiler" == "icc" ]]; then
@@ -78,7 +96,6 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
     module load $icc_netcdf
     export LOCALE=JANUSicc
     export PATH=~/.conda/envs/pmesdr/bin:$PATH
-    export PMESDR_COMPARE_TOLERANCE=0.01
   fi
 
   module list
@@ -91,6 +108,7 @@ elif [[ "$HOSTNAME" == "snow"* ]]; then
   # Initialize the virtualenv that was built for running on snow
   . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
   export PMESDR_COMPARE_TOLERANCE=0.01
+  export MAX_DIFF_PIXELS=0
 
 elif [[ "$HOSTNAME" == "brodzik" ]]; then
 
@@ -98,6 +116,7 @@ elif [[ "$HOSTNAME" == "brodzik" ]]; then
   # Initialize the virtualenv that was built for running on snow
   . ~brodzik/.virtual_envs/pmesdr/bin/activate
   export PMESDR_COMPARE_TOLERANCE=0.0
+  export MAX_DIFF_PIXELS=0
 
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
@@ -105,6 +124,7 @@ elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
   export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
+  export MAX_DIFF_PIXELS=0
 
 else
 
@@ -112,4 +132,4 @@ else
 
 fi # endif janus
 
-echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."
+echo "PMESDR system LOCALE=$LOCALE, COMPILER=$compiler, ready to use the PMESDR system."
