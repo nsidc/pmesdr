@@ -11,13 +11,15 @@ import sys
 import getopt
 
 def usage():
-    print "compare_cetb_directories [-e ] [-h] [-s] [-t tolerance] [-v] dir1 dir2"
-    print "compare_cetb_directories [--exclude_out_of_range] [--help] [--statistics] [--tolerance=tolerance] [--verbose] dir1 dir2"
+    print "compare_cetb_directories [-e ] [-h] [-s] [-t tolerance] [-m max_diff_pixels] [-v] dir1 dir2"
+    print "compare_cetb_directories [--exclude_out_of_range] [--help] [--statistics] \
+    [--tolerance=tolerance] [--max_diff_pixels=max_diff_pixels] [--verbose] dir1 dir2"
     print "  compares files in each directory"
     print "  -e : exclude out-of-range [50.,350.] temperature values"
     print "  -h : print usage message"
     print "  -s : print file/difference statistics to stderr"
     print "  -t tolerance : to within tolerance (default=0.0)"
+    print "  -m max_diff_pixels : no more than max_diff_pixels different per file (default=0)"
     print "  -v : verbose output"
 
 def main( argv ):
@@ -26,9 +28,10 @@ def main( argv ):
     statistics = False
     tolerance = 0.0
     verbose = False
+    max_diff_pixels = 0
     
     try:
-        opts, args = getopt.getopt( argv, "ehst:v", [ "tolerance=" ] )
+        opts, args = getopt.getopt( argv, "ehst:m:v", [ "tolerance=", "max_diff_pixels=" ] )
     except getopt.GetoptError:
         usage()
         sys.exit( 2 )
@@ -43,6 +46,8 @@ def main( argv ):
             statistics = True
         elif opt in ( "-t", "--tolerance" ):
             tolerance = arg
+        elif opt in ( "-m", "--max_diff_pixels" ):
+            max_diff_pixels = arg
         elif opt in ( "-v", "--verbose" ):
             verbose = True
 
@@ -55,7 +60,8 @@ def main( argv ):
                                    exclude_out_of_range=exclude_out_of_range, 
                                    verbose=verbose,
                                    statistics=statistics,
-                                   tolerance=tolerance ) ):
+                                   tolerance=tolerance,
+                                   max_diff_pixels=max_diff_pixels) ):
         sys.exit( 0 )
     else:
         sys.exit( 1 )
