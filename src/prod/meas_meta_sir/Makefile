@@ -18,7 +18,7 @@ BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 COMPAREDIR = $(PMESDR_REGRESS_DIR)
 COMPARE_TOLERANCE = $(PMESDR_COMPARE_TOLERANCE)
-MAX_DIFF_PIXELS = $(MAX_DIFF_PIXELS)
+DIFF_PIXELS = $(MAX_DIFF_PIXELS)
 
 #
 #	commands
@@ -161,13 +161,13 @@ endif
 
 rss_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/sirRSS/e2s $(TESTDIR)/sirRSS/e2s
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/sirRSS/e2t $(TESTDIR)/sirRSS/e2t
 
 rss_quick :
@@ -184,7 +184,7 @@ endif
 
 rss_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
 
 csu_ease :
@@ -221,13 +221,13 @@ endif
 
 csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/sirCSU/e2s $(TESTDIR)/sirCSU/e2s
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/sirCSU/e2t $(TESTDIR)/sirCSU/e2t
 
 csu_quick :
@@ -244,6 +244,6 @@ endif
 
 csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
 
