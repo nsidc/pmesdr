@@ -20,7 +20,7 @@ COMPAREDIR = $(PMESDR_REGRESS_DIR)
 # this tolerance should work for BYU regression for n and t only (s is much bigger), 0.0 works for NSIDCsnow
 #COMPARE_TOLERANCE = 0.01 
 COMPARE_TOLERANCE = $(PMESDR_COMPARE_TOLERANCE)
-DIFF_PIXELS = $(MAX_DIFF_PIXELS)
+MAX_DIFF_PIXELS = $(PMESDR_MAX_DIFF_PIXELS)
 EXCLUDE_OOR =
 # this excludes out of range data from the comparison and is needed to "smooth" the transition to a single
 #   bad value for bgi out-of-range data - that value is currently set to 600.0
@@ -166,13 +166,13 @@ endif
 
 rss_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/bgiRSS/e2s $(TESTDIR)/bgiRSS/e2s
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/bgiRSS/e2t $(TESTDIR)/bgiRSS/e2t
 
 rss_quick :
@@ -189,7 +189,7 @@ endif
 
 rss_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
 
 csu_ease :
@@ -226,13 +226,13 @@ endif
 
 csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/bgiCSU/e2n $(TESTDIR)/bgiCSU/e2n
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/bgiCSU/e2s $(TESTDIR)/bgiCSU/e2s
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/bgiCSU/e2t $(TESTDIR)/bgiCSU/e2t
 
 csu_quick :
@@ -249,7 +249,7 @@ endif
 
 csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
-		-t $(COMPARE_TOLERANCE) -m $(DIFF_PIXELS) \
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/bgiCSU/e2n $(TESTDIR)/bgiCSU/e2n
 
 
