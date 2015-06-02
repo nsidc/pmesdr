@@ -657,8 +657,10 @@ int main(int argc, char **argv)
     *(a_val+its) = anodata_A;
 
     /* print progress */
-    if ((its % nsx) == nsx/2  && (its/nsx) % 5 == 0) 
+    if ((its % nsx) == nsx/2  && (its/nsx) % 50 == 0) {
       printf("Processing row %d of %d  %f\n",its/nsx,nsy,amin);
+      fflush( stdout );
+    }
     
     if (cnts[its] > 0) {
       m=0;  /* number of valid measurements */
