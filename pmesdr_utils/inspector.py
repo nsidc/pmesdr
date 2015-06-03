@@ -6,9 +6,9 @@ from osgeo import gdal, osr
 import re
 import sys
 
-def make_png(filename):
+def make_png(res, filename):
 
-    print "Making png image for: " + filename
+    print "Making png image for: " + res + ", " + filename
 
     # Read and reshape the array
     # If the array were stored correctly, we shouldn't have to
@@ -22,15 +22,18 @@ def make_png(filename):
     keys = f.variables.keys()
     var_name = 'none'
     for key in keys:
-        if ( 'a_image' == key ):
+        if ( 'a_image' == key and res != '25' ):
             var_name = 'a_image'
+            break
+        if ( 'grd_a_image' == key and res == '25' ):
+            var_name = 'grd_a_image'
             break
         if ( 'bgi_image' == key ):
             var_name = 'bgi_image'
             break
 
     if ( 'none' == var_name ):
-        sys.stderr.write( filename + ": " + "contains neither a_image nor bgi_image.\n" )
+        sys.stderr.write( filename + ": " + "contains none of a_image, grd_a_image nor bgi_image.\n" )
         exit(-1)
 
     # Eventually this will need to get the bgi array if it's a bgi dump file
@@ -42,13 +45,20 @@ def make_png(filename):
     print np.amin(tb), np.amax(tb)
     tb[ tb > 590. ] = 0.
 
+    if ( var_name == 'a_image' ):
+        label = 'SIR_TB'
+    elif ( var_name == 'bgi_image' ):
+        label = 'BGI_TB'
+    else:
+        label = 'GRD_TB'
+        
     # Make the figure
     fig, ax = plt.subplots(1,1)
     ax.set_title( filename )
     plt.imshow(tb, cmap=plt.cm.gray, vmin=100, vmax=320)
     plt.axis('off')
-    plt.colorbar(shrink=0.35, label='TB')
-    outfile = filename + '.png'
+    plt.colorbar(shrink=0.35, label=label)
+    outfile = filename + '.' + label + '.png'
     fig.savefig(outfile, dpi=300, bbox_inches='tight')
     print "png image saved to: " + outfile
 
@@ -60,18 +70,29 @@ def make_geotiff(grid, filename):
         sys.stderr.write("Error opening file " + filename + "\n")
         exit(-1)
 
+    # Parse the grid for pieces we need
+    try:
+        m = re.match(r'e2([nst])_(\d+)', grid)
+        projection, resolution = m.groups()
+    except AttributeError:
+        sys.stderr.write("Error parsing grid for projection/resolution.\n")
+        exit(-1)
+
     keys = f.variables.keys()
     var_name = 'none'
     for key in keys:
-        if ( 'a_image' == key ):
+        if ( 'a_image' == key and resolution != '25' ):
             var_name = 'a_image'
+            break
+        if ( 'grd_a_image' == key and resolution == '25' ):
+            var_name = 'grd_a_image'
             break
         if ( 'bgi_image' == key ):
             var_name = 'bgi_image'
             break
 
     if ( 'none' == var_name ):
-        sys.stderr.write( filename + ": " + "contains neither a_image nor bgi_image.\n" )
+        sys.stderr.write( filename + ": " + "contains none of a_image, grd_a_image nor bgi_image.\n" )
         exit(-1)
 
     # This reshape command should not be necessary if we are writing the .nc files
@@ -83,17 +104,16 @@ def make_geotiff(grid, filename):
     tb = np.flipud(tb.reshape(rows, cols))
     print np.amin(tb), np.amax(tb)
 
-    outfilename = filename + '.tif'
+    if ( var_name == 'a_image' ):
+        label = 'SIR_TB'
+    elif ( var_name == 'bgi_image' ):
+        label = 'BGI_TB'
+    else:
+        label = 'GRD_TB'
+
+    outfilename = filename + '.' + label + '.tif'
     driver = gdal.GetDriverByName("GTiff")
     dest_ds = driver.Create(outfilename, cols, rows, 1, gdal.GDT_UInt16)
-
-    # Parse the grid for pieces we need
-    try:
-        m = re.match(r'e2([nst])_(\d+)', grid)
-        projection, resolution = m.groups()
-    except AttributeError:
-        sys.stderr.write("Error parsing grid for projection/resolution.\n")
-        exit(-1)
 
     # Initialize the projection information
     # When we can connect to epsg v8.6 or later, we should replace proj.4 strings
