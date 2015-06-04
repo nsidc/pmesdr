@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
 from netCDF4 import Dataset
 import numpy as np
 import os
@@ -172,3 +173,20 @@ def make_geotiff(grid, filename):
     dest_ds = None
 
     sys.stderr.write("Wrote geotiff to " + outfilename + "\n")
+
+
+def init_basemap():
+
+    """Initialize basemap for the map we're using"""
+    rows = 720
+    cols = 720
+    map_scale_m = 25000
+
+    m = Basemap( width=map_scale_m*cols, height=map_scale_m*rows, resolution='l', projection='laea',
+                 lon_0=0, lat_0=90 )
+    m.drawcoastlines()
+    m.drawcountries()
+    m.drawmeridians(np.arange(-180.,180.,20.),labels=[False,False,False,True])
+    m.drawparallels(np.arange(10.,80.,20.), labels=[True,False,False,False])
+    return m
+
