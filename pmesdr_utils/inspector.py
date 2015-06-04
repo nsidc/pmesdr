@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 import numpy as np
+import os
 from osgeo import gdal, osr
 import re
 import sys
@@ -53,9 +54,9 @@ def make_png(res, filename):
         label = 'GRD_TB'
 
     # Make the figure
-    fig, ax = plt.subplots(1, 1)
-    ax.set_title( filename )
-    plt.imshow(tb, cmap=plt.cm.gray, vmin=100, vmax=320)
+    fig, ax = plt.subplots( 1, 1 )
+    ax.set_title( os.path.basename( filename ) )
+    plt.imshow( tb, cmap=plt.cm.gray, vmin=100, vmax=320 )
     plt.axis('off')
     plt.colorbar(shrink=0.35, label=label)
     outfile = filename + '.' + label + '.png'
