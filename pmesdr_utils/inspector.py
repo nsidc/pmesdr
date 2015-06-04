@@ -1,10 +1,10 @@
-import os
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 import numpy as np
 from osgeo import gdal, osr
 import re
 import sys
+
 
 def make_png(res, filename):
 
@@ -51,9 +51,9 @@ def make_png(res, filename):
         label = 'BGI_TB'
     else:
         label = 'GRD_TB'
-        
+
     # Make the figure
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     ax.set_title( filename )
     plt.imshow(tb, cmap=plt.cm.gray, vmin=100, vmax=320)
     plt.axis('off')
@@ -61,6 +61,7 @@ def make_png(res, filename):
     outfile = filename + '.' + label + '.png'
     fig.savefig(outfile, dpi=300, bbox_inches='tight')
     print "png image saved to: " + outfile
+
 
 def make_geotiff(grid, filename):
 
@@ -125,19 +126,19 @@ def make_geotiff(grid, filename):
         dest_srs = "+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m"
     else:
         dest_srs = "+proj=cea +lat_0=0 +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m"
-    
+
     proj.SetFromUserInput(dest_srs)
     dest_ds.SetProjection(proj.ExportToWkt())
 
     # Initialize the grid information (extent and scale)
     # Thanks to web page at:
     # http://geoexamples.blogspot.com/2012/01/creating-files-in-ogr-and-gdal-with.html
-    # The geotransform defines the relation between the raster coordinates x, y and the 
+    # The geotransform defines the relation between the raster coordinates x, y and the
     # geographic coordinates, using the following definition:
     # Xgeo = geotransform[0] + Xpixel*geotransform[1] + Yline*geotransform[2]
     # Ygeo = geotransform[3] + Xpixel*geotransform[4] + Yline*geotransform[5]
-    # The first and fourth parameters define the origin of the upper left pixel 
-    # The second and sixth parameters define the pixels size. 
+    # The first and fourth parameters define the origin of the upper left pixel
+    # The second and sixth parameters define the pixels size.
     # The third and fifth parameters define the rotation of the raster.
     # Values are meters
     if re.match(r'[ns]', projection):
@@ -163,10 +164,10 @@ def make_geotiff(grid, filename):
         else:
             sys.stderr.write("Unrecognized resolution " + resolution + "\n")
 
-    geotransform = (map_UL_x,scale_x,0.,map_UL_y,0.,scale_y)
+    geotransform = (map_UL_x, scale_x, 0., map_UL_y, 0., scale_y)
     dest_ds.SetGeoTransform(geotransform)
 
     dest_ds.GetRasterBand(1).WriteArray((tb + 0.5).astype(np.uint16))
     dest_ds = None
-    
+
     sys.stderr.write("Wrote geotiff to " + outfilename + "\n")
