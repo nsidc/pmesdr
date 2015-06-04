@@ -81,21 +81,20 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
     module unload $icc_netcdf
     module load $gcc_netcdf
     export LOCALE=JANUSgcc
-    if [[ $do_anaconda == 1 ]]; then
-	module load python/anaconda-2.1.0
-	export PATH=~/.conda/envs/pmesdr/bin:$PATH
-    else
-	module unload python/anaconda-2.1.0
-    fi
   fi
 
   if [[ "$compiler" == "icc" ]]; then
     echo "Setting netcdf for the icc compiler"
-    module load python/anaconda-2.1.0
     module unload $gcc_netcdf
     module load $icc_netcdf
     export LOCALE=JANUSicc
+  fi
+
+  if [[ $do_anaconda == 1 ]]; then
+    module load python/anaconda-2.1.0
     export PATH=~/.conda/envs/pmesdr/bin:$PATH
+  else
+    module unload python/anaconda-2.1.0
   fi
 
   module list
