@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[150];
+  char outpath[250];
 
   float latl, lonl, lath, lonh;
   char regname[11], *s;
@@ -446,8 +446,9 @@ int main(int argc, char **argv)
 
   nspace = nls * file_savings;/* space to allocate for measurement storage */
   printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
-  space = (char *) malloc(sizeof(char)*nspace);
-  if (space == NULL) {
+  /*  space = (char *) malloc(sizeof(char)*nspace); */
+  dumb = posix_memalign( (void**)&space, 64, nspace * sizeof(char) );
+  if (dumb != 0) {
       eprintf("*** Inadequate memory for data file storage\n");
       exit(-1);
   }
