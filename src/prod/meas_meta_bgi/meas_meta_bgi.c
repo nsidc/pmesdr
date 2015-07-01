@@ -65,6 +65,7 @@ double bgi_gamma=2.6703537554;    /*0.85*3.1415926535;/* default BGI gamma param
 float delta2=1.0;                 /* default BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor (fixed)*/
 float ithres=0.125;               /* default minimum gain threshold */
+float difthres=5.0;               /* BGI-AVE difference QA threshold */
 int Nsize=0;                      /* (built into the code) */
 float wscale=0.001;  /* pattern scale coversion factor int->float */
 
@@ -145,7 +146,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[150];
+  char outpath[250];
 
   float latl, lonl, lath, lonh;
   char regname[11], *s;
@@ -187,13 +188,14 @@ int main(int argc, char **argv)
   int ibeam = 0;
  
   int nmax, mdim, mdim2, mwork, k, dx, dy, i1, j1;
-  int *ix0, *iy0, *ind;
+  int *ix0, *iy0, *ind, *adds;
   char **indx;
   float sum, **z, **zc, *u, *v, *u1, *v1, *c, *work, *tb2, *patarr;
   float p,value1, value2;
   int *fill_array;
   short int *weight_array;
-
+  float *aveweights, tbave;
+  
 /* begin program */  
 
   printf("BYU SSM/I meta BG program: C version %f\n",VERSION);
@@ -206,6 +208,8 @@ int main(int argc, char **argv)
     printf("   gamma    = BGI gamma parameter\n");
     printf("   delta2   = BGI delta2 (noise variance)\n");
     printf("   ithres   = gain threshold (in normal space)\n");
+    printf("   difthres = BGI-AVE Q/A threshold\n");
+    printf("   mflag    = median filter if 1, do not run if 0, else use metafile value\n");
     return(-1);
   }
   file_in=argv[1];
@@ -223,7 +227,7 @@ int main(int argc, char **argv)
   if (argc > 4) sscanf(argv[4],"%f",&delta2);
   if (argc > 5) sscanf(argv[5],"%f",&ithres);
 
-  printf("BGI options: omega=%f gamma=%f delta2=%f gain thres=%f\n",omega, bgi_gamma, delta2, ithres);
+  printf("BGI options: omega=%f gamma=%lf delta2=%f gain thres=%f difthres=%f\n",omega, bgi_gamma, delta2, ithres, difthres);
 
   /* get input file size */
   fseek(imf, 0L, REL_EOF);
@@ -390,6 +394,13 @@ int main(int argc, char **argv)
 
    } while (end_flag == 0);
 
+   /* optionally override median filter flag */
+   i=-1;   
+   if (argc > 7) sscanf(argv[7],"%d",&i);
+   if (i==1) median_flag=1;   
+   if (i==0) median_flag=0;
+   printf("Median flag: %d\n",median_flag);
+
    printf("\n");
    printf("A output file: '%s'\n",a_name);
    printf("Info file: '%s'\n",info_name);
@@ -435,8 +446,9 @@ int main(int argc, char **argv)
 
   nspace = nls * file_savings;/* space to allocate for measurement storage */
   printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
-  space = (char *) malloc(sizeof(char)*nspace);
-  if (space == NULL) {
+  /*  space = (char *) malloc(sizeof(char)*nspace); */
+  dumb = posix_memalign( (void**)&space, 64, nspace * sizeof(char) );
+  if (dumb != 0) {
       eprintf("*** Inadequate memory for data file storage\n");
       exit(-1);
   }
@@ -597,17 +609,20 @@ int main(int argc, char **argv)
   u = vector(1,nmax);
   u1 = vector(1,nmax);
   v = vector(1,nmax); 
+  aveweights = vector(1,nmax); 
   v1 = vector(1,nmax); 
   ind = ivector(1,nmax);
+  adds = ivector(1,nmax);  
   work = vector(1,nmax);
   c = vector(1,nmax);
   tb2 = vector(1,nmax);
   patarr = (float *) malloc(sizeof(float)*mdim*mdim*nmax);
   ix0 = (int *) malloc(sizeof(int)*(nmax+1));
   iy0 = (int *) malloc(sizeof(int)*(nmax+1));
-  if (indx == NULL || z == NULL || u == NULL || v == NULL || c == NULL
-      || zc == NULL || u1 == NULL || v1 == NULL || ind == NULL
-      || work == NULL || tb2 == NULL || patarr == NULL || ix0 == NULL || iy0 == NULL) {
+  if (indx == NULL || z == NULL || zc == NULL || u == NULL
+      || u1 == NULL || v == NULL || aveweights == NULL || v1 == NULL
+      || ind == NULL || adds == NULL || work == NULL || c == NULL
+      || tb2 == NULL || patarr == NULL || ix0 == NULL || iy0 == NULL) {
     printf("*** error allocating BGI work arrays \n");
     exit(-1);
   }
@@ -643,8 +658,10 @@ int main(int argc, char **argv)
     *(a_val+its) = anodata_A;
 
     /* print progress */
-    if ((its % nsx) == nsx/2  && (its/nsx) % 5 == 0) 
+    if ((its % nsx) == nsx/2  && (its/nsx) % 50 == 0) {
       printf("Processing row %d of %d  %f\n",its/nsx,nsy,amin);
+      fflush( stdout );
+    }
     
     if (cnts[its] > 0) {
       m=0;  /* number of valid measurements */
@@ -672,13 +689,16 @@ int main(int argc, char **argv)
 	  sum = 0.0;
 	  for (i=0; i < count; i++) 
 	    if (fill_array[i]>0) {
-	      if (fill_array[i]-1 == its) 
+	      if (fill_array[i]-1 == its) {
 		v[m] = weight_array[i]*wscale;
+		aveweights[m] = weight_array[i]*wscale;
+	      }
 	      sum += weight_array[i]*wscale;
 	    }
 	  tb2[m] = tbval;
 	  if (sum > 0.0) v[m]=v[m]/sum;
 	  u[m]=1.0;
+	  adds[m] = iadd;
 	
 	  ix0[m] = iadd % nsx;
 	  iy0[m] = iadd / nsx;
@@ -701,7 +721,35 @@ int main(int argc, char **argv)
 	}
       }
 
-      if (m > 0) {
+      if (m > 0) { /* measurements are available for this pixel */
+
+	/* check for measurements at the same (quantized) center location and average */
+	dx=0;
+	for (i=1; i <= m; i++) {
+	  for (j=i+1; j <= m; j++) {
+	    if (adds[i]==adds[j]) dx++;
+	  }
+	}
+	if (dx > 0) { /* duplicated location measurement(s) */
+	  dx = 0;
+	  for (i=1; i <= m; i++) {
+	    if (adds[i] > -1) {
+	      dx++;
+	      dy = 0;
+	      for (j=i+1; j <= m; j++) {
+		if (adds[i]==adds[j]) {  /* average in redundant meaurement */
+		  dy++;
+		  v[dx]=(v[dx]*dy+v[j])/(float) dy;
+		  for (ix=0; ix<mdim*mdim; ix++)
+		    patarr[ix*nmax+dx-1]=(patarr[ix*nmax+dx-1]*dy+patarr[ix*nmax+j-1])/(float) dy;
+		  adds[j]=-1;
+		}
+	      }
+	    }
+	  }
+	  m=dx;  /* reset number of unique location measurements */
+	}
+
 
 	/* compute z matrix */
 	for (i=1; i <= m; i++)
@@ -786,6 +834,19 @@ int main(int argc, char **argv)
 	  printf("%d %f %f %f %f %f %f\n",i,u[i],v[i],u1[i],v1[i],work[i],tb2[i]);
 	*/
 	amin=a_val[its];
+
+      /* compute AVE estimate */
+	sum = 0.0;	
+	tbave = 0.0;  
+	for (i=1; i <= m; i++) {
+	  sum = sum + aveweights[i];
+	  tbave = tbave + aveweights[i] * tb2[i];
+	}
+        tbave = tbave / sum; /* AVE Tb estimate */
+
+      /* simple Q/A test and replace for bad BGI estimates */
+        if (abs(a_val[its] - tbave) > difthres)
+	  a_val[its]=tbave;	
 	
       } else /* pixel not hit, set its value to the default nodata value */
 	a_val[its] = anodata_A;

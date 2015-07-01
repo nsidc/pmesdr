@@ -17,8 +17,8 @@ TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 COMPAREDIR = $(PMESDR_REGRESS_DIR)
-#COMPARE_TOLERANCE = 0.01 # this tolerance should work for BYU regression, 0.0 works for NSIDCsnow
 COMPARE_TOLERANCE = $(PMESDR_COMPARE_TOLERANCE)
+MAX_DIFF_PIXELS = $(PMESDR_MAX_DIFF_PIXELS)
 
 #
 #	commands
@@ -161,11 +161,14 @@ endif
 
 rss_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/daily/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirRSS/e2s $(TESTDIR)/sirRSS/e2s
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/daily/sirRSS/e2s $(TESTDIR)/sirRSS/e2s
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirRSS/e2t $(TESTDIR)/sirRSS/e2t
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/daily/sirRSS/e2t $(TESTDIR)/sirRSS/e2t
 
 rss_quick :
 	$(RM) $(TESTDIR)/sirRSS/e2n
@@ -181,7 +184,8 @@ endif
 
 rss_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/quick/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
 
 csu_ease :
 	$(RM) $(TESTDIR)/sirCSU/e2n
@@ -217,11 +221,14 @@ endif
 
 csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/daily/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirCSU/e2s $(TESTDIR)/sirCSU/e2s
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/daily/sirCSU/e2s $(TESTDIR)/sirCSU/e2s
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/daily/sirCSU/e2t $(TESTDIR)/sirCSU/e2t
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/daily/sirCSU/e2t $(TESTDIR)/sirCSU/e2t
 
 csu_quick :
 	$(RM) $(TESTDIR)/sirCSU/e2n
@@ -237,5 +244,6 @@ endif
 
 csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) $(COMPAREDIR)/quick/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
+		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
+                $(COMPAREDIR)/quick/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
 

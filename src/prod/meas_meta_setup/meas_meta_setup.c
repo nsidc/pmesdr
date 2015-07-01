@@ -16,6 +16,7 @@
   revised by MAH at NSIDC 01/20/2015 + added DGL's changes in by hand
   revised by DGL at BYU  01/27/2015 + updated convert_time and morn LTOD
   revised by MAH at NSIDC 01/30/2015 + added DGL's changes in by hand
+  further revision are tracked in bitbucket and not via this comment list MAH 05/15/15
 
 ******************************************************************/
 
@@ -310,7 +311,8 @@ int main(int argc,char *argv[])
 
   char fname[250], mname[250];
   char line[1025], outpath[250];
-
+  char ftempname[250];
+  
   int i,j,k,n;
   int dend2, ilenyear, nrec, iscan, iscan1, iasc, ii, nsum;
   char *s;
@@ -519,7 +521,8 @@ int main(int argc,char *argv[])
 
     /* find start of file name and extract it */
     s=strchr(s,'=');
-    strcpy(fname,++s);
+    strcpy(ftempname,++s);
+    strcpy(fname, ftempname);
     no_trailing_blanks(fname);    
 
     nfile++;
@@ -1120,7 +1123,7 @@ FILE * get_meta(char *mname, char *outpath,
   /* read meta file, open output .setup files, write .setup file headers, and 
      store key parameters in memory */
  
-  FILE *file_id;  
+  FILE *file_id, *ftemp;  
 
   int irecords=0,ireg;
   char line[100], lin[100];
@@ -1545,8 +1548,15 @@ FILE * get_meta(char *mname, char *outpath,
 		      
 		      /* open output setup file for this section of this region */
 		      sprintf(outname,"%s/%s",outpath,fname2);		      
-		      a->reg_lu[iregion-1]=fopen(outname,"wb");
-		      printf("Opened setup output file '%s'  %d\n",outname,iregion);
+		      ftemp = fopen( outname, "wb" );
+
+		      if ( ftemp != NULL ) {
+			a->reg_lu[iregion-1] = ftemp;
+			printf("Opened setup output file '%s'  %d\n",outname,iregion);
+		      } else {
+			fprintf( stderr, "Couldnot open setup output file '%s' \n", outname );
+			return ( NULL );
+		      }
 
 		      /* write line header info */
 		      /* all values are assumed to be 4 byte long */
