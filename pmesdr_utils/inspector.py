@@ -1,3 +1,4 @@
+import gc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from netCDF4 import Dataset
@@ -62,7 +63,12 @@ def make_png(res, filename):
     plt.colorbar(shrink=0.35, label=label)
     outfile = filename + '.' + label + '.png'
     fig.savefig(outfile, dpi=300, bbox_inches='tight')
+
+    f.close()
     print "png image saved to: " + outfile
+
+    collected = gc.collect()
+    print "Garbage collector: collected %d objects." % (collected)
 
 
 def make_geotiff(grid, filename):
@@ -171,6 +177,8 @@ def make_geotiff(grid, filename):
 
     dest_ds.GetRasterBand(1).WriteArray((tb + 0.5).astype(np.uint16))
     dest_ds = None
+
+    f.close()
 
     sys.stderr.write("Wrote geotiff to " + outfilename + "\n")
 
