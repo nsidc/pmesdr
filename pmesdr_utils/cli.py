@@ -6,10 +6,11 @@ def make_png_cli():
     pass
 
 @make_png_cli.command()
+@argument('res')
 @argument('filename')
-def make_png(filename):
+def make_png(res, filename):
     """Given a pmesdr nc file, makes a png browse image of the tb data"""
-    inspector.make_png(filename)
+    inspector.make_png(res, filename)
 
 @group()
 def make_geotiff_cli():
