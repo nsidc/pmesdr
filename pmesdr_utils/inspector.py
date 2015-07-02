@@ -1,14 +1,17 @@
-import os
+import gc
 import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
 from netCDF4 import Dataset
 import numpy as np
+import os
 from osgeo import gdal, osr
 import re
 import sys
 
-def make_png(filename):
 
-    print "Making png image for: " + filename
+def make_png(res, filename):
+
+    print "Making png image for: " + res + ", " + filename
 
     # Read and reshape the array
     # If the array were stored correctly, we shouldn't have to
@@ -22,15 +25,18 @@ def make_png(filename):
     keys = f.variables.keys()
     var_name = 'none'
     for key in keys:
-        if ( 'a_image' == key ):
+        if ( 'a_image' == key and res != '25' ):
             var_name = 'a_image'
+            break
+        if ( 'grd_a_image' == key and res == '25' ):
+            var_name = 'grd_a_image'
             break
         if ( 'bgi_image' == key ):
             var_name = 'bgi_image'
             break
 
     if ( 'none' == var_name ):
-        sys.stderr.write( filename + ": " + "contains neither a_image nor bgi_image.\n" )
+        sys.stderr.write( filename + ": " + "contains none of a_image, grd_a_image nor bgi_image.\n" )
         exit(-1)
 
     # Eventually this will need to get the bgi array if it's a bgi dump file
@@ -42,15 +48,28 @@ def make_png(filename):
     print np.amin(tb), np.amax(tb)
     tb[ tb > 590. ] = 0.
 
+    if ( var_name == 'a_image' ):
+        label = 'SIR_TB'
+    elif ( var_name == 'bgi_image' ):
+        label = 'BGI_TB'
+    else:
+        label = 'GRD_TB'
+
     # Make the figure
-    fig, ax = plt.subplots(1,1)
-    ax.set_title( filename )
-    plt.imshow(tb, cmap=plt.cm.gray, vmin=100, vmax=320)
+    fig, ax = plt.subplots( 1, 1 )
+    ax.set_title( os.path.basename( filename ) )
+    plt.imshow( tb, cmap=plt.cm.gray, vmin=100, vmax=320 )
     plt.axis('off')
-    plt.colorbar(shrink=0.35, label='TB')
-    outfile = filename + '.png'
+    plt.colorbar(shrink=0.35, label=label)
+    outfile = filename + '.' + label + '.png'
     fig.savefig(outfile, dpi=300, bbox_inches='tight')
+
+    f.close()
     print "png image saved to: " + outfile
+
+    collected = gc.collect()
+    print "Garbage collector: collected %d objects." % (collected)
+
 
 def make_geotiff(grid, filename):
 
@@ -60,18 +79,29 @@ def make_geotiff(grid, filename):
         sys.stderr.write("Error opening file " + filename + "\n")
         exit(-1)
 
+    # Parse the grid for pieces we need
+    try:
+        m = re.match(r'e2([nst])_(\d+)', grid)
+        projection, resolution = m.groups()
+    except AttributeError:
+        sys.stderr.write("Error parsing grid for projection/resolution.\n")
+        exit(-1)
+
     keys = f.variables.keys()
     var_name = 'none'
     for key in keys:
-        if ( 'a_image' == key ):
+        if ( 'a_image' == key and resolution != '25' ):
             var_name = 'a_image'
+            break
+        if ( 'grd_a_image' == key and resolution == '25' ):
+            var_name = 'grd_a_image'
             break
         if ( 'bgi_image' == key ):
             var_name = 'bgi_image'
             break
 
     if ( 'none' == var_name ):
-        sys.stderr.write( filename + ": " + "contains neither a_image nor bgi_image.\n" )
+        sys.stderr.write( filename + ": " + "contains none of a_image, grd_a_image nor bgi_image.\n" )
         exit(-1)
 
     # This reshape command should not be necessary if we are writing the .nc files
@@ -83,17 +113,16 @@ def make_geotiff(grid, filename):
     tb = np.flipud(tb.reshape(rows, cols))
     print np.amin(tb), np.amax(tb)
 
-    outfilename = filename + '.tif'
+    if ( var_name == 'a_image' ):
+        label = 'SIR_TB'
+    elif ( var_name == 'bgi_image' ):
+        label = 'BGI_TB'
+    else:
+        label = 'GRD_TB'
+
+    outfilename = filename + '.' + label + '.tif'
     driver = gdal.GetDriverByName("GTiff")
     dest_ds = driver.Create(outfilename, cols, rows, 1, gdal.GDT_UInt16)
-
-    # Parse the grid for pieces we need
-    try:
-        m = re.match(r'e2([nst])_(\d+)', grid)
-        projection, resolution = m.groups()
-    except AttributeError:
-        sys.stderr.write("Error parsing grid for projection/resolution.\n")
-        exit(-1)
 
     # Initialize the projection information
     # When we can connect to epsg v8.6 or later, we should replace proj.4 strings
@@ -105,19 +134,19 @@ def make_geotiff(grid, filename):
         dest_srs = "+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m"
     else:
         dest_srs = "+proj=cea +lat_0=0 +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m"
-    
+
     proj.SetFromUserInput(dest_srs)
     dest_ds.SetProjection(proj.ExportToWkt())
 
     # Initialize the grid information (extent and scale)
     # Thanks to web page at:
     # http://geoexamples.blogspot.com/2012/01/creating-files-in-ogr-and-gdal-with.html
-    # The geotransform defines the relation between the raster coordinates x, y and the 
+    # The geotransform defines the relation between the raster coordinates x, y and the
     # geographic coordinates, using the following definition:
     # Xgeo = geotransform[0] + Xpixel*geotransform[1] + Yline*geotransform[2]
     # Ygeo = geotransform[3] + Xpixel*geotransform[4] + Yline*geotransform[5]
-    # The first and fourth parameters define the origin of the upper left pixel 
-    # The second and sixth parameters define the pixels size. 
+    # The first and fourth parameters define the origin of the upper left pixel
+    # The second and sixth parameters define the pixels size.
     # The third and fifth parameters define the rotation of the raster.
     # Values are meters
     if re.match(r'[ns]', projection):
@@ -143,10 +172,29 @@ def make_geotiff(grid, filename):
         else:
             sys.stderr.write("Unrecognized resolution " + resolution + "\n")
 
-    geotransform = (map_UL_x,scale_x,0.,map_UL_y,0.,scale_y)
+    geotransform = (map_UL_x, scale_x, 0., map_UL_y, 0., scale_y)
     dest_ds.SetGeoTransform(geotransform)
 
     dest_ds.GetRasterBand(1).WriteArray((tb + 0.5).astype(np.uint16))
     dest_ds = None
-    
+
+    f.close()
+
     sys.stderr.write("Wrote geotiff to " + outfilename + "\n")
+
+
+def init_basemap():
+
+    """Initialize basemap for the map we're using"""
+    rows = 720
+    cols = 720
+    map_scale_m = 25000
+
+    m = Basemap( width=map_scale_m*cols, height=map_scale_m*rows, resolution='l', projection='laea',
+                 lon_0=0, lat_0=90 )
+    m.drawcoastlines()
+    m.drawcountries()
+    m.drawmeridians(np.arange(-180.,180.,20.),labels=[False,False,False,True])
+    m.drawparallels(np.arange(10.,80.,20.), labels=[True,False,False,False])
+    return m
+
