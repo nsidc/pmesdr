@@ -98,6 +98,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
   fi
 
   module list
+  echo "Janus Compiler set to $COMPILER" 
 
 
 
@@ -131,4 +132,4 @@ else
 
 fi # endif janus
 
-echo "PMESDR system LOCALE=$LOCALE, COMPILER=$compiler, ready to use the PMESDR system."
+echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."

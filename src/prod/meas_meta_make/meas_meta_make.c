@@ -562,28 +562,9 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     fprintf(mout,"  Polarization=%d\n",ipolar);
     fprintf(mout,"  Beam_index=%d\n", ibeam);
 
-    /* SSM/I SPECIAL:set number of iterations based on channel number */
     /* read number iterations from .def file */
     fscanf( pid, "%d", &nits );
-    //    nits=20;
-    // if (ibeam>=4) nits=30;
     fprintf(mout," Max_iterations=%d\n", nits);
-
-    /* SSM/I SPECIAL: reset projection size to coarser for lower resolution beams */
-    if (ibeam < 6) {
-      if (projt==8 || projt==9 || projt==10) { /* EASE2 */
-	printf("Resizing for low channel number %d\n",ibeam);	
-	ascale=ascale-1;
-	nsy = nsy/2;
-	nsx = nsx/2;
-	xdeg = xdeg/2;
-	ydeg = ydeg/2;
-	xdim=xdeg*2;
-	ydim=ydeg*2;
-	aorglon=xdeg;
-	aorglat=ydeg;
-      }
-    }
 
     /* summarize region results */
     if (projt != 0) {
