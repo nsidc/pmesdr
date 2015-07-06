@@ -1,11 +1,16 @@
 #!/bin/bash
 # link_regression_files.sh
+#
+# This script needs to be executed by user@snow, *not* as
+# vagrant, since vagrant doesn't have write permission to the
+# regression directories.
+#
 # Created Wed Jul  1 2015 by Mary Jo Brodzik <brodzik@>
 # Refer to Refer to wiki page for filenameing conventions:
 # https://nsidc.org/confluence/display/PMESDR/CETB+Data+Set+File+Definition#CETBDataSetFileDefinition-FilenamingConvention
 
 # Make new directories
-orig_dir=/projects/PMESDR/pmesdr_regression_data/20150518
+orig_dir=/projects/PMESDR/pmesdr_regression_data/20150702
 root_dir=/projects/PMESDR/pmesdr_regression_data/20150701
 mkdir -v $root_dir/daily
 mkdir -v $root_dir/daily/bgiCSU
