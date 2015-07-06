@@ -69,7 +69,8 @@ def compare_cetb_directories( dir1, dir2,
     for i in np.arange( len( list1 ) ):
 
         if not ( os.path.basename( list1[ i ] ) == os.path.basename( list2[ i ] ) ):
-            sys.stderr.write( "> " + this_program + ": Filenames differ: " + list1[ i ] + " " + list2[ i ] + "\n" )
+            if ( verbose ):
+                sys.stderr.write( "> " + this_program + ": Filenames differ: " + list1[ i ] + " " + list2[ i ] + "\n" )
             return False
             
         if not compare_cetb_files( list1[ i ], list2[ i ],
