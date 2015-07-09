@@ -137,6 +137,7 @@ static const char *cetb_direction_id_name[] = {
  * Image reconstruction technique
  */
 typedef enum {
+  CETB_UNKNOWN_RECONSTRUCTION=-1,
   CETB_SIR,
   CETB_BGI
 } cetb_reconstruction_id;
@@ -166,14 +167,6 @@ static const char *cetb_swath_producer_id_name[] = {
   "RSS"
 };
 
-int cetb_valid_region_id( cetb_region_id region_id );
-int cetb_valid_resolution_factor( int factor );
-int cetb_valid_platform_id( cetb_platform_id platform_id );
-int cetb_valid_sensor_id( cetb_sensor_id sensor_id );
-int cetb_valid_date( int year, int doy );
-int cetb_valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
-int cetb_valid_reconstruction_id( cetb_reconstruction_id reconstruction_id );
-int cetb_valid_swath_producer_id( cetb_swath_producer_id producer_id );
 int cetb_filename( char *filename, int max_length, char *dirname,
 		   cetb_region_id region_id,
 		   int factor,

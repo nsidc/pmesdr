@@ -63,6 +63,10 @@ typedef enum {
   AMSRE_89V
 } amsre_channel_id;
   
+/*
+ * AMSR-E channel ID names
+ * THIS SHOULD BE REMOVED WHEN WE START USING GSX
+ */
 static const char *amsre_channel_name[] = {
   "XXX",
   "06H",
@@ -80,227 +84,18 @@ static const char *amsre_channel_name[] = {
 };
 
 static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_id );
+static int valid_date( int year, int doy );
+static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
+static int valid_platform_id( cetb_platform_id platform_id );
+static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id );
+static int valid_region_id( cetb_region_id region_id );
+static int valid_resolution_factor( int factor );
+static int valid_sensor_id( cetb_sensor_id sensor_id );
+static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
 
 /*********************************************************************
  * Public functions
  *********************************************************************/
-
-/*
- * cetb_valid_region_id - checks for valid region_id number
- *
- *  input :
- *    region_id : integer region_id number
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_region_id( cetb_region_id region_id ) {
-
-  if ( CETB_EASE2_N == region_id
-       || CETB_EASE2_S == region_id
-       || CETB_EASE2_T == region_id ) {
-    return 1;
-  } else {
-    fprintf( stderr, "%s: Invalid region_id=%d\n", __FUNCTION__, region_id );
-    return 0;
-  }    
-  
-}
-
-/*
- * cetb_valid_resolution_factor - checks for valid grid resolution factor
- *
- *  input :
- *    factor : integer resolution factor
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_resolution_factor( int factor ) {
-
-  if ( CETB_MIN_RESOLUTION_FACTOR <= factor && factor <= CETB_MAX_RESOLUTION_FACTOR ) {
-    return 1;
-  } else {
-    fprintf( stderr, "%s: Invalid factor=%d\n", __FUNCTION__, factor );
-    return 0;
-  }    
-  
-}
-
-/*
- * cetb_valid_platform - checks for valid platform id
- *
- *  input :
- *    platform_id : integer platform id
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_platform_id( cetb_platform_id platform_id ) {
-
-  if ( 0 <= platform_id && platform_id < CETB_NUM_PLATFORMS ) {
-    return 1;
-  } else {
-    fprintf( stderr, "%s: Invalid platform_id=%d\n", __FUNCTION__, platform_id );
-    return 0;
-  }    
-  
-}
-
-/*
- * cetb_valid_sensor - checks for valid sensor id
- *
- *  input :
- *    sensor_id : integer sensor id
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_sensor_id( cetb_sensor_id sensor_id ) {
-
-  if ( 0 <= sensor_id && sensor_id < CETB_NUM_SENSORS ) {
-    return 1;
-  } else {
-    fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
-    return 0;
-  }    
-  
-}
-
-/*
- * cetb_valid_date - checks for valid years (1978 or later) and
- *                   valid doy range (1-365 or 366 for leap years)
- *
- *  input :
- *    year : integer year
- *    doy : integer day of year
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_date( int year, int doy ) {
-
-  int doy_min = 1;
-  int doy_max = 365;
-  
-  if ( CETB_YEAR_START > year ) {
-    fprintf( stderr, "%s: year=%d is out of range\n", __FUNCTION__, year );
-    return 0;
-  }
-
-  if ( 0 == (year % 4) ) {
-    doy_max = 366;
-  }
-
-  if ( doy_min <= doy && doy <= doy_max ) {
-    return 1;
-  } else {
-    fprintf( stderr, "%s: doy=%d is out of range for year=%d\n", __FUNCTION__, doy, year );
-    return 0;
-  }    
-  
-}
-
-/*
- * cetb_valid_pass_direction - checks for NS regions with both or morning/evening
- *                             and T region with both or asc/des
- *
- *  input :
- *    region_id : region id
- *    direction_id : pass direction id
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
-
-  if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ) {
-    if ( CETB_ALL_PASSES == direction_id
-	 || CETB_MORNING_PASSES == direction_id
-	 || CETB_EVENING_PASSES == direction_id ) {
-      return 1;
-    } else {
-      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
-	       direction_id );
-      return 0;
-    }
-  } else if ( CETB_EASE2_T == region_id ) {
-    if ( CETB_ALL_PASSES == direction_id
-	 || CETB_ASC_PASSES == direction_id
-	 || CETB_DES_PASSES == direction_id ) {
-      return 1;
-    } else {
-      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
-	       direction_id );
-      return 0;
-    }
-  } else {
-      fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id - CETB_EASE2_N ] );
-      return 0;
-  }
-
-}
-
-/*
- * cetb_valid_reconstruction_id - checks for valid reconstruction id
- *
- *  input :
- *    reconstruction_id : reconstruction id
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
-
-  if ( CETB_SIR == reconstruction_id
-       || CETB_BGI == reconstruction_id ) {
-    return 1;
-  } else {
-    fprintf( stderr, "%s: Invalid reconstruction_id=%d\n", __FUNCTION__, reconstruction_id );
-    return 0;
-  }    
-  
-}
-
-/*
- * cetb_valid_swath_producer_id - checks for valid swath producer id
- *
- *  input :
- *    producer_id : producer id
- *
- *  output : n/a
- *
- *  result : 1 is valid, 0 otherwise
- *
- */
-int cetb_valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
-
-  if ( CETB_CSU == producer_id
-       || CETB_RSS == producer_id ) {
-    return 1;
-  } else {
-    fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
-    return 0;
-  }    
-  
-}
 
 /*
  * cetb_filename - returns a pointer to an output filename with
@@ -335,15 +130,15 @@ int cetb_filename( char *filename, int max_length, char *dirname,
 
   char channel_str[channel_str_length] = "";
   
-  if ( !cetb_valid_region_id( region_id ) ) return 0;
-  if ( !cetb_valid_resolution_factor( factor ) ) return 0;
-  if ( !cetb_valid_platform_id( platform_id ) ) return 0;
-  if ( !cetb_valid_sensor_id( sensor_id ) ) return 0;
-  if ( !cetb_valid_date( year, doy ) ) return 0;
+  if ( !valid_region_id( region_id ) ) return 0;
+  if ( !valid_resolution_factor( factor ) ) return 0;
+  if ( !valid_platform_id( platform_id ) ) return 0;
+  if ( !valid_sensor_id( sensor_id ) ) return 0;
+  if ( !valid_date( year, doy ) ) return 0;
   if ( !channel_name( channel_str, sensor_id, beam_id ) ) return 0;
-  if ( !cetb_valid_pass_direction( region_id, direction_id ) ) return 0;
-  if ( !cetb_valid_reconstruction_id( reconstruction_id ) ) return 0;
-  if ( !cetb_valid_swath_producer_id( producer_id ) ) return 0;
+  if ( !valid_pass_direction( region_id, direction_id ) ) return 0;
+  if ( !valid_reconstruction_id( reconstruction_id ) ) return 0;
+  if ( !valid_swath_producer_id( producer_id ) ) return 0;
 
   /*
    * Needs check for exceeding max length?
@@ -413,5 +208,222 @@ static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_i
 
   return 1;
 
+}
+
+/*
+ * valid_date - checks for valid years (1978 or later) and
+ *                   valid doy range (1-365 or 366 for leap years)
+ *
+ *  input :
+ *    year : integer year
+ *    doy : integer day of year
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_date( int year, int doy ) {
+
+  int doy_min = 1;
+  int doy_max = 365;
+  
+  if ( CETB_YEAR_START > year ) {
+    fprintf( stderr, "%s: year=%d is out of range\n", __FUNCTION__, year );
+    return 0;
+  }
+
+  if ( 0 == (year % 4) ) {
+    doy_max = 366;
+  }
+
+  if ( doy_min <= doy && doy <= doy_max ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: doy=%d is out of range for year=%d\n", __FUNCTION__, doy, year );
+    return 0;
+  }    
+  
+}
+
+/*
+ * valid_pass_direction - checks for NS regions with both or morning/evening
+ *                             and T region with both or asc/des
+ *
+ *  input :
+ *    region_id : region id
+ *    direction_id : pass direction id
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
+
+  if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ) {
+    if ( CETB_ALL_PASSES == direction_id
+	 || CETB_MORNING_PASSES == direction_id
+	 || CETB_EVENING_PASSES == direction_id ) {
+      return 1;
+    } else {
+      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
+	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
+	       direction_id );
+      return 0;
+    }
+  } else if ( CETB_EASE2_T == region_id ) {
+    if ( CETB_ALL_PASSES == direction_id
+	 || CETB_ASC_PASSES == direction_id
+	 || CETB_DES_PASSES == direction_id ) {
+      return 1;
+    } else {
+      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
+	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
+	       direction_id );
+      return 0;
+    }
+  } else {
+      fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
+	       cetb_region_id_name[ region_id - CETB_EASE2_N ] );
+      return 0;
+  }
+
+}
+
+/*
+ * valid_platform - checks for valid platform id
+ *
+ *  input :
+ *    platform_id : integer platform id
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_platform_id( cetb_platform_id platform_id ) {
+
+  if ( 0 <= platform_id && platform_id < CETB_NUM_PLATFORMS ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: Invalid platform_id=%d\n", __FUNCTION__, platform_id );
+    return 0;
+  }    
+  
+}
+
+/*
+ * valid_reconstruction_id - checks for valid reconstruction id
+ *
+ *  input :
+ *    reconstruction_id : reconstruction id
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
+
+  if ( CETB_SIR == reconstruction_id
+       || CETB_BGI == reconstruction_id ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: Invalid reconstruction_id=%d\n", __FUNCTION__, reconstruction_id );
+    return 0;
+  }    
+  
+}
+
+/*
+ * valid_region_id - checks for valid region_id number
+ *
+ *  input :
+ *    region_id : integer region_id number
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_region_id( cetb_region_id region_id ) {
+
+  if ( CETB_EASE2_N == region_id
+       || CETB_EASE2_S == region_id
+       || CETB_EASE2_T == region_id ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: Invalid region_id=%d\n", __FUNCTION__, region_id );
+    return 0;
+  }    
+  
+}
+
+/*
+ * valid_resolution_factor - checks for valid grid resolution factor
+ *
+ *  input :
+ *    factor : integer resolution factor
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_resolution_factor( int factor ) {
+
+  if ( CETB_MIN_RESOLUTION_FACTOR <= factor && factor <= CETB_MAX_RESOLUTION_FACTOR ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: Invalid factor=%d\n", __FUNCTION__, factor );
+    return 0;
+  }    
+  
+}
+
+/*
+ * valid_sensor - checks for valid sensor id
+ *
+ *  input :
+ *    sensor_id : integer sensor id
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_sensor_id( cetb_sensor_id sensor_id ) {
+
+  if ( 0 <= sensor_id && sensor_id < CETB_NUM_SENSORS ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
+    return 0;
+  }    
+  
+}
+
+/*
+ * valid_swath_producer_id - checks for valid swath producer id
+ *
+ *  input :
+ *    producer_id : producer id
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+static int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
+
+  if ( CETB_CSU == producer_id
+       || CETB_RSS == producer_id ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
+    return 0;
+  }    
+  
 }
 
