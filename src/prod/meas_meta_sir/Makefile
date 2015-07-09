@@ -14,6 +14,8 @@
 #	installation directories
 #
 TOPDIR = $(PMESDR_TOP_DIR)
+INCDIR = $(TOPDIR)/include
+LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 COMPAREDIR = $(PMESDR_REGRESS_DIR)
@@ -90,19 +92,19 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS =  -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
+CFLAGS =  -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div # -Zp8
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -g
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump -g
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_sir.c ../meas_undump/netcdf_dump.c
 OBJS = meas_meta_sir.o netcdf_dump.o
-HDRS = $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
+HDRS = $(INCDIR)/cetb_file.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
 BIN = meas_meta_sir
 
 RSSE2SFILES = $(wildcard $(TESTDIR)/setupRSS/e2s/F*E2S*.setup)

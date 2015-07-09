@@ -22,6 +22,7 @@
 #include <time.h>
 #include <netcdf.h>
 
+#include "cetb_file.h"
 #include "sir3.h"
 
 #define VERSION 1.2
