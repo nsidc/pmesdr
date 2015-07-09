@@ -22,7 +22,9 @@
  */
 int cetb_valid_region_id( cetb_region_id region_id ) {
 
-  if ( CETB_EASE2_N <= region_id && region_id < CETB_NUM_REGIONS ) {
+  if ( CETB_EASE2_N == region_id
+       || CETB_EASE2_S == region_id
+       || CETB_EASE2_T == region_id ) {
     return 1;
   } else {
     fprintf( stderr, "%s: Invalid region_id=%d\n", __FUNCTION__, region_id );
@@ -98,9 +100,50 @@ int cetb_valid_sensor_id( cetb_sensor_id sensor_id ) {
 }
 
 /*
- * cetb_filename - returns a pointer to an output filename with the requested characteristics;
- *                 no checking will be done for consistencies like dates and sensors,
- #                 depends on the caller to input a combination that makes sense
+ * cetb_valid_date - checks for valid years (1978 or later) and
+ *                   valid doy range (1-365 or 366 for leap years)
+ *
+ *  input :
+ *    year : integer year
+ *    doy : integer day of year
+ *
+ *  output : n/a
+ *
+ *  result : 1 is valid, 0 otherwise
+ *
+ */
+int cetb_valid_date( int year, int doy ) {
+
+  int doy_min = 1;
+  int doy_max = 365;
+  
+  if ( CETB_YEAR_START > year ) {
+    fprintf( stderr, "%s: year=%d is out of range\n", __FUNCTION__, year );
+    return 0;
+  }
+
+  if ( 0 == (year % 4) ) {
+    doy_max = 366;
+  }
+
+  if ( doy_min <= doy && doy <= doy_max ) {
+    return 1;
+  } else {
+    fprintf( stderr, "%s: doy=%d is out of range for year=%d\n", __FUNCTION__, doy, year );
+    return 0;
+  }    
+  
+}
+
+/*
+ * cetb_filename - returns a pointer to an output filename with
+ *                 the requested characteristics; Only limited
+ *                 checking will be done for consistencies like
+ *                 dates and sensors, for example doy is checked
+ *                 for range in 1-365 or 366 for leap years, and
+ *                 years prior to 1978 are not allowed, but
+ *                 mostly depends on the caller to input a
+ *                 combination that makes sense
  *
  *  input :
  *
@@ -125,6 +168,7 @@ int cetb_filename( char *filename, int max_length, char *dirname,
   if ( !cetb_valid_resolution_factor( factor ) ) return 0;
   if ( !cetb_valid_platform_id( platform_id ) ) return 0;
   if ( !cetb_valid_sensor_id( sensor_id ) ) return 0;
+  if ( !cetb_valid_date( year, doy ) ) return 0;
 
   /*
    * Needs check for exceeding max length?

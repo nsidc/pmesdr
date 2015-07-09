@@ -11,8 +11,7 @@ typedef enum {
   CETB_NO_REGION=-1,
   CETB_EASE2_N=308,
   CETB_EASE2_S,
-  CETB_EASE2_T,
-  CETB_NUM_REGIONS
+  CETB_EASE2_T
 } cetb_region_id;
 
 /*
@@ -103,10 +102,16 @@ static const char *cetb_sensor_id_name[] = {
   "SSMIS",
 };
 
+/*
+ * Valid starting year for crude date checking
+ */
+#define CETB_YEAR_START 1978
+
 int cetb_valid_region_id( cetb_region_id region_id );
 int cetb_valid_resolution_factor( int factor );
 int cetb_valid_platform_id( cetb_platform_id platform_id );
 int cetb_valid_sensor_id( cetb_sensor_id sensor_id );
+int cetb_valid_date( int year, int doy );
 int cetb_filename( char *filename, int max_length, char *dirname,
 		   cetb_region_id region_id,
 		   int factor,

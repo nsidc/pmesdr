@@ -1,8 +1,17 @@
 #include "unity.h"
 #include "cetb_file.h"
 
+/*
+ * global variables used in multiple tests
+ * (Not sure if I should initialize the strings in setUp)
+ */
+int status;
+char filename[ FILENAME_MAX ] = "";
+char dirname[ FILENAME_MAX ] = "/path_to_file";;
+
 void setUp(void)
 {
+  status = 0;
 }
 
 void tearDown(void)
@@ -11,9 +20,6 @@ void tearDown(void)
 
 void test_bogus_region_id(void)
 {
-  int status;
-  char filename[ FILENAME_MAX ] = "";
-  char dirname[ FILENAME_MAX ] = "/path_to_file";
   cetb_region_id region_id = 311;
   int factor = 1;
   cetb_platform_id platform_id = CETB_F08;
@@ -27,9 +33,6 @@ void test_bogus_region_id(void)
 
 void test_bogus_factor(void)
 {
-  int status;
-  char filename[ FILENAME_MAX ] = "";
-  char dirname[ FILENAME_MAX ] = "/path_to_file";
   cetb_region_id region_id = 308;
   int factor = 5;
   cetb_platform_id platform_id = CETB_F08;
@@ -41,16 +44,60 @@ void test_bogus_factor(void)
   TEST_ASSERT_FALSE( status );
 }
 
-/* test_bogus_platform */
-/* test_bogus_sensor */
-/* test_bogus_year */
-/* test_bogus_doy */
+void test_bogus_platform(void)
+{
+  cetb_region_id region_id = 308;
+  int factor = 2;
+  cetb_platform_id platform_id = CETB_NO_PLATFORM;
+  cetb_sensor_id sensor_id = CETB_SSMI;
+  int year = 1991;
+  int doy = 1;
+
+  status = cetb_filename( filename, FILENAME_MAX - 1, dirname, region_id, factor, platform_id, sensor_id, year, doy );
+  TEST_ASSERT_FALSE( status );
+}
+
+void test_bogus_sensor(void)
+{
+  cetb_region_id region_id = 308;
+  int factor = 2;
+  cetb_platform_id platform_id = CETB_F08;
+  cetb_sensor_id sensor_id = CETB_NO_SENSOR;
+  int year = 1991;
+  int doy = 1;
+
+  status = cetb_filename( filename, FILENAME_MAX - 1, dirname, region_id, factor, platform_id, sensor_id, year, doy );
+  TEST_ASSERT_FALSE( status );
+}
+
+void test_bogus_year(void)
+{
+  cetb_region_id region_id = 308;
+  int factor = 2;
+  cetb_platform_id platform_id = CETB_F08;
+  cetb_sensor_id sensor_id = CETB_SSMI;
+  int year = 1970;
+  int doy = 1;
+
+  status = cetb_filename( filename, FILENAME_MAX - 1, dirname, region_id, factor, platform_id, sensor_id, year, doy );
+  TEST_ASSERT_FALSE( status );
+}
+
+void test_bogus_doy(void)
+{
+  cetb_region_id region_id = 308;
+  int factor = 2;
+  cetb_platform_id platform_id = CETB_F08;
+  cetb_sensor_id sensor_id = CETB_SSMI;
+  int year = 1987;
+  int doy = 366;
+
+  status = cetb_filename( filename, FILENAME_MAX - 1, dirname, region_id, factor, platform_id, sensor_id, year, doy );
+  TEST_ASSERT_FALSE( status );
+}
 
 void test_cetb_north_filename(void)
 {
-  int status;
-  char filename[ FILENAME_MAX ] = "";
-  char dirname[ FILENAME_MAX ] = "/path_to_file";
   cetb_region_id region_id = 308;
   int factor = 0;
   cetb_platform_id platform_id = CETB_F13;
@@ -66,9 +113,6 @@ void test_cetb_north_filename(void)
 
 void test_cetb_south_filename(void)
 {
-  int status;
-  char filename[ FILENAME_MAX ] = "";
-  char dirname[ FILENAME_MAX ] = "/path_to_file";
   cetb_region_id region_id = 309;
   int factor = 1;
   cetb_platform_id platform_id = CETB_AQUA;
@@ -84,9 +128,6 @@ void test_cetb_south_filename(void)
 
 void test_cetb_temperate_filename(void)
 {
-  int status;
-  char filename[ FILENAME_MAX ] = "";
-  char dirname[ FILENAME_MAX ] = "/path_to_file";
   cetb_region_id region_id = 310;
   int factor = 2;
   cetb_platform_id platform_id = CETB_F13;
