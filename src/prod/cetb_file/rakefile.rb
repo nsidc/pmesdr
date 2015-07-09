@@ -5,11 +5,29 @@ Ceedling.load_project
 
 task :default => %w[ test:all release ]
 
-desc "Install linkable object."
+desc "Install headers and linkable objects to PMESDR project."
 task :install do
-  puts "Installing now."
+
+  # Need to figure out how to make the include and lib dirs if
+  # they don't already exist
+  puts "Installing .o files:"
   from = File.join(PROJECT_BUILD_ROOT,"release","out","c","*.o")
-  puts "from #{from}."
+  to = "#{ENVIRONMENT_PMESDR_TOP_DIR}/lib"
+  puts "from #{from}"
+  puts "to   #{to}"
+  FileUtils.cp(Dir.glob(from),to)
+
+  # I'm sure there's a better way to do this,
+  # (there has to be a way to access the list of file you get
+  # when you run rake files:header)
+  # but for now:
+  puts "Installing .h files:"
+  from = File.join(PROJECT_BUILD_ROOT,"..","src","*.h")
+  to = "#{ENVIRONMENT_PMESDR_TOP_DIR}/include"
+  puts "from #{from}"
+  puts "to   #{to}"
+  FileUtils.cp(Dir.glob(from),to)
+
 end
 
 # Thanks to post at https://groups.google.com/forum/#!topic/throwtheswitch/PbNr1rGzoSk
