@@ -486,7 +486,7 @@ int copy_float_array_nc(int ncid_in, int ncid_out, char *name, float *val, int *
 
 int ez_copy_head(eznc_head *in, eznc_head *out)
 {
-  strncpy(out->fname, in->fname, 180);
+  strcpy(out->fname, in->fname);
   out->ncid=in->ncid;
   out->nsx=in->nsx;
   out->nsy=in->nsy;
