@@ -14,6 +14,8 @@
 #
 # PMESDR_TOPDIR should be the location you check the git repo out at
 TOPDIR = $(PMESDR_TOP_DIR)
+INCDIR = $(TOPDIR)/include
+LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
 
 #
@@ -79,7 +81,7 @@ endif
 # end configuration section
 #------------------------------------------------------------------------
 
-SUBDIRS = ../sirlib/c meas_meta_make \
+SUBDIRS = cetb_file/src ../sirlib/c meas_meta_make \
 	meas_meta_setup/meas_meta_setup_RSS meas_meta_setup/meas_meta_setup_CSU \
 	meas_meta_sir meas_meta_bgi meas_undump
 
