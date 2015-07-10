@@ -37,7 +37,7 @@ void setUp( void ) {
   beam_id = 1;
   direction_id = CETB_ALL_PASSES;
   reconstruction_id = CETB_SIR;
-  producer_id = CETB_UNKNOWN_PRODUCER;
+  producer_id = CETB_NO_PRODUCER;
   
 }
 
@@ -176,3 +176,33 @@ void test_cetb_temperate_filename( void ) {
   TEST_ASSERT_EQUAL_STRING( "/path_to_file/EASE2_T6.25km.F13_SSMI.1991365.85V.A.SIR.CSU.v0.1.nc", filename );
   
 }
+
+void test_get_direction( void ) {
+
+  char info_name[ FILENAME_MAX ] = "FD1m-stuff";
+  TEST_ASSERT_TRUE( CETB_MORNING_PASSES == cetb_get_direction_id_from_info_name( info_name ) );
+  
+}
+
+void test_get_bogus_direction( void ) {
+
+  char info_name[ FILENAME_MAX ] = "FD1z-bogus";
+  TEST_ASSERT_TRUE( CETB_NO_DIRECTION == cetb_get_direction_id_from_info_name( info_name ) );
+  
+}
+    
+void test_get_producer( void ) {
+
+  char outpath[ FILENAME_MAX ] = "/here/is/stuff/sirCSU/";
+  TEST_ASSERT_TRUE( CETB_CSU == cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+  
+}
+
+void test_get_bogus_producer( void ) {
+
+  char outpath[ FILENAME_MAX ] = "/here/is/stuff/bogus/";
+  TEST_ASSERT_TRUE( CETB_NO_PRODUCER
+		    == cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+  
+}
+

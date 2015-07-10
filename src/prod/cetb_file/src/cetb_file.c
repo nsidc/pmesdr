@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 #include "cetb_file.h"
 
@@ -98,6 +99,81 @@ static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
  *********************************************************************/
 
 /*
+ * Temporaray function, to parse the metafile info_file string
+ * to figure out what the pass direction is
+ */
+cetb_direction_id cetb_get_direction_id_from_info_name( const char *info_name ) {
+
+  int pos = 3; /* This is very fragile! */
+  cetb_direction_id id = CETB_NO_DIRECTION;
+  
+  if ( 'm' == info_name[ pos ] ) {
+    id = CETB_MORNING_PASSES;
+  } else if ( 'e' == info_name[ pos ] ) {
+    id = CETB_EVENING_PASSES;
+  } else if ( 'a' == info_name[ pos ] ) {
+    id = CETB_ASC_PASSES;
+  } else if ( 'd' == info_name[ pos ] ) {
+    id = CETB_DES_PASSES;
+  } else {
+    fprintf( stderr, "%s: Error parsing info_name=%s for pass direction\n",
+	     __FUNCTION__, info_name );
+  }
+
+  return id;
+  
+}
+
+/*
+ * Temporaray function, to parse the output path string
+ * to figure out what the swath producer is
+ * Assumes the path contains something like "sirCSU"
+ */
+cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outpath,
+								const cetb_reconstruction_id reconstruction_id ) {
+
+  cetb_swath_producer_id id = CETB_NO_PRODUCER;
+  int max_len = 10;
+  char swath_producer_str[ max_len ];
+  char recon_str[ max_len ];
+  char *ptr;
+  int i;
+  
+  if ( !valid_reconstruction_id( reconstruction_id ) ) {
+    return id;
+  }
+
+  /* Convert the recon_str to lower case, so we find paths like "/.../bgiCSU" */
+  strncpy( recon_str, cetb_reconstruction_id_name[ reconstruction_id ], max_len - 1 );
+  for ( i=0; i < strlen( recon_str ); i++ ) {
+    recon_str[i] = tolower( recon_str[i] );
+  }
+  
+  ptr = strstr( outpath, recon_str );
+  if ( !ptr ) {
+    fprintf( stderr, "%s: Error parsing outpath=%s for reconstruction type=%s.\n",
+	     __FUNCTION__, outpath, recon_str );
+    return id;
+  }
+  strncpy( swath_producer_str, ptr + strlen( recon_str ), 3 );
+
+  for ( i = 0; i < CETB_NUM_PRODUCERS; i++ ) {
+    if ( 0 == strcasecmp( cetb_swath_producer_id_name[ i ], swath_producer_str ) ) {
+      id = (cetb_swath_producer_id) i;
+      break;
+    }
+  }
+
+  if ( CETB_NO_PRODUCER == id ) {
+    fprintf( stderr, "%s: Error parsing outpath=%s for swath producer.\n",
+	     __FUNCTION__, outpath );
+  }
+
+  return id;
+
+}
+
+/*
  * cetb_filename - returns a pointer to an output filename with
  *                 the requested characteristics; Only limited
  *                 checking will be done for consistencies like
@@ -116,7 +192,7 @@ static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
  *  result : 0 on error, 1 otherwise
  *
 o */
-int cetb_filename( char *filename, int max_length, char *dirname,
+int cetb_filename( char *filename, size_t max_length, char *dirname,
 		   cetb_region_id region_id,
 		   int factor,
 		   cetb_platform_id platform_id,
@@ -141,9 +217,10 @@ int cetb_filename( char *filename, int max_length, char *dirname,
   if ( !valid_swath_producer_id( producer_id ) ) return 0;
 
   /*
-   * Needs check for exceeding max length?
+   * Needs check for sum of parts not exceeding max_length
    */
-  snprintf( filename, max_length, "%s/%s%s.%s_%s.%4.4d%3.3d.%3s.%s.%s.%s.%s.nc",
+  snprintf( filename, max_length, 
+	    "%s/%s%s.%s_%s.%4.4d%3.3d.%3s.%s.%s.%s.%s.nc",
 	    dirname,
 	    cetb_region_id_name[ region_id - CETB_EASE2_N ],
 	    cetb_resolution_name[ factor ],

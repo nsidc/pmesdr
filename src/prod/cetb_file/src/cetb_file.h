@@ -154,9 +154,10 @@ static const char *cetb_reconstruction_id_name[] = {
  * Input swath data producer
  */
 typedef enum {
-  CETB_UNKNOWN_PRODUCER=-1,
+  CETB_NO_PRODUCER=-1,
   CETB_CSU,
-  CETB_RSS
+  CETB_RSS,
+  CETB_NUM_PRODUCERS
 } cetb_swath_producer_id;
 
 /*
@@ -167,7 +168,11 @@ static const char *cetb_swath_producer_id_name[] = {
   "RSS"
 };
 
-int cetb_filename( char *filename, int max_length, char *dirname,
+cetb_direction_id cetb_get_direction_id_from_info_name( const char *info_name );
+cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outpath,
+								const cetb_reconstruction_id reconstruction_id );
+
+int cetb_filename( char *filename, size_t max_length, char *dirname,
 		   cetb_region_id region_id,
 		   int factor,
 		   cetb_platform_id platform_id,
