@@ -8,10 +8,11 @@ dump file header information
 written  9 Jun 2014 by DGL at BYU
 
 */
+#include <stdio.h>
 
 typedef struct
 {
-  char fname[100];
+  char fname[FILENAME_MAX];
   int ncid;
   int nsx, nsy, iopt;
   float ascale, bscale, a0, b0, xdeg, ydeg;
