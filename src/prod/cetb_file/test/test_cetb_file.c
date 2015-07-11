@@ -191,10 +191,17 @@ void test_get_bogus_direction( void ) {
   
 }
     
-void test_get_producer( void ) {
+void test_get_producer_sir( void ) {
 
   char outpath[ FILENAME_MAX ] = "/here/is/stuff/sirCSU/";
   TEST_ASSERT_TRUE( CETB_CSU == cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+  
+}
+
+void test_get_producer_bgi( void ) {
+
+  char outpath[ FILENAME_MAX ] = "/home/vagrant/measures-byu/NSIDCtest/bgiCSU";
+  TEST_ASSERT_TRUE( CETB_CSU == cetb_get_swath_producer_id_from_outpath( outpath, CETB_BGI ) );
   
 }
 
