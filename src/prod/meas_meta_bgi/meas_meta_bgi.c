@@ -27,6 +27,7 @@
 #include <time.h>
 #include <netcdf.h>
 
+#include "cetb_file.h"
 #include "sir3.h"
 
 #define NRANSI
@@ -73,9 +74,9 @@ float wscale=0.001;  /* pattern scale coversion factor int->float */
 
 void eprintf(char *s)
 { /* print to both stdout and stderr to catch errors */
-  fprintf(stdout,s);
+  fprintf(stdout,"%s",s);
   fflush(stdout);
-  fprintf(stderr,s);
+  fprintf(stderr,"%s",s);
   fflush(stderr);
 }
 
@@ -146,7 +147,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[250];
+  char outpath[FILENAME_MAX];
 
   float latl, lonl, lath, lonh;
   char regname[11], *s;
@@ -178,7 +179,7 @@ int main(int argc, char **argv)
 
   char a_name[100], info_name[100], line[100];
 
-  char inter_name[250];
+  char inter_name[FILENAME_MAX];
   int ncid, ncerr;
 
   long head_len;
@@ -220,7 +221,7 @@ int main(int argc, char **argv)
      exit(-1);
   }
  
-  strncpy(outpath,"./",250); /* default output path */  
+  strcpy(outpath,"./"); /* default output path */  
 
   if (argc > 2) sscanf(argv[2],"%s",outpath);
   if (argc > 3) sscanf(argv[3],"%lf",&bgi_gamma);
@@ -406,8 +407,23 @@ int main(int argc, char **argv)
    printf("Info file: '%s'\n",info_name);
    printf("\n");
 
-  /* generate output intermediate dump file name, open file, and dump info */
-   sprintf(inter_name,"%s/%s_dump1.nc",outpath,info_name);
+   /*
+    * GSX FIX ME WHEN WE START USING gsx:
+    * HARDCODED 
+    * See related note in meas_meta_sir about what has to be fixed, here.
+    *
+    * Generate output product filename
+    */
+   if ( !cetb_filename( inter_name, FILENAME_MAX, outpath,
+			iregion, ascale, CETB_F13, CETB_SSMI,
+			iyear, isday, ibeam,
+			cetb_get_direction_id_from_info_name( info_name ),
+			CETB_BGI,
+			cetb_get_swath_producer_id_from_outpath( outpath, CETB_BGI ) ) ) {
+     fprintf( stderr, "%s: Error making product filename.\n", __FUNCTION__ );
+     exit( -1 );
+   }
+
    ncerr=nc_open_file_write_head(inter_name, &ncid, nsx, nsy, iopt, 
 				 ascale, bscale, a0, b0, xdeg, ydeg, 
 				 isday, ieday, ismin, iemin, iyear, iregion, ipol, 
@@ -872,7 +888,7 @@ int main(int argc, char **argv)
   }
 
   ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
-  printf("\nFinished writing dump file: %s\n",inter_name);  
+  fprintf( stderr, "\n%s : Finished writing product file: %s\n", __FUNCTION__, inter_name );
 
   if (errors == 0) {
     printf("No errors encountered\n");

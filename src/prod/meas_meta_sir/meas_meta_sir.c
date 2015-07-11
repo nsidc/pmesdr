@@ -188,7 +188,7 @@ int main(int argc, char **argv)
     grd_pname[100], grd_cname[100], 
     info_name[100], line[100];
 
-  char inter_name[250];
+  char inter_name[FILENAME_MAX];
   int ncid, ncerr;
 
   int storage = 0;
@@ -502,8 +502,33 @@ int main(int argc, char **argv)
    printf("Info file: '%s'\n",info_name);
    printf("\n");
 
-   /* generate output intermediate dump file name, open file, and dump info */
-   sprintf(inter_name,"%s/%s_dump.nc",outpath,info_name);
+   /*
+    * GSX FIX ME WHEN WE START USING gsx:
+    *
+    * HARDCODED 
+    * and grabbing the 4th characater of the metafile output filename
+    * Not sure if ascale is the factor we really want (FACTOR 1=12.k km...)
+    *
+    * setup needs to save:
+    * platform_id
+    * sensor_id
+    * resolution factor
+    * pass direction
+    * swath_producer_id (CSU or RSS)
+    * and we need to stop specifying any output filenames in the .meta file
+    *
+    * Generate output product filename
+    */
+   if ( !cetb_filename( inter_name, FILENAME_MAX, outpath,
+			iregion, ascale, CETB_F13, CETB_SSMI,
+			iyear, isday, ibeam,
+			cetb_get_direction_id_from_info_name( info_name ),
+			CETB_SIR,
+			cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) ) ) {
+     fprintf( stderr, "%s: Error making product filename.\n", __FUNCTION__ );
+     exit( -1 );
+   }
+     
    ncerr=nc_open_file_write_head(inter_name, &ncid, nsx, nsy, iopt, 
 				 ascale, bscale, a0, b0, xdeg, ydeg, 
 				 isday, ieday, ismin, iemin, iyear, iregion, ipol, 
@@ -1326,7 +1351,7 @@ done3:
   }
 
   ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
-  printf("\nFinished writing dump file: %s\n",inter_name);  
+  fprintf( stderr, "\n%s : Finished writing product file: %s\n", __FUNCTION__, inter_name );
 
   if (errors == 0) {
     printf("No errors encountered\n");

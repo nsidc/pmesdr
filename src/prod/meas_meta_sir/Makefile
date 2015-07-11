@@ -92,7 +92,7 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS =  -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
+CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div # -Zp8
