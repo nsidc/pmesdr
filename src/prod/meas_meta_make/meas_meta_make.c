@@ -493,29 +493,26 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 
     /* projection */
     projt=iproj;  /* default value from region definition file */
+    /* This version of meas_meta_make only does EASE2-N, -S, -T */
+    if ( projt > 10 || projt < 8 ) {
+      fprintf( stderr, "Only acceptable projections are 308, 309, 310, EASE2-N, -S, -T\n" );
+      exit(-1);
+    }
     /* projection codes 
-       0 = Rectalinear lat/lon
-       1 = Lambertian Equal-Area (fixed radius)
-       2 = Lambertian Equal-Area (local radius)
-       5 = SAR Polar Stereographic
        8 = EASE2 N
        9 = EASE2 S
-      10 = EASE2 T
-      11 = EASE north
-      12 = EASE south
-      13 = EASE globe */
+      10 = EASE2 T */
 
-    printf("Projection code (0=lat/lon,1=Lambert(fixed),2=Lambert(local),5=Polar stereo,\n      8=EASE2N,9=EASE2S,10=EASE2T,11=EASE1N,12=EASE1S,13=EASE1G): %d\n",projt);
+    printf("Projection code ( 8=EASE2N,9=EASE2S,10=EASE2T ): %d\n",projt);
 
-    /* for each particular projection, define the orgin, size, scale, offset */
+    /* define the origin, size, scale, offset for each projection */
     switch (projt) {
 
     case  8:  /* ease2 grid N */
     case  9:  /* ease2 grid S */
     case 10:  /* ease2 grid T */
       fscanf(pid,"%d",&nease);
-      /* projt=regnum-300; */  /* for standard projection coding in putsir */
-
+      /* projt=regnum-300; */ 
       /* define projection parameters for particular EASE2 case */
       ind=0;  /* standard base resolution */
       printf("EASE2 parameters: proj=%d  nease=%d  ind=%d\n",projt,nease,ind);      
@@ -577,9 +574,9 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     printf("size in pixels (x,y)(lon,lat): %f %f\n\n",nsx,nsy);
 
     /* set grid image size parameters */
-    non_size=5;  /* number of enhanced resolution pixels/non-enhanced pixels */
-    if (projt>7) /* handle EASE differently - non-enhanced size is always 25 km grid */
-      non_size=(1 << (nease-1) );
+    /* number of enhanced resolution pixels/non-enhanced pixels */
+    /* for this project non-enhanced size is always 25 km grid */
+    non_size=(1 << (nease) );
  
     if (non_size*(nsx/non_size) != nsx || non_size*(nsy/non_size) != nsy) {
       fprintf(stderr,"*** warning: non grid size parameter %d does not evenly divide image size: %d %d\n",non_size,nsx,nsy);
