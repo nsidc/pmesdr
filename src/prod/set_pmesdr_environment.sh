@@ -61,7 +61,7 @@ export meas_home=$PMESDR_TOP_DIR
 export SIR_areas=$PMESDR_TOP_DIR/ref/locs
 export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
 export RSS_path=$PMESDR_TOP_DIR/ref
-regression_yyyymmdd=20150518
+regression_yyyymmdd=20150702
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
 # netCDF libraries are different, depending on compiler
@@ -98,6 +98,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
   fi
 
   module list
+  echo "Janus Compiler set to $COMPILER" 
 
 
 
@@ -131,4 +132,4 @@ else
 
 fi # endif janus
 
-echo "PMESDR system LOCALE=$LOCALE, COMPILER=$compiler, ready to use the PMESDR system."
+echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."

@@ -562,11 +562,8 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     fprintf(mout,"  Polarization=%d\n",ipolar);
     fprintf(mout,"  Beam_index=%d\n", ibeam);
 
-    /* SSM/I SPECIAL:set number of iterations based on channel number */
     /* read number iterations from .def file */
     fscanf( pid, "%d", &nits );
-    //    nits=20;
-    // if (ibeam>=4) nits=30;
     fprintf(mout," Max_iterations=%d\n", nits);
 
     /* summarize region results */
