@@ -569,22 +569,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     // if (ibeam>=4) nits=30;
     fprintf(mout," Max_iterations=%d\n", nits);
 
-    /* SSM/I SPECIAL: reset projection size to coarser for lower resolution beams */
-    if (ibeam < 6) {
-      if (projt==8 || projt==9 || projt==10) { /* EASE2 */
-	printf("Resizing for low channel number %d\n",ibeam);	
-	ascale=ascale-1;
-	nsy = nsy/2;
-	nsx = nsx/2;
-	xdeg = xdeg/2;
-	ydeg = ydeg/2;
-	xdim=xdeg*2;
-	ydim=ydeg*2;
-	aorglon=xdeg;
-	aorglat=ydeg;
-      }
-    }
-
     /* summarize region results */
     if (projt != 0) {
       printf("Projection %d   size %d %d\n",projt,nsx,nsy);
@@ -596,9 +580,9 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     printf("size in pixels (x,y)(lon,lat): %f %f\n\n",nsx,nsy);
 
     /* set grid image size parameters */
-    non_size=5;  /* number of enhanced resolution pixels/non-enhanced pixels */
-    if (projt>7) /* handle EASE differently - non-enhanced size is always 25 km grid */
-      non_size=(1 << (nease-1) );
+    /* number of enhanced resolution pixels/non-enhanced pixels */
+    if (projt>7) /* for this project non-enhanced size is always 25 km grid */
+      non_size=(1 << (nease) );
  
     if (non_size*(nsx/non_size) != nsx || non_size*(nsy/non_size) != nsy) {
       fprintf(stderr,"*** warning: non grid size parameter %d does not evenly divide image size: %d %d\n",non_size,nsx,nsy);
