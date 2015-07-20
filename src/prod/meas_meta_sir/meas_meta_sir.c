@@ -54,11 +54,11 @@ int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 
 
 /* some error print shortcuts 
-   errors output to stdout */
+   errors output to stderr */
 
 void eprintf(char *s)
 { 
-  fprintf(stderr,s);
+  fprintf(stderr,"%s",s);
   fflush(stderr);
   return;
 }
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[150], tstr[350];
+  char outpath[FILENAME_MAX], tstr[350];
 
   float latl, lonl, lath, lonh;
   char regname[11], *s;
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
      exit(-1);
   }
 
-  strncpy(outpath,"./",250); /* default output path */
+  strcpy(outpath,"./"); /* default output path */
   if (argc > 2) 
     sscanf(argv[2],"%s",outpath);
   printf("Output path %s: ",outpath);
@@ -1274,9 +1274,9 @@ done3:
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
     errors++;
-    fprintf(stderr, "Error Dumping Grid Cnt (C) output '%s' %d\n", grd_cname, tmax );
+    fprintf(stderr, "Error Dumping Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
   } else {
-    printf( "Dumped Grid Cnt (C) output '%s' %d\n", grd_cname, tmax );
+    printf( "Dumped Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
@@ -1639,7 +1639,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
 	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(212);
       } else {
 	eprintfi(" *** fill_array storage error 3 *** %d\n", *nrec);
-	fprintf(stderr," *** fill_array storage error 3 *** %d %d %ld\n", *nrec,count,nspace);
+	fprintf(stderr," *** fill_array storage error 3 *** %d %d %ld\n", *nrec,*count,nspace);
 	return(-1);
       }
 
