@@ -345,7 +345,7 @@ int main(int argc,char *argv[])
   int shortf,offset;
   float tbmin=1.e10,tbmax=-1.e10; 
   
-  int nfile_select, iadd1;
+  int nfile_select, iadd1, BOX_SIZE;
   float b_correct, angle_ref;
 
   /* memory for storage of pixel locations */
@@ -420,11 +420,15 @@ int main(int argc,char *argv[])
   sscanf(argv[2],"%s",outpath);
   printf("\nOutput path: %s \n",outpath);
 
-  /* optionally get the number of a single file to process from the input list in the meta file
-     this is only needed when debugging*/
-  nfile_select=0;
+  nfile_select = 0; /* parameter only used for debugging, but embedded all over the place */
+  /* optionally get the box size of pixels to use for calculating MRF for each */
+  /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
   if (argv[3] != NULL) {
-    sscanf(argv[3],"%d",&nfile_select);
+    sscanf(argv[3],"%d",&BOX_SIZE);
+    if ( BOX_SIZE == 0 ) {
+        BOX_SIZE=80;
+    }
+    printf("\nBox size: %d \n", BOX_SIZE);
   }
 
   /* get meta_file region information and open output files */
@@ -445,8 +449,6 @@ int main(int argc,char *argv[])
   /* set some sensor-specific constants */
   nbeams=7;          /* number of beams */     
   scan_ang=102.0;    /* azimuth angle of the scan from left measurement to right measurement at subsat point */
-  //#define BOX_SIZE 10  /* defines the gain computation box (30 for lo scan SSMI) */
-#define BOX_SIZE 80  /* defines the gain computation box (30 for lo scan SSMI) */
 
   /* set sensor specific quality control flag mask */
   set_mask(&quality_mask, 1);  /* sensor=SSM/I=1 */
