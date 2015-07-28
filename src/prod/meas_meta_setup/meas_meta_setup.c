@@ -312,6 +312,7 @@ int main(int argc,char *argv[])
   char fname[250], mname[250];
   char line[1025], outpath[250];
   char ftempname[250];
+  char *option;
   
   int i,j,k,n;
   int dend2, ilenyear, nrec, iscan, iscan1, iasc, ii, nsum;
@@ -345,7 +346,7 @@ int main(int argc,char *argv[])
   int shortf,offset;
   float tbmin=1.e10,tbmax=-1.e10; 
   
-  int nfile_select, iadd1, BOX_SIZE;
+  int nfile_select, iadd1, box_size;
   float b_correct, angle_ref;
 
   /* memory for storage of pixel locations */
@@ -402,8 +403,31 @@ int main(int argc,char *argv[])
   printf("Code version: %s\n",fcdr_input);  
   printf("MEaSures Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
 
+  /* optionally get the box size of pixels to use for calculating MRF for each */
+  /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
+  box_size = 80;  // this is the default for the regression tests
+  fprintf( stderr, "argc is %d\n", argc );
+    while (--argc > 0 && (*++argv)[0] == '-')
+    { for (option = argv[0]+1; *option != '\0'; option++)
+	{ switch (*option)
+	    { case 'b':
+		++argv; --argc;
+		if (sscanf(*argv,"%d", &box_size) != 1) {
+		  fprintf(stderr,"meas_meta_setup: can't read box size %s\n", *argv);
+		  exit(-1);
+		}
+		fprintf( stderr, "box size is %d\n", box_size );
+		break;
+	      default:
+	        fprintf(stderr,"meas_meta_setup: Invalid option %c\n", *option);
+	        exit(-1);
+	    } /* end switch */
+  	} /* end loop for each input command option */
+    } /* end loop while still input arguments */
+
+    fprintf( stderr, "out of while, argc is now %d\n", argc );  
   if (argc < 2) {
-    printf("\nusage: %s meta_in outpath singlefile\n\n",argv[0]);
+    printf("\nusage: meas_meta_setup meta_in outpath singlefile\n\n");
     printf(" input parameters:\n");
     printf("   meta_in     = input meta file\n");
     printf("   outpath     = output path\n");
@@ -413,22 +437,17 @@ int main(int argc,char *argv[])
  
 
   /* get input meta file name */
-  sscanf(argv[1],"%s",mname);
+  sscanf(*argv++,"%s",mname);
   printf("\nMetafile name: %s \n",mname);
 
   /* get output path */
-  sscanf(argv[2],"%s",outpath);
+  sscanf(*argv++,"%s",outpath);
   printf("\nOutput path: %s \n",outpath);
 
   nfile_select = 0; /* parameter only used for debugging, but embedded all over the place */
-  /* optionally get the box size of pixels to use for calculating MRF for each */
-  /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
-  if (argv[3] != NULL) {
-    sscanf(argv[3],"%d",&BOX_SIZE);
-    if ( BOX_SIZE == 0 ) {
-        BOX_SIZE=80;
-    }
-    printf("\nBox size: %d \n", BOX_SIZE);
+  if (*argv != NULL) {
+    sscanf(*argv,"%d",&nfile_select);
+    fprintf( stderr, "nfile_select is %d\n", nfile_select );
   }
 
   /* get meta_file region information and open output files */
@@ -503,8 +522,12 @@ int main(int argc,char *argv[])
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
-    if (ferror(file_id))
+    if (ferror(file_id)) {
       fprintf(stdout,"*** error reading input meta file encountered\n");
+      fflush( stdout );
+      fflush( stderr );
+      exit(-1);
+    }
 
     if (strstr(fname,"End_input_file_list")) { /* proper end of meta file */
       flag=0;
@@ -912,8 +935,8 @@ int main(int argc,char *argv[])
 	  /* define size of box centered at(ix2,iy2) in which the gain response 
 	     is computed for each pixel in the box and tested to see if
 	     the response exceeds a threshold.  if so, it is used */
-	  ixsize=dscale*BOX_SIZE; /* hi scan */
-	  iysize=dscale*BOX_SIZE;
+	  ixsize=dscale*box_size; /* hi scan */
+	  iysize=dscale*box_size;
 	  if (ixsize<1) ixsize=1;
 	  if (iysize<1) iysize=1;
 	  if (ibeam < 6) {  /* lo scan */
@@ -939,7 +962,7 @@ int main(int argc,char *argv[])
 	  fprintf(resp_debug,"%d %d %f %f %f %f %d %d %d\n",
 		  ix2,iy2,theta,azang,dmod(theta-azang+720.0,360.0),dscale,nsx,nsy,iadd);
 	  fprintf(resp_debug,"%f %d %d %d %d %d %d %d\n",
-		  dscale,BOX_SIZE,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2);
+		  dscale,box_size,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2);
 #endif
 
 #ifdef RSS
