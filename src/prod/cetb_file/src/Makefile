@@ -20,6 +20,7 @@ TESTDIR = $(TOPDIR)/NSIDCtest
 #
 #	commands
 #
+AR = ar
 CC = gcc
 CD = cd
 INSTALL = cp -f -p
@@ -30,6 +31,7 @@ CP = cp
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CC = icc
+  AR = xiar
 endif
 
 #
@@ -47,9 +49,11 @@ SYSLIBS = -lm
 # end configuration section
 #------------------------------------------------------------------------
 CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS)
+ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   CFLAGS = -D'JANUSicc=1' -I$(INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
@@ -66,7 +70,7 @@ all : libcetb.a $(LIBDIR)/libcetb.a
 $(LIBDIR)/libcetb.a : libcetb.a
 
 libcetb.a : $(OBJS) $(DEPEND_LIBS)
-	$(AR) ruv libcetb.a $(OBJS)
+	$(AR) $(ARFLAGS) libcetb.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
 	$(INSTALL) libcetb.a $(LIBDIR)
 	$(INSTALL) $(HDRS) $(INCDIR)
