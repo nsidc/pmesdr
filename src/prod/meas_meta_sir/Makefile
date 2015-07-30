@@ -110,12 +110,10 @@ OBJS = meas_meta_sir.o netcdf_dump.o
 HDRS = $(INCDIR)/cetb_file.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
 BIN = meas_meta_sir
 
-RSSE2SFILES = $(wildcard $(TESTDIR)/setupRSS/e2s/F*E2S*.setup)
+RSSFILES = $(wildcard $(TESTDIR)/setupRSS/e2*/F*E2*.setup)
 RSSE2NFILES = $(wildcard $(TESTDIR)/setupRSS/e2n/F*E2N*.setup)
-RSSE2TFILES = $(wildcard $(TESTDIR)/setupRSS/e2t/F*E2T*.setup)
-CSUE2SFILES = $(wildcard $(TESTDIR)/setupCSU/e2s/F*E2S*.setup)
+CSUFILES = $(wildcard $(TESTDIR)/setupCSU/e2*/F*E2*.setup)
 CSUE2NFILES = $(wildcard $(TESTDIR)/setupCSU/e2n/F*E2N*.setup)
-CSUE2TFILES = $(wildcard $(TESTDIR)/setupCSU/e2t/F*E2T*.setup)
 
 all : $(BIN)
 
@@ -133,47 +131,21 @@ clean :
 	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
 
 rss_ease :
-	$(RM) $(TESTDIR)/sirRSS/e2n
-	$(MKDIR) $(TESTDIR)/sirRSS/e2n
-ifeq ($(RSSE2NFILES),)
+	$(RM) $(TESTDIR)/sirRSS
+	$(MKDIR) $(TESTDIR)/sirRSS
+ifeq ($(RSSFILES),)
 	$(error	No setup files found)
 else
-	for file in $(RSSE2NFILES); do \
+	for file in $(RSSFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2n; \
-	done
-endif
-	$(RM) $(TESTDIR)/sirRSS/e2s
-	$(MKDIR) $(TESTDIR)/sirRSS/e2s
-ifeq ($(RSSE2SFILES),)
-	$(error	No setup files found)
-else
-	for file in $(RSSE2SFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2s; \
-	done
-endif
-	$(RM) $(TESTDIR)/sirRSS/e2t
-	$(MKDIR) $(TESTDIR)/sirRSS/e2t
-ifeq ($(RSSE2TFILES),)
-	$(error	No setup files found)
-else
-	for file in $(RSSE2TFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS/e2t; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS; \
 	done
 endif
 
 rss_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirRSS/e2n $(TESTDIR)/sirRSS/e2n
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirRSS/e2s $(TESTDIR)/sirRSS/e2s
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirRSS/e2t $(TESTDIR)/sirRSS/e2t
+                $(COMPAREDIR)/daily/sirRSS $(TESTDIR)/sirRSS
 
 rss_quick :
 	$(RM) $(TESTDIR)/sirRSS
@@ -193,47 +165,21 @@ rss_quick_validate :
                 $(COMPAREDIR)/quick/sirRSS $(TESTDIR)/sirRSS
 
 csu_ease :
-	$(RM) $(TESTDIR)/sirCSU/e2n
-	$(MKDIR) $(TESTDIR)/sirCSU/e2n
-ifeq ($(CSUE2NFILES),)
+	$(RM) $(TESTDIR)/sirCSU
+	$(MKDIR) $(TESTDIR)/sirCSU
+ifeq ($(CSUFILES),)
 	$(error	No setup files found)
 else
-	for file in $(CSUE2NFILES); do \
+	for file in $(CSUFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2n; \
-	done
-endif
-	$(RM) $(TESTDIR)/sirCSU/e2s
-	$(MKDIR) $(TESTDIR)/sirCSU/e2s
-ifeq ($(CSUE2SFILES),)
-	$(error	No setup files found)
-else
-	for file in $(CSUE2SFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2s; \
-	done
-endif
-	$(RM) $(TESTDIR)/sirCSU/e2t
-	$(MKDIR) $(TESTDIR)/sirCSU/e2t
-ifeq ($(CSUE2TFILES),)
-	$(error	No setup files found)
-else
-	for file in $(CSUE2TFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU/e2t; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU; \
 	done
 endif
 
 csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirCSU/e2n $(TESTDIR)/sirCSU/e2n
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirCSU/e2s $(TESTDIR)/sirCSU/e2s
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirCSU/e2t $(TESTDIR)/sirCSU/e2t
+                $(COMPAREDIR)/daily/sirCSU $(TESTDIR)/sirCSU
 
 csu_quick :
 	$(RM) $(TESTDIR)/sirCSU
@@ -251,4 +197,6 @@ csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/sirCSU $(TESTDIR)/sirCSU
+
+
 
