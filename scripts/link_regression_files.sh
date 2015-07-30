@@ -10,8 +10,9 @@
 # https://nsidc.org/confluence/display/PMESDR/CETB+Data+Set+File+Definition#CETBDataSetFileDefinition-FilenamingConvention
 
 # Make new directories
-orig_dir=/projects/PMESDR/pmesdr_regression_data/20150702
-root_dir=/projects/PMESDR/pmesdr_regression_data/20150701
+orig_dir=/projects/moha2290/pmesdr_regression_data/20150702
+root_dir=/projects/moha2290/pmesdr_regression_data/20150701
+mkdir -v $root_dir
 mkdir -v $root_dir/daily
 mkdir -v $root_dir/daily/bgiCSU
 mkdir -v $root_dir/daily/bgiRSS
