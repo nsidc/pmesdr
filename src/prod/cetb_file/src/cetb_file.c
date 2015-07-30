@@ -133,18 +133,16 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
 								const cetb_reconstruction_id reconstruction_id ) {
 
   cetb_swath_producer_id id = CETB_NO_PRODUCER;
-  int max_len = 10;
-  char swath_producer_str[ max_len ];
-  char recon_str[ max_len ];
+  char *recon_str;
   char *ptr;
   int i;
-  
+
   if ( !valid_reconstruction_id( reconstruction_id ) ) {
     return id;
   }
 
   /* Convert the recon_str to lower case, so we find paths like "/.../bgiCSU" */
-  strncpy( recon_str, cetb_reconstruction_id_name[ reconstruction_id ], max_len - 1 );
+  recon_str = strdup( cetb_reconstruction_id_name[ reconstruction_id ] );
   for ( i=0; i < strlen( recon_str ); i++ ) {
     recon_str[i] = tolower( recon_str[i] );
   }
@@ -153,12 +151,14 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
   if ( !ptr ) {
     fprintf( stderr, "%s: Error parsing outpath=%s for reconstruction type=%s.\n",
 	     __FUNCTION__, outpath, recon_str );
+    free( recon_str );
     return id;
   }
-  strncpy( swath_producer_str, ptr + strlen( recon_str ), 3 );
 
   for ( i = 0; i < CETB_NUM_PRODUCERS; i++ ) {
-    if ( 0 == strcasecmp( cetb_swath_producer_id_name[ i ], swath_producer_str ) ) {
+    if ( 0 == strncasecmp( cetb_swath_producer_id_name[ i ],
+			   ptr + strlen( recon_str ),
+			   strlen( cetb_swath_producer_id_name[ i ] ) ) ) {
       id = (cetb_swath_producer_id) i;
       break;
     }
@@ -168,6 +168,8 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
     fprintf( stderr, "%s: Error parsing outpath=%s for swath producer.\n",
 	     __FUNCTION__, outpath );
   }
+
+  free( recon_str );
 
   return id;
 
