@@ -14,6 +14,8 @@
 #	installation directories
 #
 TOPDIR = $(PMESDR_TOP_DIR)
+INCDIR = $(TOPDIR)/include
+LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 ifeq ($(LOCALE),int.nsidc.org)
@@ -96,21 +98,21 @@ endif
 #------------------------------------------------------------------------
 MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
-LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
-	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
+LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
+	-lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
+CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks # -Zp8
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks # -Zp8
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(MEAS_INCDIR) -I../meas_undump -g
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump -g
 endif
-DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
+DEPEND_LIBS = $(LIBDIR)/libcetb.a $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_bgi.c ../meas_undump/netcdf_dump.c
 OBJS = meas_meta_bgi.o netcdf_dump.o
-HDRS = nr.h nrutil.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
+HDRS = $(INCDIR)/cetb_file.h nr.h nrutil.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
 BIN = meas_meta_bgi
 
 RSSE2SFILES = $(wildcard $(TESTDIR)/setupRSS/e2s/F*E2S*.setup)
@@ -179,21 +181,21 @@ rss_ease_validate :
                 $(COMPAREDIR)/daily/bgiRSS/e2t $(TESTDIR)/bgiRSS/e2t
 
 rss_quick :
-	$(RM) $(TESTDIR)/bgiRSS/e2n
-	$(MKDIR) $(TESTDIR)/bgiRSS/e2n
+	$(RM) $(TESTDIR)/bgiRSS
+	$(MKDIR) $(TESTDIR)/bgiRSS
 ifeq ($(RSSE2NFILES),)
 	$(error	No setup files found)
 else
 	for file in $(RSSE2NFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS/e2n; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiRSS; \
 	done
 endif
 
 rss_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/quick/bgiRSS/e2n $(TESTDIR)/bgiRSS/e2n
+                $(COMPAREDIR)/quick/bgiRSS $(TESTDIR)/bgiRSS
 
 csu_ease :
 	$(RM) $(TESTDIR)/bgiCSU/e2n
@@ -239,21 +241,21 @@ csu_ease_validate :
                 $(COMPAREDIR)/daily/bgiCSU/e2t $(TESTDIR)/bgiCSU/e2t
 
 csu_quick :
-	$(RM) $(TESTDIR)/bgiCSU/e2n
-	$(MKDIR) $(TESTDIR)/bgiCSU/e2n
+	$(RM) $(TESTDIR)/bgiCSU
+	$(MKDIR) $(TESTDIR)/bgiCSU
 ifeq ($(CSUE2NFILES),)
 	$(error	No setup files found)
 else
 	for file in $(CSUE2NFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU/e2n; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiCSU; \
 	done
 endif
 
 csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py $(EXCLUDE_OOR) \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/quick/bgiCSU/e2n $(TESTDIR)/bgiCSU/e2n
+                $(COMPAREDIR)/quick/bgiCSU $(TESTDIR)/bgiCSU
 
 
 
