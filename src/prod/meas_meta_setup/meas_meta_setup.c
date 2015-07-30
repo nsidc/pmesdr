@@ -406,23 +406,23 @@ int main(int argc,char *argv[])
   /* optionally get the box size of pixels to use for calculating MRF for each */
   /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
   box_size = 80;  // this is the default for the regression tests
-    while (--argc > 0 && (*++argv)[0] == '-')
-    { for (option = argv[0]+1; *option != '\0'; option++)
-	{ switch (*option)
-	    { case 'b':
-		++argv; --argc;
-		if (sscanf(*argv,"%d", &box_size) != 1) {
-		  fprintf(stderr,"meas_meta_setup: can't read box size %s\n", *argv);
-		  exit(-1);
-		}
-		fprintf( stderr, "box size is %d\n", box_size );
-		break;
-	      default:
-	        fprintf(stderr,"meas_meta_setup: Invalid option %c\n", *option);
-	        exit(-1);
-	    } /* end switch */
-  	} /* end loop for each input command option */
-    } /* end loop while still input arguments */
+  while (--argc > 0 && (*++argv)[0] == '-') {
+    for (option = argv[0]+1; *option != '\0'; option++) {
+      switch (*option) {
+      case 'b':
+	++argv; --argc;
+	if (sscanf(*argv,"%d", &box_size) != 1) {
+	  fprintf(stderr,"meas_meta_setup: can't read box size %s\n", *argv);
+	  exit(-1);
+	}
+	fprintf( stderr, "box size is %d\n", box_size );
+	break;
+      default:
+	fprintf(stderr,"meas_meta_setup: Invalid option %c\n", *option);
+	exit(-1);
+      } /* end switch */
+    } /* end loop for each input command option */
+  } /* end loop while still input arguments */
 
   if (argc < 2) {
     printf("\nusage: meas_meta_setup -b box_size meta_in outpath singlefile\n\n");
