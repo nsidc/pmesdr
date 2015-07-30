@@ -406,7 +406,6 @@ int main(int argc,char *argv[])
   /* optionally get the box size of pixels to use for calculating MRF for each */
   /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
   box_size = 80;  // this is the default for the regression tests
-  fprintf( stderr, "argc is %d\n", argc );
     while (--argc > 0 && (*++argv)[0] == '-')
     { for (option = argv[0]+1; *option != '\0'; option++)
 	{ switch (*option)
@@ -425,10 +424,11 @@ int main(int argc,char *argv[])
   	} /* end loop for each input command option */
     } /* end loop while still input arguments */
 
-    fprintf( stderr, "out of while, argc is now %d\n", argc );  
   if (argc < 2) {
-    printf("\nusage: meas_meta_setup meta_in outpath singlefile\n\n");
+    printf("\nusage: meas_meta_setup -b box_size meta_in outpath singlefile\n\n");
     printf(" input parameters:\n");
+    printf("   -b box_size is optional input argument to specify box_size for MRF\n");
+    printf("      default box_size is 80 for early regression testing\n");
     printf("   meta_in     = input meta file\n");
     printf("   outpath     = output path\n");
     printf("   singlefile  = for testing, specify a single file. Use zero for all \n\n");
@@ -523,9 +523,7 @@ int main(int argc,char *argv[])
     /* printf("file %s\n",fname); */
 
     if (ferror(file_id)) {
-      fprintf(stdout,"*** error reading input meta file encountered\n");
-      fflush( stdout );
-      fflush( stderr );
+      fprintf( stderr, "*** error reading input meta file encountered\n" );
       exit(-1);
     }
 
@@ -1197,7 +1195,6 @@ FILE * get_meta(char *mname, char *outpath,
       printf("*** error reading meta file\n");
       flag=0;
     } else {
-      //printf("read '%s'\n",line);
       
       if (strstr(line,"End_description") != NULL)
 	flag=0;
@@ -1312,7 +1309,6 @@ FILE * get_meta(char *mname, char *outpath,
 	    printf("*** error reading meta file at region \n");
 	    flag_region=0;
 	  } else {
-	    //printf("region read '%s'\n",line);
 	    if (strstr(line,"End_region_description") != NULL)
 	      flag_region=0;
       
@@ -1356,7 +1352,6 @@ FILE * get_meta(char *mname, char *outpath,
 	    if (strstr(line,"AscDesc_flag") != NULL) {
 	      x = strchr(line,'=');
 	      asc_des=atoi(++x);
-	      //printf("Asc/Des flag value: %d\n",asc_des);
 	    }
 
 	    if (strstr(line,"Region_name") != NULL) {
@@ -1367,19 +1362,16 @@ FILE * get_meta(char *mname, char *outpath,
 	    if (strstr(line,"Polarization") != NULL) {
 	      x = strchr(line,'=');
 	      ipolar=atoi(++x);
-	      //printf("Polarization %d %s\n",ipolar,x);	      
 	    }
       
 	    if (strstr(line,"Beam_index") != NULL) {
 	      x = strchr(line,'=');
 	      ibeam=atoi(++x);
-	      //printf("Beam_index %d %s\n",ibeam,x);	      
 	    }
       
 	    if (strstr(line,"Max_iterations") != NULL) {
 	      x = strchr(line,'=');
 	      nits=atoi(++x);
-	      //printf("Max_iterations %d %s\n",nits,x);	      
 	    }
             
 	    if (strstr(line,"Sectioning_code") != NULL) {
@@ -1398,7 +1390,6 @@ FILE * get_meta(char *mname, char *outpath,
 		  printf("*** error reading meta file at section \n");
 		  flag_section=0;
 		} else {
-		  //printf("section read '%s'\n",line);
 		  if (strstr(line,"End_section_description") != NULL)
 		    flag_section=0;
       
@@ -1527,18 +1518,18 @@ FILE * get_meta(char *mname, char *outpath,
 
 		  if (strstr(line,"Setup_file_EXTENSION") != NULL) {
 		    x = strchr(line,'=');
-		    if (nfile_select> 0) {
-		      sprintf(fname2,"%3.3d%s",nfile_select,++x);
-		      no_trailing_blanks(fname2);
-		    }		    
+		    //		    if (nfile_select> 0) {
+		    //sprintf(fname2,"%3.3d%s",nfile_select,++x);
+		    //no_trailing_blanks(fname2);
+		    //}		    
 		  }      
 
 		  if (strstr(line,"Setup_file") != NULL) {
 		    x = strchr(line,'=');
-		    if (nfile_select<=0) {
+		    //if (nfile_select<=0) {
 		      strncpy(fname2,++x,40);
 		      no_trailing_blanks(fname2);   
-		    }
+		      //}
 		  }      
       
 		  if (strstr(line,"Begin_product_file_names") != NULL) {
