@@ -74,7 +74,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
 
   module load slurm
   export PMESDR_COMPARE_TOLERANCE=0.25
-  export PMESDR_MAX_DIFF_PIXELS=10
+  export PMESDR_MAX_DIFF_PIXELS=30
 
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
