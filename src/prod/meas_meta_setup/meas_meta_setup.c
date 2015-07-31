@@ -285,7 +285,7 @@ FILE * get_meta(char *mname, char *outpath, int *dstart,
 		int *year, char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, int nfile_select, region_save *save_area);
+		int *KSAT, region_save *save_area);
 
 void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store);
 
@@ -346,7 +346,7 @@ int main(int argc,char *argv[])
   int shortf,offset;
   float tbmin=1.e10,tbmax=-1.e10; 
   
-  int nfile_select, iadd1, box_size;
+  int iadd1, box_size;
   float b_correct, angle_ref;
 
   /* memory for storage of pixel locations */
@@ -444,17 +444,11 @@ int main(int argc,char *argv[])
   sscanf(*argv++,"%s",outpath);
   printf("\nOutput path: %s \n",outpath);
 
-  nfile_select = 0; /* parameter only used for debugging, but embedded all over the place */
-  if (*argv != NULL) {
-    sscanf(*argv,"%d",&nfile_select);
-    fprintf( stderr, "nfile_select is %d\n", nfile_select );
-  }
-
   /* get meta_file region information and open output files */
   file_id = get_meta(mname, outpath, &dstart, &dend, &mstart, &mend, &year,
 		     prog_name, prog_version ,&response_threshold, &flatten, &median_flag,
 		     &inc_correct, &b_correct, &angle_ref, 
-		     &KSAT, nfile_select, &save_area);
+		     &KSAT, &save_area);
   if (file_id == NULL) {
     fprintf(stderr,"*** could not open meta file %s/%s\n",outpath,mname);    
     exit(-1);  
@@ -549,9 +543,6 @@ int main(int argc,char *argv[])
     no_trailing_blanks(fname);    
 
     nfile++;
-    /* single file select */	   
-    if (nfile_select>0 && nfile_select != nfile) /* if single file select */
-      goto label_330;  /* skip all files that are not one selected */
 
     /* initialize last spacecraft position */
     sc_last_lat=-1.e25;
@@ -1141,7 +1132,7 @@ FILE * get_meta(char *mname, char *outpath,
 		char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, int nfile_select, region_save *a)
+		int *KSAT, region_save *a)
 {
   /* read meta file, open output .setup files, write .setup file headers, and 
      store key parameters in memory */
@@ -1518,18 +1509,12 @@ FILE * get_meta(char *mname, char *outpath,
 
 		  if (strstr(line,"Setup_file_EXTENSION") != NULL) {
 		    x = strchr(line,'=');
-		    //		    if (nfile_select> 0) {
-		    //sprintf(fname2,"%3.3d%s",nfile_select,++x);
-		    //no_trailing_blanks(fname2);
-		    //}		    
 		  }      
 
 		  if (strstr(line,"Setup_file") != NULL) {
 		    x = strchr(line,'=');
-		    //if (nfile_select<=0) {
-		      strncpy(fname2,++x,40);
-		      no_trailing_blanks(fname2);   
-		      //}
+		    strncpy(fname2,++x,40);
+		    no_trailing_blanks(fname2);   
 		  }      
       
 		  if (strstr(line,"Begin_product_file_names") != NULL) {
