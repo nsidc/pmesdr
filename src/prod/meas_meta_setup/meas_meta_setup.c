@@ -425,7 +425,7 @@ int main(int argc,char *argv[])
   } /* end loop while still input arguments */
 
   if (argc < 2) {
-    printf("\nusage: meas_meta_setup -b box_size meta_in outpath singlefile\n\n");
+    printf("\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
     printf(" input parameters:\n");
     printf("   -b box_size is optional input argument to specify box_size for MRF\n");
     printf("      default box_size is 80 for early regression testing\n");
