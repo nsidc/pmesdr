@@ -430,8 +430,7 @@ int main(int argc,char *argv[])
     printf("   -b box_size is optional input argument to specify box_size for MRF\n");
     printf("      default box_size is 80 for early regression testing\n");
     printf("   meta_in     = input meta file\n");
-    printf("   outpath     = output path\n");
-    printf("   singlefile  = for testing, specify a single file. Use zero for all \n\n");
+    printf("   outpath     = output path\n\n");
     exit (-1);
   }
  

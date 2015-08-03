@@ -87,17 +87,17 @@ rss_ease :
 	$(RM) $(TESTDIR)/setupRSS/e2n
 	$(MKDIR) $(TESTDIR)/setupRSS/e2n
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 0	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 	\
 	)
 	$(RM) $(TESTDIR)/setupRSS/e2s
 	$(MKDIR) $(TESTDIR)/setupRSS/e2s
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 0	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 	\
 	)
 	$(RM) $(TESTDIR)/setupRSS/e2t
 	$(MKDIR) $(TESTDIR)/setupRSS/e2t
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 0	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 	\
 	)
 
 # the input file list in the .meta file has pathnames relative to the directory
@@ -107,6 +107,6 @@ rss_quick :
 	$(RM) $(TESTDIR)/setupRSS/e2n
 	$(MKDIR) $(TESTDIR)/setupRSS/e2n
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 0	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 	\
 	)
 
