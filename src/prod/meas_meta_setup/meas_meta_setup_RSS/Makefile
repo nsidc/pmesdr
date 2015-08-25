@@ -14,6 +14,8 @@
 #	installation directories
 #
 TOPDIR = $(PMESDR_TOP_DIR)
+INCDIR = $(TOPDIR)/include
+LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 ifeq ($(LOCALE),int.nsidc.org)
@@ -52,20 +54,20 @@ SYSLIBS = -lm
 #------------------------------------------------------------------------
 MEAS_INCDIR = ../../../sirlib/c/include
 MEAS_LIBDIR = ../../../sirlib/c
-LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
-CFLAGS = -D'RSS=1' $(CONFIG_CFLAGS) -I$(MEAS_INCDIR) 
+LIBS = -L$(LIBDIR) -L$(MEAS_LIBDIR) -lgsx -lcsir $(SYSLIBS)
+CFLAGS = -D'RSS=1' -I$(INCDIR) $(CONFIG_CFLAGS) -I$(MEAS_INCDIR) 
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
+  CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -I$(MEAS_INCDIR) -g
+  CFLAGS = -D'RSS=1' -I$(INCDIR) -I$(MEAS_INCDIR) -g
 endif
-DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
+DEPEND_LIBS = $(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = ../meas_meta_setup.c
 OBJS = meas_meta_setup_RSS.o
-HDRS = $(MEAS_INCDIR)/sir3.h
+HDRS = $(INCDIR)/gsx.h $(MEAS_INCDIR)/sir3.h
 BIN = meas_meta_setup_RSS
 
 all : $(BIN)
