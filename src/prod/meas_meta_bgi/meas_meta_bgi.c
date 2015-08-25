@@ -40,9 +40,6 @@
 #define REL_EOF   2           /* fseek relative to end of file */
 #define REL_BEGIN 0           /* fseek relative to end of file */
 
-#define INFOFILE 1            /* define to create info file, undefine to not create */
-#undef INFOFILE               /* do not create info file */
-
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 
@@ -96,7 +93,6 @@ void eprintfc(char *s, char *a)
   fflush(stderr);
 }
 
-
 /* function prototypes */
 
 void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx);
@@ -141,6 +137,15 @@ long int nspace;
 
 /****************************************************************************/
 
+/* these definitions simplify indexing of patarr 
+   patarr3d stores the SRF(x,y) for measurement n
+   patarr2d indexes the SRF as a list for measurement n */
+
+#define patarr3d(x,y,n) patarr[x-1+(y-1)*mdim+(n-1)*mdim*mdim]
+#define patarr2d(k,n) patarr[k+(n-1)*mdim*mdim]
+
+/****************************************************************************/
+
 /* main program */
 
 int main(int argc, char **argv)
@@ -182,6 +187,7 @@ int main(int argc, char **argv)
   char inter_name[FILENAME_MAX];
   int ncid, ncerr;
 
+  int storage = 0;
   long head_len;
   int errors = 0;
 
@@ -227,6 +233,8 @@ int main(int argc, char **argv)
   if (argc > 3) sscanf(argv[3],"%lf",&bgi_gamma);
   if (argc > 4) sscanf(argv[4],"%f",&delta2);
   if (argc > 5) sscanf(argv[5],"%f",&ithres);
+  if (argc > 6) sscanf(argv[6],"%f",&difthres);
+  /* (more later) */
 
   printf("BGI options: omega=%f gamma=%lf delta2=%f gain thres=%f difthres=%f\n",omega, bgi_gamma, delta2, ithres, difthres);
 
@@ -323,12 +331,10 @@ int main(int argc, char **argv)
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(70);
      if (fread(line,   sizeof(char), 100, imf) == 0) Ferror(71);
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(72);
-     /* printf("line read '%s'\n",line); */
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
        a_init=  atof(++x) ;
-       //printf("A_initialization of %f\n",a_init);
      }
 
      if (strstr(line,"Beam_code") != NULL) {
@@ -340,12 +346,10 @@ int main(int argc, char **argv)
      if (strstr(line,"Max_Fill") != NULL) {
        x = strchr(line,'=');
        MAXFILL=atoi(++x);
-       //printf("Max fill %d\n",MAXFILL);
      }
 
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
-       //wscale=1.0/atoi(++x);
        printf("Wscale %f\n",wscale);
      }
 
@@ -490,7 +494,7 @@ int main(int argc, char **argv)
      cnts[i]=0;
    mwork=0;
 
-  /* with storage allocated, copy file into memory if selected */
+  /* with storage allocated, copy file into memory  */
 
   /* read measurement file into memory, 
 			   storing only essential information  */
@@ -502,11 +506,6 @@ int main(int argc, char **argv)
   
   printf("Begin setup file copy into memory\n");
   while (fread(&dumb, sizeof(int), 1, imf) != 0) {
-
-    /*	   read (50,err=500,end=500) tbval,ang,count,ktime,iadd,azi
-	   read (50,err=500,end=500) (fill_array(i),i=1,count)
-	   read (50,err=500,end=500) (response_array(i),i=1,count)
-    */
 
      /*5 items at 4 bytes each: 20 bytes if no azimuth angle */
      /*6 items at 4 bytes each: 24 bytes if azimuth angle */
@@ -529,12 +528,6 @@ int main(int argc, char **argv)
 	  printf("*** Count error %d  record %d\n",count,nrec);
 	  count=MAXFILL;	  
 	}
-	/*
-	printf("ncnt %d  %f %f  count %d %d %d\n",ncnt,tbval,ang,count,ktime,iadd); 
-	if (ncnt > 99) goto label; */
-
-	/* if measurement is "valid" keep it by indexing counters 
-           if not, new values will be stored over old values */
 
 	keep=0;
 	if (tbval < 350.0 && tbval > 50.0) { 
@@ -549,7 +542,6 @@ int main(int argc, char **argv)
 	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(110);
 	   if (fread(store, sizeof(int), count, imf) != count) {
 	      eprintf(" *** Error reading input file data at 111\n");
-	      /* exit(-1); */
 	      goto label;
 	   }
 
@@ -597,7 +589,6 @@ int main(int argc, char **argv)
   label:
   fclose(imf);
 
-
 /* print measurement file storage requirements */
 
   ratio=100.0 * (float) nbyte / (float) nls;
@@ -605,7 +596,6 @@ int main(int argc, char **argv)
   printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
 	 nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
   fflush(stdout);
-
 
   /* determine maximum hits */
 
@@ -643,6 +633,10 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
+  /* initialize SRF storage array */
+  for (i=0; i<mdim*mdim*nmax; i++)
+    patarr[i]=0.0;  
+
   /* create index array */
 
   for (i=0; i< nsize; i++)
@@ -664,7 +658,6 @@ int main(int argc, char **argv)
   }
 
   printf("Index array created %d %d\n",nsize,ncnt);
-  
   
 /* Begin BGI processing */
 
@@ -695,11 +688,6 @@ int main(int argc, char **argv)
 	  fill_array = (int *) store;
 	  store = store + 4*count;
 	  weight_array = (short int *) store;
-	  /*
-	  printf("at %d %d %d %d\n",its,m,k,count);
-	  for (i=0; i < count; i++)
-	    printf("  %d %d %d\n",i,fill_array[i],weight_array[i]);
-	  */
 	  m++;
 	  v[m] = 0.0000001;  /* a very small, non-zero value */
 	  sum = 0.0;
@@ -719,8 +707,8 @@ int main(int argc, char **argv)
 	  ix0[m] = iadd % nsx;
 	  iy0[m] = iadd / nsx;
 
-	  for (i=0; i< mdim*mdim; i++)
-	    patarr[i*nmax+m-1]=0.0;
+	  for (i=0; i < mdim*mdim; i++)
+	    patarr2d(i,m)=0.0;
 	
 	  for (i=0; i < count; i++) 
 	    if (fill_array[i]>0) {
@@ -730,14 +718,23 @@ int main(int argc, char **argv)
 	      ix = dx + mdim2;
 	      iy = (fill_array[i]-1) / nsx - iy0[m] + mdim2;
 	      if (ix >= 0 && iy >= 0 && ix < mdim && iy < mdim)
-		patarr[(iy*mdim+ix)*nmax+m-1]=weight_array[i]*wscale;
+		patarr3d(ix,iy,m) = weight_array[i]*wscale;
 	      else
 		printf("*** patarr error %d %d %d  %d\n",i,ix,iy,its);
 	    }
 	}
       }
 
-      if (m > 0) { /* measurements are available for this pixel */
+      if (m > 0) {  /* measurements are available for this pixel */
+
+	/* compute AVE estimate */
+	sum = 0.0;	
+	tbave = 0.0;  
+	for (i=1; i <= m; i++) {
+	  sum = sum + aveweights[i];
+	  tbave = tbave + aveweights[i] * tb2[i];
+	}
+        tbave = tbave / sum; /* AVE Tb estimate */
 
 	/* check for measurements at the same (quantized) center location and average */
 	dx=0;
@@ -756,16 +753,30 @@ int main(int argc, char **argv)
 		if (adds[i]==adds[j]) {  /* average in redundant meaurement */
 		  dy++;
 		  v[dx]=(v[dx]*dy+v[j])/(float) dy;
+		  tb2[dx]=(tb2[dx]*dy+tb2[j])/(float) dy;
 		  for (ix=0; ix<mdim*mdim; ix++)
-		    patarr[ix*nmax+dx-1]=(patarr[ix*nmax+dx-1]*dy+patarr[ix*nmax+j-1])/(float) dy;
+		    //patarr[ix*nmax+dx-1]=(patarr[ix*nmax+dx-1]*dy+patarr[ix*nmax+j-1])/(float) dy;
+		    patarr2d(ix,dx)=(patarr2d(ix,dx)*(dy-1)+patarr2d(ix,j))/(float) dy;
 		  adds[j]=-1;
 		}
 	      }
 	    }
 	  }
+	  /* re-organize to remove redundant entries */
+	  dx = 0;
+	  for (i=1; i <= m; i++)
+	    if (adds[i] > -1) {
+	      dx++;
+	      if (dx != i) {		  
+		v[dx]=v[i];
+		tb2[dx]=tb2[i];
+		for (ix=0; ix<mdim*mdim; ix++)
+		  //patarr[ix*nmax+dx-1]=patarr[ix*nmax+i-1];
+		  patarr2d(ix,dx)=patarr2d(ix,i);
+	      }	      
+	    }
 	  m=dx;  /* reset number of unique location measurements */
 	}
-
 
 	/* compute z matrix */
 	for (i=1; i <= m; i++)
@@ -774,28 +785,19 @@ int main(int argc, char **argv)
 	    dy = iy0[i] - iy0[j];
 	    z[i][j] = 0.0;
 	    sum=0.0;
-	    for (i1=1; i1 <= mdim; i1++)
-	      for (j1=1; j1 <= mdim; j1++) {
+	    for (j1=1; j1 <= mdim; j1++)
+	      for (i1=1; i1 <= mdim; i1++) {
 		ix=i1-dx;
 		iy=j1-dy;
 		if (ix > 0 && iy > 0 && ix <= mdim && iy <= mdim)
-		  sum = sum + patarr[((j1-1)*mdim+i1-1)*nmax+i-1]*patarr[((iy-1)*mdim+ix-1)*nmax+j-1];
+		  sum = sum + patarr3d(i1,j1,i)*patarr3d(ix,iy,j);
 	      } 
-	    z[i][j] = sum * cos(bgi_gamma) ;
-
-	    if (i == j) z[i][j] =  z[i][j] + omega *  sin(bgi_gamma)  * delta2;
-
-	    z[j][i] = z[i][j];
-	    /*	    printf("in z %d %d %d %d %f %f\n",i,j,dx,dy,sum*cos(bgi_gamma),z[dx,dy]); */
+	    z[i][j] = sum * cos(bgi_gamma);
+	    if (i == j) 
+	      z[i][j] =  z[i][j] + omega * sin(bgi_gamma) * delta2;
+	    else
+	      z[j][i] = z[i][j];
 	  }
-	/*
-	printf("z is: %d %d %f\n",m,m,omega * sin(bgi_gamma) * delta2);
-	for (i=1;i<=m;i++) {
-	  for (j=1;j<=m;j++)
-	    printf("%f ",z[i][j]);
-	  printf("\n");
-	}
-	*/
 
 	/* Do LU decomposition */
 	ludcmp(z,m,ind,&p);
@@ -839,30 +841,17 @@ int main(int argc, char **argv)
 	for (i=1; i <= m; i++)
 	  sum = sum + work[i] * tb2[i];
 	a_val[its] = sum;
-	/* set data to 600.0 if it is OOR */
-       	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
-	  a_val[its] = 600.0;
-	}
 	
-	/*
-	printf("one %d %d  %f %f %f\n",its,m,sum,value1,value2);
-	for (i=1; i <= m; i++)
-	  printf("%d %f %f %f %f %f %f\n",i,u[i],v[i],u1[i],v1[i],work[i],tb2[i]);
-	*/
 	amin=a_val[its];
-
-      /* compute AVE estimate */
-	sum = 0.0;	
-	tbave = 0.0;  
-	for (i=1; i <= m; i++) {
-	  sum = sum + aveweights[i];
-	  tbave = tbave + aveweights[i] * tb2[i];
-	}
-        tbave = tbave / sum; /* AVE Tb estimate */
 
       /* simple Q/A test and replace for bad BGI estimates */
         if (abs(a_val[its] - tbave) > difthres)
 	  a_val[its]=tbave;	
+
+      /* set data to 600.0 if it is OOR */
+       	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
+	  a_val[its] = 600.0;
+	}
 	
       } else /* pixel not hit, set its value to the default nodata value */
 	a_val[its] = anodata_A;
@@ -875,7 +864,6 @@ int main(int argc, char **argv)
     printf("Applying Median Filter to BG image result\n");    
     filter(a_val, 5, 0, nsx, nsy, a_temp, anodata_A);  /* 5x5 modified median filter */
   }
-  
 
   /* output image file */
 
@@ -892,19 +880,9 @@ int main(int argc, char **argv)
 
   if (errors == 0) {
     printf("No errors encountered\n");
-#ifdef INFOFILE
-    /* write out info file if processing is completed successfully */
-    omf = fopen(info_name,"a"); 
-    if (omf == NULL) {
-      eprintfc("ERROR: cannot open info file: '%s'\n",info_name); 
-    } else {
-      fprintf(omf,"BG Processing of '%s' successfully completed\n",file_in);
-      fprintf(omf,"A output file: '%s'\n",a_name);
-      fclose(omf);
-    }
-#endif
-  } else
+  } else {
     printf("Processing errors encountered\n");
+  }
   
   /* end of program */
 
@@ -984,8 +962,6 @@ void make_indx(int nmax, int count, int fill_array[], short int response_array[]
     }  
 }
 
-
-
 /* modified median or smoothing filter routine */
 
 float median(float *array, int count);
@@ -1059,8 +1035,6 @@ float median(float array[], int count)
   return(temp);
 }
 
-
-
 void Ferror(int i)
 {
   fprintf(stdout,"*** Error reading input file at %d ***\n",i);
@@ -1068,10 +1042,7 @@ void Ferror(int i)
   fflush(stdout);
   fflush(stderr);
   return;
-  /* exit(-1); */
 }
-
-
 
 void no_trailing_blanks(char *s)
 {  /* remove trailing blanks (spaces) from string */
