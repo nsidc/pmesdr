@@ -32,8 +32,7 @@
     - test/support
   :data:
     - test/data
-  :include:
-    - /opt/miniconda/include
+
 
 :defines:
   # in order to add common defines:
@@ -64,12 +63,6 @@
 # Ceedling defaults to using gcc for compiling, linking, etc.
 # As [:tools] is blank, gcc will be used (so long as it's in your system path)
 :tools:
-#  :test_compiler:
-#    :executable: gcc
-#    :arguments:
-#      - -I"/opt/miniconda/include"
-#      - -c ${1}
-#      - -o ${2}
   :test_linker:
     :executable: gcc
     :arguments:
@@ -78,7 +71,6 @@
       - -lhdf5_hl
       - -lhdf5
       - -lz
-      - -L"/opt/miniconda/lib"
       - -o ${2}
 
 :plugins:
