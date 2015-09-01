@@ -7,10 +7,17 @@
 #ifndef gsx_H
 #define gsx_H
 
+#define ALIGNMENT 64
+#define GSX_MAX_DIMS 10
+
 #define GSX_VERSION "v0.1"
 
 typedef struct {
-  int *fileid;
+  int fileid;
+  int dims;
+  int vars;
+  int atts;
+  int unlimdims;
 } gsx_class;
 
 int gsx_version ( void );
