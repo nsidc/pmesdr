@@ -4,7 +4,10 @@
  * 06-Jul-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
+#include <malloc.h>
+#include <netcdf.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -18,7 +21,10 @@
  * Maximum lengths of channel strings, including null char
  * THIS SHOULD BE REMOVED WHEN WE START USING GSX
  */
-#define channel_str_length 4
+#define CHANNEL_STR_LENGTH 4
+
+/* Maximum generic string length */
+#define MAX_STR_LENGTH 100
 
 /*
  * SSM/I channel IDs
@@ -193,7 +199,7 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
  *
  *  result : 0 on error, 1 otherwise
  *
-o */
+ */
 int cetb_filename( char *filename, size_t max_length, char *dirname,
 		   cetb_region_id region_id,
 		   int factor,
@@ -206,7 +212,7 @@ int cetb_filename( char *filename, size_t max_length, char *dirname,
 		   cetb_reconstruction_id reconstruction_id,
 		   cetb_swath_producer_id producer_id ) {
 
-  char channel_str[channel_str_length] = "";
+  char channel_str[CHANNEL_STR_LENGTH] = "";
   
   if ( !valid_region_id( region_id ) ) return 0;
   if ( !valid_resolution_factor( factor ) ) return 0;
@@ -240,6 +246,100 @@ int cetb_filename( char *filename, size_t max_length, char *dirname,
   
 }
 
+/*
+ * cetb_init - Creates the requested netCDF file and populates it with
+ *             required global attributes for the CETB product.
+ *
+ *  input :
+ *    cetb_filename : filename to create
+ *
+ *  output :
+ *
+ *  result : 0 on error, 1 otherwise
+ *           A new file is created and populated with required global attributes
+ *
+ */
+int cetb_init( char *cetb_filename ) {
+
+  char template_filename[ FILENAME_MAX ] = ".";
+  const char *ptr_path;
+  int status;
+  int template_fid;
+  int cetb_fid;
+  int num_attributes;
+  int i;
+  char attribute_name[ MAX_STR_LENGTH ];
+  
+  /*
+   * Find and open the template file with the global attribute data
+   */
+  ptr_path = getenv( "PMESDR_TOP_DIR" );
+  if ( ptr_path ) {
+    strncpy( template_filename, ptr_path, FILENAME_MAX );
+  }
+  strcat( template_filename,
+	  "/src/prod/cetb_file/templates/cetb_global_template.nc" );
+  if ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) {
+    fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
+	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    return 0 ;
+  }
+  if ( status = nc_inq_natts( template_fid, &num_attributes ) ) {
+    fprintf( stderr, "%s: "
+	     "Error getting num attributes in cetb_filename=%s: %s.\n",
+	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    return 0 ;
+  }
+
+  /*
+   * Create a new cetb file and populate its global attributes
+   * using the template file attributes
+   */
+  if ( status = nc_create( cetb_filename, NC_NETCDF4, &cetb_fid ) ) {
+    fprintf( stderr, "%s: Error creating cetb_filename=%s: %s.\n",
+	     __FUNCTION__, cetb_filename, nc_strerror( status ) );
+    return 0 ;
+  }
+
+  for ( i = 0; i < num_attributes; i++ ) {
+    if ( status = nc_inq_attname( template_fid, NC_GLOBAL,
+				  i, attribute_name ) ) {
+      fprintf( stderr, "%s: Error getting next attribute_name: %s.\n",
+	       __FUNCTION__, nc_strerror( status ) );
+      return 0 ;
+    }
+    if ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
+			       cetb_fid, NC_GLOBAL ) ) {
+      fprintf( stderr, "%s: Error copying %s: %s.\n",
+	       __FUNCTION__, attribute_name, nc_strerror( status ) );
+      return 0 ;
+    }
+  }
+
+  /*
+   * Set the global attributes that need to be specific for this file
+   */
+  if ( status = nc_put_att_text( cetb_fid, NC_GLOBAL, "platform",
+				 5, "012345678" ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+	     __FUNCTION__, "platform", nc_strerror( status ) );
+    return 0 ;
+  }
+
+  if ( status = nc_close( cetb_fid ) ) {
+    fprintf( stderr, "%s: Error closing cetb_filename=%s: %s.\n",
+	     __FUNCTION__, cetb_filename, nc_strerror( status ) );
+  }
+  if ( status = nc_close( template_fid ) ) {
+    fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
+	     __FUNCTION__, template_filename, nc_strerror( status ) );
+  }
+
+  printf( "Wrote cetb_filename=%s\n", cetb_filename );
+  return( 0 );
+  
+}
+
 /*********************************************************************
  * Internal function definitions
  *********************************************************************/
@@ -266,14 +366,14 @@ static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_i
 
   if ( CETB_SSMI == sensor_id ) {
     if ( 0 < beam_id && beam_id <= SSMI_85V ) {
-      strncpy( channel_str, ssmi_channel_name[ beam_id ], channel_str_length );
+      strncpy( channel_str, ssmi_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
       return 0;
     }
   } else if ( CETB_AMSRE == sensor_id ) {
     if ( 0 < beam_id && beam_id <= AMSRE_89V ) {
-      strncpy( channel_str, amsre_channel_name[ beam_id ], channel_str_length );
+      strncpy( channel_str, amsre_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
       return 0;

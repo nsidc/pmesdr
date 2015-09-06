@@ -184,4 +184,6 @@ int cetb_filename( char *filename, size_t max_length, char *dirname,
 		   cetb_reconstruction_id reconstruction_id,
 		   cetb_swath_producer_id producer_id );
 
+int cetb_init( char *filename );
+
 #endif // cetb_file_H
