@@ -15,6 +15,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "ezdump.h"
 #include "sir3.h"
 
 #define VERSION 0.0
@@ -49,23 +50,10 @@ void image_minmax(float *val, int nsx, int nsy, float anodata, float *amin, floa
 
 /* function prototypes */
 
-int nc_open_file_read_head(char *outfile, int *ncid_in, int *nsx, int *nsy, 
-			   int *iopt, float *ascale, float *bscale, 
-			   float* a0, float *b0, float *xdeg, float *ydeg, 
-			   int *isday, int *ieday, int *ismin, int *iemin,
-			   int *iyear, int *iregion, int *ipol, 
-			   int *nsx2, int *nsy2, int *non_size_x, 
-			   int *non_size_y, float *ascale2, float *bscale2, 
-			   float *a02, float *b02, float *xdeg2, float *ydeg2,
-			   float *a_init, int *ibeam, int *nits, 
-			   int *median_flag, int *nout);
-
 int get_string_nc(int ncid, char *name, char *str, int maxc);
 
 int get_float_array_nc(int ncid, char *name, float *val, int *nsx, int *nsy,
 		       float *anodata_A); 
-
-int nc_close_file(int ncid);
 
 int netcdf_write_single(char *outpath, char *a_name_ave, float *val, char *varname,
 			int idatatype, int nsx, int nsy, float xdeg, float ydeg, 
