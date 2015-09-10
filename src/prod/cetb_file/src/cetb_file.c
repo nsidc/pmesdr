@@ -250,8 +250,8 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    cetb_reconstruction_id_name[ reconstruction_id ],
   	    cetb_swath_producer_id_name[ producer_id ],
   	    CETB_FILE_FORMAT_VERSION );
-  
-    return this;
+
+  return this;
   
 }
 
@@ -394,7 +394,7 @@ void cetb_file_close( cetb_file_class *this ) {
       fprintf( stderr, "%s: Error closing file=%s: %s.\n",
 	       __FUNCTION__, this->filename, nc_strerror( status ) );
     }
-    fprintf( stderr, "Wrote cetb filename=%s\n", this->filename );
+    fprintf( stderr, "> %s: Wrote cetb file=%s\n", __FUNCTION__, this->filename );
 
     free( this->filename );
   }

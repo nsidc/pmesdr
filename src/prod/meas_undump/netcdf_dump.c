@@ -15,7 +15,7 @@
 #include <math.h>
 
 #include <netcdf.h>  /* netCDF interface */
-#include <ezdump.h>  /* ezdump interface */
+#include "ezdump.h"  /* ezdump interface */
 
 # define RANK_0 0	
 # define RANK_1 1
@@ -205,25 +205,14 @@ int read_gatt_double_(int *ncid, char *name, double *val)
 /* external routines */
 /********************************************************************/
 
-int nc_open_file_write_head(char *outfile, int *ncid_in, int nsx, int nsy, int iopt, 
+int nc_open_file_write_head(int ncid, int nsx, int nsy, int iopt, 
 			    float ascale, float bscale, float a0, float b0, float xdeg, float ydeg, 
 			    int isday, int ieday, int ismin, int iemin, int iyear, int iregion, int ipol, 
 			    int nsx2, int nsy2, int non_size_x, int non_size_y, float ascale2, float bscale2, 
 			    float a02, float b02, float xdeg2, float ydeg2,
 			    float a_init, int ibeam, int nits, int median_flag, int nout)
 {
-  int ncid, stat, nsx_dim, nsy_dim, nsx2_dim, nsy2_dim;
-  
-  /* create new netcdf file, clobbering existing file if necessary */
-  stat = nc_create(outfile, NC_CLOBBER, &ncid);  check_err(stat,__LINE__,__FILE__);
-  *ncid_in=ncid;  
-  if (stat != 0) return(stat);
-
-  /* define primary dimensions */
-  //stat = nc_def_dim(ncid, "nsx", nsx, &nsx_dim);  check_err(stat,__LINE__,__FILE__);
-  //stat = nc_def_dim(ncid, "nsy", nsy, &nsy_dim);  check_err(stat,__LINE__,__FILE__);
-  //stat = nc_def_dim(ncid, "nsx2", nsx2, &nsx2_dim);  check_err(stat,__LINE__,__FILE__);
-  //stat = nc_def_dim(ncid, "nsy2", nsy2, &nsy2_dim);  check_err(stat,__LINE__,__FILE__);
+  int stat, nsx_dim, nsy_dim, nsx2_dim, nsy2_dim;
 
   /* leave define mode to enable use for write_gatt routines */
   stat = nc_enddef(ncid);  check_err(stat,__LINE__,__FILE__);
@@ -450,20 +439,6 @@ int ez_nc_open_file_read_head(char *filename, int *ncid, eznc_head *dhead)
   dhead->ncid=*ncid;
   return(stat);  
 }
-
-int ez_nc_open_file_write_head(char *filename, int *ncid, eznc_head *dhead)
-{
-  int stat;
-  stat=nc_open_file_write_head(filename, ncid, dhead->nsx, dhead->nsy, dhead->iopt, 
-			       dhead->ascale, dhead->bscale, dhead->a0, dhead->b0, dhead->xdeg, dhead->ydeg, 
-			       dhead->isday, dhead->ieday, dhead->ismin, dhead->iemin, dhead->iyear, dhead->iregion, dhead->ipol, 
-			       dhead->nsx2, dhead->nsy2, dhead->non_size_x, dhead->non_size_y, dhead->ascale2, dhead->bscale2, 
-			       dhead->a02, dhead->b02, dhead->xdeg2, dhead->ydeg2,
-			       dhead->a_init, dhead->ibeam, dhead->nits, dhead->median_flag, dhead->nout);
-    dhead->ncid=*ncid;
-  return(stat);
-}
-
 
 int copy_string_nc(int ncid_in, int ncid_out, char *name, char *str, int maxc)
 {
