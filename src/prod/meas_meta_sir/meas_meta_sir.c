@@ -515,6 +515,7 @@ int main(int argc, char **argv)
     * resolution factor
     * pass direction
     * swath_producer_id (CSU or RSS)
+    * list of actual gsx source files used as input
     * and we need to stop specifying any output filenames in the .meta file
     *
     * Generate output product filename
