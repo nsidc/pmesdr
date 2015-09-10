@@ -191,10 +191,21 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
  * cetb_file_init - returns a pointer to an initialized cetb_file object
  *
  *  input :
+ *    dirname : directory location for cetb file
+ *    region_id : projection id
+ *    factor : grid resolution factor
+ *    platform_id : satellite platform id
+ *    sensor_id : passive microwave sensor id
+ *    year : 4-digit year
+ *    doy : 3-digit day of year
+ *    beam_id : beam (channel) id
+ *    direction_id : direction id for temporal subsetting
+ *    reconstruction_id : image reconstruction method id
+ *    producer_id : swath data producer id
  *
  *  output : n/a
  *
- *  result : pointer to cetb_file_class object or NULL if an error occurred
+ *  result : pointer to initialized cetb_file_class object or NULL if an error occurred
  *
  */
 cetb_file_class *cetb_file_init( char *dirname,
@@ -256,16 +267,17 @@ cetb_file_class *cetb_file_init( char *dirname,
 }
 
 /*
- * cetb_file_open - Open the file associated with this object
- *                  and populate its global file attributes
+ * cetb_file_open - Open the file associated with this object and
+ *                  populate its global file attributes
  *
  * input :
- *    this : pointer to cetb_file_class object
+ *    this : pointer to initialized cetb_file_class object
  *
  * output : n/a
  *
  *  result : 0 on error, 1 otherwise
- *           The CETB file is created and populated with required global attributes
+ *           The CETB file is created and populated with required
+ *           global attributes
   *
  */
 int cetb_file_open( cetb_file_class *this ) {
@@ -369,19 +381,23 @@ int cetb_file_open( cetb_file_class *this ) {
 	     __FUNCTION__, template_filename, nc_strerror( status ) );
   }
 
+  free( software_version );
+  free( time_stamp );
+
   return 1;
   
 }
 
 /*
- * cetb_file_close - close the CETB file and free all memory associated with this object
+ * cetb_file_close - close the CETB file and free all memory
+ *                   associated with this object
  *
  *  input :
  *    this : pointer to cetb_file_class object
  *
  *  output : n/a
  *
- *  result : n/a
+ *  result : File is closed, and memory is freed
  *
  */
 void cetb_file_close( cetb_file_class *this ) {
