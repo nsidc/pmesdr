@@ -28,6 +28,7 @@
 #include <netcdf.h>
 
 #include "cetb_file.h"
+#include "ezdump.h"
 #include "sir3.h"
 
 #define NRANSI
@@ -108,21 +109,6 @@ void no_trailing_blanks(char *s);
 
 char *addpath(char *outpath, char *name, char *temp);
 
-int nc_open_file_write_head(char *inter_name, int *ncid, int nsx, int nsy, int iopt, 
-		 float ascale, float bscale, float a0, float b0, float xdeg, float ydeg, 
-		 int isday, int ieday, int ismin, int iemin, int iyear, int iregion, int ipol, 
-		 int nsx2, int nsy2, int non_size_x, int non_size_y, float ascale2, float bscale2, 
-		 float a02, float b02, float xdeg2, float ydeg2,
-			    float a_init, int ibeam, int nits, int median_flag, int nout); 
-   
-int add_string_nc(int ncid, char *name, char *str, int maxc);
-
-int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float anodata_A);
-
-int nc_close_file(int ncid);
-
-void check_err(const int stat, const int line, const char *file);
-
 /****************************************************************************/
 
 /* global array variables used for storing images*/
@@ -184,8 +170,8 @@ int main(int argc, char **argv)
 
   char a_name[100], info_name[100], line[100];
 
-  char inter_name[FILENAME_MAX];
-  int ncid, ncerr;
+  cetb_file_class *cetb;
+  int ncerr;
 
   int storage = 0;
   long head_len;
@@ -416,19 +402,25 @@ int main(int argc, char **argv)
     * HARDCODED 
     * See related note in meas_meta_sir about what has to be fixed, here.
     *
-    * Generate output product filename
+    * Initialize cetb_file.
     */
-   if ( !cetb_filename( inter_name, FILENAME_MAX, outpath,
-			iregion, ascale, CETB_F13, CETB_SSMI,
-			iyear, isday, ibeam,
-			cetb_get_direction_id_from_info_name( info_name ),
-			CETB_BGI,
-			cetb_get_swath_producer_id_from_outpath( outpath, CETB_BGI ) ) ) {
-     fprintf( stderr, "%s: Error making product filename.\n", __FUNCTION__ );
+   cetb = cetb_file_init( outpath,
+			  iregion, ascale, CETB_F13, CETB_SSMI,
+			  iyear, isday, ibeam,
+			  cetb_get_direction_id_from_info_name( info_name ),
+			  CETB_BGI,
+			  cetb_get_swath_producer_id_from_outpath( outpath, CETB_BGI ) );
+   if ( !cetb ) {
+     fprintf( stderr, "%s: Error initializing cetb_file.\n", __FUNCTION__ );
      exit( -1 );
    }
 
-   ncerr=nc_open_file_write_head(inter_name, &ncid, nsx, nsy, iopt, 
+   if ( 0 != cetb_file_open( cetb ) ) {
+     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FUNCTION__, cetb->filename );
+     exit( -1 );
+   }
+     
+   ncerr=nc_open_file_write_head(cetb->fid, nsx, nsy, iopt, 
 				 ascale, bscale, a0, b0, xdeg, ydeg, 
 				 isday, ieday, ismin, iemin, iyear, iregion, ipol, 
 				 nsx2, nsy2, non_size_x, non_size_y, 
@@ -437,13 +429,13 @@ int main(int argc, char **argv)
 				 Nfiles_out); check_err(ncerr, __LINE__,__FILE__);
 
    /* add string information */
-   ncerr=add_string_nc(ncid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
    sprintf(crproc,"BYU MERS:meas_meta_bgi v1.0 g=%f d2=%f thres=%f",bgi_gamma,delta2,ithres);
-   ncerr=add_string_nc(ncid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__); 
+   ncerr=add_string_nc(cetb->fid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__); 
    (void) time(&tod);
    (void) strftime(crtime,28,"%X %x",localtime(&tod));
-   ncerr=add_string_nc(ncid,"Creation_time",crtime,29); check_err(ncerr, __LINE__,__FILE__); 
+   ncerr=add_string_nc(cetb->fid,"Creation_time",crtime,29); check_err(ncerr, __LINE__,__FILE__); 
 
 
    /* generate BG output name */
@@ -453,7 +445,7 @@ int main(int argc, char **argv)
    sprintf(a_name,"%s.bgi",line);
 
    /* add product file names */
-   ncerr=add_string_nc(ncid,"bgi_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"bgi_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
 
 
    head_len = ftell(imf);
@@ -868,15 +860,14 @@ int main(int argc, char **argv)
   /* output image file */
 
   printf("\n"); 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"bgi_image",a_val,nsx,nsy,anodata_A ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"bgi_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
     eprintfc("Error dumping A BGI '%s'. \n", a_name );
   } else {
     printf("Dumped A BGI '%s'. \n", a_name );
   }
 
-  ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
-  fprintf( stderr, "\n%s : Finished writing product file: %s\n", __FUNCTION__, inter_name );
+  cetb_file_close( cetb );
 
   if (errors == 0) {
     printf("No errors encountered\n");

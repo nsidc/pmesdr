@@ -23,6 +23,7 @@
 #include <netcdf.h>
 
 #include "cetb_file.h"
+#include "ezdump.h"
 #include "sir3.h"
 
 #define VERSION 1.2
@@ -109,21 +110,6 @@ void no_trailing_blanks(char *s);
 
 char *addpath(char *outpath, char *name, char *temp);
 
-int nc_open_file_write_head(char *inter_name, int *ncid, int nsx, int nsy, int iopt, 
-		 float ascale, float bscale, float a0, float b0, float xdeg, float ydeg, 
-		 int isday, int ieday, int ismin, int iemin, int iyear, int iregion, int ipol, 
-		 int nsx2, int nsy2, int non_size_x, int non_size_y, float ascale2, float bscale2, 
-		 float a02, float b02, float xdeg2, float ydeg2,
-			    float a_init, int ibeam, int nits, int median_flag, int nout); 
-   
-int add_string_nc(int ncid, char *name, char *str, int maxc);
-
-int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float anodata_A);
-
-int nc_close_file(int ncid);
-
-void check_err(const int stat, const int line, const char *file);
-
 /****************************************************************************/
 
 /* global array variables used for storing images*/
@@ -188,8 +174,8 @@ int main(int argc, char **argv)
     grd_pname[100], grd_cname[100], 
     info_name[100], line[100];
 
-  char inter_name[FILENAME_MAX];
-  int ncid, ncerr;
+  cetb_file_class *cetb;
+  int ncerr;
 
   int storage = 0;
   long head_len;
@@ -515,21 +501,29 @@ int main(int argc, char **argv)
     * resolution factor
     * pass direction
     * swath_producer_id (CSU or RSS)
+    * list of actual gsx source files used as input
+    * list of GSX version used to create each gsx file used as input
     * and we need to stop specifying any output filenames in the .meta file
     *
-    * Generate output product filename
+    * Initialize cetb_file.
     */
-   if ( !cetb_filename( inter_name, FILENAME_MAX, outpath,
-			iregion, ascale, CETB_F13, CETB_SSMI,
-			iyear, isday, ibeam,
-			cetb_get_direction_id_from_info_name( info_name ),
-			CETB_SIR,
-			cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) ) ) {
-     fprintf( stderr, "%s: Error making product filename.\n", __FUNCTION__ );
+   cetb = cetb_file_init( outpath,
+			  iregion, ascale, CETB_F13, CETB_SSMI,
+			  iyear, isday, ibeam,
+			  cetb_get_direction_id_from_info_name( info_name ),
+			  CETB_SIR,
+			  cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+   if ( !cetb ) {
+     fprintf( stderr, "%s: Error initializing cetb_file.\n", __FUNCTION__ );
+     exit( -1 );
+   }
+
+   if ( 0 != cetb_file_open( cetb ) ) {
+     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FUNCTION__, cetb->filename );
      exit( -1 );
    }
      
-   ncerr=nc_open_file_write_head(inter_name, &ncid, nsx, nsy, iopt, 
+   ncerr=nc_open_file_write_head(cetb->fid, nsx, nsy, iopt, 
 				 ascale, bscale, a0, b0, xdeg, ydeg, 
 				 isday, ieday, ismin, iemin, iyear, iregion, ipol, 
 				 nsx2, nsy2, non_size_x, non_size_y, 
@@ -538,33 +532,33 @@ int main(int argc, char **argv)
 				 Nfiles_out); check_err(ncerr, __LINE__,__FILE__);
 
    /* add string information */
-   ncerr=add_string_nc(ncid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
    sprintf(crproc,"BYU MERS:meas_meta_sir v%f",VERSION);
-   ncerr=add_string_nc(ncid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__);
    (void) time(&tod);
    (void) strftime(crtime,28,"%X %x",localtime(&tod));
-   ncerr=add_string_nc(ncid,"Creation_time",crtime,29); check_err(ncerr, __LINE__,__FILE__); 
+   ncerr=add_string_nc(cetb->fid,"Creation_time",crtime,29); check_err(ncerr, __LINE__,__FILE__); 
 
    /* add product file names */
-   ncerr=add_string_nc(ncid,"a_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"c_name",c_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"e_name",e_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"i_name",i_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"j_name",j_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"v_name",v_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"p_name",p_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"a_name_ave",a_name_ave,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"a_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"c_name",c_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"e_name",e_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"i_name",i_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"j_name",j_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"v_name",v_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"p_name",p_name,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"a_name_ave",a_name_ave,100); check_err(ncerr, __LINE__,__FILE__);
    if (CREATE_NON) {
-     ncerr=add_string_nc(ncid,"non_aname",non_aname,100); check_err(ncerr, __LINE__,__FILE__);   
-     ncerr=add_string_nc(ncid,"non_vname",non_vname,100); check_err(ncerr, __LINE__,__FILE__);
+     ncerr=add_string_nc(cetb->fid,"non_aname",non_aname,100); check_err(ncerr, __LINE__,__FILE__);   
+     ncerr=add_string_nc(cetb->fid,"non_vname",non_vname,100); check_err(ncerr, __LINE__,__FILE__);
    }   
-   ncerr=add_string_nc(ncid,"grd_aname",grd_aname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"grd_vname",grd_vname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"grd_iname",grd_iname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"grd_jname",grd_jname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"grd_pname",grd_pname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(ncid,"grd_cname",grd_cname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"grd_aname",grd_aname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"grd_vname",grd_vname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"grd_iname",grd_iname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"grd_jname",grd_jname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"grd_pname",grd_pname,100); check_err(ncerr, __LINE__,__FILE__);
+   ncerr=add_string_nc(cetb->fid,"grd_cname",grd_cname,100); check_err(ncerr, __LINE__,__FILE__);
 
    head_len = ftell(imf);
    printf("Input header file length %ld\n",head_len);
@@ -885,7 +879,7 @@ done:
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
     if (its == 0) {  /* output AVE image */
-      if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
+      if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
 	errors++;
 	eprintfc("\nError dumping Tb (A) AVE '%s'\n", a_name_ave );
       } else {
@@ -897,7 +891,7 @@ done:
   printf(" weight max --> %f Average weight: %.4f\n",tmax,total/nsize);
 
   /* output SIR image */
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"a_image",a_val,nsx,nsy,anodata_A ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"a_image",a_val,nsx,nsy,anodata_A ) ) ) {
     errors++;
     eprintfc("\nError dumping Tb (A) SIR '%s'\n", a_name );
   } else {
@@ -905,14 +899,14 @@ done:
   }
 
   /* output other auxilary product images */
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
     errors++;
     eprintfc("Error dumping Istd (I) SIR '%s'\n", i_name );
   } else {
     printf( "Dumped Istd (I) SIR '%s'\n", i_name );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
     errors++;
     eprintfc("Error dumping Iave (J) SIR '%s'\n", j_name );
   } else {
@@ -920,7 +914,7 @@ done:
   }
 
   /* this product is not produced for weighted SIR/SIRF
-     if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"c_image",sxy,nsx,nsy,anodata_C ) ) ) {
+     if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"c_image",sxy,nsx,nsy,anodata_C ) ) ) {
      errors++;
      } else {
      eprintf( sprintf( "*** ERROR writing Cnt output ***\n" ) );
@@ -1011,14 +1005,14 @@ done1:
   printf(" Tb STD min   max --> %f %f\n",amin,amax);
   printf(" Tb ERR min   max --> %f %f\n",bmin,bmax);
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"v_image",sxy,nsx,nsy,anodata_V ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"v_image",sxy,nsx,nsy,anodata_V ) ) ) {
     errors++;
     eprintfc("Error Dumping Tb STD (V) SIR output '%s'\n", v_name );
   } else {
     printf("Dumped Tb STD (V) SIR output '%s'\n", v_name );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"e_image",sx,nsx,nsy,anodata_E ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"e_image",sx,nsx,nsy,anodata_E ) ) ) {
     errors++;
     eprintfc("Error Dumping Tb err (E) SIR output '%s' \n", e_name );
   } else {
@@ -1117,7 +1111,7 @@ done2:
   printf(" Time (postfilter) min   max --> %f %f\n",amin,amax);
   */
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"p_image",sxy,nsx,nsy,anodata_P ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"p_image",sxy,nsx,nsy,anodata_P ) ) ) {
     errors++;
     eprintfc("Error Dumped time output (P) SIR '%s'\n", p_name );
   } else {
@@ -1270,42 +1264,42 @@ done3:
   printf(" Non-enhanced/Grid I  min   max --> %f %f\n",bmin,bmax);
   printf(" Non-enhanced/Grid C        max --> %.1f\n",tmax);
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_a_image",a_val,nsx2,nsy2,anodata_A ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_a_image",a_val,nsx2,nsy2,anodata_A ) ) ) {
     errors++;
     eprintfc("Error Dumping Grid TB (A) output '%s'\n", grd_aname );
   } else {
     printf( "Dumped Grid TB (A) output '%s'\n", grd_aname );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
     errors++;
     eprintfc( "Error Dumping Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   } else { 
     printf( "Dumped Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
     errors++;
     eprintfc( "Error Dumping Grid Istd (I) output '%s'\n", grd_iname );
   } else { 
     printf( "Dumped Grid Istd (I) output '%s'\n", grd_iname );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
     errors++;
     eprintfc( "Error Dumping Grid Iave (J) output '%s'\n", grd_jname );
   } else { 
     printf( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
     errors++;
     fprintf(stderr, "Error Dumping Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
   } else {
     printf( "Dumped Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
     errors++;
     eprintfc( "Error Dumping Grid time (P) '%s'\n", grd_pname );
   } else { 
@@ -1334,14 +1328,14 @@ done3:
 	}
     }
   
-    if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
       errors++;
       eprintfc( "Error Dumping Non-enhanced Tb (A) output '%s'\n", non_aname );
     } else { 
       printf( "Dumped Non-enhanced Tb (A) output '%s'\n", non_aname );
     }
 
-    if ( NC_NOERR != ( ncerr=add_float_array_nc(ncid,"non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
       errors++;
       eprintfc( "Error Dumping Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
     } else { 
@@ -1350,8 +1344,7 @@ done3:
 
   }
 
-  ncerr=nc_close_file(ncid); check_err(ncerr, __LINE__,__FILE__);
-  fprintf( stderr, "\n%s : Finished writing product file: %s\n", __FUNCTION__, inter_name );
+  cetb_file_close( cetb );
 
   if (errors == 0) {
     printf("No errors encountered\n");
