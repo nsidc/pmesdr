@@ -35,35 +35,32 @@ gsx_class *gsx_init ( char *filename ) {
   
   fprintf( stderr, "%s: gsx file name = %s \n",
 	     __FUNCTION__, filename );
-  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
-  fprintf( stderr, "%s: nc_open return=%s: filename=%s \n",
-	   __FUNCTION__, nc_strerror(status), filename );
-  
-  if ( NC_NOERR == status ) {
-    this->fileid = nc_fileid;
-  } else {
+  if ( status = nc_open( filename, NC_NOWRITE, &nc_fileid ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s \n",
 	     __FUNCTION__, nc_strerror(status), filename );
     free( this );
     return NULL;
   }
 
-  status = nc_inq( nc_fileid, &nc_dims, &nc_vars, &nc_atts, &nc_unlimdims );
-  fprintf( stderr, "%s: nc_inq return=%s: ndims=%d, nvars=%d, natts=%d, nunlimdims=%d \n",
-	   __FUNCTION__, nc_strerror(status), nc_dims, nc_vars, nc_atts, nc_unlimdims );
-  
-  if ( NC_NOERR == status ) {
-    this->fileid = nc_fileid;
-    this->dims = nc_dims;
-    this->vars = nc_vars;
-    this->atts = nc_atts;
-    this->unlimdims = nc_unlimdims;
-  } else {
+  this->fileid = nc_fileid;
+
+  if ( status = nc_inq( this->fileid, &nc_dims, &nc_vars, &nc_atts, &nc_unlimdims ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s \n",
 	     __FUNCTION__, nc_strerror(status), filename );
     free( this );
     return NULL;
   }
+
+  //fprintf( stderr, "%s: nc_inq return=%s: ndims=%d, nvars=%d, natts=%d, nunlimdims=%d \n",
+  //	   __FUNCTION__, nc_strerror(status), nc_dims, nc_vars, nc_atts, nc_unlimdims );
+  
+  this->dims = nc_dims;
+  this->vars = nc_vars;
+  this->atts = nc_atts;
+  this->unlimdims = nc_unlimdims;
+
+  /* Now call gsx_inq_dims to get more variables */
+  status = gsx_inq_dims( this );
 
   return this;
 
@@ -73,8 +70,7 @@ void gsx_close ( gsx_class *this ) {
   int status;
   
   if ( NULL == this ) return;
-  status = nc_close( this->fileid );
-  if ( NC_NOERR != status ) {
+  if ( status = nc_close( this->fileid ) ) {
     fprintf( stderr, "%s: nc_close error=%s \n",
   	     __FUNCTION__, nc_strerror(status) );
   }
@@ -96,23 +92,23 @@ int gsx_inq_dims( gsx_class *this ) {
       fprintf( stderr, "%s: unable to allocate memory for dimension names\n", __FUNCTION__ );
       return -1;
     } else {
-      fprintf( stderr, "%s: memallocated for %dth char pointer \n", __FUNCTION__, i );
+      //fprintf( stderr, "%s: memallocated for %dth char pointer \n", __FUNCTION__, i );
     }
-    fflush (stderr );
-    status = nc_inq_dimname( this->fileid, i, dim_name[i] );
-    if ( NC_NOERR == status ) {
-      status = nc_inq_dimlen( this->fileid, i, &dim_length );
-      if ( NC_NOERR == status ) {
-	fprintf( stderr, "%s: %dth dim name=%s and length=%d\n", __FUNCTION__, i, dim_name[i], (int)dim_length );
-	// assign them here
-      } else {
-	fprintf ( stderr, "%s: couldn't get dim length\n", __FUNCTION__ );
-      }
-    } else {
-      fprintf ( stderr, "%s: couldn't get dim name info\n", __FUNCTION__ );
+    if ( status = nc_inq_dimname( this->fileid, i, dim_name[i] ) ) {
+      fprintf ( stderr, "%s: couldn't get dim name info error %s\n", __FUNCTION__, nc_strerror( status ) );
       return -1;
     }
+    if ( status = nc_inq_dimlen( this->fileid, i, &dim_length ) ) {
+      fprintf ( stderr, "%s: couldn't get dim length, error: %s\n", __FUNCTION__, nc_strerror( status ) );
+    }
+    //    fprintf( stderr, "%s: %dth dim name=%s and length=%d\n", __FUNCTION__, i, dim_name[i], (int)dim_length );
+    if ( strncmp( dim_name[i], "scans_loc1", strlen( dim_name[i] ) ) == 0 ) this->scans_loc1 = dim_length;
+    if ( strncmp( dim_name[i], "scans_loc2", strlen( dim_name[i] ) ) == 0 ) this->scans_loc2 = dim_length;
+    if ( strncmp( dim_name[i], "measurements_loc1", strlen( dim_name[i] ) ) == 0 ) this->measurements_loc1 = dim_length;
+    if ( strncmp( dim_name[i], "measurements_loc2", strlen( dim_name[i] ) ) == 0 ) this->measurements_loc2 = dim_length;
   }
+  //  fprintf( stderr, "%s: %d loc1 %d=loc2 %d=meas1 %d=meas2\n",	\
+  //	   __FUNCTION__, this->scans_loc1, this->scans_loc2, this->measurements_loc1, this->measurements_loc2 );
   return 0;
 }
 

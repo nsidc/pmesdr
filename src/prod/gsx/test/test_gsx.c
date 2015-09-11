@@ -74,7 +74,66 @@ void test_gsx_dim_names ( void )
   } else {
     status = 1;
   }
+  fprintf( stderr, "%s: netcdf file %s with id %d has returned %d dimension names\n",\
+	   __FUNCTION__, file_name, gsx->fileid, gsx->dims );
   TEST_ASSERT_TRUE( 0 == status );
 }
 
+void test_gsx_dim_scans_loc1 ( void ) {
+  gsx_class *gsx;
+  int status;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    status = gsx_inq_dims( gsx );
+  } else {
+    status = 1;
+  }
+  fprintf( stderr, "%s: netcdf file %s with id %d has %d lo res scans\n",\
+	   __FUNCTION__, file_name, gsx->fileid, gsx->scans_loc1 );
+  TEST_ASSERT_TRUE( gsx->scans_loc1 == 1605 );
+}
+
+void test_gsx_dim_scans_loc2 ( void ) {
+  gsx_class *gsx;
+  int status;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    fprintf( stderr, "%s: netcdf file %s with id %d has %d hi/loc2 res scans\n", \
+	     __FUNCTION__, file_name, gsx->fileid, gsx->scans_loc2 );
+  } else {
+    status = 1;
+  }
+  TEST_ASSERT_TRUE( gsx->scans_loc2 == 3210 );
+  gsx_close( gsx );
+}
+
+void test_gsx_dim_measurements_loc1 ( void ) {
+  gsx_class *gsx;
+  int status;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    fprintf( stderr, "%s: netcdf file %s with id %d has %d loc1 res measurements per scan\n", \
+	     __FUNCTION__, file_name, gsx->fileid, gsx->measurements_loc1 );
+  } else {
+    status = 1;
+  }
+  TEST_ASSERT_TRUE( gsx->measurements_loc1 == 64 );
+  gsx_close( gsx );
+}
   
+void test_gsx_dim_measurements_loc2 ( void ) {
+  gsx_class *gsx;
+  int status;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    fprintf( stderr, "%s: netcdf file %s with id %d has %d loc2 res measurements per scans\n", \
+	   __FUNCTION__, file_name, gsx->fileid, gsx->measurements_loc2 );
+  } else {
+    status = 1;
+  }
+  TEST_ASSERT_TRUE( gsx->measurements_loc2 == 128 );
+}
