@@ -46,7 +46,7 @@ int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float
 
 int nc_close_file(int ncid);
 
-int nc_open_file_write_head(char *outfile, int *ncid_in, int nsx, int nsy, int iopt, 
+int nc_open_file_write_head(int ncid, int nsx, int nsy, int iopt, 
 			    float ascale, float bscale, float a0, float b0, float xdeg, float ydeg, 
 			    int isday, int ieday, int ismin, int iemin, int iyear, int iregion, int ipol, 
 			    int nsx2, int nsy2, int non_size_x, int non_size_y, float ascale2, float bscale2, 

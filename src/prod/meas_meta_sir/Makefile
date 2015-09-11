@@ -19,7 +19,7 @@ LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 ifeq ($(LOCALE),int.nsidc.org)
-  TESTDIR = /projects/PMESDR/vagrant/NSIDCtest
+  TESTDIR = /projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)
 endif
 COMPAREDIR = $(PMESDR_REGRESS_DIR)
 COMPARE_TOLERANCE = $(PMESDR_COMPARE_TOLERANCE)
