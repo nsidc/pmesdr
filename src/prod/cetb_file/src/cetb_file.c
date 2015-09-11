@@ -20,6 +20,9 @@
  * Internal data and function prototypes
  *********************************************************************/
 
+#define STATUS_OK 0
+#define STATUS_FAILURE 1
+
 /*
  * Maximum lengths of channel strings, including null char
  * THIS SHOULD BE REMOVED WHEN WE START USING GSX
@@ -149,7 +152,7 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
   char *ptr;
   int i;
 
-  if ( !valid_reconstruction_id( reconstruction_id ) ) {
+  if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) {
     return id;
   }
 
@@ -223,15 +226,15 @@ cetb_file_class *cetb_file_init( char *dirname,
   cetb_file_class *this=NULL;
   char channel_str[CHANNEL_STR_LENGTH] = "";
 
-  if ( !valid_region_id( region_id ) ) return NULL;
-  if ( !valid_resolution_factor( factor ) ) return NULL;
-  if ( !valid_platform_id( platform_id ) ) return NULL;
-  if ( !valid_sensor_id( sensor_id ) ) return NULL;
-  if ( !valid_date( year, doy ) ) return NULL;
-  if ( !channel_name( channel_str, sensor_id, beam_id ) ) return NULL;
-  if ( !valid_pass_direction( region_id, direction_id ) ) return NULL;
-  if ( !valid_reconstruction_id( reconstruction_id ) ) return NULL;
-  if ( !valid_swath_producer_id( producer_id ) ) return NULL;
+  if ( STATUS_OK != valid_region_id( region_id ) ) return NULL;
+  if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
+  if ( STATUS_OK != valid_platform_id( platform_id ) ) return NULL;
+  if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
+  if ( STATUS_OK != valid_date( year, doy ) ) return NULL;
+  if ( STATUS_OK != channel_name( channel_str, sensor_id, beam_id ) ) return NULL;
+  if ( STATUS_OK != valid_pass_direction( region_id, direction_id ) ) return NULL;
+  if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) return NULL;
+  if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
 
   this = (cetb_file_class *)calloc(1, sizeof( cetb_file_class ) );
   if ( !this ) { 
@@ -275,7 +278,8 @@ cetb_file_class *cetb_file_init( char *dirname,
  *
  * output : n/a
  *
- *  result : 0 on error, 1 otherwise
+ *  result : 0 on success
+ *           1 if an error occurs; error message will be written to stderr
  *           The CETB file is created and populated with required
  *           global attributes
   *
@@ -293,13 +297,17 @@ int cetb_file_open( cetb_file_class *this ) {
   char attribute_name[ MAX_STR_LENGTH ];
   FILE *filep;
 
-  if ( !this->filename ) return 0;
+  if ( !this->filename ) {
+    fprintf( stderr, "%s: Cannot open cetb file with empty filename.\n",
+  	     __FUNCTION__ );
+    return 1;
+  }
   
   /* Create a new cetb file */
   if ( status = nc_create( this->filename, NC_NETCDF4, &(this->fid) ) ) {
     fprintf( stderr, "%s: Error creating cetb_filename=%s: %s.\n",
   	     __FUNCTION__, this->filename, nc_strerror( status ) );
-    return 0;
+    return 1;
   }
 
   /*
@@ -318,7 +326,7 @@ int cetb_file_open( cetb_file_class *this ) {
     fprintf( stderr, "%s: "
   	     "Error getting num attributes in cetb_filename=%s: %s.\n",
   	     __FUNCTION__, template_filename, nc_strerror( status ) );
-    return 0;
+    return 1;
   }
 
   /*
@@ -329,13 +337,13 @@ int cetb_file_open( cetb_file_class *this ) {
   				  i, attribute_name ) ) {
       fprintf( stderr, "%s: Error getting next attribute_name: %s.\n",
   	       __FUNCTION__, nc_strerror( status ) );
-      return 0;
+      return 1;
     }
     if ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
   			       this->fid, NC_GLOBAL ) ) {
       fprintf( stderr, "%s: Error copying %s: %s.\n",
   	       __FUNCTION__, attribute_name, nc_strerror( status ) );
-      return 0;
+      return 1;
     }
   }
 
@@ -348,7 +356,7 @@ int cetb_file_open( cetb_file_class *this ) {
 				 software_version ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
   	     __FUNCTION__, "software_version_id", software_version, nc_strerror( status ) );
-    return 0;
+    return 1;
   }
   
   if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "platform",
@@ -356,7 +364,7 @@ int cetb_file_open( cetb_file_class *this ) {
   				 cetb_gcmd_platform_keyword[ this->platform_id ] ) ) {
      fprintf( stderr, "%s: Error setting %s: %s.\n",
    	     __FUNCTION__, "platform", nc_strerror( status ) );
-     return 0;
+     return 1;
    }
 
   if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "sensor",
@@ -364,7 +372,7 @@ int cetb_file_open( cetb_file_class *this ) {
   				 cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "sensor", nc_strerror( status ) );
-    return 0;
+    return 1;
   }
 
   time_stamp = current_time_stamp();
@@ -373,7 +381,7 @@ int cetb_file_open( cetb_file_class *this ) {
   				 time_stamp ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "date_created", nc_strerror( status ) );
-    return 0;
+    return 1;
   }
 
   if ( status = nc_close( template_fid ) ) {
@@ -384,7 +392,7 @@ int cetb_file_open( cetb_file_class *this ) {
   free( software_version );
   free( time_stamp );
 
-  return 1;
+  return 0;
   
 }
 
@@ -440,7 +448,7 @@ void cetb_file_close( cetb_file_class *this ) {
  *  output :
  *    channel_str : channel string, 2-digit frequency, 1-letter polarization,  e.g. "19H"
  *
- *  result : 1 for success, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_id ) {
@@ -450,23 +458,23 @@ static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_i
       strncpy( channel_str, ssmi_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else if ( CETB_AMSRE == sensor_id ) {
     if ( 0 < beam_id && beam_id <= AMSRE_89V ) {
       strncpy( channel_str, amsre_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
 	     __FUNCTION__ );
-    return 0;
+    return STATUS_FAILURE;
   }
 
-  return 1;
+  return STATUS_OK;
 
 }
 
@@ -598,7 +606,7 @@ static char *pmesdr_top_dir( void ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_date( int year, int doy ) {
@@ -608,7 +616,7 @@ static int valid_date( int year, int doy ) {
   
   if ( CETB_YEAR_START > year ) {
     fprintf( stderr, "%s: year=%d is out of range\n", __FUNCTION__, year );
-    return 0;
+    return STATUS_FAILURE;
   }
 
   if ( 0 == (year % 4) ) {
@@ -616,10 +624,10 @@ static int valid_date( int year, int doy ) {
   }
 
   if ( doy_min <= doy && doy <= doy_max ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: doy=%d is out of range for year=%d\n", __FUNCTION__, doy, year );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -634,7 +642,7 @@ static int valid_date( int year, int doy ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
@@ -643,28 +651,28 @@ static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id dir
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_MORNING_PASSES == direction_id
 	 || CETB_EVENING_PASSES == direction_id ) {
-      return 1;
+      return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
 	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
 	       direction_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else if ( CETB_EASE2_T == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_ASC_PASSES == direction_id
 	 || CETB_DES_PASSES == direction_id ) {
-      return 1;
+      return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
 	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
 	       direction_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else {
       fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
 	       cetb_region_id_name[ region_id - CETB_EASE2_N ] );
-      return 0;
+      return STATUS_FAILURE;
   }
 
 }
@@ -677,16 +685,16 @@ static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id dir
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_platform_id( cetb_platform_id platform_id ) {
 
   if ( 0 <= platform_id && platform_id < CETB_NUM_PLATFORMS ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid platform_id=%d\n", __FUNCTION__, platform_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -699,17 +707,17 @@ static int valid_platform_id( cetb_platform_id platform_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
 
   if ( CETB_SIR == reconstruction_id
        || CETB_BGI == reconstruction_id ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid reconstruction_id=%d\n", __FUNCTION__, reconstruction_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -722,7 +730,7 @@ static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_region_id( cetb_region_id region_id ) {
@@ -730,10 +738,10 @@ static int valid_region_id( cetb_region_id region_id ) {
   if ( CETB_EASE2_N == region_id
        || CETB_EASE2_S == region_id
        || CETB_EASE2_T == region_id ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid region_id=%d\n", __FUNCTION__, region_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -746,16 +754,17 @@ static int valid_region_id( cetb_region_id region_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_resolution_factor( int factor ) {
 
-  if ( CETB_MIN_RESOLUTION_FACTOR <= factor && factor <= CETB_MAX_RESOLUTION_FACTOR ) {
-    return 1;
+  if ( CETB_MIN_RESOLUTION_FACTOR <= factor
+       && factor <= CETB_MAX_RESOLUTION_FACTOR ) {
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid factor=%d\n", __FUNCTION__, factor );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -768,16 +777,16 @@ static int valid_resolution_factor( int factor ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_sensor_id( cetb_sensor_id sensor_id ) {
 
   if ( 0 <= sensor_id && sensor_id < CETB_NUM_SENSORS ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -790,17 +799,17 @@ static int valid_sensor_id( cetb_sensor_id sensor_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
 
   if ( CETB_CSU == producer_id
        || CETB_RSS == producer_id ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }

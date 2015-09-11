@@ -50,7 +50,7 @@ void setUp( void ) {
   cetb = cetb_file_init( dirname,
 			 region_id, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id );
-  TEST_ASSERT_TRUE( cetb );
+  TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
 			    cetb->filename );
   
@@ -65,14 +65,14 @@ void test_cetb_open_with_bad_filename( void ) {
 
   cetb->filename = NULL;
   status = cetb_file_open( cetb );
-  TEST_ASSERT_FALSE( status );
+  TEST_ASSERT_TRUE( 0 != status  );
   
 }
 
 void test_cetb_open( void ) {
 
   status = cetb_file_open( cetb );
-  TEST_ASSERT_TRUE( status );
+  TEST_ASSERT_TRUE( 0 == status );
   
 }
 

@@ -518,7 +518,7 @@ int main(int argc, char **argv)
      exit( -1 );
    }
 
-   if ( !cetb_file_open( cetb ) ) {
+   if ( 0 != cetb_file_open( cetb ) ) {
      fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FUNCTION__, cetb->filename );
      exit( -1 );
    }
