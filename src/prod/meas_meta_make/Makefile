@@ -15,7 +15,7 @@ TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 ifeq ($(LOCALE),int.nsidc.org)
-  TESTDIR = /projects/PMESDR/vagrant/NSIDCtest
+  TESTDIR = /projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)
 endif
 #
 #	commands
