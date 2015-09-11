@@ -18,6 +18,10 @@ typedef struct {
   int vars;
   int atts;
   int unlimdims;
+  int scans_loc1;
+  int scans_loc2;
+  int measurements_loc1;
+  int measurements_loc2;
 } gsx_class;
 
 int gsx_version ( void );
