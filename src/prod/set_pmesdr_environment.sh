@@ -110,14 +110,6 @@ elif [[ "$HOSTNAME" == "snow"* ]]; then
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=0
 
-elif [[ "$HOSTNAME" == "brodzik" ]]; then
-
-  export LOCALE=NSIDCdev
-  # Initialize the virtualenv that was built for running on snow
-  . ~brodzik/.virtual_envs/pmesdr/bin/activate
-  export PMESDR_COMPARE_TOLERANCE=0.0
-  export PMESDR_MAX_DIFF_PIXELS=0
-
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
   export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}

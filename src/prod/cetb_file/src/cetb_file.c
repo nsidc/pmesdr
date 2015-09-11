@@ -4,9 +4,15 @@
  * 06-Jul-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
+#include <malloc.h>
+#include <netcdf.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 
 #include "cetb_file.h"
 
@@ -14,11 +20,17 @@
  * Internal data and function prototypes
  *********************************************************************/
 
+#define STATUS_OK 0
+#define STATUS_FAILURE 1
+
 /*
  * Maximum lengths of channel strings, including null char
  * THIS SHOULD BE REMOVED WHEN WE START USING GSX
  */
-#define channel_str_length 4
+#define CHANNEL_STR_LENGTH 4
+
+/* Maximum generic string length */
+#define MAX_STR_LENGTH 100
 
 /*
  * SSM/I channel IDs
@@ -85,6 +97,9 @@ static const char *amsre_channel_name[] = {
 };
 
 static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_id );
+static char *current_time_stamp( void );
+static char *pmesdr_release_version( void );
+static char *pmesdr_top_dir( void );
 static int valid_date( int year, int doy );
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
@@ -137,7 +152,7 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
   char *ptr;
   int i;
 
-  if ( !valid_reconstruction_id( reconstruction_id ) ) {
+  if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) {
     return id;
   }
 
@@ -176,68 +191,242 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
 }
 
 /*
- * cetb_filename - returns a pointer to an output filename with
- *                 the requested characteristics; Only limited
- *                 checking will be done for consistencies like
- *                 dates and sensors, for example doy is checked
- *                 for range in 1-365 or 366 for leap years, and
- *                 years prior to 1978 are not allowed, but
- *                 mostly depends on the caller to input a
- *                 combination that makes sense
+ * cetb_file_init - returns a pointer to an initialized cetb_file object
  *
  *  input :
+ *    dirname : directory location for cetb file
+ *    region_id : projection id
+ *    factor : grid resolution factor
+ *    platform_id : satellite platform id
+ *    sensor_id : passive microwave sensor id
+ *    year : 4-digit year
+ *    doy : 3-digit day of year
+ *    beam_id : beam (channel) id
+ *    direction_id : direction id for temporal subsetting
+ *    reconstruction_id : image reconstruction method id
+ *    producer_id : swath data producer id
  *
- *  output :
- *    filename : pointer to CETB standard filename specified by input arguments
- *               filename convention is described in CETB ATBD
+ *  output : n/a
  *
- *  result : 0 on error, 1 otherwise
+ *  result : pointer to initialized cetb_file_class object or NULL if an error occurred
  *
-o */
-int cetb_filename( char *filename, size_t max_length, char *dirname,
-		   cetb_region_id region_id,
-		   int factor,
-		   cetb_platform_id platform_id,
-		   cetb_sensor_id sensor_id,
-		   int year,
-		   int doy,
-		   int beam_id,
-		   cetb_direction_id direction_id,
-		   cetb_reconstruction_id reconstruction_id,
-		   cetb_swath_producer_id producer_id ) {
+ */
+cetb_file_class *cetb_file_init( char *dirname,
+				 cetb_region_id region_id,
+				 int factor,
+				 cetb_platform_id platform_id,
+				 cetb_sensor_id sensor_id,
+				 int year,
+				 int doy,
+				 int beam_id,
+				 cetb_direction_id direction_id,
+				 cetb_reconstruction_id reconstruction_id,
+				 cetb_swath_producer_id producer_id ) {
 
-  char channel_str[channel_str_length] = "";
+  cetb_file_class *this=NULL;
+  char channel_str[CHANNEL_STR_LENGTH] = "";
+
+  if ( STATUS_OK != valid_region_id( region_id ) ) return NULL;
+  if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
+  if ( STATUS_OK != valid_platform_id( platform_id ) ) return NULL;
+  if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
+  if ( STATUS_OK != valid_date( year, doy ) ) return NULL;
+  if ( STATUS_OK != channel_name( channel_str, sensor_id, beam_id ) ) return NULL;
+  if ( STATUS_OK != valid_pass_direction( region_id, direction_id ) ) return NULL;
+  if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) return NULL;
+  if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
+
+  this = (cetb_file_class *)calloc(1, sizeof( cetb_file_class ) );
+  if ( !this ) { 
+    perror( __FUNCTION__ );
+    return NULL;
+  }
+  this->fid = 0;
+  this->filename = (char *) calloc(1, FILENAME_MAX );
+  if ( !(this->filename ) ) { 
+    perror( __FUNCTION__ );
+    return NULL;
+  }
+  this->platform_id = platform_id;
+  this->sensor_id = sensor_id;
   
-  if ( !valid_region_id( region_id ) ) return 0;
-  if ( !valid_resolution_factor( factor ) ) return 0;
-  if ( !valid_platform_id( platform_id ) ) return 0;
-  if ( !valid_sensor_id( sensor_id ) ) return 0;
-  if ( !valid_date( year, doy ) ) return 0;
-  if ( !channel_name( channel_str, sensor_id, beam_id ) ) return 0;
-  if ( !valid_pass_direction( region_id, direction_id ) ) return 0;
-  if ( !valid_reconstruction_id( reconstruction_id ) ) return 0;
-  if ( !valid_swath_producer_id( producer_id ) ) return 0;
+  snprintf( this->filename, FILENAME_MAX,
+  	    "%s/%s%s.%s_%s.%4.4d%3.3d.%3s.%s.%s.%s.%s.nc",
+  	    dirname,
+  	    cetb_region_id_name[ region_id - CETB_EASE2_N ],
+  	    cetb_resolution_name[ factor ],
+  	    cetb_platform_id_name[ platform_id ],
+  	    cetb_sensor_id_name[ sensor_id ],
+  	    year,
+  	    doy,
+  	    channel_str,
+  	    cetb_direction_id_name[ direction_id ],
+  	    cetb_reconstruction_id_name[ reconstruction_id ],
+  	    cetb_swath_producer_id_name[ producer_id ],
+  	    CETB_FILE_FORMAT_VERSION );
+
+  return this;
+  
+}
+
+/*
+ * cetb_file_open - Open the file associated with this object and
+ *                  populate its global file attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *
+ * output : n/a
+ *
+ *  result : 0 on success
+ *           1 if an error occurs; error message will be written to stderr
+ *           The CETB file is created and populated with required
+ *           global attributes
+  *
+ */
+int cetb_file_open( cetb_file_class *this ) {
+
+  int status;
+  char template_filename[ FILENAME_MAX ];
+  char *ptr_path;
+  char *time_stamp;
+  char *software_version;
+  int template_fid;
+  int num_attributes;
+  int i;
+  char attribute_name[ MAX_STR_LENGTH ];
+  FILE *filep;
+
+  if ( !this->filename ) {
+    fprintf( stderr, "%s: Cannot open cetb file with empty filename.\n",
+  	     __FUNCTION__ );
+    return 1;
+  }
+  
+  /* Create a new cetb file */
+  if ( status = nc_create( this->filename, NC_NETCDF4, &(this->fid) ) ) {
+    fprintf( stderr, "%s: Error creating cetb_filename=%s: %s.\n",
+  	     __FUNCTION__, this->filename, nc_strerror( status ) );
+    return 1;
+  }
 
   /*
-   * Needs check for sum of parts not exceeding max_length
+   * Find and open the CETB template file with the global attribute data
    */
-  snprintf( filename, max_length, 
-	    "%s/%s%s.%s_%s.%4.4d%3.3d.%3s.%s.%s.%s.%s.nc",
-	    dirname,
-	    cetb_region_id_name[ region_id - CETB_EASE2_N ],
-	    cetb_resolution_name[ factor ],
-	    cetb_platform_id_name[ platform_id ],
-	    cetb_sensor_id_name[ sensor_id ],
-	    year,
-	    doy,
-	    channel_str,
-	    cetb_direction_id_name[ direction_id ],
-	    cetb_reconstruction_id_name[ reconstruction_id ],
-	    cetb_swath_producer_id_name[ producer_id ],
-	    CETB_FILE_FORMAT_VERSION );
+  if ( !( ptr_path = pmesdr_top_dir( ) ) ) return 0;
+  strncpy( template_filename, ptr_path, FILENAME_MAX );
+  strcat( template_filename,
+  	  "/src/prod/cetb_file/templates/cetb_global_template.nc" );
+  if ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) {
+    fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
+  	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    return 0;
+  }
+  if ( status = nc_inq_natts( template_fid, &num_attributes ) ) {
+    fprintf( stderr, "%s: "
+  	     "Error getting num attributes in cetb_filename=%s: %s.\n",
+  	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    return 1;
+  }
+
+  /*
+   * Copy all global attributes from template file to CETB file
+   */
+  for ( i = 0; i < num_attributes; i++ ) { 
+    if ( status = nc_inq_attname( template_fid, NC_GLOBAL,
+  				  i, attribute_name ) ) {
+      fprintf( stderr, "%s: Error getting next attribute_name: %s.\n",
+  	       __FUNCTION__, nc_strerror( status ) );
+      return 1;
+    }
+    if ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
+  			       this->fid, NC_GLOBAL ) ) {
+      fprintf( stderr, "%s: Error copying %s: %s.\n",
+  	       __FUNCTION__, attribute_name, nc_strerror( status ) );
+      return 1;
+    }
+  }
+
+  /*
+   * Set the global attributes that need to be specific for this file:
+   */
+  software_version = pmesdr_release_version();
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "software_version_id",
+				 strlen( software_version ),
+				 software_version ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "software_version_id", software_version, nc_strerror( status ) );
+    return 1;
+  }
   
-  return 1;
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "platform",
+   				 strlen( cetb_gcmd_platform_keyword[ this->platform_id ] ),
+  				 cetb_gcmd_platform_keyword[ this->platform_id ] ) ) {
+     fprintf( stderr, "%s: Error setting %s: %s.\n",
+   	     __FUNCTION__, "platform", nc_strerror( status ) );
+     return 1;
+   }
+
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "sensor",
+  				 strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
+  				 cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "sensor", nc_strerror( status ) );
+    return 1;
+  }
+
+  time_stamp = current_time_stamp();
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
+  				 strlen( time_stamp ), 
+  				 time_stamp ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "date_created", nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_close( template_fid ) ) {
+    fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
+	     __FUNCTION__, template_filename, nc_strerror( status ) );
+  }
+
+  free( software_version );
+  free( time_stamp );
+
+  return 0;
   
+}
+
+/*
+ * cetb_file_close - close the CETB file and free all memory
+ *                   associated with this object
+ *
+ *  input :
+ *    this : pointer to cetb_file_class object
+ *
+ *  output : n/a
+ *
+ *  result : File is closed, and memory is freed
+ *
+ */
+void cetb_file_close( cetb_file_class *this ) {
+
+  int status;
+  
+  if ( !this ) return;
+  if ( this->filename ) {
+    if ( status = nc_close( this->fid ) ) {
+      fprintf( stderr, "%s: Error closing file=%s: %s.\n",
+	       __FUNCTION__, this->filename, nc_strerror( status ) );
+    }
+    fprintf( stderr, "> %s: Wrote cetb file=%s\n", __FUNCTION__, this->filename );
+
+    free( this->filename );
+  }
+  
+  free( this );
+  
+  return;
+
 }
 
 /*********************************************************************
@@ -259,35 +448,153 @@ int cetb_filename( char *filename, size_t max_length, char *dirname,
  *  output :
  *    channel_str : channel string, 2-digit frequency, 1-letter polarization,  e.g. "19H"
  *
- *  result : 1 for success, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_id ) {
 
   if ( CETB_SSMI == sensor_id ) {
     if ( 0 < beam_id && beam_id <= SSMI_85V ) {
-      strncpy( channel_str, ssmi_channel_name[ beam_id ], channel_str_length );
+      strncpy( channel_str, ssmi_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else if ( CETB_AMSRE == sensor_id ) {
     if ( 0 < beam_id && beam_id <= AMSRE_89V ) {
-      strncpy( channel_str, amsre_channel_name[ beam_id ], channel_str_length );
+      strncpy( channel_str, amsre_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
 	     __FUNCTION__ );
-    return 0;
+    return STATUS_FAILURE;
   }
 
-  return 1;
+  return STATUS_OK;
 
 }
+
+/*
+ * current_time_stamp - Formats a string with the current date and time.
+ *
+ *  input : n/a
+ *
+ *  output : n/a
+ *
+ *  result : ptr to newly-allocated string with current date/time
+ *           or NULL on error
+ *           Any errors that occur will be written to stderr
+ *
+ */
+static char *current_time_stamp( void ) {
+
+  char *p;
+  time_t curtime;
+  struct tm *loctime;
+
+  p = (char *)calloc( 1, MAX_STR_LENGTH + 1  );
+  if ( !p ) {
+    perror( __FUNCTION__ );
+    return NULL;
+  }
+
+  /*
+   * Get the current time
+   * and convert it to local time representation
+   */
+  curtime = time( NULL );
+  loctime = localtime( &curtime );
+
+  /* Now format it the way I want it. */
+  strftime( p, MAX_STR_LENGTH, "%Y-%m-%dT%H:%M:%S%Z", loctime );
+
+  return p;
+
+}
+  
+/*
+ * pmesdr_release_version - Fetches the PMESDR software project release version id
+ #                          from the project VERSION file.
+ *
+ *  input : n/a
+ *
+ *  output : n/a
+ *
+ *  result : ptr to newly-allocated string with system software version,
+ *           like "v0.0.1" or NULL on error
+ *           Any errors that occur will be written to stderr
+ *
+ */
+static char *pmesdr_release_version( void ) {
+
+  int status;
+  char filename[ FILENAME_MAX ];
+  char *ptr_path;
+  FILE *filep;
+  char *cp;
+  struct stat fileinfo;
+  char *version_str;
+
+  /*
+   * Use the environment to build the complete VERSION path
+   */
+  if ( !( ptr_path = pmesdr_top_dir( ) ) ) return NULL;
+  strncpy( filename, ptr_path, FILENAME_MAX );
+  strcat( filename, "/VERSION" );
+
+  if ( stat( filename, &fileinfo ) ) {
+    fprintf( stderr, "%s: Error fetching status for %s: %s.\n",
+	     __FUNCTION__, filename, strerror( errno ) );
+    return NULL;
+  }
+  version_str = (char *)calloc( 1, fileinfo.st_size + 1  );
+
+  if ( !( filep = fopen( filename, "rt" ) ) ) { 
+    fprintf( stderr, "%s: Error opening software version file %s: %s.\n",
+	     __FUNCTION__, filename, strerror( errno ) );
+    return NULL;
+  }
+  fread( version_str, sizeof( char ), fileinfo.st_size, filep );
+  fclose( filep );
+
+  /* Replace any newline with null char */
+  if ( ( cp = strchr( version_str, '\n' ) ) ) *cp = '\0';
+
+  return version_str;
+
+}
+  
+/*
+ * pmesdr_top_dir - Retrieves the value of environment variable PMESDR_TOP_DIR
+ *
+ *  input : n/a
+ *
+ *  output : n/a
+ *
+ *  result : ptr to string with value of PMESDR_TOP_DIR
+ *           if not set or set to "", returns NULL
+ *           Any errors that occur will be written to stderr
+ *
+ */
+static char *pmesdr_top_dir( void ) {
+
+  char *ptr_path;
+
+  ptr_path = getenv( "PMESDR_TOP_DIR" );
+  if ( !ptr_path || 0 == strcmp( "", ptr_path ) ) {
+      fprintf( stderr, "%s: Warning: No environment value found for PMESDR_TOP_DIR.\n",
+	       __FUNCTION__ );
+      return NULL;
+  }
+  
+  return ptr_path;
+
+}
+
 
 /*
  * valid_date - checks for valid years (1978 or later) and
@@ -299,7 +606,7 @@ static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_i
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_date( int year, int doy ) {
@@ -309,7 +616,7 @@ static int valid_date( int year, int doy ) {
   
   if ( CETB_YEAR_START > year ) {
     fprintf( stderr, "%s: year=%d is out of range\n", __FUNCTION__, year );
-    return 0;
+    return STATUS_FAILURE;
   }
 
   if ( 0 == (year % 4) ) {
@@ -317,10 +624,10 @@ static int valid_date( int year, int doy ) {
   }
 
   if ( doy_min <= doy && doy <= doy_max ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: doy=%d is out of range for year=%d\n", __FUNCTION__, doy, year );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -335,7 +642,7 @@ static int valid_date( int year, int doy ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
@@ -344,28 +651,28 @@ static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id dir
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_MORNING_PASSES == direction_id
 	 || CETB_EVENING_PASSES == direction_id ) {
-      return 1;
+      return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
 	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
 	       direction_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else if ( CETB_EASE2_T == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_ASC_PASSES == direction_id
 	 || CETB_DES_PASSES == direction_id ) {
-      return 1;
+      return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
 	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
 	       direction_id );
-      return 0;
+      return STATUS_FAILURE;
     }
   } else {
       fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
 	       cetb_region_id_name[ region_id - CETB_EASE2_N ] );
-      return 0;
+      return STATUS_FAILURE;
   }
 
 }
@@ -378,16 +685,16 @@ static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id dir
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_platform_id( cetb_platform_id platform_id ) {
 
   if ( 0 <= platform_id && platform_id < CETB_NUM_PLATFORMS ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid platform_id=%d\n", __FUNCTION__, platform_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -400,17 +707,17 @@ static int valid_platform_id( cetb_platform_id platform_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
 
   if ( CETB_SIR == reconstruction_id
        || CETB_BGI == reconstruction_id ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid reconstruction_id=%d\n", __FUNCTION__, reconstruction_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -423,7 +730,7 @@ static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_region_id( cetb_region_id region_id ) {
@@ -431,10 +738,10 @@ static int valid_region_id( cetb_region_id region_id ) {
   if ( CETB_EASE2_N == region_id
        || CETB_EASE2_S == region_id
        || CETB_EASE2_T == region_id ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid region_id=%d\n", __FUNCTION__, region_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -447,16 +754,17 @@ static int valid_region_id( cetb_region_id region_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_resolution_factor( int factor ) {
 
-  if ( CETB_MIN_RESOLUTION_FACTOR <= factor && factor <= CETB_MAX_RESOLUTION_FACTOR ) {
-    return 1;
+  if ( CETB_MIN_RESOLUTION_FACTOR <= factor
+       && factor <= CETB_MAX_RESOLUTION_FACTOR ) {
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid factor=%d\n", __FUNCTION__, factor );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -469,16 +777,16 @@ static int valid_resolution_factor( int factor ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_sensor_id( cetb_sensor_id sensor_id ) {
 
   if ( 0 <= sensor_id && sensor_id < CETB_NUM_SENSORS ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }
@@ -491,17 +799,17 @@ static int valid_sensor_id( cetb_sensor_id sensor_id ) {
  *
  *  output : n/a
  *
- *  result : 1 is valid, 0 otherwise
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
 
   if ( CETB_CSU == producer_id
        || CETB_RSS == producer_id ) {
-    return 1;
+    return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
-    return 0;
+    return STATUS_FAILURE;
   }    
   
 }

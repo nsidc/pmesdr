@@ -83,6 +83,24 @@ static const char *cetb_platform_id_name[] = {
 };
 
 /*
+ * GCMD platform keywords
+ * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/platforms/platforms.csv
+ */
+static const char *cetb_gcmd_platform_keyword[] = {
+  "NIMBUS > Nimbus-7",
+  "AQUA > Earth Observing System, AQUA",
+  "DMSP 5D-2/F8 > Defense Meteorological Satellite Program-F8",
+  "DMSP 5D-2/F10 > Defense Meteorological Satellite Program-F10",
+  "DMSP 5D-2/F11 > Defense Meteorological Satellite Program-F11",
+  "DMSP 5D-2/F13 > Defense Meteorological Satellite Program-F13",
+  "DMSP 5D-2/F15 > Defense Meteorological Satellite Program-F15",
+  "DMSP 5D-3/F16 > Defense Meteorological Satellite Program-F16",
+  "DMSP 5D-3/F17 > Defense Meteorological Satellite Program-F17",
+  "DMSP 5D-3/F18 > Defense Meteorological Satellite Program-F18"
+};
+
+
+/*
  * Sensor IDs
  */
 typedef enum {
@@ -102,6 +120,17 @@ static const char *cetb_sensor_id_name[] = {
   "AMSRE",
   "SSMI",
   "SSMIS"
+};
+
+/*
+ * GCMD sensor name keywords
+ * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/instruments/instruments.csv
+ */
+static const char *cetb_gcmd_sensor_keyword[] = {
+  "SMMR > Scanning Multichannel Microwave Radiometer",
+  "AMSR-E > Advanced Microwave Scanning Radiometer-EOS",
+  "SSM/I > Special Sensor Microwave/Imager",
+  "SSMIS > Special Sensor Microwave Imager/Sounder"
 };
 
 /*
@@ -168,20 +197,36 @@ static const char *cetb_swath_producer_id_name[] = {
   "RSS"
 };
 
+/*
+ * These 2 functions are temporary, and should not be needed once
+ * we start passing this information along to bgi/sir in setup files
+ */
 cetb_direction_id cetb_get_direction_id_from_info_name( const char *info_name );
 cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outpath,
 								const cetb_reconstruction_id reconstruction_id );
 
-int cetb_filename( char *filename, size_t max_length, char *dirname,
-		   cetb_region_id region_id,
-		   int factor,
-		   cetb_platform_id platform_id,
-		   cetb_sensor_id sensor_id,
-		   int year,
-		   int doy,
-		   int beam_id,
-		   cetb_direction_id direction_id,
-		   cetb_reconstruction_id reconstruction_id,
-		   cetb_swath_producer_id producer_id );
+/*
+ * The public interface definition of a cetb object
+ */
+typedef struct {
+  int fid;
+  char *filename;
+  cetb_platform_id platform_id;
+  cetb_sensor_id sensor_id;
+} cetb_file_class;
+
+cetb_file_class *cetb_file_init( char *dirname,
+				 cetb_region_id region_id,
+				 int factor,
+				 cetb_platform_id platform_id,
+				 cetb_sensor_id sensor_id,
+				 int year,
+				 int doy,
+				 int beam_id,
+				 cetb_direction_id direction_id,
+				 cetb_reconstruction_id reconstruction_id,
+				 cetb_swath_producer_id producer_id );
+int cetb_file_open( cetb_file_class *this );
+void cetb_file_close( cetb_file_class *this );
 
 #endif // cetb_file_H
