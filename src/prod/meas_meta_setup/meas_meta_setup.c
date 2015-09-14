@@ -299,6 +299,8 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
 
+int box_size_by_channel( int ibeam );
+
 /****************************************************************************/
 
 int main(int argc,char *argv[])
@@ -923,14 +925,11 @@ int main(int argc,char *argv[])
 	  /* define size of box centered at(ix2,iy2) in which the gain response 
 	     is computed for each pixel in the box and tested to see if
 	     the response exceeds a threshold.  if so, it is used */
-	  ixsize=dscale*box_size; /* hi scan */
+	  box_size = box_size_by_channel( ibeam );
+	  ixsize=dscale*box_size; 
 	  iysize=dscale*box_size;
 	  if (ixsize<1) ixsize=1;
 	  if (iysize<1) iysize=1;
-	  if (ibeam < 6) {  /* lo scan */
-	    ixsize *= 2;
-	    iysize *= 2;
-	  }
 
 	  /* define search box limits */
 	  ixsize1=-ixsize;
@@ -2578,4 +2577,27 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
   *isec=mod(itime-*ihour*3600-*imin*60,60);
 }
 
+/* setting the box size by channel - will need to expanded to include other sensors and gsx info */
+int box_size_by_channel( int ibeam ) {
+  int box_size;
+
+  switch ( ibeam ) {
+  case 1:
+  case 2:
+  case 3:
+    box_size = 100;
+    break;
+  case 4:
+  case 5:
+    box_size = 60;
+    break;
+  case 6:
+  case 7:
+    box_size = 20;
+    break;
+  default:
+    box_size = 160;
+  }
+  return box_size;
+}
 /* *********************************************************************** */
