@@ -24,6 +24,16 @@ typedef struct {
   int measurements_loc2;
 } gsx_class;
 
+typedef enum ssmi_channel {
+  GSX_SSMI_19H=1,
+  GSX_SSMI_19V,
+  GSX_SSMI_22V,
+  GSX_SSMI_37H,
+  GSX_SSMI_37V,
+  GSX_SSMI_85H,
+  GSX_SSMI_85V
+} gsx_ssmi_channel;
+
 int gsx_version ( void );
 gsx_class *gsx_init ( char *filename );
 void gsx_close ( gsx_class *this );

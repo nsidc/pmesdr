@@ -49,19 +49,57 @@ endif
 #
 SYSLIBS = -lm
 
+ifeq ($(LOCALE),NSIDCsnow)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_INCDIR = /usr/include
+  HDF5_LIBDIR = /usr/lib64
+  ZLIB_LIBDIR = /usr/lib64
+else ifeq ($(LOCALE),int.nsidc.org)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib
+  HDF5_INCDIR = /usr/include
+  HDF5_LIBDIR = /usr/lib
+  ZLIB_LIBDIR = /usr/lib
+else ifeq ($(LOCALE),JANUSicc)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = $(shell nc-config --includedir)
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
+  HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/include
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
+else ifeq ($(LOCALE),JANUSgcc)
+  $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = $(shell nc-config --includedir)
+  NETCDF4_LIBDIR = $(shell nc-config --libs)
+  HDF5_INCDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/gcc/4.9.1/include
+  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/gcc/4.9.1/lib
+  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.8/gcc/4.9.1/lib
+else
+  $(warning Assuming default LOCALE=BYU)
+  NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+  NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
+  HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
+  HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
+  ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
+endif
 #
 # end configuration section
 #------------------------------------------------------------------------
 MEAS_INCDIR = ../../../sirlib/c/include
 MEAS_LIBDIR = ../../../sirlib/c
-LIBS = -L$(LIBDIR) -L$(MEAS_LIBDIR) -lgsx -lcsir $(SYSLIBS)
-CFLAGS = -D'RSS=1' -I$(INCDIR) $(CONFIG_CFLAGS) -I$(MEAS_INCDIR) 
+#LIBS = -L$(LIBDIR) -L$(MEAS_LIBDIR) -lgsx -lcsir $(SYSLIBS)
+LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
+	-lgsx -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
+CFLAGS = -D'RSS=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
+  CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -I$(INCDIR) -I$(MEAS_INCDIR) -g
+  CFLAGS = -D'RSS=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g
 endif
 DEPEND_LIBS = $(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a
 
