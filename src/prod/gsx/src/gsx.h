@@ -8,8 +8,10 @@
 #define gsx_H
 
 #define ALIGNMENT 64
-#define GSX_MAX_DIMS 10
-
+#define GSX_MAX_DIMS 10 // max number of dimension variables in file
+#define GSX_MAX_CHANNELS 30 // max expected number of channels per platform
+#define SENSOR_MAX 10 // max number of characters in the short sensor name
+#define PLATFORM_MAX 10 // max number of characters in the short platform name
 #define GSX_VERSION "v0.1"
 
 typedef struct {
@@ -20,8 +22,16 @@ typedef struct {
   int unlimdims;
   int scans_loc1;
   int scans_loc2;
+  int scans_loc3;
   int measurements_loc1;
   int measurements_loc2;
+  int measurements_loc3;
+  char *source_file;
+  char *short_sensor;
+  char *short_platform;
+  char *input_provider;
+  int channel_number;
+  char *channel_names[GSX_MAX_CHANNELS];
 } gsx_class;
 
 typedef enum ssmi_channel {

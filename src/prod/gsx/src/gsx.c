@@ -22,6 +22,7 @@ int gsx_version ( void ) {
 }
 
 gsx_class *gsx_init ( char *filename ) {
+
   gsx_class *this=NULL;
   int status;
   int nc_fileid;
@@ -43,6 +44,11 @@ gsx_class *gsx_init ( char *filename ) {
   }
 
   this->fileid = nc_fileid;
+  /* initialize all variable pointers in gsx_struct */
+  this->source_file = NULL;
+  this->short_sensor = NULL;
+  this->short_platform = NULL;
+  this->input_provider = NULL;
 
   if ( status = nc_inq( this->fileid, &nc_dims, &nc_vars, &nc_atts, &nc_unlimdims ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s \n",
@@ -51,9 +57,6 @@ gsx_class *gsx_init ( char *filename ) {
     return NULL;
   }
 
-  //fprintf( stderr, "%s: nc_inq return=%s: ndims=%d, nvars=%d, natts=%d, nunlimdims=%d \n",
-  //	   __FUNCTION__, nc_strerror(status), nc_dims, nc_vars, nc_atts, nc_unlimdims );
-  
   this->dims = nc_dims;
   this->vars = nc_vars;
   this->atts = nc_atts;
@@ -61,7 +64,15 @@ gsx_class *gsx_init ( char *filename ) {
 
   /* Now call gsx_inq_dims to get more variables */
   status = gsx_inq_dims( this );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: bad return from gsx_inq_dims %d\n", __FUNCTION__, status );
+  } else {
+    fprintf( stderr, "%s: good return from gsx_inq_dims %d\n", __FUNCTION__, status );
+  }
 
+  /* Now get the global attributes */
+  status = gsx_inq_global_attributes( this );
+  status = gsx_inq_global_variables( this );
   return this;
 
 }
@@ -74,6 +85,12 @@ void gsx_close ( gsx_class *this ) {
     fprintf( stderr, "%s: nc_close error=%s \n",
   	     __FUNCTION__, nc_strerror(status) );
   }
+  /* free the malloc'd arrays before you free the gsx_struct */
+  if ( NULL != this->source_file ) free( this->source_file );
+  if ( NULL != this->short_sensor ) free( this->short_sensor );
+  if ( NULL != this->short_platform ) free( this->short_platform );
+  if ( NULL != this->input_provider ) free( this->input_provider );
+  
   free( this );
   return;
 }
@@ -84,32 +101,150 @@ int gsx_inq_dims( gsx_class *this ) {
   size_t dim_length;
   char *dim_name[GSX_MAX_DIMS];
 
-  if ( NULL == this ) return;
+  if ( NULL == this ) return -1;
 
   for ( i = 0; i < this->dims; i++ ) {
     dim_name[i] = malloc( sizeof( char )*(NC_MAX_NAME+1) );
     if ( NULL == dim_name[i] ) {
       fprintf( stderr, "%s: unable to allocate memory for dimension names\n", __FUNCTION__ );
       return -1;
-    } else {
-      //fprintf( stderr, "%s: memallocated for %dth char pointer \n", __FUNCTION__, i );
-    }
+    } 
     if ( status = nc_inq_dimname( this->fileid, i, dim_name[i] ) ) {
       fprintf ( stderr, "%s: couldn't get dim name info error %s\n", __FUNCTION__, nc_strerror( status ) );
       return -1;
     }
     if ( status = nc_inq_dimlen( this->fileid, i, &dim_length ) ) {
       fprintf ( stderr, "%s: couldn't get dim length, error: %s\n", __FUNCTION__, nc_strerror( status ) );
+      return -1;
     }
-    //    fprintf( stderr, "%s: %dth dim name=%s and length=%d\n", __FUNCTION__, i, dim_name[i], (int)dim_length );
+    //    fprintf( stderr, "%s: return status: %s, for %s with length %d\n", __FUNCTION__, nc_strerror( status ), dim_name[i], (int)dim_length );
     if ( strncmp( dim_name[i], "scans_loc1", strlen( dim_name[i] ) ) == 0 ) this->scans_loc1 = dim_length;
     if ( strncmp( dim_name[i], "scans_loc2", strlen( dim_name[i] ) ) == 0 ) this->scans_loc2 = dim_length;
+    if ( strncmp( dim_name[i], "scans_loc3", strlen( dim_name[i] ) ) == 0 ) this->scans_loc3 = dim_length;
     if ( strncmp( dim_name[i], "measurements_loc1", strlen( dim_name[i] ) ) == 0 ) this->measurements_loc1 = dim_length;
     if ( strncmp( dim_name[i], "measurements_loc2", strlen( dim_name[i] ) ) == 0 ) this->measurements_loc2 = dim_length;
+    if ( strncmp( dim_name[i], "measurements_loc3", strlen( dim_name[i] ) ) == 0 ) this->measurements_loc3 = dim_length;
   }
-  //  fprintf( stderr, "%s: %d loc1 %d=loc2 %d=meas1 %d=meas2\n",	\
-  //	   __FUNCTION__, this->scans_loc1, this->scans_loc2, this->measurements_loc1, this->measurements_loc2 );
   return 0;
+}
+
+int gsx_inq_global_attributes( gsx_class *this ) {
+  
+  int status;
+  char *source_file;
+  char *platform;
+  char *sensor;
+  char *input_provider;
+  int att_len;
+
+  if ( NULL == this ) {
+    return -1;
+  }
+
+  fprintf( stderr, "%s: into function\n\n", __FUNCTION__ );
+  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "gsx_source", (size_t *)&att_len ) ) {
+    fprintf( stderr, "%s: no gsx source file length, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  } else {
+    fprintf( stderr, "%s: got length of gsx_source %d\n", __FUNCTION__, att_len );
+    source_file = (char *)malloc(FILENAME_MAX);
+  }
+  if ( status = nc_get_att_string( this->fileid, NC_GLOBAL, "gsx_source", &source_file ) ) {
+    fprintf( stderr, "%s: no gsx source file, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+  this->source_file = source_file;
+
+  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "short_platform", (size_t*)&att_len ) ) {
+    fprintf( stderr, "%s: no gsx short platform, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+  fprintf( stderr, "%s: gsx short platform, status: %s and length of att %d\n", __FUNCTION__, nc_strerror( status ), att_len );
+  platform = ( char * )malloc( ( size_t )att_len );
+  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "short_platform", platform ) ) {
+    fprintf( stderr, "%s: no gsx short platform, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+  this->short_platform = platform;
+  
+  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "short_sensor", (size_t*)&att_len ) ) {
+    fprintf( stderr, "%s: no gsx short sensor, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+  sensor = ( char * )malloc( (size_t) att_len );
+  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "short_sensor", sensor ) ) {
+    fprintf( stderr, "%s: no gsx short_sensor, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+  this->short_sensor = sensor;
+
+  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "input_provider", (size_t*)&att_len ) ) {
+    fprintf( stderr, "%s: no gsx input provider, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+  input_provider = ( char * )malloc( (size_t) att_len );
+  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "input_provider", input_provider ) ) {
+    fprintf( stderr, "%s: no gsx input provider, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+  this->input_provider = input_provider;
+
+  return 0;
+}
+      
+int gsx_inq_global_variables( gsx_class *this ) {
+  int status;
+  char *channel_names[GSX_MAX_CHANNELS];
+  int att_len;
+  int channel_number;
+  char *channel_list;
+  char *token=" ,";
+  int count;
+  char *channel_ptr;
+
+  if ( NULL == this ) {
+    return -1;
+  }
+
+  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "gsx_variables", (size_t*)&att_len ) ) {
+    fprintf( stderr, "%s: no gsx_variables, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+
+  channel_list = (char*)malloc( (size_t) att_len );
+  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "gsx_variables", channel_list ) ) {
+    fprintf( stderr, "%s: couldn't retrieve gsx_variables, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    return -1;
+  }
+
+  fprintf( stderr, "%s: temp names in gsx_variables %s\n", __FUNCTION__, channel_list );
+  count = 0;
+  //  channel_names[count] = (char*)malloc( (size_t) att_len );
+  channel_ptr = strtok( channel_list, token );
+  while ( NULL != channel_ptr ) {
+    att_len = strlen( channel_ptr );
+    channel_names[count] = (char*)malloc( (size_t) att_len );
+    strcpy( channel_names[count], channel_ptr );
+    //this->channel_names[count] = (char*)malloc( (size_t) att_len );
+    //strcpy( this->channel_names[count], channel_ptr );
+    fprintf( stderr, "%s: channel %d is %d long %s and %s\n", __FUNCTION__, count, \
+	     att_len, this->channel_names[count], channel_ptr );
+    channel_ptr = strtok( NULL, token );
+    count++;
+  }
+  fprintf( stderr, "%s: total channels is %d\n", __FUNCTION__, count );
+  this->channel_number = count;
+
+  /*
+  for ( count=0; count<this->channel_number; count++ ) {
+    this->channel_names[count] = (char*)malloc( strlen(channel_names[count]) + 1);
+    strcpy( this->channel_names[count], channel_names[count]);
+    fprintf( stderr, "%s: %d channel is %s\n", __FUNCTION__, count, *(this->channel_names) );
+  }
+  */
+  return 0;
+    
+    
 }
 
   
