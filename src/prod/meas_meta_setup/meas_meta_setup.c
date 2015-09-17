@@ -299,7 +299,7 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
 
-int box_size_by_channel( int ibeam );
+int box_size_by_channel( int ibeam, char *short_sensor );
 
 /****************************************************************************/
 
@@ -925,7 +925,10 @@ int main(int argc,char *argv[])
 	  /* define size of box centered at(ix2,iy2) in which the gain response 
 	     is computed for each pixel in the box and tested to see if
 	     the response exceeds a threshold.  if so, it is used */
-	  box_size = box_size_by_channel( ibeam );
+	  box_size = box_size_by_channel( ibeam, "SSMI" ); // pending adding gsx->short_sensor
+	  if ( box_size < 0 ) {
+	    exit -1;
+	  }
 	  ixsize=dscale*box_size; 
 	  iysize=dscale*box_size;
 	  if (ixsize<1) ixsize=1;
@@ -2577,9 +2580,32 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
   *isec=mod(itime-*ihour*3600-*imin*60,60);
 }
 
-/* setting the box size by channel - will need to expanded to include other sensors and gsx info */
-int box_size_by_channel( int ibeam ) {
+/*
+ * box_size_by_channel - returns the box size to use based on the channel and sensor
+ *
+ * input :
+ *   ibeam : channel number
+ *   sensor : short_sensor id
+ *
+ * result :
+ *   box size in pixels for that channel/sensor combination
+ *
+ * the function only expects SSMI channel data for now and fails otherwise
+ *
+ * a discussion of the process by which the optimum box_size was chosen can be
+ * found in the project on bitbucket.org in the directory docs/internal
+ *
+ * a discussion document as well as a spread sheet with the data used to make the
+ * box size determination are located there
+ *
+ */
+int box_size_by_channel( int ibeam, char *short_sensor ) {
   int box_size;
+
+  if ( 0 != strcmp( "SSMI", short_sensor ) ) {
+    fprintf( stderr, "%s: bad sensor type %s\n", __FUNCTION__, short_sensor );
+    return -1;
+  }
 
   switch ( ibeam ) {
   case 1:
@@ -2596,7 +2622,8 @@ int box_size_by_channel( int ibeam ) {
     box_size = 20;
     break;
   default:
-    box_size = 160;
+    box_size = -1;
+    fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
   }
   return box_size;
 }
