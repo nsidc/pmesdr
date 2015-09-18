@@ -2589,6 +2589,7 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
  *
  * result :
  *   box size in pixels for that channel/sensor combination
+ *   returns -1 in case of error - e.g. out of range channel or unknown sensor
  *
  * the function only expects SSMI channel data for now and fails otherwise
  *
