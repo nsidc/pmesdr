@@ -198,8 +198,9 @@ int gsx_inq_global_variables( gsx_class *this ) {
   int att_len;
   int channel_number;
   char *channel_list;
-  char *token=" ,";
+  char *delim=",";
   int count;
+  char *token;
   char *channel_ptr;
 
   if ( NULL == this ) {
@@ -216,24 +217,27 @@ int gsx_inq_global_variables( gsx_class *this ) {
     fprintf( stderr, "%s: couldn't retrieve gsx_variables, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
+  channel_ptr = channel_list;
 
   fprintf( stderr, "%s: temp names in gsx_variables %s\n", __FUNCTION__, channel_list );
   count = 0;
-  //  channel_names[count] = (char*)malloc( (size_t) att_len );
-  channel_ptr = strtok( channel_list, token );
-  while ( NULL != channel_ptr ) {
-    att_len = strlen( channel_ptr );
-    channel_names[count] = (char*)malloc( (size_t) att_len );
-    strcpy( channel_names[count], channel_ptr );
-    //this->channel_names[count] = (char*)malloc( (size_t) att_len );
+  token = strsep( &channel_list, delim );
+  fprintf( stderr, "%s: %d, channel_ptr = '%s',\n", __FUNCTION__, count, token );
+  while ( NULL != channel_list ) {
+    fprintf( stderr, "%s:length = %d\n", __FUNCTION__, (int)(channel_list-channel_ptr) );
+    att_len = strlen( token );
+    channel_names[count] = (char*)malloc( (size_t) att_len+1 );
+    strcpy( channel_names[count], token );
+    //this->channel_names[count] = (char*)malloc( (size_t) att_len+1 );
     //strcpy( this->channel_names[count], channel_ptr );
     fprintf( stderr, "%s: channel %d is %d long %s and %s\n", __FUNCTION__, count, \
-	     att_len, this->channel_names[count], channel_ptr );
-    channel_ptr = strtok( NULL, token );
+	     att_len, this->channel_names[count], token );
+    token = strsep( &channel_list, delim );
     count++;
+    fprintf( stderr, "%s: %d, channel_ptr = '%s',\n", __FUNCTION__, count, token );
   }
-  fprintf( stderr, "%s: total channels is %d\n", __FUNCTION__, count );
-  this->channel_number = count;
+  fprintf( stderr, "%s: total channels is %d\n", __FUNCTION__, count+1 );
+  this->channel_number = count+1;
 
   /*
   for ( count=0; count<this->channel_number; count++ ) {
@@ -243,8 +247,6 @@ int gsx_inq_global_variables( gsx_class *this ) {
   }
   */
   return 0;
-    
-    
 }
 
   

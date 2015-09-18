@@ -194,16 +194,22 @@ void test_gsx_channel_number ( void ) {
   gsx_close( gsx );
 }
 
+
 void test_gsx_channel_names ( void ) {
   gsx_class *gsx;
   int status;
 
   gsx = gsx_init( file_name );
   if ( NULL != gsx ){
-    fprintf( stderr, "%s: netcdf file %s has %d channels\n",	\
-	     __FUNCTION__, gsx->source_file, gsx->channel_number );
+    status = 0;
+    while( status < gsx->channel_number ) {
+      fprintf( stderr, "%s: netcdf file %s has %d channels, %d is \n", \
+	       __FUNCTION__, gsx->source_file, gsx->channel_number, status );
+      status++;
+    }
   }
-  TEST_ASSERT_TRUE( NULL != gsx->input_provider );
+  TEST_ASSERT_TRUE( 0 != gsx->channel_number );
   gsx_close( gsx );
 }
+
 
