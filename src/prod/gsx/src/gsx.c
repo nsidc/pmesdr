@@ -226,10 +226,8 @@ int gsx_inq_global_variables( gsx_class *this ) {
   while ( NULL != channel_list ) {
     fprintf( stderr, "%s:length = %d\n", __FUNCTION__, (int)(channel_list-channel_ptr) );
     att_len = strlen( token );
-    channel_names[count] = (char*)malloc( (size_t) att_len+1 );
-    strcpy( channel_names[count], token );
-    //this->channel_names[count] = (char*)malloc( (size_t) att_len+1 );
-    //strcpy( this->channel_names[count], channel_ptr );
+    this->channel_names[count] = (char*)malloc( (size_t) att_len+1 );
+    strcpy( this->channel_names[count], token );
     fprintf( stderr, "%s: channel %d is %d long %s and %s\n", __FUNCTION__, count, \
 	     att_len, this->channel_names[count], token );
     token = strsep( &channel_list, delim );

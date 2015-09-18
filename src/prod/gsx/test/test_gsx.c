@@ -194,7 +194,7 @@ void test_gsx_channel_number ( void ) {
   gsx_close( gsx );
 }
 
-
+/*
 void test_gsx_channel_names ( void ) {
   gsx_class *gsx;
   int status;
@@ -211,5 +211,6 @@ void test_gsx_channel_names ( void ) {
   TEST_ASSERT_TRUE( 0 != gsx->channel_number );
   gsx_close( gsx );
 }
+*/
 
 
