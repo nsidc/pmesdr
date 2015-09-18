@@ -30,8 +30,8 @@ typedef struct {
   char *short_sensor;
   char *short_platform;
   char *input_provider;
-  int channel_number;
   char *channel_names[GSX_MAX_CHANNELS];
+  int channel_number;
 } gsx_class;
 
 typedef enum ssmi_channel {
