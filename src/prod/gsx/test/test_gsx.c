@@ -37,7 +37,6 @@ void test_gsx_valid_file ( void )
   gsx = gsx_init( file_name );
   TEST_ASSERT_TRUE( gsx );
   fprintf( stderr, "%s: netcdf file id %d \n", __FUNCTION__, gsx->fileid );
-  fprintf( stderr, "%s: netcdf dimensions %d\n", __FUNCTION__, gsx->dims );
   gsx_close( gsx );
 }
 
@@ -68,15 +67,9 @@ void test_gsx_dim_names ( void )
   int status;
 
   gsx = gsx_init ( file_name );
-  /*  if ( NULL != gsx ){
-    status = gsx_inq_dims( gsx );
-  } else {
-    status = 1;
-  }
-  */
-  fprintf( stderr, "%s: netcdf file %s with id %d has returned %d dimension names\n",\
+  fprintf( stderr, "%s: netcdf file %s with id %d has returned %d dimension values\n",\
 	   __FUNCTION__, file_name, gsx->fileid, gsx->dims );
-  TEST_ASSERT_TRUE( 0 == status );
+  TEST_ASSERT_TRUE( 0 != gsx->measurements_loc1 );
   gsx_close( gsx );
 }
 
@@ -190,27 +183,35 @@ void test_gsx_channel_number ( void ) {
     fprintf( stderr, "%s: netcdf file %s has %d channels\n",	\
 	     __FUNCTION__, gsx->source_file, gsx->channel_number );
   }
-  TEST_ASSERT_TRUE( 0 != gsx->channel_number );
+  TEST_ASSERT_TRUE( 7 == gsx->channel_number );
   gsx_close( gsx );
 }
 
-/*
 void test_gsx_channel_names ( void ) {
   gsx_class *gsx;
   int status;
 
   gsx = gsx_init( file_name );
   if ( NULL != gsx ){
-    status = 0;
-    while( status < gsx->channel_number ) {
-      fprintf( stderr, "%s: netcdf file %s has %d channels, %d is \n", \
-	       __FUNCTION__, gsx->source_file, gsx->channel_number, status );
-      status++;
-    }
+    fprintf( stderr, "%s: netcdf file %s, %dth channel name is %s\n",	\
+	     __FUNCTION__, gsx->source_file, gsx->channel_number, \
+	     gsx->channel_names[gsx->channel_number-1] );
   }
-  TEST_ASSERT_TRUE( 0 != gsx->channel_number );
+  TEST_ASSERT_TRUE( NULL != gsx->channel_names[gsx->channel_number-1] );
   gsx_close( gsx );
 }
-*/
+
+void test_gsx_fill_value ( void ) {
+  gsx_class *gsx;
+  int status;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    fprintf( stderr, "%s: netcdf file %s, fill value for %s is %f\n",	\
+	     __FUNCTION__, gsx->source_file, gsx->channel_names[1], gsx->fillvalue );
+  }
+  TEST_ASSERT_TRUE( -100.0 == gsx->fillvalue );
+  gsx_close( gsx );
+}
 
 
