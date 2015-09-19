@@ -32,6 +32,7 @@ typedef struct {
   char *input_provider;
   char *channel_names[GSX_MAX_CHANNELS];
   int channel_number;
+  float fillvalue;
 } gsx_class;
 
 typedef enum ssmi_channel {
@@ -43,6 +44,18 @@ typedef enum ssmi_channel {
   GSX_SSMI_85H,
   GSX_SSMI_85V
 } gsx_ssmi_channel;
+
+static const char *gsx_variable_attributes[] = {
+  "standard_name",
+  "long_name",
+  "units",
+  "valid_range",
+  "_FillValue",
+  "coordinates",
+  "gsx_field_of_view",
+  "gsx_azimuth_angle",
+  "gsx_incidence_angle"
+};
 
 int gsx_version ( void );
 gsx_class *gsx_init ( char *filename );
