@@ -70,13 +70,26 @@ gsx_class *gsx_init ( char *filename ) {
   if ( this->dims == 0 ) return this;
   status = gsx_inq_dims( this );
 
-  if ( 0 != status ) return this;
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: bad return from gsx_inq_dims \n", __FUNCTION__ );
+    return this;
+  }
   /* Now get the global attributes */
   status = gsx_inq_global_attributes( this );
-  if ( 0 != status ) return this;
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: bad return from gsx_inq_global_attributes \n", __FUNCTION__ );
+    return this;
+  }
   status = gsx_inq_global_variables( this );
-  if ( 0 != status ) return this;
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: bad return from gsx_inq_global_variables \n", __FUNCTION__ );
+    return this;
+  }
   status = gsx_inq_variable_attributes( this );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: bad return from gsx_inq_variable_attributes \n", __FUNCTION__ );
+    return this;
+  }
   return this;
 
 }
@@ -154,48 +167,52 @@ int gsx_inq_global_attributes( gsx_class *this ) {
     return -1;
   } else {
     //fprintf( stderr, "%s: got length of gsx_source %d\n", __FUNCTION__, att_len );
-    source_file = (char *)malloc(FILENAME_MAX);
+    source_file = (char *)malloc( ( size_t )att_len+1);
   }
-  if ( status = nc_get_att_string( this->fileid, NC_GLOBAL, "gsx_source", &source_file ) ) {
+  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "gsx_source", source_file ) ) {
     fprintf( stderr, "%s: no gsx source file, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
   this->source_file = source_file;
+  *(this->source_file+att_len) = '\0';
 
   if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "short_platform", (size_t*)&att_len ) ) {
     fprintf( stderr, "%s: no gsx short platform, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
 
-  platform = ( char * )malloc( ( size_t )att_len );
+  platform = ( char * )malloc( ( size_t )att_len+1 );
   if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "short_platform", platform ) ) {
     fprintf( stderr, "%s: no gsx short platform, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
   this->short_platform = platform;
+  *(this->short_platform+att_len) = '\0';
   
   if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "short_sensor", (size_t*)&att_len ) ) {
     fprintf( stderr, "%s: no gsx short sensor, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
-  sensor = ( char * )malloc( (size_t) att_len );
+  sensor = ( char * )malloc( (size_t) att_len+1 );
   if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "short_sensor", sensor ) ) {
     fprintf( stderr, "%s: no gsx short_sensor, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
   this->short_sensor = sensor;
+  *(this->short_sensor+att_len) = '\0';
 
   if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "input_provider", (size_t*)&att_len ) ) {
     fprintf( stderr, "%s: no gsx input provider, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
-  input_provider = ( char * )malloc( (size_t) att_len );
+  input_provider = ( char * )malloc( (size_t) att_len+1 );
   if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "input_provider", input_provider ) ) {
     fprintf( stderr, "%s: no gsx input provider, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     return -1;
   }
   this->input_provider = input_provider;
-
+  *(this->input_provider+att_len) = '\0';
+  
   return 0;
 }
       
@@ -251,27 +268,41 @@ int gsx_inq_variable_attributes( gsx_class *this ) {
   char *token;
   char *channel_ptr;
   float fillvalue;
+  nc_type var_type;
+  int ndims;
+  int dimid;
+  int natts;
 
   if ( NULL == this ) {
     return -1;
   }
 
-  if ( status = nc_inq_varid( this->fileid, this->channel_names[0], &varid ) ) {
-    fprintf( stderr, "%s: no variable named %s, error : %s\n", \
-	     __FUNCTION__, this->channel_names[0], nc_strerror( status ) );
-    fprintf( stderr, "%s: comparison is %d\n", __FUNCTION__, strncmp( this->channel_names[0], delim, 1 ) );
-    return -1;
+  for ( count=0; count<this->channel_number; count++ ) {
+
+    if ( status = nc_inq_varid( this->fileid, this->channel_names[count], &varid ) ) {
+      fprintf( stderr, "%s: no variable named '%s', error : %s\n",	\
+	       __FUNCTION__, this->channel_names[0], nc_strerror( status ) );
+      fprintf( stderr, "%s: comparison is %d\n", __FUNCTION__, strncmp( this->channel_names[count], delim, 1 ) );
+      return -1;
+    }
+
+    //if ( 0 == strncmp( this->channel_names[0], delim, 1 ) ) fprintf( stderr, "%s: Hallelujah!\n", __FUNCTION__ );
+    if ( status = nc_inq_varndims( this->fileid, varid, &ndims ) ) {
+      fprintf( stderr, "%s: couldn't get %s variable attributes\n", __FUNCTION__, this->channel_names[count] );
+      return -1;
+    }
+
+    fprintf( stderr, "%s: channel name is '%s' and variable ID is %d and ndims are %d\n", \
+	     __FUNCTION__, this->channel_names[count], varid, ndims );
+
+    if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue) ) {
+      fprintf( stderr, "%s: no fill value attribute for %s variable\n", \
+	       __FUNCTION__, this->channel_names[count] );
+      return -1;
+    }
+
+    this->fillvalue = fillvalue;
   }
-
-  if ( 0 == strncmp( this->channel_names[0], delim, 1 ) ) fprintf( stderr, "%s: Hallelujah!\n", __FUNCTION__ );
-
-  if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue) ) {
-    fprintf( stderr, "%s: no fill value attribute for %s variable\n", \
-	     __FUNCTION__, this->channel_names[0] );
-    return -1;
-  }
-
-  this->fillvalue = fillvalue;
 
   return 0;
 }
