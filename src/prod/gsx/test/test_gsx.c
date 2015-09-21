@@ -7,7 +7,7 @@ char *file_name;
 
 void setUp(void)
 {
-  file_name = strdup( "/home/vagrant/gsx_regression/data/expected/csu/GSX_CSU_SSMI_FCDR_V01R00_F13_D19960322_S0056_E0238_R05133.nc" );
+  file_name = strdup( "/projects/PMESDR/vagrant/savoie/sample-files/GSX_CSU_SSMI_FCDR_V01R00_F13_D19960322_S0056_E0238_R05133.nc" );
 }
 
 void tearDown(void)

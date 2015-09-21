@@ -20,6 +20,7 @@ typedef struct {
   int vars;
   int atts;
   int unlimdims;
+  //  int dimids[GSX_MAX_DIMS];
   int scans_loc1;
   int scans_loc2;
   int scans_loc3;
