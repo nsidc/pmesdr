@@ -20,7 +20,6 @@ typedef struct {
   int vars;
   int atts;
   int unlimdims;
-  //  int dimids[GSX_MAX_DIMS];
   int scans_loc1;
   int scans_loc2;
   int scans_loc3;
@@ -34,6 +33,29 @@ typedef struct {
   char *channel_names[GSX_MAX_CHANNELS];
   int channel_number;
   float fillvalue;
+  float *efov[GSX_MAX_CHANNELS];
+  float *latitude_loc1;
+  float *latitude_loc2;
+  float *latitude_loc3;
+  float *longitude_loc1;
+  float *longitude_loc2;
+  float *longitude_loc3;
+  float *sc_latitude_loc1;
+  float *sc_latitude_loc2;
+  float *sc_latitude_loc3;
+  float *sc_longitude_loc1;
+  float *sc_longitude_loc2;
+  float *sc_longitude_loc3;
+  double *scantime_loc1;
+  double *scantime_loc2;
+  double *scantime_loc3;
+  float *eia_loc1;
+  float *eia_loc2;
+  float *eia_loc3;
+  float *eaz_loc1;
+  float *eaz_loc2;
+  float *eaz_loc3;
+  float *brightness_temps[GSX_MAX_CHANNELS];
 } gsx_class;
 
 typedef enum ssmi_channel {
