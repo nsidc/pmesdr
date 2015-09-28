@@ -249,6 +249,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   }
   this->platform_id = platform_id;
   this->sensor_id = sensor_id;
+  this->reconstruction_id = reconstruction_id;
   
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s%s.%s_%s.%4.4d%3.3d.%3s.%s.%s.%s.%s.nc",
@@ -391,6 +392,123 @@ int cetb_file_open( cetb_file_class *this ) {
 
   free( software_version );
   free( time_stamp );
+
+  return 0;
+  
+}
+
+/*
+ * cetb_file_add_bgi_parameters - Add BGI-specific global file attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *    gamma : double, BGI gamma (actually gamma*pi??, this needs to be more specific)
+ *    dimensionless : double, BGI dimensionless parameter value
+ *    db_threshold : double, BGI db_threshold (needs to be more specific)
+ *    diff_threshold_K : double, BGI diff_threshold (needs to be more specific)
+ *
+ * output : n/a
+ *
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is populated with BGI-specific global attributes
+ *
+ * Reference : add reference here to David's BGI white paper and/or ATBD
+ */
+int cetb_file_add_bgi_parameters( cetb_file_class *this,
+				  double gamma,
+				  double dimensionless,
+				  double db_threshold,
+				  double diff_threshold_K ) {
+
+  int status;
+  
+  if ( !this ) {
+    fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
+    return 1;
+  }
+
+  if ( CETB_BGI != this->reconstruction_id ) {
+    fprintf( stderr, "%s: Cannot set BGI parameters on non-BGI file.\n", __FUNCTION__ );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_gamma",
+				NC_DOUBLE, 1, &gamma ) ) {
+    fprintf( stderr, "%s: Error setting bgi_gamma: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_dimensionless",
+				NC_DOUBLE, 1, &dimensionless ) ) {
+    fprintf( stderr, "%s: Error setting bgi_dimensionless: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_db_threshold",
+				NC_DOUBLE, 1, &db_threshold ) ) {
+    fprintf( stderr, "%s: Error setting bgi_db_threshold: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_diff_threshold",
+				NC_DOUBLE, 1, &diff_threshold_K ) ) {
+    fprintf( stderr, "%s: Error setting bgi_diff_threshold: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  return 0;
+  
+}
+
+/*
+ * cetb_file_add_sir_parameters - Add SIR-specific global file attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *    number_of_iterations : integer SIR nits
+ *    median_filter : integer median_filtering flag: 0=off, 1=on
+ *
+ * output : n/a
+ *
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is populated with SIR-specific global attributes
+ *
+ */
+int cetb_file_add_sir_parameters( cetb_file_class *this,
+				  int number_of_iterations,
+				  int median_filter ) {
+
+  int status;
+  
+  if ( !this ) {
+    fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
+    return 1;
+  }
+
+  if ( CETB_SIR != this->reconstruction_id ) {
+    fprintf( stderr, "%s: Cannot set SIR parameters on non-SIR file.\n", __FUNCTION__ );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_number_of_iterations",
+				NC_INT, 1, &number_of_iterations ) ) {
+    fprintf( stderr, "%s: Error setting sir_number_of_iterations: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_median_filter",
+				NC_INT, 1, &median_filter ) ) {
+    fprintf( stderr, "%s: Error setting sir_median_filter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
 
   return 0;
   
