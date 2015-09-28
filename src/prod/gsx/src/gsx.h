@@ -1,5 +1,5 @@
 /*
- * gsx.h - Utilities for Calibrated Enhanced-Resolution TB files
+ * gsx.h - Utilities for extended generic swath
  *
  * 03-Aug-2015 M. A. Hardman mhardman@nsidc.org 303-492-2969
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
@@ -9,13 +9,13 @@
 
 #define ALIGNMENT 64
 #define GSX_MAX_DIMS 10 // max number of dimension variables in file
-#define GSX_MAX_CHANNELS 30 // max expected number of channels per platform
+#define GSX_MAX_CHANNELS 20 // max expected number of channels per platform
 #define SENSOR_MAX 10 // max number of characters in the short sensor name
 #define PLATFORM_MAX 10 // max number of characters in the short platform name
-#define GSX_VERSION "v0.1"
 
 typedef struct {
   int fileid;
+  char* gsx_version;
   int dims;
   int vars;
   int atts;
@@ -58,16 +58,6 @@ typedef struct {
   float *brightness_temps[GSX_MAX_CHANNELS];
 } gsx_class;
 
-typedef enum ssmi_channel {
-  GSX_SSMI_19H=1,
-  GSX_SSMI_19V,
-  GSX_SSMI_22V,
-  GSX_SSMI_37H,
-  GSX_SSMI_37V,
-  GSX_SSMI_85H,
-  GSX_SSMI_85V
-} gsx_ssmi_channel;
-
 static const char *gsx_variable_attributes[] = {
   "standard_name",
   "long_name",
@@ -80,8 +70,16 @@ static const char *gsx_variable_attributes[] = {
   "gsx_incidence_angle"
 };
 
-int gsx_version ( void );
+/*
+ * public functions
+ */
+int gsx_version ( gsx_class *this );
 gsx_class *gsx_init ( char *filename );
 void gsx_close ( gsx_class *this );
+/*
+ * private functions
+ */
+char *gsx_att_text( int fileid, int varid, const char* varname );
+gsx_class *get_gsx_file( char *filename );
 #endif // gsx_H
 

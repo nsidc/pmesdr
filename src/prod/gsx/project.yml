@@ -32,6 +32,8 @@
     - test/support
   :data:
     - test/data
+  :include:
+    - ../../../include
 
 
 :defines:

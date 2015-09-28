@@ -1,7 +1,7 @@
 #========================================================================
-# Makefile for cetb_file utility library
+# Makefile for gsx utility library
 #
-# 2015-07-06 M. J. Brodzik 303-492-8263 brodzik@nsidc.org
+# 2015-08-15 M. A. Hardman 303-492-2969 mhardman@nsidc.org
 # National Snow & Ice Data Center, University of Colorado, Boulder
 # Copyright (C) 2015 Regents of University of Colorado and Brigham-Young University
 #========================================================================
