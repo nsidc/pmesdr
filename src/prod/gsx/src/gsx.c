@@ -1,6 +1,10 @@
 /*
  * gsx- Utilities for Importing GSX files
  *
+ *  gsx == eXtended Generic Swath
+ *   all input swath files from each different sensor in the PMESDR project
+ *   will be translated into gsx format before being read into the meas_meta system from BYU
+ *
  * 03-Aug-2015 M. A. Hardman mhardman@nsidc.org 303-492-2969
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
@@ -10,84 +14,74 @@
 #include <string.h>
 #include <strings.h>
 
+#include "cetb.h"
 #include "gsx.h"
 
-int gsx_version ( void ) {
-  fprintf( stderr, "%s: gsx version = %s \n",
-	     __FUNCTION__, GSX_VERSION );
-  fprintf( stderr, "%s: netcdf version = %s \n",
-	   __FUNCTION__, nc_inq_libvers() );
+/*
+ * this function takes a gsx file name and opens it as a netCDF4
+ * file and returns a pointer to a structure that is populated with
+ * the information in the input gsx file
 
-  return 1;
-}
-
+ *
+ *  Input:
+ *    GSX file name
+ *
+ *  Return:
+ *    pointer to gsx_struct
+ *    NULL on failure
+ */
 gsx_class *gsx_init ( char *filename ) {
 
   gsx_class *this=NULL;
   int status;
-  int nc_fileid;
-  int nc_dims;
-  int nc_vars;
-  int nc_atts;
-  int nc_unlimdims;
   int counter;
 
-  this = (gsx_class *)calloc(1, sizeof(gsx_class));
+  /* first check to make sure you have a netcdf file and get gsx version*/
+  this = get_gsx_file( filename );
   if ( NULL == this ) { perror( __FUNCTION__ ); return NULL; }
-  
-  //fprintf( stderr, "\n%s: gsx file name = %s \n", __FUNCTION__, filename );
-  if ( status = nc_open( filename, NC_NOWRITE, &nc_fileid ) ) {
-    fprintf( stderr, "%s: nc_open error=%s: filename=%s \n",
-	     __FUNCTION__, nc_strerror(status), filename );
-    free( this );
-    return NULL;
-  }
 
-  this->fileid = nc_fileid;
-  /* initialize all variable pointers in gsx_struct */
+  /* initialize all variable pointers in gsx_struct if you have a gsx file*/
+  if ( NULL == this->gsx_version ) { perror( __FUNCTION__ ); return NULL; }
   status = gsx_init_pointers( this );
-
-  if ( status = nc_inq( this->fileid, &nc_dims, &nc_vars, &nc_atts, &nc_unlimdims ) ) {
-    fprintf( stderr, "%s: nc_open error=%s: filename=%s \n",
-	     __FUNCTION__, nc_strerror(status), filename );
-    free( this );
-    return NULL;
-  }
-
-  this->dims = nc_dims;
-  this->vars = nc_vars;
-  this->atts = nc_atts;
-  this->unlimdims = nc_unlimdims;
-
-  /* Now call gsx_inq_dims to get more variables */
-  /* only make the next calls if you have a valid gsx file */
-  if ( 3 >= this->dims ) return this;
-  status = gsx_inq_dims( this );
-
+  if ( 0 != status ) { perror( __FUNCTION__ ); return NULL; }
+    
+  /* Now call gsx_get_dims to get more variables */
+  status = gsx_get_dims( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_inq_dims \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from gsx_get_dims \n", __FUNCTION__ );
     return this;
   }
+  
   /* Now get the global attributes */
-  status = gsx_inq_global_attributes( this );
+  status = gsx_get_global_attributes( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_inq_global_attributes \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from gsx_get_global_attributes \n", __FUNCTION__ );
     return this;
   }
-  status = gsx_inq_global_variables( this );
+  status = gsx_get_global_variables( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_inq_global_variables \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from gsx_get_global_variables \n", __FUNCTION__ );
     return this;
   }
-  status = gsx_inq_variable_attributes( this );
+  status = gsx_get_variable_attributes( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_inq_variable_attributes \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from gsx_get_variable_attributes \n", __FUNCTION__ );
     return this;
   }
   return this;
 
 }
 
+/*
+ * this function takes a gsx structure and frees the memory
+ * associated with any pointers and then then frees the entire struct
+ *
+ *  Input:
+ *    pointer to gsx_struct
+ *
+ *  Return:
+ *    void function
+ */
 void gsx_close ( gsx_class *this ) {
   int status;
   int counter;
@@ -98,6 +92,7 @@ void gsx_close ( gsx_class *this ) {
   	     __FUNCTION__, nc_strerror(status) );
   }
   /* free the malloc'd arrays before you free the gsx_struct */
+  if ( NULL != this->gsx_version ) free( this->gsx_version );
   if ( NULL != this->source_file ) free( this->source_file );
   if ( NULL != this->short_sensor ) free( this->short_sensor );
   if ( NULL != this->short_platform ) free( this->short_platform );
@@ -128,25 +123,57 @@ void gsx_close ( gsx_class *this ) {
     if ( NULL != this->efov[counter] ) free( this->efov[counter] );
     if ( NULL != this->brightness_temps[counter] ) free( this->brightness_temps[counter] );
   }
-  
   free( this );
   return;
 }
 
-int gsx_inq_dims( gsx_class *this ) {
+/*
+ * this function takes a gsx_class structure pointer and populates
+ * some of the dimension variables from the netcdf file
+ *
+ * Note - this function is only looking for the dimension vars that give the
+ * number of scan lines and the number of measurements per scan line
+ *
+ * All other dimensions are ignored
+ *
+ *  Input:
+ *    gsx_class struct
+ *
+ *  Return:
+ *    status variable returned 0 on success
+ *    
+ */
+int gsx_get_dims( gsx_class *this ) {
   int status;
   int i;
   size_t dim_length;
   char *dim_name;
+  int nc_dims;
+  int nc_vars;
+  int nc_atts;
+  int nc_unlimdims;
 
   if ( NULL == this ) return -1;
 
+  if ( status = nc_inq( this->fileid, &nc_dims, &nc_vars, &nc_atts, &nc_unlimdims ) ) {
+    fprintf( stderr, "%s: nc_inq error=%s: fileid=%d \n",
+	     __FUNCTION__, nc_strerror(status), this->fileid );
+    free( this );
+    return -1;
+  }
+
+  this->dims = nc_dims;
+  this->vars = nc_vars;
+  this->atts = nc_atts;
+  this->unlimdims = nc_unlimdims;
+
+  dim_name = malloc( sizeof( char )*(NC_MAX_NAME+1) );
+  if ( NULL == dim_name ) {
+    fprintf( stderr, "%s: unable to allocate memory for dimension names\n", __FUNCTION__ );
+    return -1;
+  }
+  
   for ( i = 0; i < this->dims; i++ ) {
-    dim_name = malloc( sizeof( char )*(NC_MAX_NAME+1) );
-    if ( NULL == dim_name ) {
-      fprintf( stderr, "%s: unable to allocate memory for dimension names\n", __FUNCTION__ );
-      return -1;
-    } 
     if ( status = nc_inq_dimname( this->fileid, i, dim_name ) ) {
       fprintf ( stderr, "%s: couldn't get dim name info error %s\n", __FUNCTION__, nc_strerror( status ) );
       return -1;
@@ -162,77 +189,71 @@ int gsx_inq_dims( gsx_class *this ) {
     if ( strncmp( dim_name, "measurements_loc2", strlen( dim_name ) ) == 0 ) this->measurements_loc2 = dim_length;
     if ( strncmp( dim_name, "measurements_loc3", strlen( dim_name ) ) == 0 ) this->measurements_loc3 = dim_length;
   }
+  
   free( dim_name );
+
   return 0;
 }
 
-int gsx_inq_global_attributes( gsx_class *this ) {
+/*
+ * this function takes a gsx_class struct and populates the global attributes
+ *
+ *  Input:
+ *    gsx_class structure
+ *
+ *  Return:
+ *    status variable returns 0 for success and non-zero on failure
+ *    
+ */
+int gsx_get_global_attributes( gsx_class *this ) {
   
   int status;
-  char *source_file;
-  char *platform;
-  char *sensor;
-  char *input_provider;
   int att_len;
 
   if ( NULL == this ) {
     return -1;
   }
 
-  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "gsx_source", (size_t *)&att_len ) ) {
-    fprintf( stderr, "%s: no gsx source file length, error : %s\n", __FUNCTION__, nc_strerror( status ) );
-    return -1;
-  } else {
-    source_file = (char *)malloc( ( size_t )att_len+1);
-  }
-  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "gsx_source", source_file ) ) {
-    fprintf( stderr, "%s: no gsx source file, error : %s\n", __FUNCTION__, nc_strerror( status ) );
-    return -1;
-  }
-  this->source_file = source_file;
-  *(this->source_file+att_len) = '\0';
-
-  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "short_platform", (size_t*)&att_len ) ) {
-    fprintf( stderr, "%s: no gsx short platform, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+  this->source_file = gsx_att_text( this->fileid, NC_GLOBAL, "gsx_source" );
+  if ( NULL == this->source_file ) {
+    fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
     return -1;
   }
 
-  platform = ( char * )malloc( ( size_t )att_len+1 );
-  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "short_platform", platform ) ) {
-    fprintf( stderr, "%s: no gsx short platform, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+  this->short_platform = gsx_att_text( this->fileid, NC_GLOBAL, "short_platform" );
+  if ( NULL == this->source_file ) {
+    fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
     return -1;
   }
-  this->short_platform = platform;
-  *(this->short_platform+att_len) = '\0';
-  
-  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "short_sensor", (size_t*)&att_len ) ) {
-    fprintf( stderr, "%s: no gsx short sensor, error : %s\n", __FUNCTION__, nc_strerror( status ) );
-    return -1;
-  }
-  sensor = ( char * )malloc( (size_t) att_len+1 );
-  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "short_sensor", sensor ) ) {
-    fprintf( stderr, "%s: no gsx short_sensor, error : %s\n", __FUNCTION__, nc_strerror( status ) );
-    return -1;
-  }
-  this->short_sensor = sensor;
-  *(this->short_sensor+att_len) = '\0';
 
-  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "input_provider", (size_t*)&att_len ) ) {
-    fprintf( stderr, "%s: no gsx input provider, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+  this->short_sensor = gsx_att_text( this->fileid, NC_GLOBAL, "short_sensor" );
+  if ( NULL == this->short_sensor ) {
+    fprintf( stderr, "%s: no short_sensor\n", __FUNCTION__ );
     return -1;
   }
-  input_provider = ( char * )malloc( (size_t) att_len+1 );
-  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "input_provider", input_provider ) ) {
-    fprintf( stderr, "%s: no gsx input provider, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+
+  this->input_provider = gsx_att_text( this->fileid, NC_GLOBAL, "input_provider" );
+  if ( NULL == this->input_provider ) {
+    fprintf( stderr, "%s: no input_provider\n", __FUNCTION__ );
     return -1;
   }
-  this->input_provider = input_provider;
-  *(this->input_provider+att_len) = '\0';
-  
+
   return 0;
 }
       
-int gsx_inq_global_variables( gsx_class *this ) {
+/*
+ * this function takes a gsx_class struct and gets the names of the channels
+ * in the file and populates the structure with the list
+ * Also counts the number of channels in the file
+ *
+ *  Input:
+ *    gsx_class structure
+ *
+ *  Return:
+ *    status variable 0 on success and !=0 on failure
+ *    
+ */
+int gsx_get_global_variables( gsx_class *this ) {
   int status;
   int att_len;
   int channel_number;
@@ -247,23 +268,8 @@ int gsx_inq_global_variables( gsx_class *this ) {
     return -1;
   }
 
-  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "gsx_variables", (size_t*)&att_len ) ) {
-    fprintf( stderr, "%s: no gsx_variables, error : %s\n", __FUNCTION__, nc_strerror( status ) );
-    return -1;
-  }
-  //  fprintf( stderr, "%s: %d is length from nc_inq_attlen\n", __FUNCTION__, att_len );
-
-  channel_list = (char*)malloc( (size_t) (att_len+1) );
-  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "gsx_variables", channel_list ) ) {
-    fprintf( stderr, "%s: couldn't retrieve gsx_variables, error : %s\n", __FUNCTION__, nc_strerror( status ) );
-    return -1;
-  }
-  *(channel_list+att_len) = '\0';
-  
+  channel_list = gsx_att_text( this->fileid, NC_GLOBAL, "gsx_variables" );
   channel_ptr = channel_list;
-
-  //fprintf( stderr, "%s: length of channel_list %d \n\t channel_list '%s' and \n\t channel_ptr '%s'\n", \
-  //	   __FUNCTION__, (int)strlen( channel_list ), channel_list, channel_ptr );
 
   count = 0;
   while ( NULL != channel_ptr ) {
@@ -272,7 +278,6 @@ int gsx_inq_global_variables( gsx_class *this ) {
     att_len = strlen( token );
     this->channel_names[count] = (char*)malloc( (size_t) att_len+1 );
     strcpy( this->channel_names[count], token );
-    //fprintf( stderr, "%s: channel name is '%s' and token '%s'\n", __FUNCTION__, this->channel_names[count], token ); 
     count++;
   }
   *(this->channel_names[count-1]+att_len) = '\0';
@@ -283,7 +288,18 @@ int gsx_inq_global_variables( gsx_class *this ) {
   return 0;
 }
 
-int gsx_inq_variable_attributes( gsx_class *this ) {
+/*
+ * this function takes a gsx_class structure and fills it with data for
+ * each channel in the file
+ *
+ *  Input:
+ *    gsx_class struct
+ *
+ *  Return:
+ *    status is returned 0 on success and !=0 on failure
+ *    
+ */
+int gsx_get_variable_attributes( gsx_class *this ) {
   int status;
   int att_len;
   int varid;
@@ -307,7 +323,6 @@ int gsx_inq_variable_attributes( gsx_class *this ) {
     if ( status = nc_inq_varid( this->fileid, this->channel_names[count], &varid ) ) {
       fprintf( stderr, "%s: file id %d %d count '%s', error : %s\n",	\
 	       __FUNCTION__, this->fileid, count, this->channel_names[count], nc_strerror( status ) );
-      fprintf( stderr, "%s: comparison is %d\n", __FUNCTION__, strncmp( this->channel_names[count], delim, 1 ) );
       return -1;
     }
 
@@ -346,6 +361,19 @@ int gsx_inq_variable_attributes( gsx_class *this ) {
   return 0;
 }
 
+/*
+ * this function takes a gsx_class struct and gets the position variables
+ * file and returns a pointer to a structure that is populated with the
+ * lat and lons as well as the spacecraft position per scan line and the angles
+ * along the scan lines
+ *
+ *  Input:
+ *    gsx_class structure
+ *
+ *  Return:
+ *    returns 0 on success and !=0 on failures
+ *    
+ */
 int gsx_get_positions( gsx_class *this ) {
   int status;
 
@@ -356,20 +384,37 @@ int gsx_get_positions( gsx_class *this ) {
 }
 
 int gsx_get_temperature( gsx_class *this, int varid, int count, int scans, int measurements ) {
-  int status;
-  float *tb;
+  int status=0;
 
-  status = 0;
-  tb = (float *)malloc( sizeof(float)*scans*measurements );
-  if ( status = nc_get_var_float( this->fileid, varid, tb ) ) {
-    fprintf( stderr, "%s: tb from %s\n", __FUNCTION__, this->channel_names[count] );
-    return -1;
+  this->brightness_temps[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->brightness_temps[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->brightness_temps[count] ) ) {
+      fprintf( stderr, "%s: tb from %s\n", __FUNCTION__, this->channel_names[count] );
+      status = -1;
+    }
+  } else {
+    status = -1;
   }
 
-  this->brightness_temps[count] = tb;
   return status;
 }
   
+/*
+ * this function takes a gsx_class structure and sets all pointers
+ * EXCEPT for gsx_version to NULL
+ * 
+ * Note that the gsx_version is pulled from the file when it is first opened
+ * as a way to check that this is a valid gsx file so this pointer should NOT
+ * be nulled in this function
+
+ *
+ *  Input:
+ *    pointer to gsx_struct
+ *
+ *  Return:
+ *    status = 0 on success !=0 on failure
+ *    
+ */
 int gsx_init_pointers( gsx_class *this ) {
   int status=0;
   int counter;
@@ -407,10 +452,88 @@ int gsx_init_pointers( gsx_class *this ) {
 
   return status;
 }
-  
-  
 
+/*
+ * function get_gsx_file
+ *
+ *  Input:
+ *    filename to be opened and checked
+ *
+ *  Return:
+ *    pointer to gsx_class struct upon 
+ *    NULL if not a gsx file or file not found
+ *
+ */
+gsx_class *get_gsx_file( char *filename ){
+  int status;
+  int nc_fileid;
+  gsx_class *this;
+  int att_len;
   
+  if ( status = nc_open( filename, NC_NOWRITE, &nc_fileid ) ) {
+    fprintf( stderr, "%s: nc_open error=%s: filename=%s \n",
+	     __FUNCTION__, nc_strerror(status), filename );
+    return NULL;
+  }
+
+  this = (gsx_class *)calloc(1, sizeof(gsx_class));
+  if ( NULL == this ) { perror( __FUNCTION__ ); return NULL; }
+  this->fileid = nc_fileid;
+
+  /* now check for existence of gsx_version string indicating this is a gsx file */
+
+  if ( status = nc_inq_attlen( this->fileid, NC_GLOBAL, "gsx_version", (size_t*)&att_len ) ) {
+    fprintf( stderr, "%s: no gsx_version, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    free ( this );
+    return NULL;
+  }
+
+  this->gsx_version = (char *)malloc( (size_t)(att_len+1) );
+  if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "gsx_version", this->gsx_version ) ) { 
+    fprintf( stderr, "%s: couldn't get gsx version, error : %s\n", __FUNCTION__, nc_strerror( status ) );
+    free( this );
+    return NULL;
+  }
+
+  return this;
+}
+
+/*
+ * gsx_get_att_text
+ *
+ *  Input:
+ *    fileid - netcdf file id
+ *    varid - the variable id of the attribute to be retrieved (cound be NC_GLOBAL)
+ *    varname - the attribute name
+ *
+ *  Result:
+ *    returns a pointer to the string returned from the file
+ *    NULL is returned on failure
+ *
+ */
+char *gsx_att_text( int fileid, int varid, const char* varname ) {
+  int status=0;
+  int att_len;
+  char *att_text;
+
+  if ( status = nc_inq_attlen( fileid, varid, varname, (size_t*)&att_len ) ) {
+    fprintf( stderr, "%s: no attribute %s, error : %s\n", __FUNCTION__, varname, nc_strerror( status ) );
+    return NULL;
+  }
+  
+  att_text = (char *)malloc( (size_t)(att_len+1) );
+  if ( NULL != att_text ) {
+    if ( status = nc_get_att_text( fileid, varid, varname, att_text ) ) { 
+      fprintf( stderr, "%s: couldn't get attribute %s string, error : %s\n", \
+	     __FUNCTION__, varname, nc_strerror( status ) );
+      return NULL;
+    }
+    *(att_text+att_len) = '\0';
+    fprintf( stderr, "%s: attribute text for %s is %s\n", __FUNCTION__, varname, att_text );
+  }
+  
+  return att_text;
+}
 
 
   
