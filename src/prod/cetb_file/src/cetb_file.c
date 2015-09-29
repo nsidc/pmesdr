@@ -402,10 +402,15 @@ int cetb_file_open( cetb_file_class *this ) {
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
- *    gamma : double, BGI gamma (actually gamma*pi??, this needs to be more specific)
- *    dimensionless : double, BGI dimensionless parameter value
- *    db_threshold : double, BGI db_threshold (needs to be more specific)
- *    diff_threshold_K : double, BGI diff_threshold (needs to be more specific)
+ *    gamma : float, BGI "noise-tuning" parameter gamma
+ *            gamma rangins from 0 to pi/2
+ *    dimensional_tuning_parameter : float, BGI dimensional tuning parameter value
+ *            ATBD says dimensional-tuning parameter should be 0.001
+ *    db_threshold : float, BGI db_threshold (determines size of neighborhood for
+ *                   measurements to be used in BGI matrix)
+ *    diff_threshold : float, BGI diff_threshold in Kelvins
+ *                     BGI values further than this threshold from the AVE value are
+ *                     reset to AVE value
  *
  * output : n/a
  *
@@ -413,13 +418,20 @@ int cetb_file_open( cetb_file_class *this ) {
  *          1 if an error occurs; error message will be written to stderr
  *          The CETB file is populated with BGI-specific global attributes
  *
- * Reference : add reference here to David's BGI white paper and/or ATBD
+ * Reference : See definitions for tuning parameters at
+ *
+ * Brodzik, M. J. and D. G. Long.  2015. Calibrated Passive
+ * Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR
+ * (CETB) Algorithm Theoretical Basis Document. MEaSUREs Project
+ * White Paper.  NSIDC.  Boulder, CO.
+ * http://nsidc.org/pmesdr/files/2015/09/MEaSUREs_CETB_ATBD_v0.10.pdf
+ *
  */
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
-				  double gamma,
-				  double dimensionless,
-				  double db_threshold,
-				  double diff_threshold_K ) {
+				  float gamma,
+				  float dimensional_tuning_parameter,
+				  float db_threshold,
+				  float diff_threshold ) {
 
   int status;
   
@@ -433,29 +445,29 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_gamma",
-				NC_DOUBLE, 1, &gamma ) ) {
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_gamma",
+				NC_FLOAT, 1, &gamma ) ) {
     fprintf( stderr, "%s: Error setting bgi_gamma: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_dimensionless",
-				NC_DOUBLE, 1, &dimensionless ) ) {
-    fprintf( stderr, "%s: Error setting bgi_dimensionless: %s.\n",
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
+				NC_FLOAT, 1, &dimensional_tuning_parameter ) ) {
+    fprintf( stderr, "%s: Error setting bgi_dimensional_tuning_parameter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_db_threshold",
-				NC_DOUBLE, 1, &db_threshold ) ) {
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_db_threshold",
+				NC_FLOAT, 1, &db_threshold ) ) {
     fprintf( stderr, "%s: Error setting bgi_db_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_diff_threshold",
-				NC_DOUBLE, 1, &diff_threshold_K ) ) {
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_diff_threshold",
+				NC_FLOAT, 1, &diff_threshold ) ) {
     fprintf( stderr, "%s: Error setting bgi_diff_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
