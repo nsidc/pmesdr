@@ -12,6 +12,8 @@
 #	installation directories
 #
 TOPDIR = $(PMESDR_TOP_DIR)
+INCDIR = $(TOPDIR)/include
+LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
 TESTDIR = $(TOPDIR)/NSIDCtest
 ifeq ($(LOCALE),int.nsidc.org)
@@ -23,6 +25,7 @@ endif
 CC = gcc
 CD = cd
 INSTALL = cp -f -p
+LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
@@ -86,21 +89,21 @@ endif
 #------------------------------------------------------------------------
 MEAS_INCDIR = ../../../sirlib/c/include
 MEAS_LIBDIR = ../../../sirlib/c
-LIBS = -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
-	-lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
+LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
+	-lgsx -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
+CFLAGS = -D'CSU=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'CSU=1' -D'JANUSicc=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
+  CFLAGS = -D'CSU=1' -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'CSU=1' -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g
+  CFLAGS = -D'CSU=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g
 endif
-DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
+DEPEND_LIBS = $(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = ../meas_meta_setup.c
 OBJS = meas_meta_setup_CSU.o
-HDRS = $(MEAS_INCDIR)/sir3.h
+HDRS = $(INCDIR)/gsx.h $(MEAS_INCDIR)/sir3.h
 BIN = meas_meta_setup_CSU
 
 all : $(BIN)
