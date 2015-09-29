@@ -229,7 +229,7 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
-				  float gamma,
+				  double gamma,
 				  float dimensional_tuning_parameter,
 				  float db_threshold,
 				  float diff_threshold );

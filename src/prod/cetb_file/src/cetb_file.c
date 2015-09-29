@@ -402,7 +402,7 @@ int cetb_file_open( cetb_file_class *this ) {
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
- *    gamma : float, BGI "noise-tuning" parameter gamma
+ *    gamma : double, BGI "noise-tuning" parameter gamma
  *            gamma rangins from 0 to pi/2
  *    dimensional_tuning_parameter : float, BGI dimensional tuning parameter value
  *            ATBD says dimensional-tuning parameter should be 0.001
@@ -428,7 +428,7 @@ int cetb_file_open( cetb_file_class *this ) {
  *
  */
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
-				  float gamma,
+				  double gamma,
 				  float dimensional_tuning_parameter,
 				  float db_threshold,
 				  float diff_threshold ) {
@@ -445,8 +445,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_gamma",
-				NC_FLOAT, 1, &gamma ) ) {
+  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_gamma",
+				   NC_DOUBLE, 1, &gamma ) ) {
     fprintf( stderr, "%s: Error setting bgi_gamma: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;

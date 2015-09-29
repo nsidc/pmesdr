@@ -94,10 +94,10 @@ void test_cetb_populate_sir_parameters( void ) {
 void test_cetb_populate_bgi_parameters_on_sir_file( void ) {
 
   int nc_fileid=0;
-  float gamma=0.0D;
-  float dimensional_tuning_parameter=1.0D;
-  float db_threshold=2.0D;
-  float diff_threshold=3.0D;
+  double gamma=0.0D;
+  float dimensional_tuning_parameter=1.0;
+  float db_threshold=2.0;
+  float diff_threshold=3.0;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
