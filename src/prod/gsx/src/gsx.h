@@ -27,9 +27,10 @@ typedef struct {
   int measurements_loc2;
   int measurements_loc3;
   char *source_file;
-  char *short_sensor;
-  char *short_platform;
-  char *input_provider;
+  //char *short_sensor;
+  cetb_sensor_id short_sensor;
+  cetb_platform_id short_platform;
+  cetb_swath_producer_id input_provider;
   char *channel_names[GSX_MAX_CHANNELS];
   int channel_number;
   float fillvalue;

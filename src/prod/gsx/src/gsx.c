@@ -107,9 +107,6 @@ void gsx_close ( gsx_class *this ) {
   /* free the malloc'd arrays before you free the gsx_struct */
   if ( NULL != this->gsx_version ) free( this->gsx_version );
   if ( NULL != this->source_file ) free( this->source_file );
-  if ( NULL != this->short_sensor ) free( this->short_sensor );
-  if ( NULL != this->short_platform ) free( this->short_platform );
-  if ( NULL != this->input_provider ) free( this->input_provider );
   if ( NULL != this->latitude_loc1 ) free( this->latitude_loc1 );
   if ( NULL != this->latitude_loc2 ) free( this->latitude_loc2 );
   if ( NULL != this->latitude_loc3 ) free( this->latitude_loc3 );
@@ -222,6 +219,8 @@ int get_gsx_global_attributes( gsx_class *this ) {
   
   int status;
   int att_len;
+  char *temp;
+  int i;
 
   if ( NULL == this ) {
     return -1;
@@ -233,24 +232,45 @@ int get_gsx_global_attributes( gsx_class *this ) {
     return -1;
   }
 
-  this->short_platform = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
-  if ( NULL == this->source_file ) {
+  temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
+  if ( NULL == temp ) {
     fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
     return -1;
   }
+  this->short_platform = CETB_NO_PLATFORM;
+  for ( i=0; i< CETB_NUM_PLATFORMS; i++ ) {
+    if ( 0 == strncmp( cetb_platform_id_name[i], temp, strlen(temp) ) ) {
+      this->short_platform = (cetb_platform_id) i;
+      break;
+    }
+  }
 
-  this->short_sensor = get_att_text( this->fileid, NC_GLOBAL, "short_sensor" );
-  if ( NULL == this->short_sensor ) {
+  temp = get_att_text( this->fileid, NC_GLOBAL, "short_sensor" );
+  if ( NULL == temp ) {
     fprintf( stderr, "%s: no short_sensor\n", __FUNCTION__ );
     return -1;
   }
-
-  this->input_provider = get_att_text( this->fileid, NC_GLOBAL, "input_provider" );
-  if ( NULL == this->input_provider ) {
+  this->short_sensor = CETB_NO_SENSOR;
+  for ( i=0; i< CETB_NUM_SENSORS; i++ ) {
+    if ( 0 == strncmp( cetb_sensor_id_name[i], temp, strlen(temp) ) ) {
+      this->short_sensor = (cetb_sensor_id) i;
+      break;
+    }
+  }
+    
+  temp = get_att_text( this->fileid, NC_GLOBAL, "input_provider" );
+  if ( NULL == temp ) {
     fprintf( stderr, "%s: no input_provider\n", __FUNCTION__ );
     return -1;
   }
-
+  this->input_provider = CETB_NO_PRODUCER;
+  for ( i=0; i< CETB_NUM_PRODUCERS; i++ ) {
+    if ( 0 == strncmp( cetb_swath_producer_id_name[i], temp, strlen(temp) ) ) {
+      this->input_provider = (cetb_swath_producer_id) i;
+      break;
+    }
+  }
+    
   return 0;
 }
       
@@ -424,7 +444,6 @@ int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int m
  * Note that the gsx_version is pulled from the file when it is first opened
  * as a way to check that this is a valid gsx file so this pointer should NOT
  * be nulled in this function
-
  *
  *  Input:
  *    pointer to gsx_struct
@@ -438,9 +457,6 @@ int init_gsx_pointers( gsx_class *this ) {
   int counter;
 
   this->source_file = NULL;
-  this->short_sensor = NULL;
-  this->short_platform = NULL;
-  this->input_provider = NULL;
   this->latitude_loc1 = NULL;
   this->latitude_loc2 = NULL;
   this->latitude_loc3 = NULL;
@@ -517,7 +533,7 @@ gsx_class *get_gsx_file( char *filename ){
 }
 
 /*
- * get_att_text
+ * get_att_text - utility function to pull attribute text from a netcdf file
  *
  *  Input:
  *    fileid - netcdf file id

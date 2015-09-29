@@ -1,5 +1,6 @@
 #include <string.h>
 #include "unity.h"
+#include "cetb.h"
 #include "gsx.h"
 
 
@@ -145,9 +146,9 @@ void test_gsx_short_platform ( void ) {
   gsx = gsx_init( file_name );
   if ( NULL != gsx ){
     fprintf( stderr, "\n%s: netcdf file '%s' with id %d is from '%s' platform\n", \
-	   __FUNCTION__, gsx->source_file, gsx->fileid, gsx->short_platform );
+	   __FUNCTION__, gsx->source_file, gsx->fileid, cetb_platform_id_name[gsx->short_platform] );
   }
-  TEST_ASSERT_TRUE( NULL != gsx->short_platform );
+  TEST_ASSERT_TRUE( CETB_NO_PLATFORM != gsx->short_platform );
   gsx_close( gsx );
 }
 
@@ -158,9 +159,9 @@ void test_gsx_short_sensor ( void ) {
   gsx = gsx_init( file_name );
   if ( NULL != gsx ){
     fprintf( stderr, "%s: netcdf file '%s' with id %d has '%s' sensor\n",	\
-	     __FUNCTION__, gsx->source_file, gsx->fileid, gsx->short_sensor );
+	     __FUNCTION__, gsx->source_file, gsx->fileid, cetb_sensor_id_name[gsx->short_sensor] );
   }
-  TEST_ASSERT_TRUE( NULL != gsx->short_sensor );
+  TEST_ASSERT_TRUE( CETB_NO_SENSOR != gsx->short_sensor );
   gsx_close( gsx );
 }
 
@@ -171,9 +172,9 @@ void test_gsx_input_provider ( void ) {
   gsx = gsx_init( file_name );
   if ( NULL != gsx ){
     fprintf( stderr, "\n%s: netcdf file '%s' with id %d was provided by '%s'\n",	\
-	     __FUNCTION__, gsx->source_file, gsx->fileid, gsx->input_provider );
+	     __FUNCTION__, gsx->source_file, gsx->fileid, cetb_swath_producer_id_name[gsx->input_provider] );
   }
-  TEST_ASSERT_TRUE( NULL != gsx->input_provider );
+  TEST_ASSERT_TRUE( CETB_NO_PRODUCER != gsx->input_provider );
   gsx_close( gsx );
 }
 
