@@ -411,6 +411,7 @@ int cetb_file_open( cetb_file_class *this ) {
  *    diff_threshold : float, BGI diff_threshold in Kelvins
  *                     BGI values further than this threshold from the AVE value are
  *                     reset to AVE value
+ *    median_filter : integer median_filtering flag: 0=off, 1=on
  *
  * output : n/a
  *
@@ -431,7 +432,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  double gamma,
 				  float dimensional_tuning_parameter,
 				  float db_threshold,
-				  float diff_threshold ) {
+				  float diff_threshold,
+				  int median_filter ) {
 
   int status;
   
@@ -469,6 +471,13 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
   if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_diff_threshold",
 				NC_FLOAT, 1, &diff_threshold ) ) {
     fprintf( stderr, "%s: Error setting bgi_diff_threshold: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "bgi_median_filter",
+				NC_INT, 1, &median_filter ) ) {
+    fprintf( stderr, "%s: Error setting bgi_median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
