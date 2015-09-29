@@ -161,12 +161,9 @@ int write_gatt_double_(int *ncid, char *name, double *val)
 int write_gatt_text_(int *ncid, char *name, char *text)
 {
   int stat, stat1;
-  /* re-enter define mode */
-  stat = nc_redef(*ncid);  check_err(stat,__LINE__,__FILE__);
+
   /* write global attribute as text */
    stat1 = nc_put_att_text(*ncid, NC_GLOBAL, name, strlen(text), text); check_err(stat1,__LINE__,__FILE__);  
-  /* leave define mode so we can begin variable writing */
-  stat = nc_enddef(*ncid);  check_err(stat,__LINE__,__FILE__);
   return(stat1);  
 }
 
@@ -274,9 +271,6 @@ int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float
   static size_t wstart[3], wcount[3];
   char str[250];  
 
-  /* re-enter define mode */
-  stat = nc_redef(ncid);  check_err(stat,__LINE__,__FILE__);
-
   /* define custom dimension for this array */
   sprintf(str,"%s_nsx",name);  
   stat = nc_def_dim(ncid, str, nsx, &nsx_dim);  check_err(stat,__LINE__,__FILE__);
@@ -292,8 +286,7 @@ int add_float_array_nc(int ncid, char *name, float *val, int nsx, int nsy, float
 
   /* define variable */
   var_id=define_var_float(ncid, name, name, RANK_2, dims, "N/A", &anodata);
-  /* leave define mode so we can begin variable writing */
-  stat = nc_enddef(ncid);  check_err(stat,__LINE__,__FILE__);
+
   /* write variable */
   stat = nc_put_vara_float(ncid, var_id, wstart, wcount, val); check_err(stat,__LINE__,__FILE__);
 
