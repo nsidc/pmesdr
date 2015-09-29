@@ -523,43 +523,11 @@ int main(int argc, char **argv)
      exit( -1 );
    }
      
-   ncerr=nc_open_file_write_head(cetb->fid, nsx, nsy, iopt, 
-				 ascale, bscale, a0, b0, xdeg, ydeg, 
-				 isday, ieday, ismin, iemin, iyear, iregion, ipol, 
-				 nsx2, nsy2, non_size_x, non_size_y, 
-				 ascale2, bscale2, a02, b02, xdeg2, ydeg2,
-				 a_init, ibeam, nits, median_flag, 
-				 Nfiles_out); check_err(ncerr, __LINE__,__FILE__);
-
-   /* add string information */
-   ncerr=add_string_nc(cetb->fid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
-   sprintf(crproc,"BYU MERS:meas_meta_sir v%f",VERSION);
-   ncerr=add_string_nc(cetb->fid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__);
-   (void) time(&tod);
-   (void) strftime(crtime,28,"%X %x",localtime(&tod));
-   ncerr=add_string_nc(cetb->fid,"Creation_time",crtime,29); check_err(ncerr, __LINE__,__FILE__); 
-
-   /* add product file names */
-   ncerr=add_string_nc(cetb->fid,"a_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"c_name",c_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"e_name",e_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"i_name",i_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"j_name",j_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"v_name",v_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"p_name",p_name,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"a_name_ave",a_name_ave,100); check_err(ncerr, __LINE__,__FILE__);
-   if (CREATE_NON) {
-     ncerr=add_string_nc(cetb->fid,"non_aname",non_aname,100); check_err(ncerr, __LINE__,__FILE__);   
-     ncerr=add_string_nc(cetb->fid,"non_vname",non_vname,100); check_err(ncerr, __LINE__,__FILE__);
-   }   
-   ncerr=add_string_nc(cetb->fid,"grd_aname",grd_aname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"grd_vname",grd_vname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"grd_iname",grd_iname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"grd_jname",grd_jname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"grd_pname",grd_pname,100); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"grd_cname",grd_cname,100); check_err(ncerr, __LINE__,__FILE__);
-
+   if ( 0 != cetb_file_add_sir_parameters( cetb, nits, median_flag ) ) {
+     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FUNCTION__, cetb->filename );
+     exit( -1 );
+   }
+     
    head_len = ftell(imf);
    printf("Input header file length %ld\n",head_len);
    nls=nls-head_len;
@@ -912,15 +880,6 @@ done:
   } else {
     printf( "Dumped Iave (J) SIR '%s'\n", j_name );
   }
-
-  /* this product is not produced for weighted SIR/SIRF
-     if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"c_image",sxy,nsx,nsy,anodata_C ) ) ) {
-     errors++;
-     } else {
-     eprintf( sprintf( "*** ERROR writing Cnt output ***\n" ) );
-     }
-  */
-
 
 /* create STD and Err images */
 
