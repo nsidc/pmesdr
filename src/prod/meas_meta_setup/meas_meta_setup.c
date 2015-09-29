@@ -406,7 +406,6 @@ int main(int argc,char *argv[])
   
   printf("Code version: %s\n",fcdr_input);  
   printf("MEaSures Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
-  gsx_version();
 
   /* optionally get the box size of pixels to use for calculating MRF for each */
   /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
