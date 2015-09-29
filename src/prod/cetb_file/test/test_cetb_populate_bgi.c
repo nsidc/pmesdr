@@ -67,15 +67,17 @@ void test_cetb_populate_bgi_parameters( void ) {
   float dimensional_tuning_parameter=1.0;
   float db_threshold=2.0;
   float diff_threshold=3.0;
+  int median_filter=1;
   double expected_gamma=0.0D;
   float expected_dimensional_tuning_parameter=1.0;
   float expected_db_threshold=2.0;
   float expected_diff_threshold=3.0;
+  int expected_median_filter=1;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
   status = cetb_file_add_bgi_parameters( cetb, gamma, dimensional_tuning_parameter,
-					 db_threshold, diff_threshold );
+					 db_threshold, diff_threshold, median_filter );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_bgi_parameters" );
   cetb_file_close( cetb );
 
@@ -99,6 +101,11 @@ void test_cetb_populate_bgi_parameters( void ) {
   status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_diff_threshold", &diff_threshold );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_FLOAT( expected_diff_threshold, diff_threshold );
+
+  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "bgi_median_filter", &median_filter );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+  TEST_ASSERT_EQUAL_INT( expected_median_filter, median_filter );
+
   nc_close( nc_fileid );
 
 }

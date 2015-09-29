@@ -98,11 +98,12 @@ void test_cetb_populate_bgi_parameters_on_sir_file( void ) {
   float dimensional_tuning_parameter=1.0;
   float db_threshold=2.0;
   float diff_threshold=3.0;
+  int median_filter=1;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
   status = cetb_file_add_bgi_parameters( cetb, gamma, dimensional_tuning_parameter,
-					 db_threshold, diff_threshold );
+					 db_threshold, diff_threshold, median_filter );
   TEST_ASSERT_TRUE_MESSAGE( 0 != status, "cetb_file_add_bgi_parameters" );
   cetb_file_close( cetb );
 
