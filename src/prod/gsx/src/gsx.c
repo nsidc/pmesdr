@@ -18,6 +18,19 @@
 #include "gsx.h"
 
 /*
+ * Private Functions
+ */
+static char *get_att_text( int fileid, int varid, const char* varname );
+static gsx_class *get_gsx_file( char *filename );
+static int get_gsx_dims( gsx_class *this );
+static int get_gsx_global_attributes( gsx_class *this );
+static int get_gsx_global_variables( gsx_class *this );
+static int get_gsx_variable_attributes( gsx_class *this );
+static int get_gsx_positions( gsx_class *this );
+static int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements );
+static int init_gsx_pointers( gsx_class *this );
+
+/*
  * this function takes a gsx file name and opens it as a netCDF4
  * file and returns a pointer to a structure that is populated with
  * the information in the input gsx file
@@ -42,30 +55,30 @@ gsx_class *gsx_init ( char *filename ) {
 
   /* initialize all variable pointers in gsx_struct if you have a gsx file*/
   if ( NULL == this->gsx_version ) { perror( __FUNCTION__ ); return NULL; }
-  status = gsx_init_pointers( this );
+  status = init_gsx_pointers( this );
   if ( 0 != status ) { perror( __FUNCTION__ ); return NULL; }
     
-  /* Now call gsx_get_dims to get more variables */
-  status = gsx_get_dims( this );
+  /* Now call get_gsx_dims to get more variables */
+  status = get_gsx_dims( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_get_dims \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from get_gsx_dims \n", __FUNCTION__ );
     return this;
   }
   
   /* Now get the global attributes */
-  status = gsx_get_global_attributes( this );
+  status = get_gsx_global_attributes( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_get_global_attributes \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from get_gsx_global_attributes \n", __FUNCTION__ );
     return this;
   }
-  status = gsx_get_global_variables( this );
+  status = get_gsx_global_variables( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_get_global_variables \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from get_gsx_global_variables \n", __FUNCTION__ );
     return this;
   }
-  status = gsx_get_variable_attributes( this );
+  status = get_gsx_variable_attributes( this );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: bad return from gsx_get_variable_attributes \n", __FUNCTION__ );
+    fprintf( stderr, "%s: bad return from get_gsx_variable_attributes \n", __FUNCTION__ );
     return this;
   }
   return this;
@@ -143,7 +156,7 @@ void gsx_close ( gsx_class *this ) {
  *    status variable returned 0 on success
  *    
  */
-int gsx_get_dims( gsx_class *this ) {
+int get_gsx_dims( gsx_class *this ) {
   int status;
   int i;
   size_t dim_length;
@@ -205,7 +218,7 @@ int gsx_get_dims( gsx_class *this ) {
  *    status variable returns 0 for success and non-zero on failure
  *    
  */
-int gsx_get_global_attributes( gsx_class *this ) {
+int get_gsx_global_attributes( gsx_class *this ) {
   
   int status;
   int att_len;
@@ -214,25 +227,25 @@ int gsx_get_global_attributes( gsx_class *this ) {
     return -1;
   }
 
-  this->source_file = gsx_att_text( this->fileid, NC_GLOBAL, "gsx_source" );
+  this->source_file = get_att_text( this->fileid, NC_GLOBAL, "gsx_source" );
   if ( NULL == this->source_file ) {
     fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
     return -1;
   }
 
-  this->short_platform = gsx_att_text( this->fileid, NC_GLOBAL, "short_platform" );
+  this->short_platform = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
   if ( NULL == this->source_file ) {
     fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
     return -1;
   }
 
-  this->short_sensor = gsx_att_text( this->fileid, NC_GLOBAL, "short_sensor" );
+  this->short_sensor = get_att_text( this->fileid, NC_GLOBAL, "short_sensor" );
   if ( NULL == this->short_sensor ) {
     fprintf( stderr, "%s: no short_sensor\n", __FUNCTION__ );
     return -1;
   }
 
-  this->input_provider = gsx_att_text( this->fileid, NC_GLOBAL, "input_provider" );
+  this->input_provider = get_att_text( this->fileid, NC_GLOBAL, "input_provider" );
   if ( NULL == this->input_provider ) {
     fprintf( stderr, "%s: no input_provider\n", __FUNCTION__ );
     return -1;
@@ -253,7 +266,7 @@ int gsx_get_global_attributes( gsx_class *this ) {
  *    status variable 0 on success and !=0 on failure
  *    
  */
-int gsx_get_global_variables( gsx_class *this ) {
+int get_gsx_global_variables( gsx_class *this ) {
   int status;
   int att_len;
   int channel_number;
@@ -268,7 +281,7 @@ int gsx_get_global_variables( gsx_class *this ) {
     return -1;
   }
 
-  channel_list = gsx_att_text( this->fileid, NC_GLOBAL, "gsx_variables" );
+  channel_list = get_att_text( this->fileid, NC_GLOBAL, "gsx_variables" );
   channel_ptr = channel_list;
 
   count = 0;
@@ -299,7 +312,7 @@ int gsx_get_global_variables( gsx_class *this ) {
  *    status is returned 0 on success and !=0 on failure
  *    
  */
-int gsx_get_variable_attributes( gsx_class *this ) {
+int get_gsx_variable_attributes( gsx_class *this ) {
   int status;
   int att_len;
   int varid;
@@ -340,14 +353,19 @@ int gsx_get_variable_attributes( gsx_class *this ) {
 
     dim_ptr = strstr( dimname, "_loc1");
     if ( NULL != dim_ptr ) { //scans_loc1 and measurements_loc1 for this variable
-      status = gsx_get_temperature( this, varid, count, this->scans_loc1, this->measurements_loc1 );
+      status = get_gsx_temperature( this, varid, count, this->scans_loc1, this->measurements_loc1 );
     }
 
     dim_ptr = strstr( dimname, "_loc2");
     if ( NULL != dim_ptr ) { //scans_loc2 and measurements_loc2 for this variable
-      status = gsx_get_temperature( this, varid, count, this->scans_loc2, this->measurements_loc2 );
+      status = get_gsx_temperature( this, varid, count, this->scans_loc2, this->measurements_loc2 );
     }
     
+    dim_ptr = strstr( dimname, "_loc3");
+    if ( NULL != dim_ptr ) { //scans_loc3 and measurements_loc3 for this variable
+      status = get_gsx_temperature( this, varid, count, this->scans_loc3, this->measurements_loc3 );
+    }
+
     if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue) ) {
       fprintf( stderr, "%s: no fill value attribute for %s variable\n", \
 	       __FUNCTION__, this->channel_names[count] );
@@ -356,7 +374,7 @@ int gsx_get_variable_attributes( gsx_class *this ) {
     this->fillvalue = fillvalue;
   }
 
-  status = gsx_get_positions( this );
+  status = get_gsx_positions( this );
 
   return 0;
 }
@@ -374,7 +392,7 @@ int gsx_get_variable_attributes( gsx_class *this ) {
  *    returns 0 on success and !=0 on failures
  *    
  */
-int gsx_get_positions( gsx_class *this ) {
+int get_gsx_positions( gsx_class *this ) {
   int status;
 
   status = 0;
@@ -383,7 +401,7 @@ int gsx_get_positions( gsx_class *this ) {
 
 }
 
-int gsx_get_temperature( gsx_class *this, int varid, int count, int scans, int measurements ) {
+int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
   this->brightness_temps[count] = (float *)malloc( sizeof(float)*scans*measurements );
@@ -415,7 +433,7 @@ int gsx_get_temperature( gsx_class *this, int varid, int count, int scans, int m
  *    status = 0 on success !=0 on failure
  *    
  */
-int gsx_init_pointers( gsx_class *this ) {
+int init_gsx_pointers( gsx_class *this ) {
   int status=0;
   int counter;
 
@@ -499,7 +517,7 @@ gsx_class *get_gsx_file( char *filename ){
 }
 
 /*
- * gsx_get_att_text
+ * get_att_text
  *
  *  Input:
  *    fileid - netcdf file id
@@ -511,7 +529,7 @@ gsx_class *get_gsx_file( char *filename ){
  *    NULL is returned on failure
  *
  */
-char *gsx_att_text( int fileid, int varid, const char* varname ) {
+char *get_att_text( int fileid, int varid, const char* varname ) {
   int status=0;
   int att_len;
   char *att_text;
