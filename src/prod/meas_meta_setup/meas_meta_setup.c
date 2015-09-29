@@ -29,6 +29,7 @@
 #include <math.h>
 #endif
 
+#include "gsx.h"
 #include <sir3.h>
 
 #define prog_version 0.3 /* program version */
@@ -301,6 +302,7 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 
 int box_size_by_channel( int ibeam, char *short_sensor );
 
+
 /****************************************************************************/
 
 int main(int argc,char *argv[])
@@ -404,6 +406,7 @@ int main(int argc,char *argv[])
   
   printf("Code version: %s\n",fcdr_input);  
   printf("MEaSures Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
+  gsx_version();
 
   /* optionally get the box size of pixels to use for calculating MRF for each */
   /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
@@ -925,10 +928,12 @@ int main(int argc,char *argv[])
 	  /* define size of box centered at(ix2,iy2) in which the gain response 
 	     is computed for each pixel in the box and tested to see if
 	     the response exceeds a threshold.  if so, it is used */
+
 	  box_size = box_size_by_channel( ibeam, "SSMI" ); // pending adding gsx->short_sensor
 	  if ( box_size < 0 ) {
 	    exit -1;
 	  }
+
 	  ixsize=dscale*box_size; 
 	  iysize=dscale*box_size;
 	  if (ixsize<1) ixsize=1;
