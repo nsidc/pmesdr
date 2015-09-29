@@ -63,14 +63,14 @@ void tearDown( void ) {
 void test_cetb_populate_bgi_parameters( void ) {
 
   int nc_fileid=0;
-  float gamma=0.0D;
-  float dimensional_tuning_parameter=1.0D;
-  float db_threshold=2.0D;
-  float diff_threshold=3.0D;
-  float expected_gamma=0.0D;
-  float expected_dimensional_tuning_parameter=1.0D;
-  float expected_db_threshold=2.0D;
-  float expected_diff_threshold=3.0D;
+  double gamma=0.0D;
+  float dimensional_tuning_parameter=1.0;
+  float db_threshold=2.0;
+  float diff_threshold=3.0;
+  double expected_gamma=0.0D;
+  float expected_dimensional_tuning_parameter=1.0;
+  float expected_db_threshold=2.0;
+  float expected_diff_threshold=3.0;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
@@ -83,9 +83,9 @@ void test_cetb_populate_bgi_parameters( void ) {
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
-  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_gamma", &gamma );
+  status = nc_get_att_double( nc_fileid, NC_GLOBAL, "bgi_gamma", &gamma );
   TEST_ASSERT_TRUE( NC_NOERR == status );
-  TEST_ASSERT_EQUAL_FLOAT( expected_gamma, gamma );
+  TEST_ASSERT_EQUAL_DOUBLE( expected_gamma, gamma );
 
   status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
 			     &dimensional_tuning_parameter );
