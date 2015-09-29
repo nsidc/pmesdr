@@ -29,6 +29,7 @@
 #include <math.h>
 #endif
 
+#include "gsx.h"
 #include <sir3.h>
 
 #define prog_version 0.3 /* program version */
@@ -300,6 +301,7 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 		      float ascale, float bscale, float a0, float b0);
 
 int box_size_by_channel( int ibeam, char *short_sensor );
+
 
 /****************************************************************************/
 
@@ -925,10 +927,12 @@ int main(int argc,char *argv[])
 	  /* define size of box centered at(ix2,iy2) in which the gain response 
 	     is computed for each pixel in the box and tested to see if
 	     the response exceeds a threshold.  if so, it is used */
+
 	  box_size = box_size_by_channel( ibeam, "SSMI" ); // pending adding gsx->short_sensor
 	  if ( box_size < 0 ) {
 	    exit -1;
 	  }
+
 	  ixsize=dscale*box_size; 
 	  iysize=dscale*box_size;
 	  if (ixsize<1) ixsize=1;
