@@ -420,7 +420,8 @@ int main(int argc, char **argv)
      exit( -1 );
    }
      
-   if ( 0 != cetb_file_add_bgi_parameters( cetb, bgi_gamma, delta2, ithres, difthres, median_flag ) ) {
+   if ( 0 != cetb_file_add_bgi_parameters( cetb, bgi_gamma, omega, delta2,
+					   ithres, difthres, median_flag ) ) {
      fprintf( stderr, "%s: Error adding BGI parameters to %s.\n", __FUNCTION__, cetb->filename );
      exit( -1 );
    }

@@ -406,6 +406,7 @@ int cetb_file_open( cetb_file_class *this ) {
  *            gamma rangins from 0 to pi/2
  *    dimensional_tuning_parameter : float, BGI dimensional tuning parameter value
  *            ATBD says dimensional-tuning parameter should be 0.001
+ *    noise_variance : float, BGI noise variance parameter value, in K^2
  *    db_threshold : float, BGI db_threshold (determines size of neighborhood for
  *                   measurements to be used in BGI matrix)
  *    diff_threshold : float, BGI diff_threshold in Kelvins
@@ -431,6 +432,7 @@ int cetb_file_open( cetb_file_class *this ) {
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  double gamma,
 				  float dimensional_tuning_parameter,
+				  float noise_variance,
 				  float db_threshold,
 				  float diff_threshold,
 				  int median_filter ) {
@@ -457,6 +459,13 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
   if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
 				NC_FLOAT, 1, &dimensional_tuning_parameter ) ) {
     fprintf( stderr, "%s: Error setting bgi_dimensional_tuning_parameter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_noise_variance",
+				NC_FLOAT, 1, &noise_variance ) ) {
+    fprintf( stderr, "%s: Error setting bgi_noise_variance: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
