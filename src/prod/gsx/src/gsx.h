@@ -76,10 +76,6 @@ static const char *gsx_variable_attributes[] = {
 int gsx_version ( gsx_class *this );
 gsx_class *gsx_init ( char *filename );
 void gsx_close ( gsx_class *this );
-/*
- * private functions
- */
-char *gsx_att_text( int fileid, int varid, const char* varname );
-gsx_class *get_gsx_file( char *filename );
+
 #endif // gsx_H
 
