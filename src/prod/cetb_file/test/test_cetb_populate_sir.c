@@ -94,14 +94,14 @@ void test_cetb_populate_sir_parameters( void ) {
 void test_cetb_populate_bgi_parameters_on_sir_file( void ) {
 
   int nc_fileid=0;
-  double gamma=0.0D;
-  double dimensionless=1.0D;
-  double db_threshold=2.0D;
-  double diff_threshold=3.0D;
+  float gamma=0.0D;
+  float dimensional_tuning_parameter=1.0D;
+  float db_threshold=2.0D;
+  float diff_threshold=3.0D;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
-  status = cetb_file_add_bgi_parameters( cetb, gamma, dimensionless,
+  status = cetb_file_add_bgi_parameters( cetb, gamma, dimensional_tuning_parameter,
 					 db_threshold, diff_threshold );
   TEST_ASSERT_TRUE_MESSAGE( 0 != status, "cetb_file_add_bgi_parameters" );
   cetb_file_close( cetb );

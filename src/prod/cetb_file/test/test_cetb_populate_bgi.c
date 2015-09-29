@@ -1,5 +1,5 @@
 /*
- * test_cetb_populate - Unit tests for populating cetb_file objects
+ * test_cetb_populate_bgi - Unit tests for populating cetb_file objects
  *
  * 01-Sep-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
@@ -14,7 +14,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char filename[ FILENAME_MAX ];
+char test_filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 cetb_region_id region_id;
 int factor;
@@ -35,7 +35,7 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( filename, "" );
+  strcpy( test_filename, "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.BGI.CSU.v0.1.nc" );
   strcpy( dirname, "./test" );
   region_id = CETB_EASE2_N;
   factor = 0;
@@ -45,15 +45,14 @@ void setUp( void ) {
   doy = 1;
   beam_id = 1;
   direction_id = CETB_MORNING_PASSES;
-  reconstruction_id = CETB_SIR;
+  reconstruction_id = CETB_BGI;
   producer_id = CETB_CSU;
 
   cetb = cetb_file_init( dirname,
 			 region_id, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
-			    cetb->filename );
+  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   
 }
 
@@ -61,51 +60,62 @@ void tearDown( void ) {
 
 }
 
-void test_cetb_populate_sir_parameters( void ) {
+void test_cetb_populate_bgi_parameters( void ) {
+
+  int nc_fileid=0;
+  float gamma=0.0D;
+  float dimensional_tuning_parameter=1.0D;
+  float db_threshold=2.0D;
+  float diff_threshold=3.0D;
+  float expected_gamma=0.0D;
+  float expected_dimensional_tuning_parameter=1.0D;
+  float expected_db_threshold=2.0D;
+  float expected_diff_threshold=3.0D;
+  
+  status = cetb_file_open( cetb );
+  TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
+  status = cetb_file_add_bgi_parameters( cetb, gamma, dimensional_tuning_parameter,
+					 db_threshold, diff_threshold );
+  TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_bgi_parameters" );
+  cetb_file_close( cetb );
+
+  /* Confirm the expected values are in the output file */
+  status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+
+  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_gamma", &gamma );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+  TEST_ASSERT_EQUAL_FLOAT( expected_gamma, gamma );
+
+  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
+			     &dimensional_tuning_parameter );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+  TEST_ASSERT_EQUAL_FLOAT( expected_dimensional_tuning_parameter, dimensional_tuning_parameter );
+
+  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_db_threshold", &db_threshold );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+  TEST_ASSERT_EQUAL_FLOAT( expected_db_threshold, db_threshold );
+
+  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_diff_threshold", &diff_threshold );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+  TEST_ASSERT_EQUAL_FLOAT( expected_diff_threshold, diff_threshold );
+  nc_close( nc_fileid );
+
+}
+
+void test_cetb_populate_sir_parameters_on_bgi_file( void ) {
 
   int nc_fileid=0;
   int nits=20;
   int median_filter=1;
-  int expected_nits=20;
-  int expected_median_filter=1;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
   status = cetb_file_add_sir_parameters( cetb, nits, median_filter );
-  TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_sir_parameters" );
-  cetb_file_close( cetb );
-
-  /* Confirm the expected values are in the output file */
-  status = nc_open( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
-		    NC_NOWRITE, &nc_fileid );
-  TEST_ASSERT_TRUE( NC_NOERR == status );
-
-  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "sir_number_of_iterations", &nits );
-  TEST_ASSERT_TRUE( NC_NOERR == status );
-  TEST_ASSERT_EQUAL_INT( expected_nits, nits );
-
-  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "sir_median_filter", &median_filter );
-  TEST_ASSERT_TRUE( NC_NOERR == status );
-  TEST_ASSERT_EQUAL_INT( expected_median_filter, median_filter );
-  nc_close( nc_fileid );
-  
-}
-
-void test_cetb_populate_bgi_parameters_on_sir_file( void ) {
-
-  int nc_fileid=0;
-  double gamma=0.0D;
-  double dimensionless=1.0D;
-  double db_threshold=2.0D;
-  double diff_threshold=3.0D;
-  
-  status = cetb_file_open( cetb );
-  TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
-  status = cetb_file_add_bgi_parameters( cetb, gamma, dimensionless,
-					 db_threshold, diff_threshold );
-  TEST_ASSERT_TRUE_MESSAGE( 0 != status, "cetb_file_add_bgi_parameters" );
+  TEST_ASSERT_TRUE_MESSAGE( 0 != status, "cetb_file_add_sir_parameters" );
   cetb_file_close( cetb );
 
 }
+
 
     
