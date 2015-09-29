@@ -65,11 +65,13 @@ void test_cetb_populate_bgi_parameters( void ) {
   int nc_fileid=0;
   double gamma=0.0D;
   float dimensional_tuning_parameter=1.0;
+  float noise_variance=1.5;
   float db_threshold=2.0;
   float diff_threshold=3.0;
   int median_filter=1;
   double expected_gamma=0.0D;
   float expected_dimensional_tuning_parameter=1.0;
+  float expected_noise_variance=1.5;
   float expected_db_threshold=2.0;
   float expected_diff_threshold=3.0;
   int expected_median_filter=1;
@@ -77,6 +79,7 @@ void test_cetb_populate_bgi_parameters( void ) {
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
   status = cetb_file_add_bgi_parameters( cetb, gamma, dimensional_tuning_parameter,
+					 noise_variance,
 					 db_threshold, diff_threshold, median_filter );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_bgi_parameters" );
   cetb_file_close( cetb );
@@ -93,6 +96,11 @@ void test_cetb_populate_bgi_parameters( void ) {
 			     &dimensional_tuning_parameter );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_FLOAT( expected_dimensional_tuning_parameter, dimensional_tuning_parameter );
+
+  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_noise_variance",
+			     &noise_variance );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+  TEST_ASSERT_EQUAL_FLOAT( expected_noise_variance, noise_variance );
 
   status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_db_threshold", &db_threshold );
   TEST_ASSERT_TRUE( NC_NOERR == status );

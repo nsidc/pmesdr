@@ -231,6 +231,7 @@ int cetb_file_open( cetb_file_class *this );
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  double gamma,
 				  float dimensional_tuning_parameter,
+				  float noise_variance,
 				  float db_threshold,
 				  float diff_threshold,
 				  int median_flag );
