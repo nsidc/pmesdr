@@ -420,34 +420,12 @@ int main(int argc, char **argv)
      exit( -1 );
    }
      
-   ncerr=nc_open_file_write_head(cetb->fid, nsx, nsy, iopt, 
-				 ascale, bscale, a0, b0, xdeg, ydeg, 
-				 isday, ieday, ismin, iemin, iyear, iregion, ipol, 
-				 nsx2, nsy2, non_size_x, non_size_y, 
-				 ascale2, bscale2, a02, b02, xdeg2, ydeg2,
-				 a_init, ibeam, nits, median_flag, 
-				 Nfiles_out); check_err(ncerr, __LINE__,__FILE__);
-
-   /* add string information */
-   ncerr=add_string_nc(cetb->fid,"Region_name",regname,10); check_err(ncerr, __LINE__,__FILE__);
-   ncerr=add_string_nc(cetb->fid,"Sensor_name",sensor_in,40); check_err(ncerr, __LINE__,__FILE__);
-   sprintf(crproc,"BYU MERS:meas_meta_bgi v1.0 g=%f d2=%f thres=%f",bgi_gamma,delta2,ithres);
-   ncerr=add_string_nc(cetb->fid,"Creator",crproc,101); check_err(ncerr, __LINE__,__FILE__); 
-   (void) time(&tod);
-   (void) strftime(crtime,28,"%X %x",localtime(&tod));
-   ncerr=add_string_nc(cetb->fid,"Creation_time",crtime,29); check_err(ncerr, __LINE__,__FILE__); 
-
-
-   /* generate BG output name */
-   s=strncpy(line,a_name,100);
-   s=strchr(line,'.');
-   if (s != NULL) *s ='\0';
-   sprintf(a_name,"%s.bgi",line);
-
-   /* add product file names */
-   ncerr=add_string_nc(cetb->fid,"bgi_name",a_name,100); check_err(ncerr, __LINE__,__FILE__);
-
-
+   if ( 0 != cetb_file_add_bgi_parameters( cetb, bgi_gamma, omega, delta2,
+					   ithres, difthres, median_flag ) ) {
+     fprintf( stderr, "%s: Error adding BGI parameters to %s.\n", __FUNCTION__, cetb->filename );
+     exit( -1 );
+   }
+     
    head_len = ftell(imf);
    printf("Input header file length %ld\n",head_len);
    nls=nls-head_len;
