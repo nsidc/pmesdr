@@ -249,6 +249,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   }
   this->platform_id = platform_id;
   this->sensor_id = sensor_id;
+  this->reconstruction_id = reconstruction_id;
   
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s%s.%s_%s.%4.4d%3.3d.%3s.%s.%s.%s.%s.nc",
@@ -391,6 +392,153 @@ int cetb_file_open( cetb_file_class *this ) {
 
   free( software_version );
   free( time_stamp );
+
+  return 0;
+  
+}
+
+/*
+ * cetb_file_add_bgi_parameters - Add BGI-specific global file attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *    gamma : double, BGI "noise-tuning" parameter gamma
+ *            gamma rangins from 0 to pi/2
+ *    dimensional_tuning_parameter : float, BGI dimensional tuning parameter value
+ *            ATBD says dimensional-tuning parameter should be 0.001
+ *    noise_variance : float, BGI noise variance parameter value, in K^2
+ *    db_threshold : float, BGI db_threshold (determines size of neighborhood for
+ *                   measurements to be used in BGI matrix)
+ *    diff_threshold : float, BGI diff_threshold in Kelvins
+ *                     BGI values further than this threshold from the AVE value are
+ *                     reset to AVE value
+ *    median_filter : integer median_filtering flag: 0=off, 1=on
+ *
+ * output : n/a
+ *
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is populated with BGI-specific global attributes
+ *
+ * Reference : See definitions for tuning parameters at
+ *
+ * Brodzik, M. J. and D. G. Long.  2015. Calibrated Passive
+ * Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR
+ * (CETB) Algorithm Theoretical Basis Document. MEaSUREs Project
+ * White Paper.  NSIDC.  Boulder, CO.
+ * http://nsidc.org/pmesdr/files/2015/09/MEaSUREs_CETB_ATBD_v0.10.pdf
+ *
+ */
+int cetb_file_add_bgi_parameters( cetb_file_class *this,
+				  double gamma,
+				  float dimensional_tuning_parameter,
+				  float noise_variance,
+				  float db_threshold,
+				  float diff_threshold,
+				  int median_filter ) {
+
+  int status;
+  
+  if ( !this ) {
+    fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
+    return 1;
+  }
+
+  if ( CETB_BGI != this->reconstruction_id ) {
+    fprintf( stderr, "%s: Cannot set BGI parameters on non-BGI file.\n", __FUNCTION__ );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_gamma",
+				   NC_DOUBLE, 1, &gamma ) ) {
+    fprintf( stderr, "%s: Error setting bgi_gamma: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
+				NC_FLOAT, 1, &dimensional_tuning_parameter ) ) {
+    fprintf( stderr, "%s: Error setting bgi_dimensional_tuning_parameter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_noise_variance",
+				NC_FLOAT, 1, &noise_variance ) ) {
+    fprintf( stderr, "%s: Error setting bgi_noise_variance: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_db_threshold",
+				NC_FLOAT, 1, &db_threshold ) ) {
+    fprintf( stderr, "%s: Error setting bgi_db_threshold: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_diff_threshold",
+				NC_FLOAT, 1, &diff_threshold ) ) {
+    fprintf( stderr, "%s: Error setting bgi_diff_threshold: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "bgi_median_filter",
+				NC_INT, 1, &median_filter ) ) {
+    fprintf( stderr, "%s: Error setting bgi_median_filter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  return 0;
+  
+}
+
+/*
+ * cetb_file_add_sir_parameters - Add SIR-specific global file attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *    number_of_iterations : integer SIR nits
+ *    median_filter : integer median_filtering flag: 0=off, 1=on
+ *
+ * output : n/a
+ *
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is populated with SIR-specific global attributes
+ *
+ */
+int cetb_file_add_sir_parameters( cetb_file_class *this,
+				  int number_of_iterations,
+				  int median_filter ) {
+
+  int status;
+  
+  if ( !this ) {
+    fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
+    return 1;
+  }
+
+  if ( CETB_SIR != this->reconstruction_id ) {
+    fprintf( stderr, "%s: Cannot set SIR parameters on non-SIR file.\n", __FUNCTION__ );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_number_of_iterations",
+				NC_INT, 1, &number_of_iterations ) ) {
+    fprintf( stderr, "%s: Error setting sir_number_of_iterations: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_median_filter",
+				NC_INT, 1, &median_filter ) ) {
+    fprintf( stderr, "%s: Error setting sir_median_filter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
 
   return 0;
   

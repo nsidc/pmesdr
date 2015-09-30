@@ -4,6 +4,7 @@
  * 01-Sep-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
+#include <netcdf.h>
 #include <string.h>
 #include "unity.h"
 #include "cetb_file.h"
@@ -75,4 +76,3 @@ void test_cetb_open( void ) {
   TEST_ASSERT_TRUE( 0 == status );
   
 }
-

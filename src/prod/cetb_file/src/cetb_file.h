@@ -213,6 +213,7 @@ typedef struct {
   char *filename;
   cetb_platform_id platform_id;
   cetb_sensor_id sensor_id;
+  cetb_reconstruction_id reconstruction_id;
 } cetb_file_class;
 
 cetb_file_class *cetb_file_init( char *dirname,
@@ -227,6 +228,16 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_reconstruction_id reconstruction_id,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
+int cetb_file_add_bgi_parameters( cetb_file_class *this,
+				  double gamma,
+				  float dimensional_tuning_parameter,
+				  float noise_variance,
+				  float db_threshold,
+				  float diff_threshold,
+				  int median_flag );
+int cetb_file_add_sir_parameters( cetb_file_class *this,
+				  int number_of_iterations,
+				  int median_flag );
 void cetb_file_close( cetb_file_class *this );
 
 #endif // cetb_file_H
