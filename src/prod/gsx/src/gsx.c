@@ -29,6 +29,8 @@ static int get_gsx_variable_attributes( gsx_class *this );
 static int get_gsx_positions( gsx_class *this );
 static int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements );
 static int init_gsx_pointers( gsx_class *this );
+static int assign_channels( gsx_class *this, char *token );
+static int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 );
 
 /*
  * this function takes a gsx file name and opens it as a netCDF4
@@ -296,6 +298,7 @@ int get_gsx_global_variables( gsx_class *this ) {
   char *token;
   char *channel_ptr;
   char *space=" ";
+  char *temp;
 
   if ( NULL == this ) {
     return -1;
@@ -304,18 +307,25 @@ int get_gsx_global_variables( gsx_class *this ) {
   channel_list = get_att_text( this->fileid, NC_GLOBAL, "gsx_variables" );
   channel_ptr = channel_list;
 
-  count = 0;
   while ( NULL != channel_ptr ) {
     token = strsep( &channel_ptr, delim );
     if ( 0 == strncmp( space, token, 1 ) ) token++;
     att_len = strlen( token );
-    this->channel_names[count] = (char*)malloc( (size_t) att_len+1 );
-    strcpy( this->channel_names[count], token );
-    count++;
+    /* now match the channel name to the channel enum */
+    status = assign_channels( this, token );
   }
-  *(this->channel_names[count-1]+att_len) = '\0';
-  
-  this->channel_number = count;
+  //  *(this->channel_names[count-1]+att_len) = '\0';
+
+  switch ( this->short_sensor ) {
+  case CETB_SSMI:
+    this->channel_number = SSMI_NUM_CHANNELS;
+    break;
+  case CETB_AMSRE:
+    this->channel_number = AMSRE_NUM_CHANNELS;
+    break;
+  default:
+    fprintf( stderr, "%s: sensor not implemented yet \n", __FUNCTION__ );
+  }
   free( channel_list );
 
   return 0;
@@ -334,18 +344,14 @@ int get_gsx_global_variables( gsx_class *this ) {
  */
 int get_gsx_variable_attributes( gsx_class *this ) {
   int status;
-  int att_len;
   int varid;
-  char *delim=" ";
   int count;
-  char *token;
-  char *dim_ptr;
   float fillvalue;
   nc_type var_type;
   int ndims;
   int dimid[2];
-  int natts;
-  char *dimname;
+  int dim1;
+  int dim2;
 
   if ( NULL == this ) {
     return -1;
@@ -354,44 +360,24 @@ int get_gsx_variable_attributes( gsx_class *this ) {
   for ( count=0; count<this->channel_number; count++ ) {
 
     if ( status = nc_inq_varid( this->fileid, this->channel_names[count], &varid ) ) {
-      fprintf( stderr, "%s: file id %d %d count '%s', error : %s\n",	\
-	       __FUNCTION__, this->fileid, count, this->channel_names[count], nc_strerror( status ) );
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, this->channel_names[count], nc_strerror( status ) );
       return -1;
     }
 
-    if ( status = nc_inq_vardimid( this->fileid, varid, dimid ) ) {
-      fprintf( stderr, "%s: couldn't get %s dimension ids\n", __FUNCTION__, this->channel_names[count] );
+    status = get_gsx_dimensions( this, varid, &dim1, &dim2 );
+    if ( 0 != status ) {
+      fprintf( stderr, "%s: couldn't get dimensions for %s\n", __FUNCTION__, this->channel_names[count] );
       return -1;
-    }
-
-    dimname = (char *)malloc(NC_MAX_NAME+1);
-    if ( status = nc_inq_dimname( this->fileid, dimid[0], dimname ) ) {
-      fprintf( stderr, "%s: couldn't get %s dimension name from id %d\n", \
-	       __FUNCTION__, this->channel_names[count], dimid[0] );
-      return -1;
-    }
-
-    dim_ptr = strstr( dimname, "_loc1");
-    if ( NULL != dim_ptr ) { //scans_loc1 and measurements_loc1 for this variable
-      status = get_gsx_temperature( this, varid, count, this->scans_loc1, this->measurements_loc1 );
-    }
-
-    dim_ptr = strstr( dimname, "_loc2");
-    if ( NULL != dim_ptr ) { //scans_loc2 and measurements_loc2 for this variable
-      status = get_gsx_temperature( this, varid, count, this->scans_loc2, this->measurements_loc2 );
     }
     
-    dim_ptr = strstr( dimname, "_loc3");
-    if ( NULL != dim_ptr ) { //scans_loc3 and measurements_loc3 for this variable
-      status = get_gsx_temperature( this, varid, count, this->scans_loc3, this->measurements_loc3 );
-    }
+    status = get_gsx_temperature( this, varid, count, dim1, dim2 );
 
-    if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue) ) {
-      fprintf( stderr, "%s: no fill value attribute for %s variable\n", \
-	       __FUNCTION__, this->channel_names[count] );
+    if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue ) ) {
+      fprintf( stderr, "%s: could get fillvalue from %s\n", __FUNCTION__, this->channel_names[count] );
       return -1;
     }
-    this->fillvalue = fillvalue;
+    this->fillvalue[count] = fillvalue;
   }
 
   status = get_gsx_positions( this );
@@ -402,8 +388,7 @@ int get_gsx_variable_attributes( gsx_class *this ) {
 /*
  * this function takes a gsx_class struct and gets the position variables
  * file and returns a pointer to a structure that is populated with the
- * lat and lons as well as the spacecraft position per scan line and the angles
- * along the scan lines
+ * lat and lons as well and the angles along the scan lines
  *
  *  Input:
  *    gsx_class structure
@@ -414,9 +399,13 @@ int get_gsx_variable_attributes( gsx_class *this ) {
  */
 int get_gsx_positions( gsx_class *this ) {
   int status;
+  int i;
 
   status = 0;
+  /* for each channel name this routine retrieves the lat, lon, eia and eaz for each position */
 
+  //  for ( i=0; i<this->channel_number; i++ )
+    // first get dimension id
   return status;
 
 }
@@ -569,5 +558,103 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
   return att_text;
 }
 
+/*
+ * assign_channels
+ *  - this function assigns the channels read in from the gsx file into the beam order
+ *    that is expected by setup - this order is used across the system to correctly identify
+ *    channels from each other
+ *
+ *  Input:
+ *    gsx_class *this
+ *    channel name read from the gsx_variables global attribute
+ *
+ *  Result:
+ *    id number of the channel in cetb.h
+ *
+ */
+int assign_channels( gsx_class *this, char *token ) {
+  int status;
+  int count;
 
+  if ( NULL == this ) {
+    return -1;
+  }
+  
+  switch ( this->short_sensor ) {
+  case CETB_SSMI:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_ssmi_channel_name[count], token ) ) && count < (int) SSMI_NUM_CHANNELS ) count++;
+    this->channel_names[count] = (char*)malloc( strlen(token) + 1 );
+    strcpy( this->channel_names[count], token );
+    *(this->channel_names[count]+strlen(token)) = '\0';
+    status = 0;
+    break;
+  case CETB_AMSRE:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_amsre_channel_name[count], token ) ) && count < (int) AMSRE_NUM_CHANNELS ) count++;
+    this->channel_names[count] = (char*)malloc( strlen(token) + 1 );
+    strcpy( this->channel_names[count], token );
+    status = 0;
+    break;
+  default:
+    status = -1;
+  }
+
+  return status;
+}
+
+/*
+ * function to get dimension values for a variable
+ *
+ *  Input:
+ *    gsx_class *this - pointer to gsx structure
+ *    int varid - the ncdf id of the variable whose dimensions are needed
+ *
+ *  Output:
+ *    number of rows (scans) and columns (measurements)
+ *
+ *  Result:
+ *    status is 0 upon success and != 0 upon failure
+ *
+ */
+int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
+  int status;
+  int dimid[2];
+  char *dimname;
+  char *dim_ptr;
+  
+  if ( status = nc_inq_vardimid( this->fileid, varid, dimid ) ) {
+    fprintf( stderr, "%s: couldn't get varid %d dimension ids\n", __FUNCTION__, varid );
+    return -1;
+  }
+
+  dimname = (char *)malloc(NC_MAX_NAME+1);
+  if ( status = nc_inq_dimname( this->fileid, dimid[0], dimname ) ) {
+    fprintf( stderr, "%s: couldn't get %d dimension name from id %d\n", \
+	     __FUNCTION__, varid, dimid[0] );
+    return -1;
+  }
+  
+  dim_ptr = strstr( dimname, "_loc1" );
+  if ( NULL != dim_ptr ) {
+    *dim1 = this->scans_loc1;
+    *dim2 = this->measurements_loc1;
+    status = 0;
+  }
+  dim_ptr = strstr( dimname, "_loc2" );
+  if ( NULL != dim_ptr ) {
+    *dim1 = this->scans_loc2;
+    *dim2 = this->measurements_loc2;
+    status = 0;
+  }
+  dim_ptr = strstr( dimname, "_loc3" );
+  if ( NULL != dim_ptr ) {
+    *dim1 = this->scans_loc3;
+    *dim2 = this->measurements_loc3;
+    status = 0;
+  }
+  return status;
+}
+
+      
   

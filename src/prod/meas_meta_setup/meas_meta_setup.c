@@ -29,6 +29,7 @@
 #include <math.h>
 #endif
 
+#include "cetb.h"
 #include "gsx.h"
 #include <sir3.h>
 
@@ -377,6 +378,16 @@ int main(int argc,char *argv[])
   int krec = 0; /* total scans considered */
   int mcnt=0;
 
+  /*
+   * begin to add in GSX variables
+   */
+  gsx_class *gsx=NULL;
+  int gsx_count;
+  char *csu;
+  char *gsx_fname;
+  int csu_length;
+  int counter;
+
 #ifdef DEBUG_RESPONSE
   FILE *resp_debug;
   char debug_response_out_name[]="debug_response.out";  
@@ -515,7 +526,9 @@ int main(int argc,char *argv[])
   while(flag) { /* meta file read loop 1050 */     
     /* printf("Read meta file input file name\n"); */
     
-  label_330:; /* read next input line (file name) from meta file */   
+  label_330:; /* read next input line (file name) from meta file */
+    /* before reading in the next file, free the memory from the previous gsx pointer */
+    if ( NULL != gsx ) gsx_close( gsx );
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
@@ -560,11 +573,35 @@ int main(int argc,char *argv[])
 #else
     file_read_error=read_ssmiCSU_TB(fname, d, 1);
 #endif
+    /*
+     * read file into gsx_class variable
+     * if it's a CSU file get the GSX filename by prepending GSX to the name
+     * temporary section to get GSX file from CSU ncdf file to test reading in gsx data
+     */
+    csu = strstr( fname, "CSU" );
+    if ( NULL != csu ) {
+      gsx = NULL;
+      csu = strrchr( fname, '/' );
+      gsx_fname = (char *)malloc( strlen(fname)+4 );
+      csu_length = (int)(csu-fname)+1;
+      strncpy( gsx_fname, fname, csu_length );
+      strncpy( gsx_fname+strlen(gsx_fname), "GSX_", 4 );
+      strcpy( gsx_fname+strlen(gsx_fname), fname+csu_length );
+      gsx = gsx_init( gsx_fname ); // for now a NULL return will come back from a bad filename OR an RSS binary file
+      counter = 0;
+    }
+    if ( NULL == gsx ) {
+      fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
+      //goto label_330;
+    }
     if (file_read_error < 0) {
       fprintf(stderr,"*** error reading %s\n  skipping...\n",fname);
       goto label_330;   /* skip reading file on error */
     }
     printf("Satellite %d  orbit %d  scans %d\n",d->KSAT,d->IORBIT,d->NUMSCAN);
+    fflush( stderr );
+    if ( NULL != gsx ) fprintf( stderr, "%s: Satellite %d  platform %d  scans %d\n", \
+	     __FUNCTION__, gsx->short_sensor, gsx->short_platform, gsx->scans_loc1 );
 
     /* extract values of interest */
     nscans=d->NUMSCAN;
@@ -743,28 +780,42 @@ int main(int argc,char *argv[])
 	  }
 
 	  /* for this beam, get measurement, geometry, and location */
-
-	  switch (ibeam) {
+	  if ( NULL != gsx ) {
+	    gsx_count = ssmi_channel_mapping[ibeam];
+	    counter++;
+	    if ( 0 == (( counter ) % 1000) ) {
+	      fprintf( stderr, "%s: processed %d gsx temperatures\n", __FUNCTION__, counter );
+	      fflush( stderr );
+	    }
+	  }
+	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
 	    tb=d->CEL_19H[i+ilow*LO_SCAN];             /*Tb measurement value */
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 2:
 	    tb=d->CEL_19V[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;	    
 	  case 3:
 	    tb=d->CEL_22V[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 4:
 	    tb=d->CEL_37H[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 5:
 	    tb=d->CEL_37V[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 6:
 	    tb=d->CEL_85H[i+iscan*HI_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
 	    break;
 	  case 7:
 	    tb=d->CEL_85V[i+iscan*HI_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[ibeam]+i+iscan*HI_SCAN);
 	    break;
 	  default:
 	    printf("**** beam specification error \n");
@@ -929,6 +980,7 @@ int main(int argc,char *argv[])
 	     the response exceeds a threshold.  if so, it is used */
 
 	  box_size = box_size_by_channel( ibeam, "SSMI" ); // pending adding gsx->short_sensor
+	  if ( NULL != gsx ) box_size = box_size_by_channel( ibeam, cetb_sensor_id_name[gsx->short_sensor] ); 
 	  if ( box_size < 0 ) {
 	    exit -1;
 	  }

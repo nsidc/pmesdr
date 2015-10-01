@@ -196,7 +196,7 @@ static const char *cetb_swath_producer_id_name[] = {
 /*
  * Maximum lengths of channel strings, including null char
  */
-#define CHANNEL_STR_LENGTH 4
+#define CHANNEL_STR_LENGTH 6
 
 /* Maximum generic string length */
 #define MAX_STR_LENGTH 100
@@ -205,17 +205,18 @@ static const char *cetb_swath_producer_id_name[] = {
  * SSM/I channel IDs
  */
 typedef enum {
-  SSMI_19H=1,
+  SSMI_NO_CHANNEL=-1,
+  SSMI_19H,
   SSMI_19V,
   SSMI_22V,
   SSMI_37H,
   SSMI_37V,
   SSMI_85H,
-  SSMI_85V
+  SSMI_85V,
+  SSMI_NUM_CHANNELS
 } ssmi_channel_id;
   
-static const char *ssmi_channel_name[] = {
-  "XXX",
+static const char *cetb_ssmi_channel_name[] = {
   "19H",
   "19V",
   "22V",
@@ -225,11 +226,33 @@ static const char *ssmi_channel_name[] = {
   "85V"
 };
 
+static const char *gsx_ssmi_channel_name[] = {
+  "brightness_temperature_19H",
+  "brightness_temperature_19V",
+  "brightness_temperature_22V",
+  "brightness_temperature_37H",
+  "brightness_temperature_37V",
+  "brightness_temperature_85H",
+  "brightness_temperature_85V"
+};
+
+static const int ssmi_channel_mapping[] = {
+  -1,
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+};
+
 /*
  * AMSR-E channel IDs
  */
 typedef enum {
-  AMSRE_06H=1,
+  AMSRE_NO_CHANNEL=-1,
+  AMSRE_06H,
   AMSRE_06V,
   AMSRE_10H,
   AMSRE_10V,
@@ -239,26 +262,64 @@ typedef enum {
   AMSRE_23V,
   AMSRE_36H,
   AMSRE_36V,
-  AMSRE_89H,
-  AMSRE_89V
+  AMSRE_89H_A,
+  AMSRE_89V_A,
+  AMSRE_89H_B,
+  AMSRE_89V_B,
+  AMSRE_NUM_CHANNELS
 } amsre_channel_id;
   
 /*
  * AMSR-E channel ID names
  */
-static const char *amsre_channel_name[] = {
-  "XXX",
+static const char *cetb_amsre_channel_name[] = {
   "06H",
   "06V",
-  "10H",
-  "10V",
+  "10.7H",
+  "10.7V",
   "18H",
   "18V",
   "23H",
   "23V",
   "36H",
   "36V",
-  "89H",
-  "89V"
+  "89H_A",
+  "89V_A",
+  "89H_B",
+  "89V_B"
+};
+
+static const char *gsx_amsre_channel_name[] = {
+  "brightness_temperature_7H",
+  "brightness_temperature_7V",
+  "brightness_temperature_10.7H",
+  "brightness_temperature_10.7V",
+  "brightness_temperature_18H",
+  "brightness_temperature_18V",
+  "brightness_temperature_23H",
+  "brightness_temperature_23V",
+  "brightness_temperature_37H",
+  "brightness_temperature_37V",
+  "brightness_temperature_89H_A",
+  "brightness_temperature_89V_A",
+  "brightness_temperature_89H_B",
+  "brightness_temperature_89V_B"
+};
+
+static const int amsre_channel_mapping[] = {
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14
 };
 

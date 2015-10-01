@@ -9,6 +9,7 @@ char *file_name;
 void setUp(void)
 {
   file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc" );
+  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200308080121_D.nc" );
 }
 
 void tearDown(void)
@@ -208,13 +209,16 @@ void test_gsx_channel_names ( void ) {
 void test_gsx_fill_value ( void ) {
   gsx_class *gsx;
   int status;
+  int counter;
 
   gsx = gsx_init( file_name );
   if ( NULL != gsx ){
     fprintf( stderr, "\n%s: netcdf file '%s', fill value for '%s' is %f\n",	\
 	     __FUNCTION__, gsx->source_file, gsx->channel_names[1], gsx->fillvalue );
   }
-  TEST_ASSERT_TRUE( -100.0 == gsx->fillvalue );
+  for ( counter=0; counter<gsx->channel_number; counter++ ) {
+    TEST_ASSERT_TRUE( -100.0 == gsx->fillvalue[counter] );
+  }
   gsx_close( gsx );
 }
 
@@ -230,9 +234,10 @@ void test_gsx_temperature ( void ) {
 	       gsx->channel_names[counter], \
 	       *(gsx->brightness_temps[counter]+1000),	\
 	       *(gsx->brightness_temps[counter]+1001) );
+      TEST_ASSERT_TRUE( NULL != gsx->brightness_temps[counter] );
     }
   }
-  TEST_ASSERT_TRUE( -100.0 == gsx->fillvalue );
+
   gsx_close( gsx );
 }
 
