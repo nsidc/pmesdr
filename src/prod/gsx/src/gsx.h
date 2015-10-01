@@ -27,13 +27,12 @@ typedef struct {
   int measurements_loc2;
   int measurements_loc3;
   char *source_file;
-  //char *short_sensor;
   cetb_sensor_id short_sensor;
   cetb_platform_id short_platform;
   cetb_swath_producer_id input_provider;
   char *channel_names[GSX_MAX_CHANNELS];
   int channel_number;
-  float fillvalue;
+  float fillvalue[GSX_MAX_CHANNELS];
   float *efov[GSX_MAX_CHANNELS];
   float *latitude_loc1;
   float *latitude_loc2;
@@ -57,6 +56,7 @@ typedef struct {
   float *eaz_loc2;
   float *eaz_loc3;
   float *brightness_temps[GSX_MAX_CHANNELS];
+  int orbit;
 } gsx_class;
 
 static const char *gsx_variable_attributes[] = {
