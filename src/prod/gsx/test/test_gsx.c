@@ -213,11 +213,11 @@ void test_gsx_fill_value ( void ) {
 
   gsx = gsx_init( file_name );
   if ( NULL != gsx ){
-    fprintf( stderr, "\n%s: netcdf file '%s', fill value for '%s' is %f\n",	\
-	     __FUNCTION__, gsx->source_file, gsx->channel_names[1], gsx->fillvalue );
-  }
-  for ( counter=0; counter<gsx->channel_number; counter++ ) {
-    TEST_ASSERT_TRUE( -100.0 == gsx->fillvalue[counter] );
+    for ( counter=0; counter<gsx->channel_number; counter++ ) {
+      TEST_ASSERT_TRUE( -100.0 == gsx->fillvalue[counter] );
+      fprintf( stderr, "%s: fill value for '%s' is %f\n", \
+	       __FUNCTION__, gsx->channel_names[counter], gsx->fillvalue[counter] );
+    }
   }
   gsx_close( gsx );
 }
@@ -241,4 +241,20 @@ void test_gsx_temperature ( void ) {
   gsx_close( gsx );
 }
 
+void test_gsx_efov ( void ) {
+  gsx_class *gsx;
+  int status;
+  int counter;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    for ( counter=0; counter<gsx->channel_number; counter++ ) {
+      fprintf( stderr, "\n%s: efov for %s is %f by %f\n", \
+	       __FUNCTION__, gsx->channel_names[counter], *gsx->efov[counter], *(gsx->efov[counter]+1) );
+      TEST_ASSERT_TRUE( 0.0 != *gsx->efov[counter] );
+      TEST_ASSERT_TRUE( 0.0 != *(gsx->efov[counter]+1) );
+    }
+  }
+  gsx_close( gsx );
+}
 

@@ -352,6 +352,7 @@ int get_gsx_variable_attributes( gsx_class *this ) {
   int dimid[2];
   int dim1;
   int dim2;
+  char *efov;
 
   if ( NULL == this ) {
     return -1;
@@ -374,10 +375,25 @@ int get_gsx_variable_attributes( gsx_class *this ) {
     status = get_gsx_temperature( this, varid, count, dim1, dim2 );
 
     if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue ) ) {
-      fprintf( stderr, "%s: could get fillvalue from %s\n", __FUNCTION__, this->channel_names[count] );
+      fprintf( stderr, "%s: couldn't get fillvalue from %s\n", __FUNCTION__, this->channel_names[count] );
       return -1;
     }
     this->fillvalue[count] = fillvalue;
+
+    efov = get_att_text( this->fileid, varid, "gsx_field_of_view" );
+    if ( status = nc_inq_varid( this->fileid, efov, &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, efov, nc_strerror( status ) );
+      return -1;
+    }
+    this->efov[count] = (float*)malloc(2*sizeof(float));
+    if ( status = nc_get_var_float( this->fileid, varid, this->efov[count] ) ) {
+      fprintf( stderr, "%s: couldn't get efov %s for error : %s\n",	\
+	       __FUNCTION__, this->fileid, this->efov[count], nc_strerror( status ) );
+      return -1;
+    }
+
+    
   }
 
   status = get_gsx_positions( this );
