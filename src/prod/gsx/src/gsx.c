@@ -568,7 +568,6 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
       return NULL;
     }
     *(att_text+att_len) = '\0';
-    fprintf( stderr, "%s: attribute text for %s is %s\n", __FUNCTION__, varname, att_text );
   }
   
   return att_text;
