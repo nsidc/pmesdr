@@ -87,7 +87,14 @@ void test_gsx_dim_scans_loc1 ( void ) {
   gsx = gsx_init( file_name );
   fprintf( stderr, "\n%s: netcdf file %s with id %d has %d lo res scans\n",\
 	   __FUNCTION__, file_name, gsx->fileid, gsx->scans_loc1 );
-  TEST_ASSERT_TRUE( gsx->scans_loc1 == 1605 );
+  switch (gsx->short_sensor) {
+  case CETB_SSMI:
+    TEST_ASSERT_TRUE( gsx->scans_loc1 > 1000 );
+    break;
+  case CETB_AMSRE:
+    TEST_ASSERT_TRUE( gsx->scans_loc1 > 1000 );
+    break;
+  }
   gsx_close( gsx );
 }
 
@@ -99,10 +106,35 @@ void test_gsx_dim_scans_loc2 ( void ) {
     fprintf( stderr, "\n%s: netcdf file %s with id %d has %d hi/loc2 res scans\n", \
 	     __FUNCTION__, file_name, gsx->fileid, gsx->scans_loc2 );
   } 
-  TEST_ASSERT_TRUE( gsx->scans_loc2 == 3210 );
+  switch (gsx->short_sensor) {
+  case CETB_SSMI:
+    TEST_ASSERT_TRUE( gsx->scans_loc2 > 3000 );
+    break;
+  case CETB_AMSRE:
+    TEST_ASSERT_TRUE( gsx->scans_loc2 > 1000 );
+    break;
+  }
   gsx_close( gsx );
 }
 
+void test_gsx_dim_scans_loc3 ( void ) {
+  gsx_class *gsx;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    fprintf( stderr, "\n%s: netcdf file %s with id %d has %d hi/loc3 res scans\n", \
+	     __FUNCTION__, file_name, gsx->fileid, gsx->scans_loc3 );
+  }
+  switch (gsx->short_sensor) {
+  case CETB_SSMI:
+    TEST_ASSERT_TRUE( gsx->scans_loc3 == 0 );
+    break;
+  case CETB_AMSRE:
+    TEST_ASSERT_TRUE( gsx->scans_loc3 > 1000 );
+    break;
+  }
+  gsx_close( gsx );
+}
 void test_gsx_dim_measurements_loc1 ( void ) {
   gsx_class *gsx;
 
@@ -111,10 +143,36 @@ void test_gsx_dim_measurements_loc1 ( void ) {
     fprintf( stderr, "\n%s: netcdf file %s with id %d has %d loc1 res measurements per scan\n", \
 	     __FUNCTION__, file_name, gsx->fileid, gsx->measurements_loc1 );
   }
-  TEST_ASSERT_TRUE( gsx->measurements_loc1 == 64 );
+  switch (gsx->short_sensor) {
+  case CETB_SSMI:
+    TEST_ASSERT_TRUE( gsx->measurements_loc1 == 64 );
+    break;
+  case CETB_AMSRE:
+    TEST_ASSERT_TRUE( gsx->measurements_loc1 > 100 );
+    break;
+  }
   gsx_close( gsx );
 }
   
+void test_gsx_dim_measurements_loc3 ( void ) {
+  gsx_class *gsx;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    fprintf( stderr, "\n%s: netcdf file %s with id %d has %d loc3 res measurements per scans\n", \
+	   __FUNCTION__, file_name, gsx->fileid, gsx->measurements_loc3 );
+  } 
+  switch (gsx->short_sensor) {
+  case CETB_SSMI:
+    TEST_ASSERT_TRUE( gsx->measurements_loc3 == 0 );
+    break;
+  case CETB_AMSRE:
+    TEST_ASSERT_TRUE( gsx->measurements_loc3 > 200 );
+    break;
+  }
+  gsx_close( gsx );
+}
+
 void test_gsx_dim_measurements_loc2 ( void ) {
   gsx_class *gsx;
 
@@ -123,7 +181,14 @@ void test_gsx_dim_measurements_loc2 ( void ) {
     fprintf( stderr, "\n%s: netcdf file %s with id %d has %d loc2 res measurements per scans\n", \
 	   __FUNCTION__, file_name, gsx->fileid, gsx->measurements_loc2 );
   } 
-  TEST_ASSERT_TRUE( gsx->measurements_loc2 == 128 );
+  switch (gsx->short_sensor) {
+  case CETB_SSMI:
+    TEST_ASSERT_TRUE( gsx->measurements_loc2 == 128 );
+    break;
+  case CETB_AMSRE:
+    TEST_ASSERT_TRUE( gsx->measurements_loc2 > 200 );
+    break;
+  }
   gsx_close( gsx );
 }
 
