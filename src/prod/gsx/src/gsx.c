@@ -109,31 +109,19 @@ void gsx_close ( gsx_class *this ) {
   /* free the malloc'd arrays before you free the gsx_struct */
   if ( NULL != this->gsx_version ) free( this->gsx_version );
   if ( NULL != this->source_file ) free( this->source_file );
-  if ( NULL != this->latitude_loc1 ) free( this->latitude_loc1 );
-  if ( NULL != this->latitude_loc2 ) free( this->latitude_loc2 );
-  if ( NULL != this->latitude_loc3 ) free( this->latitude_loc3 );
-  if ( NULL != this->longitude_loc1 ) free( this->longitude_loc1 );
-  if ( NULL != this->longitude_loc2 ) free( this->longitude_loc2 );
-  if ( NULL != this->longitude_loc3 ) free( this->longitude_loc3 );
-  if ( NULL != this->sc_latitude_loc1 ) free( this->sc_latitude_loc1 );
-  if ( NULL != this->sc_latitude_loc2 ) free( this->sc_latitude_loc2 );
-  if ( NULL != this->sc_latitude_loc3 ) free( this->sc_latitude_loc3 );
-  if ( NULL != this->sc_longitude_loc1 ) free( this->sc_longitude_loc1 );
-  if ( NULL != this->sc_longitude_loc2 ) free( this->sc_longitude_loc2 );
-  if ( NULL != this->sc_longitude_loc3 ) free( this->sc_longitude_loc3 );
-  if ( NULL != this->scantime_loc1 ) free( this->scantime_loc1 );
-  if ( NULL != this->scantime_loc2 ) free( this->scantime_loc2 );
-  if ( NULL != this->scantime_loc3 ) free( this->scantime_loc3 );
-  if ( NULL != this->eia_loc1 ) free( this->eia_loc1 );
-  if ( NULL != this->eia_loc2 ) free( this->eia_loc2 );
-  if ( NULL != this->eia_loc3 ) free( this->eia_loc3 );
-  if ( NULL != this->eaz_loc1 ) free( this->eaz_loc1 );
-  if ( NULL != this->eaz_loc2 ) free( this->eaz_loc2 );
-  if ( NULL != this->eaz_loc3 ) free( this->eaz_loc3 );
   for ( counter=0; counter<this->channel_number; counter++ ) {
     if ( NULL != this->channel_names[counter] ) free( this->channel_names[counter] );
     if ( NULL != this->efov[counter] ) free( this->efov[counter] );
     if ( NULL != this->brightness_temps[counter] ) free( this->brightness_temps[counter] );
+  }
+  for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
+    if ( NULL != this->latitude[counter] ) free( this->latitude[counter] );
+    if ( NULL != this->longitude[counter] ) free( this->longitude[counter] );
+    if ( NULL != this->eia[counter] ) free( this->eia[counter] );
+    if ( NULL != this->eaz[counter] ) free( this->eaz[counter] );
+    if ( NULL != this->sc_latitude[counter] ) free( this->sc_latitude[counter] );
+    if ( NULL != this->sc_longitude[counter] ) free( this->sc_longitude[counter] );
+    if ( NULL != this->scantime[counter] ) free( this->scantime[counter] );
   }
   free( this );
   return;
@@ -389,11 +377,9 @@ int get_gsx_variable_attributes( gsx_class *this ) {
     this->efov[count] = (float*)malloc(2*sizeof(float));
     if ( status = nc_get_var_float( this->fileid, varid, this->efov[count] ) ) {
       fprintf( stderr, "%s: couldn't get efov %s for error : %s\n",	\
-	       __FUNCTION__, this->fileid, this->efov[count], nc_strerror( status ) );
+	       __FUNCTION__, efov, nc_strerror( status ) );
       return -1;
     }
-
-    
   }
 
   status = get_gsx_positions( this );
@@ -416,11 +402,54 @@ int get_gsx_variable_attributes( gsx_class *this ) {
 int get_gsx_positions( gsx_class *this ) {
   int status;
   int i;
+  int varid;
+  int scans;
+  int measurements;
 
   status = 0;
-  /* for each channel name this routine retrieves the lat, lon, eia and eaz for each position */
+  /* for each set of position (i.e. loc1, loc2, loc3 this routine retrieves the lat, lon, eia and eaz for each position */
 
-  //  for ( i=0; i<this->channel_number; i++ )
+  for ( i=0; i<GSX_MAX_DIMS; i++) {
+    if ( 0 == i && this->scans_loc1 != 0 ) {
+      scans = this->scans_loc1;
+      measurements = this->measurements_loc1;
+    } else if ( 1 == i && this->scans_loc2 != 0 ) {
+      scans = this->scans_loc2;
+      measurements = this->measurements_loc2;
+    } else if ( 2 == i && this->scans_loc3 != 0 ) {
+      scans = this->scans_loc3;
+      measurements = this->measurements_loc3;
+    } else {
+      return 0;
+    }
+    if ( status = nc_inq_varid( this->fileid, gsx_latitudes[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_latitudes[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_latitudes( this, varid, i, scans, measurements );
+      
+    if ( status = nc_inq_varid( this->fileid, gsx_longitudes[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_longitudes[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_longitudes( this, varid, i, scans, measurements );
+      
+    if ( status = nc_inq_varid( this->fileid, gsx_eias[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_eias[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_eias( this, varid, i, scans, measurements );
+
+    if ( status = nc_inq_varid( this->fileid, gsx_eazs[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_eazs[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_eazs( this, varid, i, scans, measurements );
+  }    
     // first get dimension id
   return status;
 
@@ -442,6 +471,70 @@ int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int m
   return status;
 }
   
+int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->latitude[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->latitude[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->latitude[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving latitudes\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+
+int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->longitude[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->longitude[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->longitude[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving longitudes\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+
+int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->eia[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->eia[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->eia[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving ei angles\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+
+int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->eaz[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->eaz[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->eaz[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving eaz angle\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+ 
 /*
  * this function takes a gsx_class structure and sets all pointers
  * EXCEPT for gsx_version to NULL
@@ -462,31 +555,19 @@ int init_gsx_pointers( gsx_class *this ) {
   int counter;
 
   this->source_file = NULL;
-  this->latitude_loc1 = NULL;
-  this->latitude_loc2 = NULL;
-  this->latitude_loc3 = NULL;
-  this->longitude_loc1 = NULL;
-  this->longitude_loc2 = NULL;
-  this->longitude_loc3 = NULL;
-  this->sc_latitude_loc1 = NULL;
-  this->sc_latitude_loc2 = NULL;
-  this->sc_latitude_loc3 = NULL;
-  this->sc_longitude_loc1 = NULL;
-  this->sc_longitude_loc2 = NULL;
-  this->sc_longitude_loc3 = NULL;
-  this->scantime_loc1 = NULL;
-  this->scantime_loc2 = NULL;
-  this->scantime_loc3 = NULL;
-  this->eia_loc1 = NULL;
-  this->eia_loc2 = NULL;
-  this->eia_loc3 = NULL;
-  this->eaz_loc1 = NULL;
-  this->eaz_loc2 = NULL;
-  this->eaz_loc3 = NULL;
   for ( counter=0; counter < GSX_MAX_CHANNELS; counter++ ) {
     this->channel_names[counter] = NULL;
     this->efov[counter] = NULL;
     this->brightness_temps[counter] = NULL;
+  }
+  for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
+    this->latitude[counter] = NULL;
+    this->longitude[counter] = NULL;
+    this->eia[counter] = NULL;
+    this->eaz[counter] = NULL;
+    this->sc_latitude[counter] = NULL;
+    this->sc_longitude[counter] = NULL;
+    this->scantime[counter] = NULL;
   }
 
   return status;

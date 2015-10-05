@@ -8,7 +8,7 @@
 #define gsx_H
 
 #define ALIGNMENT 64
-#define GSX_MAX_DIMS 10 // max number of dimension variables in file
+#define GSX_MAX_DIMS 3 // max number of dimension variables in file
 #define GSX_MAX_CHANNELS 20 // max expected number of channels per platform
 #define SENSOR_MAX 10 // max number of characters in the short sensor name
 #define PLATFORM_MAX 10 // max number of characters in the short platform name
@@ -34,27 +34,13 @@ typedef struct {
   int channel_number;
   float fillvalue[GSX_MAX_CHANNELS];
   float *efov[GSX_MAX_CHANNELS];
-  float *latitude_loc1;
-  float *latitude_loc2;
-  float *latitude_loc3;
-  float *longitude_loc1;
-  float *longitude_loc2;
-  float *longitude_loc3;
-  float *sc_latitude_loc1;
-  float *sc_latitude_loc2;
-  float *sc_latitude_loc3;
-  float *sc_longitude_loc1;
-  float *sc_longitude_loc2;
-  float *sc_longitude_loc3;
-  double *scantime_loc1;
-  double *scantime_loc2;
-  double *scantime_loc3;
-  float *eia_loc1;
-  float *eia_loc2;
-  float *eia_loc3;
-  float *eaz_loc1;
-  float *eaz_loc2;
-  float *eaz_loc3;
+  float *latitude[GSX_MAX_DIMS];
+  float *longitude[GSX_MAX_DIMS];
+  float *sc_latitude[GSX_MAX_DIMS];
+  float *sc_longitude[GSX_MAX_DIMS];
+  double *scantime[GSX_MAX_DIMS];
+  float *eia[GSX_MAX_DIMS];
+  float *eaz[GSX_MAX_DIMS];
   float *brightness_temps[GSX_MAX_CHANNELS];
   int orbit;
 } gsx_class;
@@ -71,6 +57,29 @@ static const char *gsx_variable_attributes[] = {
   "gsx_incidence_angle"
 };
 
+static const char *gsx_latitudes[] = {
+  "latitude_loc1",
+  "latitude_loc2",
+  "latitude_loc3"
+};
+
+static const char *gsx_longitudes[] = {
+  "longitude_loc1",
+  "longitude_loc2",
+  "longitude_loc3"
+};
+
+static const char *gsx_eias[] = {
+  "earth_incidence_angle_loc1",
+  "earth_incidence_angle_loc2",
+  "earth_incidence_angle_loc3"
+};
+
+static const char *gsx_eazs[] = {
+  "earth_azimuth_angle_loc1",
+  "earth_azimuth_angle_loc2",
+  "earth_azimuth_angle_loc3"
+};
 /*
  * public functions
  */
