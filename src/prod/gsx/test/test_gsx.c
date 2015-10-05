@@ -9,6 +9,7 @@ char *file_name;
 void setUp(void)
 {
   file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc" );
+  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_RSS_SSMI_FCDR_V07R00_F13_D19970302_S0321_E0513_R10006.nc" );
   //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200308080121_D.nc" );
 }
 
@@ -323,3 +324,91 @@ void test_gsx_efov ( void ) {
   gsx_close( gsx );
 }
 
+void test_gsx_loc1_variables ( void ) {
+  gsx_class *gsx;
+  int i=0;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ) {
+    fprintf( stderr, "\n%s: netcdf file '%s' has these loc1 variables\n", __FUNCTION__, gsx->source_file ); 
+    fprintf( stderr, "\t on latitude_loc1, longitude_loc1 eia_loc1, eaz_loc1\n" );
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \n",	\
+	     *(gsx->latitude[i]+1000), \
+	     *(gsx->longitude[i]+1000), \
+	     *(gsx->eia[i]+1000),	\
+	     *(gsx->eaz[i]+1000) );
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \n", \
+	     *(gsx->latitude[i]+1001), \
+	     *(gsx->longitude[i]+1001), \
+	     *(gsx->eia[i]+1001),	\
+	     *(gsx->eaz[i]+1001) );
+
+    TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
+  }
+
+  gsx_close( gsx );
+}
+
+void test_gsx_loc2_variables ( void ) {
+  gsx_class *gsx;
+  int i=1;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ) {
+    fprintf( stderr, "\n%s: netcdf file '%s' has these loc2 variables\n", __FUNCTION__, gsx->source_file ); 
+    fprintf( stderr, "\t on latitude_loc2, longitude_loc2 eia_loc2, eaz_loc2\n" );
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \n",	\
+	     *(gsx->latitude[i]+1000), \
+	     *(gsx->longitude[i]+1000), \
+	     *(gsx->eia[i]+1000),	\
+	     *(gsx->eaz[i]+1000) );
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \n", \
+	     *(gsx->latitude[i]+1001), \
+	     *(gsx->longitude[i]+1001), \
+	     *(gsx->eia[i]+1001),	\
+	     *(gsx->eaz[i]+1001) );
+
+    TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
+  }
+
+  gsx_close( gsx );
+}
+
+void test_gsx_loc3_variables ( void ) {
+  gsx_class *gsx;
+  int i=0;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ) {
+    if ( 0 != gsx->scans_loc3 ) {
+      fprintf( stderr, "\n%s: netcdf file '%s' has these loc3 variables\n", __FUNCTION__, gsx->source_file ); 
+      fprintf( stderr, "\t on latitude_loc3, longitude_loc3 eia_loc3, eaz_loc3\n" );
+      fprintf( stderr, "\t %f \t %f \t %f \t %f \n",	\
+	       *(gsx->latitude[i]+1000), \
+	       *(gsx->longitude[i]+1000), \
+	       *(gsx->eia[i]+1000),	\
+	       *(gsx->eaz[i]+1000) );
+      fprintf( stderr, "\t %f \t %f \t %f \t %f \n", \
+	       *(gsx->latitude[i]+1001), \
+	       *(gsx->longitude[i]+1001), \
+	       *(gsx->eia[i]+1001),	\
+	       *(gsx->eaz[i]+1001) );
+
+      TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
+      TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
+      TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
+      TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
+    } else {
+      fprintf( stderr, "%s: There are no loc3 variables in this file %s\n", \
+	       __FUNCTION__, gsx->source_file );
+    }
+  }
+
+  gsx_close( gsx );
+}

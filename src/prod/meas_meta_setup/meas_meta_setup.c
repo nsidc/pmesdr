@@ -783,10 +783,10 @@ int main(int argc,char *argv[])
 	  if ( NULL != gsx ) {
 	    gsx_count = ssmi_channel_mapping[ibeam];
 	    counter++;
-	    if ( 0 == (( counter ) % 1000) ) {
-	      fprintf( stderr, "%s: processed %d gsx temperatures\n", __FUNCTION__, counter );
-	      fflush( stderr );
-	    }
+	    //if ( 0 == (( counter ) % 10000) ) {
+	      //fprintf( stderr, "%s: processed %d gsx temperatures\n", __FUNCTION__, counter );
+	      //fflush( stderr );
+	    //}
 	  }
 	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
@@ -815,7 +815,7 @@ int main(int argc,char *argv[])
 	    break;
 	  case 7:
 	    tb=d->CEL_85V[i+iscan*HI_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[ibeam]+i+iscan*HI_SCAN);
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
 	    break;
 	  default:
 	    printf("**** beam specification error \n");
@@ -1125,17 +1125,13 @@ int main(int argc,char *argv[])
 	    fwrite(response_array,2,count,save_area.reg_lu[iregion]);
 	    fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);		  
 	  }
-
-	label_3400:; /* end of regions loop */
+          label_3400:; /* end of regions loop */
 	}
-      /*      label_3401:; /* end of measurements loop */
+        label_3401:; /* end of measurements loop */
       }
-      
-    label_350:; /* end of scan loop */
+      label_350:; /* end of scan loop */
     }
-
-
-  label_3501:;  /* end of input file */
+    label_3501:;  /* end of input file */
     /* printf("end of input file\n"); */
 
     /* input file has been processed */
