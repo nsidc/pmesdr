@@ -791,7 +791,7 @@ int main(int argc,char *argv[])
 
 	  /* for this beam, get measurement, geometry, and location */
 	  if ( NULL != gsx ) {
-	    gsx_count = ssmi_channel_mapping[ibeam];
+	    gsx_count = gsx_ibeam_to_cetb_ssmi_channel[ibeam];
 	  }
 	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
@@ -1672,15 +1672,6 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(&xdeg2,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&ydeg2,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      /*
-           write (reg_lu[iregion]) irecords
-           write (reg_lu[iregion]) nsx,nsy,ascale,bscale,a0,b0,xdeg,ydeg
-           write (reg_lu[iregion]) dstart,dend,mstart,mend,year,regnum,projt,
-     $          ipolar,latl,lonl,lath,lonh,regname
-           write (reg_lu[iregion]) nsx2,nsy2,non_size_x,non_size_y,
-     $          ascale2,bscale2,a02,b02,xdeg2,ydeg2
-		      */
-
 
 		      /* now add optional 100 char records
 			 with tagged variable values */
@@ -1786,15 +1777,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      } else {
 			if (strstr(line,"End_product_file_names") != NULL) {
 			  flag_files=0;
-			  /*  don't write out the End_header line until gsx info is inserted into header
-			    if (flag_out) {
-			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-			    for(z=0;z<100;z++)lin[z]=' ';
-			    sprintf(lin," End_header");
-			    fwrite(lin,100,1,a->reg_lu[iregion-1]);
-			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-			  }
-			  */
+			  /*  don't write out the End_header line until gsx info is inserted into header */
 			} else 
 			  if (flag_out) {
 			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);

@@ -101,7 +101,7 @@ static const char *gsx_ssmi_channel_name[] = {
  * ibeam = 1 will have the mapping 0 in the C code
  *
  */
-static const int ssmi_channel_mapping[] = {
+static const int gsx_ibeam_to_cetb_ssmi_channel[] = {
   -1,
   0,
   1,
@@ -129,7 +129,7 @@ static const char *gsx_amsre_channel_name[] = {
   "brightness_temperature_89V_B"
 };
 
-static const int amsre_channel_mapping[] = {
+static const int gsx_ibeam_to_cetb_amsre_channel[] = {
   1,
   2,
   3,
