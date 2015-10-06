@@ -31,6 +31,10 @@ static int get_gsx_temperature( gsx_class *this, int varid, int count, int scans
 static int init_gsx_pointers( gsx_class *this );
 static int assign_channels( gsx_class *this, char *token );
 static int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 );
+static int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements );
 
 /*
  * this function takes a gsx file name and opens it as a netCDF4
@@ -455,6 +459,20 @@ int get_gsx_positions( gsx_class *this ) {
 
 }
 
+/*
+ * get_gsx_temperatures - retrieves a channel's worth of tb's from GSX file
+ *
+ *  Input:
+ *    this - gsx_class pointer
+ *    varid - the NCDF variable id for the channel
+ *    count - the entry into the list of channels in the file
+ *    scans - number of scans for this channel
+ *    measurements - number of measurements across the scan line
+ *
+ *  Return:
+ *    status variable 0 == success, !=0 failure
+ *
+ */
 int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
@@ -470,7 +488,21 @@ int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int m
 
   return status;
 }
-  
+
+/*
+ * get_gsx_latitudes - returns latitude values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
 int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
@@ -487,6 +519,21 @@ int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int mea
   return status;
 }
 
+/*
+ * get_gsx_longitudes - returns longitude values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
+
 int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
@@ -502,7 +549,20 @@ int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int me
 
   return status;
 }
-
+/*
+ * get_gsx_eias - returns eia values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
 int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
@@ -519,6 +579,20 @@ int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurem
   return status;
 }
 
+/*
+ * get_gsx_eazs - returns eaz values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
 int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
