@@ -15,3 +15,4 @@ emacs-config.el
 *.o
 *.loc
 *.pyc
+lib*.a
