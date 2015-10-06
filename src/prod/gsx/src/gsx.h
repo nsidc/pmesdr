@@ -80,6 +80,72 @@ static const char *gsx_eazs[] = {
   "earth_azimuth_angle_loc2",
   "earth_azimuth_angle_loc3"
 };
+
+static const char *gsx_ssmi_channel_name[] = {
+  "brightness_temperature_19H",
+  "brightness_temperature_19V",
+  "brightness_temperature_22V",
+  "brightness_temperature_37H",
+  "brightness_temperature_37V",
+  "brightness_temperature_85H",
+  "brightness_temperature_85V"
+};
+
+/*
+ * this mapping is set to match the way SSMI beams are defined in meas_meta_setup and
+ * in meas_meta_make
+ *
+ * in those routines, ibeam = 1 is set for 19H and on up to ibeam = 7 for 85 V
+ *
+ * starting at -1 allows the code to have normal C arrays that begin at 0, i.e.
+ * ibeam = 1 will have the mapping 0 in the C code
+ *
+ */
+static const int ssmi_channel_mapping[] = {
+  -1,
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+};
+
+static const char *gsx_amsre_channel_name[] = {
+  "brightness_temperature_7H",
+  "brightness_temperature_7V",
+  "brightness_temperature_10.7H",
+  "brightness_temperature_10.7V",
+  "brightness_temperature_18H",
+  "brightness_temperature_18V",
+  "brightness_temperature_23H",
+  "brightness_temperature_23V",
+  "brightness_temperature_37H",
+  "brightness_temperature_37V",
+  "brightness_temperature_89H_A",
+  "brightness_temperature_89V_A",
+  "brightness_temperature_89H_B",
+  "brightness_temperature_89V_B"
+};
+
+static const int amsre_channel_mapping[] = {
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14
+};
+
 /*
  * public functions
  */

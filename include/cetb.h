@@ -214,7 +214,7 @@ typedef enum {
   SSMI_85H,
   SSMI_85V,
   SSMI_NUM_CHANNELS
-} ssmi_channel_id;
+} cetb_ssmi_channel_id;
   
 static const char *cetb_ssmi_channel_name[] = {
   "19H",
@@ -224,27 +224,6 @@ static const char *cetb_ssmi_channel_name[] = {
   "37V",
   "85H",
   "85V"
-};
-
-static const char *gsx_ssmi_channel_name[] = {
-  "brightness_temperature_19H",
-  "brightness_temperature_19V",
-  "brightness_temperature_22V",
-  "brightness_temperature_37H",
-  "brightness_temperature_37V",
-  "brightness_temperature_85H",
-  "brightness_temperature_85V"
-};
-
-static const int ssmi_channel_mapping[] = {
-  -1,
-  0,
-  1,
-  2,
-  3,
-  4,
-  5,
-  6
 };
 
 /*
@@ -267,7 +246,7 @@ typedef enum {
   AMSRE_89H_B,
   AMSRE_89V_B,
   AMSRE_NUM_CHANNELS
-} amsre_channel_id;
+} cetb_amsre_channel_id;
   
 /*
  * AMSR-E channel ID names
@@ -289,37 +268,5 @@ static const char *cetb_amsre_channel_name[] = {
   "89V_B"
 };
 
-static const char *gsx_amsre_channel_name[] = {
-  "brightness_temperature_7H",
-  "brightness_temperature_7V",
-  "brightness_temperature_10.7H",
-  "brightness_temperature_10.7V",
-  "brightness_temperature_18H",
-  "brightness_temperature_18V",
-  "brightness_temperature_23H",
-  "brightness_temperature_23V",
-  "brightness_temperature_37H",
-  "brightness_temperature_37V",
-  "brightness_temperature_89H_A",
-  "brightness_temperature_89V_A",
-  "brightness_temperature_89H_B",
-  "brightness_temperature_89V_B"
-};
 
-static const int amsre_channel_mapping[] = {
-  1,
-  2,
-  3,
-  4,
-  5,
-  6,
-  7,
-  8,
-  9,
-  10,
-  11,
-  12,
-  13,
-  14
-};
 
