@@ -27,8 +27,14 @@ static int get_gsx_global_attributes( gsx_class *this );
 static int get_gsx_global_variables( gsx_class *this );
 static int get_gsx_variable_attributes( gsx_class *this );
 static int get_gsx_positions( gsx_class *this );
-static int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_temperatures( gsx_class *this, int varid, int count, int scans, int measurements );
 static int init_gsx_pointers( gsx_class *this );
+static int assign_channels( gsx_class *this, char *token );
+static int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 );
+static int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements );
 
 /*
  * this function takes a gsx file name and opens it as a netCDF4
@@ -107,34 +113,19 @@ void gsx_close ( gsx_class *this ) {
   /* free the malloc'd arrays before you free the gsx_struct */
   if ( NULL != this->gsx_version ) free( this->gsx_version );
   if ( NULL != this->source_file ) free( this->source_file );
-  if ( NULL != this->short_sensor ) free( this->short_sensor );
-  if ( NULL != this->short_platform ) free( this->short_platform );
-  if ( NULL != this->input_provider ) free( this->input_provider );
-  if ( NULL != this->latitude_loc1 ) free( this->latitude_loc1 );
-  if ( NULL != this->latitude_loc2 ) free( this->latitude_loc2 );
-  if ( NULL != this->latitude_loc3 ) free( this->latitude_loc3 );
-  if ( NULL != this->longitude_loc1 ) free( this->longitude_loc1 );
-  if ( NULL != this->longitude_loc2 ) free( this->longitude_loc2 );
-  if ( NULL != this->longitude_loc3 ) free( this->longitude_loc3 );
-  if ( NULL != this->sc_latitude_loc1 ) free( this->sc_latitude_loc1 );
-  if ( NULL != this->sc_latitude_loc2 ) free( this->sc_latitude_loc2 );
-  if ( NULL != this->sc_latitude_loc3 ) free( this->sc_latitude_loc3 );
-  if ( NULL != this->sc_longitude_loc1 ) free( this->sc_longitude_loc1 );
-  if ( NULL != this->sc_longitude_loc2 ) free( this->sc_longitude_loc2 );
-  if ( NULL != this->sc_longitude_loc3 ) free( this->sc_longitude_loc3 );
-  if ( NULL != this->scantime_loc1 ) free( this->scantime_loc1 );
-  if ( NULL != this->scantime_loc2 ) free( this->scantime_loc2 );
-  if ( NULL != this->scantime_loc3 ) free( this->scantime_loc3 );
-  if ( NULL != this->eia_loc1 ) free( this->eia_loc1 );
-  if ( NULL != this->eia_loc2 ) free( this->eia_loc2 );
-  if ( NULL != this->eia_loc3 ) free( this->eia_loc3 );
-  if ( NULL != this->eaz_loc1 ) free( this->eaz_loc1 );
-  if ( NULL != this->eaz_loc2 ) free( this->eaz_loc2 );
-  if ( NULL != this->eaz_loc3 ) free( this->eaz_loc3 );
   for ( counter=0; counter<this->channel_number; counter++ ) {
     if ( NULL != this->channel_names[counter] ) free( this->channel_names[counter] );
     if ( NULL != this->efov[counter] ) free( this->efov[counter] );
     if ( NULL != this->brightness_temps[counter] ) free( this->brightness_temps[counter] );
+  }
+  for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
+    if ( NULL != this->latitude[counter] ) free( this->latitude[counter] );
+    if ( NULL != this->longitude[counter] ) free( this->longitude[counter] );
+    if ( NULL != this->eia[counter] ) free( this->eia[counter] );
+    if ( NULL != this->eaz[counter] ) free( this->eaz[counter] );
+    if ( NULL != this->sc_latitude[counter] ) free( this->sc_latitude[counter] );
+    if ( NULL != this->sc_longitude[counter] ) free( this->sc_longitude[counter] );
+    if ( NULL != this->scantime[counter] ) free( this->scantime[counter] );
   }
   free( this );
   return;
@@ -222,6 +213,8 @@ int get_gsx_global_attributes( gsx_class *this ) {
   
   int status;
   int att_len;
+  char *temp;
+  int i;
 
   if ( NULL == this ) {
     return -1;
@@ -233,24 +226,50 @@ int get_gsx_global_attributes( gsx_class *this ) {
     return -1;
   }
 
-  this->short_platform = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
-  if ( NULL == this->source_file ) {
+  temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
+  if ( NULL == temp ) {
     fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
     return -1;
   }
+  this->short_platform = CETB_NO_PLATFORM;
+  for ( i=0; i< CETB_NUM_PLATFORMS; i++ ) {
+    if ( 0 == strncmp( cetb_platform_id_name[i], temp, strlen(temp) ) ) {
+      this->short_platform = (cetb_platform_id) i;
+      break;
+    }
+  }
 
-  this->short_sensor = get_att_text( this->fileid, NC_GLOBAL, "short_sensor" );
-  if ( NULL == this->short_sensor ) {
+  temp = get_att_text( this->fileid, NC_GLOBAL, "short_sensor" );
+  if ( NULL == temp ) {
     fprintf( stderr, "%s: no short_sensor\n", __FUNCTION__ );
     return -1;
   }
-
-  this->input_provider = get_att_text( this->fileid, NC_GLOBAL, "input_provider" );
-  if ( NULL == this->input_provider ) {
+  this->short_sensor = CETB_NO_SENSOR;
+  for ( i=0; i< CETB_NUM_SENSORS; i++ ) {
+    if ( 0 == strncmp( cetb_sensor_id_name[i], temp, strlen(temp) ) ) {
+      this->short_sensor = (cetb_sensor_id) i;
+      break;
+    }
+  }
+    
+  temp = get_att_text( this->fileid, NC_GLOBAL, "input_provider" );
+  if ( NULL == temp ) {
     fprintf( stderr, "%s: no input_provider\n", __FUNCTION__ );
     return -1;
   }
+  this->input_provider = CETB_NO_PRODUCER;
+  for ( i=0; i< CETB_NUM_PRODUCERS; i++ ) {
+    if ( 0 == strncmp( cetb_swath_producer_id_name[i], temp, strlen(temp) ) ) {
+      this->input_provider = (cetb_swath_producer_id) i;
+      break;
+    }
+  }
 
+  if ( this->short_platform == CETB_NO_PLATFORM || \
+       this->short_sensor == CETB_NO_SENSOR || \
+       this->input_provider == CETB_NO_PRODUCER ) {
+    return -1;
+  }
   return 0;
 }
       
@@ -276,6 +295,7 @@ int get_gsx_global_variables( gsx_class *this ) {
   char *token;
   char *channel_ptr;
   char *space=" ";
+  char *temp;
 
   if ( NULL == this ) {
     return -1;
@@ -284,18 +304,25 @@ int get_gsx_global_variables( gsx_class *this ) {
   channel_list = get_att_text( this->fileid, NC_GLOBAL, "gsx_variables" );
   channel_ptr = channel_list;
 
-  count = 0;
   while ( NULL != channel_ptr ) {
     token = strsep( &channel_ptr, delim );
     if ( 0 == strncmp( space, token, 1 ) ) token++;
     att_len = strlen( token );
-    this->channel_names[count] = (char*)malloc( (size_t) att_len+1 );
-    strcpy( this->channel_names[count], token );
-    count++;
+    /* now match the channel name to the channel enum */
+    status = assign_channels( this, token );
   }
-  *(this->channel_names[count-1]+att_len) = '\0';
-  
-  this->channel_number = count;
+  //  *(this->channel_names[count-1]+att_len) = '\0';
+
+  switch ( this->short_sensor ) {
+  case CETB_SSMI:
+    this->channel_number = SSMI_NUM_CHANNELS;
+    break;
+  case CETB_AMSRE:
+    this->channel_number = AMSRE_NUM_CHANNELS;
+    break;
+  default:
+    fprintf( stderr, "%s: sensor not implemented yet \n", __FUNCTION__ );
+  }
   free( channel_list );
 
   return 0;
@@ -314,18 +341,15 @@ int get_gsx_global_variables( gsx_class *this ) {
  */
 int get_gsx_variable_attributes( gsx_class *this ) {
   int status;
-  int att_len;
   int varid;
-  char *delim=" ";
   int count;
-  char *token;
-  char *dim_ptr;
   float fillvalue;
   nc_type var_type;
   int ndims;
   int dimid[2];
-  int natts;
-  char *dimname;
+  int dim1;
+  int dim2;
+  char *efov;
 
   if ( NULL == this ) {
     return -1;
@@ -334,44 +358,37 @@ int get_gsx_variable_attributes( gsx_class *this ) {
   for ( count=0; count<this->channel_number; count++ ) {
 
     if ( status = nc_inq_varid( this->fileid, this->channel_names[count], &varid ) ) {
-      fprintf( stderr, "%s: file id %d %d count '%s', error : %s\n",	\
-	       __FUNCTION__, this->fileid, count, this->channel_names[count], nc_strerror( status ) );
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, this->channel_names[count], nc_strerror( status ) );
       return -1;
     }
 
-    if ( status = nc_inq_vardimid( this->fileid, varid, dimid ) ) {
-      fprintf( stderr, "%s: couldn't get %s dimension ids\n", __FUNCTION__, this->channel_names[count] );
+    status = get_gsx_dimensions( this, varid, &dim1, &dim2 );
+    if ( 0 != status ) {
+      fprintf( stderr, "%s: couldn't get dimensions for %s\n", __FUNCTION__, this->channel_names[count] );
       return -1;
-    }
-
-    dimname = (char *)malloc(NC_MAX_NAME+1);
-    if ( status = nc_inq_dimname( this->fileid, dimid[0], dimname ) ) {
-      fprintf( stderr, "%s: couldn't get %s dimension name from id %d\n", \
-	       __FUNCTION__, this->channel_names[count], dimid[0] );
-      return -1;
-    }
-
-    dim_ptr = strstr( dimname, "_loc1");
-    if ( NULL != dim_ptr ) { //scans_loc1 and measurements_loc1 for this variable
-      status = get_gsx_temperature( this, varid, count, this->scans_loc1, this->measurements_loc1 );
-    }
-
-    dim_ptr = strstr( dimname, "_loc2");
-    if ( NULL != dim_ptr ) { //scans_loc2 and measurements_loc2 for this variable
-      status = get_gsx_temperature( this, varid, count, this->scans_loc2, this->measurements_loc2 );
     }
     
-    dim_ptr = strstr( dimname, "_loc3");
-    if ( NULL != dim_ptr ) { //scans_loc3 and measurements_loc3 for this variable
-      status = get_gsx_temperature( this, varid, count, this->scans_loc3, this->measurements_loc3 );
-    }
+    status = get_gsx_temperatures( this, varid, count, dim1, dim2 );
 
-    if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue) ) {
-      fprintf( stderr, "%s: no fill value attribute for %s variable\n", \
-	       __FUNCTION__, this->channel_names[count] );
+    if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue ) ) {
+      fprintf( stderr, "%s: couldn't get fillvalue from %s\n", __FUNCTION__, this->channel_names[count] );
       return -1;
     }
-    this->fillvalue = fillvalue;
+    this->fillvalue[count] = fillvalue;
+
+    efov = get_att_text( this->fileid, varid, "gsx_field_of_view" );
+    if ( status = nc_inq_varid( this->fileid, efov, &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, efov, nc_strerror( status ) );
+      return -1;
+    }
+    this->efov[count] = (float*)malloc(2*sizeof(float));
+    if ( status = nc_get_var_float( this->fileid, varid, this->efov[count] ) ) {
+      fprintf( stderr, "%s: couldn't get efov %s for error : %s\n",	\
+	       __FUNCTION__, efov, nc_strerror( status ) );
+      return -1;
+    }
   }
 
   status = get_gsx_positions( this );
@@ -382,8 +399,7 @@ int get_gsx_variable_attributes( gsx_class *this ) {
 /*
  * this function takes a gsx_class struct and gets the position variables
  * file and returns a pointer to a structure that is populated with the
- * lat and lons as well as the spacecraft position per scan line and the angles
- * along the scan lines
+ * lat and lons as well and the angles along the scan lines
  *
  *  Input:
  *    gsx_class structure
@@ -394,14 +410,78 @@ int get_gsx_variable_attributes( gsx_class *this ) {
  */
 int get_gsx_positions( gsx_class *this ) {
   int status;
+  int i;
+  int varid;
+  int scans;
+  int measurements;
 
   status = 0;
+  /* for each set of position (i.e. loc1, loc2, loc3 this routine retrieves the lat, lon, eia and eaz for each position */
+  /*  Note that each GSX file can have 1, 2 or 3 sets of position parameters
+   *  if there is only 1 set, i.e. scans_loc2 and scans_loc3 are == 0, then we are done here and the function returns success
+   */
+
+  for ( i=0; i<GSX_MAX_DIMS; i++) {
+    if ( 0 == i && this->scans_loc1 != 0 ) {
+      scans = this->scans_loc1;
+      measurements = this->measurements_loc1;
+    } else if ( 1 == i && this->scans_loc2 != 0 ) {
+      scans = this->scans_loc2;
+      measurements = this->measurements_loc2;
+    } else if ( 2 == i && this->scans_loc3 != 0 ) {
+      scans = this->scans_loc3;
+      measurements = this->measurements_loc3;
+    } else {
+      return 0;
+    }
+    if ( status = nc_inq_varid( this->fileid, gsx_latitudes[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_latitudes[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_latitudes( this, varid, i, scans, measurements );
+      
+    if ( status = nc_inq_varid( this->fileid, gsx_longitudes[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_longitudes[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_longitudes( this, varid, i, scans, measurements );
+      
+    if ( status = nc_inq_varid( this->fileid, gsx_eias[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_eias[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_eias( this, varid, i, scans, measurements );
+
+    if ( status = nc_inq_varid( this->fileid, gsx_eazs[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_eazs[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_eazs( this, varid, i, scans, measurements );
+  }    
 
   return status;
 
 }
 
-int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements ) {
+/*
+ * get_gsx_temperatures - retrieves a channel's worth of tb's from GSX file
+ *
+ *  Input:
+ *    this - gsx_class pointer
+ *    varid - the NCDF variable id for the channel
+ *    count - the entry into the list of channels in the file
+ *    scans - number of scans for this channel
+ *    measurements - number of measurements across the scan line
+ *
+ *  Return:
+ *    status variable 0 == success, !=0 failure
+ *
+ */
+int get_gsx_temperatures( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
   this->brightness_temps[count] = (float *)malloc( sizeof(float)*scans*measurements );
@@ -416,7 +496,127 @@ int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int m
 
   return status;
 }
-  
+
+/*
+ * get_gsx_latitudes - returns latitude values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
+int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->latitude[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->latitude[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->latitude[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving latitudes\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+
+/*
+ * get_gsx_longitudes - returns longitude values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
+
+int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->longitude[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->longitude[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->longitude[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving longitudes\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+/*
+ * get_gsx_eias - returns eia values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
+int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->eia[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->eia[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->eia[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving ei angles\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+
+/*
+ * get_gsx_eazs - returns eaz values for loc1, loc2 or loc3 depending on input
+ *
+ *  Input:
+ *    this - pointer to gsx_class struct
+ *    varid - netcdf variable id to be retrieved
+ *    count - entry into the list of sets of positions in file
+ *    scans - number of scans for this variable
+ *    measurements - number of measurements across a scan line
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
+int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements ) {
+  int status=0;
+
+  this->eaz[count] = (float *)malloc( sizeof(float)*scans*measurements );
+  if ( NULL != this->eaz[count] ) {
+    if ( status = nc_get_var_float( this->fileid, varid, this->eaz[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving eaz angle\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+ 
 /*
  * this function takes a gsx_class structure and sets all pointers
  * EXCEPT for gsx_version to NULL
@@ -424,7 +624,6 @@ int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int m
  * Note that the gsx_version is pulled from the file when it is first opened
  * as a way to check that this is a valid gsx file so this pointer should NOT
  * be nulled in this function
-
  *
  *  Input:
  *    pointer to gsx_struct
@@ -438,34 +637,19 @@ int init_gsx_pointers( gsx_class *this ) {
   int counter;
 
   this->source_file = NULL;
-  this->short_sensor = NULL;
-  this->short_platform = NULL;
-  this->input_provider = NULL;
-  this->latitude_loc1 = NULL;
-  this->latitude_loc2 = NULL;
-  this->latitude_loc3 = NULL;
-  this->longitude_loc1 = NULL;
-  this->longitude_loc2 = NULL;
-  this->longitude_loc3 = NULL;
-  this->sc_latitude_loc1 = NULL;
-  this->sc_latitude_loc2 = NULL;
-  this->sc_latitude_loc3 = NULL;
-  this->sc_longitude_loc1 = NULL;
-  this->sc_longitude_loc2 = NULL;
-  this->sc_longitude_loc3 = NULL;
-  this->scantime_loc1 = NULL;
-  this->scantime_loc2 = NULL;
-  this->scantime_loc3 = NULL;
-  this->eia_loc1 = NULL;
-  this->eia_loc2 = NULL;
-  this->eia_loc3 = NULL;
-  this->eaz_loc1 = NULL;
-  this->eaz_loc2 = NULL;
-  this->eaz_loc3 = NULL;
   for ( counter=0; counter < GSX_MAX_CHANNELS; counter++ ) {
     this->channel_names[counter] = NULL;
     this->efov[counter] = NULL;
     this->brightness_temps[counter] = NULL;
+  }
+  for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
+    this->latitude[counter] = NULL;
+    this->longitude[counter] = NULL;
+    this->eia[counter] = NULL;
+    this->eaz[counter] = NULL;
+    this->sc_latitude[counter] = NULL;
+    this->sc_longitude[counter] = NULL;
+    this->scantime[counter] = NULL;
   }
 
   return status;
@@ -517,7 +701,7 @@ gsx_class *get_gsx_file( char *filename ){
 }
 
 /*
- * get_att_text
+ * get_att_text - utility function to pull attribute text from a netcdf file
  *
  *  Input:
  *    fileid - netcdf file id
@@ -547,11 +731,112 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
       return NULL;
     }
     *(att_text+att_len) = '\0';
-    fprintf( stderr, "%s: attribute text for %s is %s\n", __FUNCTION__, varname, att_text );
   }
   
   return att_text;
 }
 
+/*
+ * assign_channels
+ *  - this function assigns the channels read in from the gsx file into the beam order
+ *    that is expected by setup - this order is used across the system to correctly identify
+ *    channels from each other
+ *
+ *  Input:
+ *    gsx_class *this
+ *    channel name read from the gsx_variables global attribute
+ *
+ *  Result:
+ *    id number of the channel in cetb.h
+ *
+ */
+int assign_channels( gsx_class *this, char *channel ) {
+  int status=0;
+  int count;
 
+  if ( NULL == this ) {
+    return -1;
+  }
+  
+  switch ( this->short_sensor ) {
+  case CETB_SSMI:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_ssmi_channel_name[count], channel ) ) && count < (int) SSMI_NUM_CHANNELS ) count++;
+    if ( SSMI_NUM_CHANNELS == count ) {
+      status = -1;
+    }
+    break;
+  case CETB_AMSRE:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_amsre_channel_name[count], channel ) ) && count < (int) AMSRE_NUM_CHANNELS ) count++;
+    if ( AMSRE_NUM_CHANNELS == count ) {
+      status = -1;
+    }
+    break;
+  default:
+    status = -1;
+  }
+  if ( 0 == status ) {
+    this->channel_names[count] = (char*)malloc( strlen(channel) + 1 );
+    strcpy( this->channel_names[count], channel );
+    *(this->channel_names[count]+strlen(channel)) = '\0';
+  }
+
+  return status;
+}
+
+/*
+ * function to get dimension values for a variable
+ *
+ *  Input:
+ *    gsx_class *this - pointer to gsx structure
+ *    int varid - the ncdf id of the variable whose dimensions are needed
+ *
+ *  Output:
+ *    number of rows (scans) and columns (measurements)
+ *
+ *  Result:
+ *    status is 0 upon success and != 0 upon failure
+ *
+ */
+int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
+  int status;
+  int dimid[2];
+  char *dimname;
+  char *dim_ptr;
+  
+  if ( status = nc_inq_vardimid( this->fileid, varid, dimid ) ) {
+    fprintf( stderr, "%s: couldn't get varid %d dimension ids\n", __FUNCTION__, varid );
+    return -1;
+  }
+
+  dimname = (char *)malloc(NC_MAX_NAME+1);
+  if ( status = nc_inq_dimname( this->fileid, dimid[0], dimname ) ) {
+    fprintf( stderr, "%s: couldn't get %d dimension name from id %d\n", \
+	     __FUNCTION__, varid, dimid[0] );
+    return -1;
+  }
+  
+  dim_ptr = strstr( dimname, "_loc1" );
+  if ( NULL != dim_ptr ) {
+    *dim1 = this->scans_loc1;
+    *dim2 = this->measurements_loc1;
+    status = 0;
+  }
+  dim_ptr = strstr( dimname, "_loc2" );
+  if ( NULL != dim_ptr ) {
+    *dim1 = this->scans_loc2;
+    *dim2 = this->measurements_loc2;
+    status = 0;
+  }
+  dim_ptr = strstr( dimname, "_loc3" );
+  if ( NULL != dim_ptr ) {
+    *dim1 = this->scans_loc3;
+    *dim2 = this->measurements_loc3;
+    status = 0;
+  }
+  return status;
+}
+
+      
   

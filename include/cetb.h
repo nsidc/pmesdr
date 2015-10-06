@@ -192,3 +192,81 @@ static const char *cetb_swath_producer_id_name[] = {
   "CSU",
   "RSS"
 };
+
+/*
+ * Maximum lengths of channel strings, including null char
+ */
+#define CETB_CHANNEL_STR_LENGTH 6
+
+/* Maximum generic string length */
+#define CETB_MAX_STR_LENGTH 100
+
+/*
+ * SSM/I channel IDs
+ */
+typedef enum {
+  SSMI_NO_CHANNEL=-1,
+  SSMI_19H,
+  SSMI_19V,
+  SSMI_22V,
+  SSMI_37H,
+  SSMI_37V,
+  SSMI_85H,
+  SSMI_85V,
+  SSMI_NUM_CHANNELS
+} cetb_ssmi_channel_id;
+  
+static const char *cetb_ssmi_channel_name[] = {
+  "19H",
+  "19V",
+  "22V",
+  "37H",
+  "37V",
+  "85H",
+  "85V"
+};
+
+/*
+ * AMSR-E channel IDs
+ */
+typedef enum {
+  AMSRE_NO_CHANNEL=-1,
+  AMSRE_06H,
+  AMSRE_06V,
+  AMSRE_10H,
+  AMSRE_10V,
+  AMSRE_18H,
+  AMSRE_18V,
+  AMSRE_23H,
+  AMSRE_23V,
+  AMSRE_36H,
+  AMSRE_36V,
+  AMSRE_89H_A,
+  AMSRE_89V_A,
+  AMSRE_89H_B,
+  AMSRE_89V_B,
+  AMSRE_NUM_CHANNELS
+} cetb_amsre_channel_id;
+  
+/*
+ * AMSR-E channel ID names
+ */
+static const char *cetb_amsre_channel_name[] = {
+  "06H",
+  "06V",
+  "10.7H",
+  "10.7V",
+  "18H",
+  "18V",
+  "23H",
+  "23V",
+  "36H",
+  "36V",
+  "89H_A",
+  "89V_A",
+  "89H_B",
+  "89V_B"
+};
+
+
+
