@@ -27,7 +27,7 @@ static int get_gsx_global_attributes( gsx_class *this );
 static int get_gsx_global_variables( gsx_class *this );
 static int get_gsx_variable_attributes( gsx_class *this );
 static int get_gsx_positions( gsx_class *this );
-static int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_temperatures( gsx_class *this, int varid, int count, int scans, int measurements );
 static int init_gsx_pointers( gsx_class *this );
 static int assign_channels( gsx_class *this, char *token );
 static int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 );
@@ -264,7 +264,12 @@ int get_gsx_global_attributes( gsx_class *this ) {
       break;
     }
   }
-    
+
+  if ( this->short_platform == CETB_NO_PLATFORM || \
+       this->short_sensor == CETB_NO_SENSOR || \
+       this->input_provider == CETB_NO_PRODUCER ) {
+    return -1;
+  }
   return 0;
 }
       
@@ -364,7 +369,7 @@ int get_gsx_variable_attributes( gsx_class *this ) {
       return -1;
     }
     
-    status = get_gsx_temperature( this, varid, count, dim1, dim2 );
+    status = get_gsx_temperatures( this, varid, count, dim1, dim2 );
 
     if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue ) ) {
       fprintf( stderr, "%s: couldn't get fillvalue from %s\n", __FUNCTION__, this->channel_names[count] );
@@ -412,6 +417,9 @@ int get_gsx_positions( gsx_class *this ) {
 
   status = 0;
   /* for each set of position (i.e. loc1, loc2, loc3 this routine retrieves the lat, lon, eia and eaz for each position */
+  /*  Note that each GSX file can have 1, 2 or 3 sets of position parameters
+   *  if there is only 1 set, i.e. scans_loc2 and scans_loc3 are == 0, then we are done here and the function returns success
+   */
 
   for ( i=0; i<GSX_MAX_DIMS; i++) {
     if ( 0 == i && this->scans_loc1 != 0 ) {
@@ -454,7 +462,7 @@ int get_gsx_positions( gsx_class *this ) {
     }
     status = get_gsx_eazs( this, varid, i, scans, measurements );
   }    
-    // first get dimension id
+
   return status;
 
 }
@@ -473,7 +481,7 @@ int get_gsx_positions( gsx_class *this ) {
  *    status variable 0 == success, !=0 failure
  *
  */
-int get_gsx_temperature( gsx_class *this, int varid, int count, int scans, int measurements ) {
+int get_gsx_temperatures( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
   this->brightness_temps[count] = (float *)malloc( sizeof(float)*scans*measurements );
@@ -742,8 +750,8 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
  *    id number of the channel in cetb.h
  *
  */
-int assign_channels( gsx_class *this, char *token ) {
-  int status;
+int assign_channels( gsx_class *this, char *channel ) {
+  int status=0;
   int count;
 
   if ( NULL == this ) {
@@ -753,21 +761,25 @@ int assign_channels( gsx_class *this, char *token ) {
   switch ( this->short_sensor ) {
   case CETB_SSMI:
     count = 0;
-    while ( ( 0 != strcmp( gsx_ssmi_channel_name[count], token ) ) && count < (int) SSMI_NUM_CHANNELS ) count++;
-    this->channel_names[count] = (char*)malloc( strlen(token) + 1 );
-    strcpy( this->channel_names[count], token );
-    *(this->channel_names[count]+strlen(token)) = '\0';
-    status = 0;
+    while ( ( 0 != strcmp( gsx_ssmi_channel_name[count], channel ) ) && count < (int) SSMI_NUM_CHANNELS ) count++;
+    if ( SSMI_NUM_CHANNELS == count ) {
+      status = -1;
+    }
     break;
   case CETB_AMSRE:
     count = 0;
-    while ( ( 0 != strcmp( gsx_amsre_channel_name[count], token ) ) && count < (int) AMSRE_NUM_CHANNELS ) count++;
-    this->channel_names[count] = (char*)malloc( strlen(token) + 1 );
-    strcpy( this->channel_names[count], token );
-    status = 0;
+    while ( ( 0 != strcmp( gsx_amsre_channel_name[count], channel ) ) && count < (int) AMSRE_NUM_CHANNELS ) count++;
+    if ( AMSRE_NUM_CHANNELS == count ) {
+      status = -1;
+    }
     break;
   default:
     status = -1;
+  }
+  if ( 0 == status ) {
+    this->channel_names[count] = (char*)malloc( strlen(channel) + 1 );
+    strcpy( this->channel_names[count], channel );
+    *(this->channel_names[count]+strlen(channel)) = '\0';
   }
 
   return status;

@@ -281,8 +281,8 @@ int read_ssmiCSU_TB(char *fname, ssmiCSU *d, int verbose);
 void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat);
 
 #endif
-void write_end_header( region_save *save_area );
-void write_more_header_info( gsx_class *gsx, region_save *save_area );
+static void write_end_header( region_save *save_area );
+static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
                 int *dend, int *mstart, int *mend, 
 		int *year, char *prog_n, float prog_v,
@@ -302,7 +302,7 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
 
-int box_size_by_channel( int ibeam, cetb_sensor_id id );
+static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 
 
 /****************************************************************************/
@@ -595,7 +595,7 @@ int main(int argc,char *argv[])
     if ( 0 == first_file ) {
       first_file++;
       if ( NULL != gsx ) {
-	write_more_header_info( gsx, &save_area );
+	write_header_info( gsx, &save_area );
       }
       write_end_header( &save_area );
     }
@@ -2691,7 +2691,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
 }
 
 /*
- * write_more_header_info - writes out the info required for CETB files
+ * write_header_info - writes out the info required for CETB files
  *
  * Input:
  *   gsx - pointer to gsx_class struct
@@ -2701,7 +2701,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
  *   none
  *
  */
-void write_more_header_info( gsx_class *gsx, region_save *save_area ) {
+void write_header_info( gsx_class *gsx, region_save *save_area ) {
   int cnt=100;
   char lin[100];
   int z;

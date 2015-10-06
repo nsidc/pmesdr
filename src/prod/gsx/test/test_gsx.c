@@ -8,9 +8,9 @@ char *file_name;
 
 void setUp(void)
 {
-  file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc" );
+  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc" );
   //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_RSS_SSMI_FCDR_V07R00_F13_D19970302_S0321_E0513_R10006.nc" );
-  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200308080121_D.nc" );
+  file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200308080121_D.nc" );
 }
 
 void tearDown(void)
@@ -382,7 +382,7 @@ void test_gsx_loc2_variables ( void ) {
 
 void test_gsx_loc3_variables ( void ) {
   gsx_class *gsx;
-  int i=0;
+  int i=2;
 
   gsx = gsx_init( file_name );
   if ( NULL != gsx ) {
