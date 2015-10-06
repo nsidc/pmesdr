@@ -88,7 +88,7 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS)
+CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -g
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
@@ -111,7 +111,7 @@ all : libgsx.a $(LIBDIR)/libgsx.a
 
 $(LIBDIR)/libgsx.a : libgsx.a
 
-libgsx.a : $(OBJS) $(DEPEND_LIBS)
+libgsx.a : $(OBJS) $(DEPEND_LIBS) $(HDRS)
 	$(AR) $(ARFLAGS) libgsx.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
 	$(INSTALL) libgsx.a $(LIBDIR)

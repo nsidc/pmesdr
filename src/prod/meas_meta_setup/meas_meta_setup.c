@@ -29,6 +29,7 @@
 #include <math.h>
 #endif
 
+#include "cetb.h"
 #include "gsx.h"
 #include <sir3.h>
 
@@ -280,7 +281,8 @@ int read_ssmiCSU_TB(char *fname, ssmiCSU *d, int verbose);
 void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat);
 
 #endif
-
+static void write_end_header( region_save *save_area );
+static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
                 int *dend, int *mstart, int *mend, 
 		int *year, char *prog_n, float prog_v,
@@ -300,7 +302,7 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
 
-int box_size_by_channel( int ibeam, char *short_sensor );
+static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 
 
 /****************************************************************************/
@@ -376,6 +378,16 @@ int main(int argc,char *argv[])
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
   int mcnt=0;
+
+  /*
+   * begin to add in GSX variables
+   */
+  gsx_class *gsx=NULL;
+  int gsx_count;
+  char *csu;
+  char *gsx_fname;
+  int csu_length;
+  int first_file=0;
 
 #ifdef DEBUG_RESPONSE
   FILE *resp_debug;
@@ -515,7 +527,9 @@ int main(int argc,char *argv[])
   while(flag) { /* meta file read loop 1050 */     
     /* printf("Read meta file input file name\n"); */
     
-  label_330:; /* read next input line (file name) from meta file */   
+  label_330:; /* read next input line (file name) from meta file */
+    /* before reading in the next file, free the memory from the previous gsx pointer */
+    if ( NULL != gsx ) gsx_close( gsx );
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
@@ -560,11 +574,44 @@ int main(int argc,char *argv[])
 #else
     file_read_error=read_ssmiCSU_TB(fname, d, 1);
 #endif
+    /*
+     * read file into gsx_class variable
+     * if it's a CSU file get the GSX filename by prepending GSX to the name
+     * temporary section to get GSX file from CSU ncdf file to test reading in gsx data
+     */
+    csu = strstr( fname, "CSU" );
+    if ( NULL != csu ) {
+      gsx = NULL;
+      csu = strrchr( fname, '/' );
+      gsx_fname = (char *)malloc( strlen(fname)+4 );
+      csu_length = (int)(csu-fname)+1;
+      strncpy( gsx_fname, fname, csu_length );
+      strncpy( gsx_fname+strlen(gsx_fname), "GSX_", 4 );
+      strcpy( gsx_fname+strlen(gsx_fname), fname+csu_length );
+      gsx = gsx_init( gsx_fname ); // for now a NULL return will come back from a bad filename OR an RSS binary file
+    }
+
+    /* if this is the first file to be read, then write out the final header info for downstream processing */
+    if ( 0 == first_file ) {
+      first_file++;
+      if ( NULL != gsx ) {
+	write_header_info( gsx, &save_area );
+      }
+      write_end_header( &save_area );
+    }
+    
+    if ( NULL == gsx ) {
+      fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
+      //goto label_330;
+    }
     if (file_read_error < 0) {
       fprintf(stderr,"*** error reading %s\n  skipping...\n",fname);
       goto label_330;   /* skip reading file on error */
     }
     printf("Satellite %d  orbit %d  scans %d\n",d->KSAT,d->IORBIT,d->NUMSCAN);
+    fflush( stderr );
+    if ( NULL != gsx ) fprintf( stderr, "%s: Satellite %d  platform %d  scans %d\n", \
+	     __FUNCTION__, gsx->short_sensor, gsx->short_platform, gsx->scans_loc1 );
 
     /* extract values of interest */
     nscans=d->NUMSCAN;
@@ -743,28 +790,37 @@ int main(int argc,char *argv[])
 	  }
 
 	  /* for this beam, get measurement, geometry, and location */
-
-	  switch (ibeam) {
+	  if ( NULL != gsx ) {
+	    gsx_count = gsx_ibeam_to_cetb_ssmi_channel[ibeam];
+	  }
+	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
 	    tb=d->CEL_19H[i+ilow*LO_SCAN];             /*Tb measurement value */
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 2:
 	    tb=d->CEL_19V[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;	    
 	  case 3:
 	    tb=d->CEL_22V[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 4:
 	    tb=d->CEL_37H[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 5:
 	    tb=d->CEL_37V[i+ilow*LO_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
 	    break;
 	  case 6:
 	    tb=d->CEL_85H[i+iscan*HI_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
 	    break;
 	  case 7:
 	    tb=d->CEL_85V[i+iscan*HI_SCAN];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
 	    break;
 	  default:
 	    printf("**** beam specification error \n");
@@ -928,7 +984,8 @@ int main(int argc,char *argv[])
 	     is computed for each pixel in the box and tested to see if
 	     the response exceeds a threshold.  if so, it is used */
 
-	  box_size = box_size_by_channel( ibeam, "SSMI" ); // pending adding gsx->short_sensor
+	  box_size = box_size_by_channel( ibeam, CETB_SSMI ); // pending adding gsx->short_sensor
+	  if ( NULL != gsx ) box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
 	  if ( box_size < 0 ) {
 	    exit -1;
 	  }
@@ -1073,17 +1130,13 @@ int main(int argc,char *argv[])
 	    fwrite(response_array,2,count,save_area.reg_lu[iregion]);
 	    fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);		  
 	  }
-
-	label_3400:; /* end of regions loop */
+          label_3400:; /* end of regions loop */
 	}
-      /*      label_3401:; /* end of measurements loop */
+        label_3401:; /* end of measurements loop */
       }
-      
-    label_350:; /* end of scan loop */
+      label_350:; /* end of scan loop */
     }
-
-
-  label_3501:;  /* end of input file */
+    label_3501:;  /* end of input file */
     /* printf("end of input file\n"); */
 
     /* input file has been processed */
@@ -1619,15 +1672,6 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(&xdeg2,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&ydeg2,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      /*
-           write (reg_lu[iregion]) irecords
-           write (reg_lu[iregion]) nsx,nsy,ascale,bscale,a0,b0,xdeg,ydeg
-           write (reg_lu[iregion]) dstart,dend,mstart,mend,year,regnum,projt,
-     $          ipolar,latl,lonl,lath,lonh,regname
-           write (reg_lu[iregion]) nsx2,nsy2,non_size_x,non_size_y,
-     $          ascale2,bscale2,a02,b02,xdeg2,ydeg2
-		      */
-
 
 		      /* now add optional 100 char records
 			 with tagged variable values */
@@ -1718,6 +1762,8 @@ FILE * get_meta(char *mname, char *outpath,
 		      sprintf(lin," Sensor=%s",sensor);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+
+
 		    }
 
 		    /* Now read output file names and write to file */
@@ -1731,13 +1777,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      } else {
 			if (strstr(line,"End_product_file_names") != NULL) {
 			  flag_files=0;
-			  if (flag_out) {
-			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-			    for(z=0;z<100;z++)lin[z]=' ';
-			    sprintf(lin," End_header");
-			    fwrite(lin,100,1,a->reg_lu[iregion-1]);
-			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-			  }
+			  /*  don't write out the End_header line until gsx info is inserted into header */
 			} else 
 			  if (flag_out) {
 			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
@@ -2604,11 +2644,11 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
  * box size determination are located there
  *
  */
-int box_size_by_channel( int ibeam, char *short_sensor ) {
+int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
   int box_size;
 
-  if ( 0 != strcmp( "SSMI", short_sensor ) ) {
-    fprintf( stderr, "%s: bad sensor type %s\n", __FUNCTION__, short_sensor );
+  if ( CETB_SSMI != id ) {
+    fprintf( stderr, "%s: bad sensor type %s\n", __FUNCTION__, cetb_sensor_id_name[id] );
     return -1;
   }
 
@@ -2632,4 +2672,72 @@ int box_size_by_channel( int ibeam, char *short_sensor ) {
   }
   return box_size;
 }
+
+/*
+ * write_header_info - writes out the info required for CETB files
+ *
+ * Input:
+ *   gsx - pointer to gsx_class struct
+ *   save_area - contains info on open output setup files
+ *
+ * Return:
+ *   none
+ *
+ */
+void write_header_info( gsx_class *gsx, region_save *save_area ) {
+  int cnt=100;
+  char lin[100];
+  int z;
+  int iregion;
+  
+  /* Writing out CETB required information to setup file */
+  if ( gsx != NULL ) {
+    for ( iregion=1; iregion<=save_area->nregions; iregion++ ) {
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+      for(z=0;z<100;z++)lin[z]=' ';
+      sprintf(lin," Platform_id=%d ", gsx->short_platform);
+      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+      for(z=0;z<100;z++)lin[z]=' ';
+      sprintf(lin," Sensor_id=%d ", gsx->short_sensor);
+      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+      for(z=0;z<100;z++)lin[z]=' ';
+      sprintf(lin," Producer_id=%d ", gsx->input_provider);
+      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+
+    }
+  }
+}
+
+/*
+ * write_end_header - writes out the End_file line that is used in sir and bgi
+ *
+ * Input:
+ *   save_area - contains info on open output setup files
+ *
+ * Return:
+ *   none
+ *
+ */
+void write_end_header( region_save *save_area ){
+  int cnt=100;
+  char lin[100];
+  int z;
+  int iregion;
+
+  for ( iregion=1; iregion<=save_area->nregions; iregion++ ) {
+    fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+    for(z=0;z<100;z++)lin[z]=' ';
+    sprintf(lin," End_header");
+    fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+    fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+  }
+}
+
 /* *********************************************************************** */
