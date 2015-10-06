@@ -196,10 +196,10 @@ static const char *cetb_swath_producer_id_name[] = {
 /*
  * Maximum lengths of channel strings, including null char
  */
-#define CHANNEL_STR_LENGTH 6
+#define CETB_CHANNEL_STR_LENGTH 6
 
 /* Maximum generic string length */
-#define MAX_STR_LENGTH 100
+#define CETB_MAX_STR_LENGTH 100
 
 /*
  * SSM/I channel IDs
