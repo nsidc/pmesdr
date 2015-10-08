@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include "cetb.h"
 #include "cetb_file.h"
 
 /*********************************************************************
@@ -22,81 +23,9 @@
 
 #define STATUS_OK 0
 #define STATUS_FAILURE 1
+#define MAX_STR_LENGTH 256
 
-/*
- * Maximum lengths of channel strings, including null char
- * THIS SHOULD BE REMOVED WHEN WE START USING GSX
- */
-#define CHANNEL_STR_LENGTH 4
-
-/* Maximum generic string length */
-#define MAX_STR_LENGTH 100
-
-/*
- * SSM/I channel IDs
- * THIS SHOULD BE REMOVED WHEN WE START USING GSX
- */
-typedef enum {
-  SSMI_19H=1,
-  SSMI_19V,
-  SSMI_22V,
-  SSMI_37H,
-  SSMI_37V,
-  SSMI_85H,
-  SSMI_85V
-} ssmi_channel_id;
-  
-static const char *ssmi_channel_name[] = {
-  "XXX",
-  "19H",
-  "19V",
-  "22V",
-  "37H",
-  "37V",
-  "85H",
-  "85V"
-};
-
-/*
- * AMSR-E channel IDs
- * THIS SHOULD BE REMOVED WHEN WE START USING GSX
- */
-typedef enum {
-  AMSRE_06H=1,
-  AMSRE_06V,
-  AMSRE_10H,
-  AMSRE_10V,
-  AMSRE_18H,
-  AMSRE_18V,
-  AMSRE_23H,
-  AMSRE_23V,
-  AMSRE_36H,
-  AMSRE_36V,
-  AMSRE_89H,
-  AMSRE_89V
-} amsre_channel_id;
-  
-/*
- * AMSR-E channel ID names
- * THIS SHOULD BE REMOVED WHEN WE START USING GSX
- */
-static const char *amsre_channel_name[] = {
-  "XXX",
-  "06H",
-  "06V",
-  "10H",
-  "10V",
-  "18H",
-  "18V",
-  "23H",
-  "23V",
-  "36H",
-  "36V",
-  "89H",
-  "89V"
-};
-
-static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_id );
+static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static char *pmesdr_release_version( void );
 static char *pmesdr_top_dir( void );
@@ -224,14 +153,14 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_swath_producer_id producer_id ) {
 
   cetb_file_class *this=NULL;
-  char channel_str[CHANNEL_STR_LENGTH] = "";
+  char *channel_str=NULL;
 
   if ( STATUS_OK != valid_region_id( region_id ) ) return NULL;
   if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
   if ( STATUS_OK != valid_platform_id( platform_id ) ) return NULL;
   if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
   if ( STATUS_OK != valid_date( year, doy ) ) return NULL;
-  if ( STATUS_OK != channel_name( channel_str, sensor_id, beam_id ) ) return NULL;
+  if ( !( channel_str = channel_name( sensor_id, beam_id ) ) ) return NULL;
   if ( STATUS_OK != valid_pass_direction( region_id, direction_id ) ) return NULL;
   if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) return NULL;
   if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
@@ -252,7 +181,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->reconstruction_id = reconstruction_id;
   
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s%s.%s_%s.%4.4d%3.3d.%3s.%s.%s.%s.%s.nc",
+  	    "%s/%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
   	    dirname,
   	    cetb_region_id_name[ region_id - CETB_EASE2_N ],
   	    cetb_resolution_name[ factor ],
@@ -266,6 +195,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    cetb_swath_producer_id_name[ producer_id ],
   	    CETB_FILE_FORMAT_VERSION );
 
+  free( channel_str );
   return this;
   
 }
@@ -336,8 +266,8 @@ int cetb_file_open( cetb_file_class *this ) {
   for ( i = 0; i < num_attributes; i++ ) { 
     if ( status = nc_inq_attname( template_fid, NC_GLOBAL,
   				  i, attribute_name ) ) {
-      fprintf( stderr, "%s: Error getting next attribute_name: %s.\n",
-  	       __FUNCTION__, nc_strerror( status ) );
+      fprintf( stderr, "%s: Error getting attribute index %d: %s.\n",
+  	       __FUNCTION__, i, nc_strerror( status ) );
       return 1;
     }
     if ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
@@ -593,36 +523,32 @@ void cetb_file_close( cetb_file_class *this ) {
  *    beam_id : beam_id - integer id for channels, e.g. for SSM/I,
  *              beam_id = 1 (19H), 2 (19V), etc.
  *
- *  output :
- *    channel_str : channel string, 2-digit frequency, 1-letter polarization,  e.g. "19H"
- *
- *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
- *
+ *  result : (newly-allocated) channel string, with frequency and polarization,  e.g. "19H", or
+ *           NULL on error
  */
-static int channel_name( char *channel_str, cetb_sensor_id sensor_id, int beam_id ) {
+static char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
 
+  char *channel_str = NULL;
+  
   if ( CETB_SSMI == sensor_id ) {
-    if ( 0 < beam_id && beam_id <= SSMI_85V ) {
-      strncpy( channel_str, ssmi_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
+    if ( 0 < beam_id && beam_id <= SSMI_NUM_CHANNELS ) {
+      channel_str = strdup( cetb_ssmi_channel_name[ cetb_ibeam_to_cetb_ssmi_channel[ beam_id ] ] );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-      return STATUS_FAILURE;
     }
   } else if ( CETB_AMSRE == sensor_id ) {
-    if ( 0 < beam_id && beam_id <= AMSRE_89V ) {
-      strncpy( channel_str, amsre_channel_name[ beam_id ], CHANNEL_STR_LENGTH );
+    if ( 0 < beam_id && beam_id <= AMSRE_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_amsre_channel_name[ cetb_ibeam_to_cetb_amsre_channel[ beam_id ] ] );
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-      return STATUS_FAILURE;
     }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
 	     __FUNCTION__ );
-    return STATUS_FAILURE;
   }
 
-  return STATUS_OK;
+  return channel_str;
 
 }
 
