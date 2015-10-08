@@ -4,6 +4,8 @@
  * 25-Sep-2015 M. A. Hardman mhardman@nsidc.org 303-492-2969
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
+#ifndef cetb_H
+#define cetb_H
 
 typedef enum {
   CETB_NO_REGION=-1,
@@ -194,14 +196,6 @@ static const char *cetb_swath_producer_id_name[] = {
 };
 
 /*
- * Maximum lengths of channel strings, including null char
- */
-#define CETB_CHANNEL_STR_LENGTH 6
-
-/* Maximum generic string length */
-#define CETB_MAX_STR_LENGTH 100
-
-/*
  * SSM/I channel IDs
  */
 typedef enum {
@@ -224,6 +218,32 @@ static const char *cetb_ssmi_channel_name[] = {
   "37V",
   "85H",
   "85V"
+};
+
+/*
+ * this mapping is set to match the way SSMI beams are defined in meas_meta_setup and
+ * in meas_meta_make
+ *
+ * in those routines, ibeam = 1 is set for 19H and on up to ibeam = 7 for 85V
+ *
+ * starting at -1 allows the code to have normal C arrays that begin at 0, i.e.
+ * ibeam = 1 will have the mapping 0 in the C code
+ * 
+ * Example:
+ *  cetb_ibeam_to_cetb_ssmi_channel[1] returns the value of SSMI_19H
+ *  and
+ *  cetb_ibeam_to_cetb_ssmi_channel[3] returns the value of SSMI_22V
+ *
+ */
+static const cetb_ssmi_channel_id cetb_ibeam_to_cetb_ssmi_channel[] = {
+  SSMI_NO_CHANNEL,
+  SSMI_19H,
+  SSMI_19V,
+  SSMI_22V,
+  SSMI_37H,
+  SSMI_37V,
+  SSMI_85H,
+  SSMI_85V
 };
 
 /*
@@ -268,5 +288,26 @@ static const char *cetb_amsre_channel_name[] = {
   "89V_B"
 };
 
+/*
+ * See notes for using cetb_ibeam_to_cetb_ssmi_channel, above.
+ */
+static const cetb_amsre_channel_id cetb_ibeam_to_cetb_amsre_channel[] = {
+  AMSRE_NO_CHANNEL,
+  AMSRE_06H,
+  AMSRE_06V,
+  AMSRE_10H,
+  AMSRE_10V,
+  AMSRE_18H,
+  AMSRE_18V,
+  AMSRE_23H,
+  AMSRE_23V,
+  AMSRE_36H,
+  AMSRE_36V,
+  AMSRE_89H_A,
+  AMSRE_89V_A,
+  AMSRE_89H_B,
+  AMSRE_89V_B
+};
 
+#endif // cetb_H
 
