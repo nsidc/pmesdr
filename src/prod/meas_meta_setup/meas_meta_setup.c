@@ -791,7 +791,7 @@ int main(int argc,char *argv[])
 
 	  /* for this beam, get measurement, geometry, and location */
 	  if ( NULL != gsx ) {
-	    gsx_count = gsx_ibeam_to_cetb_ssmi_channel[ibeam];
+	    gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
 	  }
 	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
