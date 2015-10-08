@@ -267,6 +267,7 @@ typedef struct { /* ssmiCSU data file contents */
 
 /* BYU SSM/I approximate spatial response computation */
 float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibeam);
+static float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
 
 #ifdef RSS
 
@@ -388,6 +389,8 @@ int main(int argc,char *argv[])
   char *gsx_fname;
   int csu_length;
   int first_file=0;
+  int first_scan_loc2;
+  int last_scan_loc2;
 
 #ifdef DEBUG_RESPONSE
   FILE *resp_debug;
@@ -631,13 +634,30 @@ int main(int argc,char *argv[])
 #else
     timedecode(d->SCAN_TIME[0],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
     timedecode(d->SCAN_TIME[nscans-1],&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-#endif    
+#endif
     printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);    
     printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
 
     printf("first scan:%lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);
     printf("last scan: %lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);
     printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+
+    if ( gsx != NULL ) {
+      first_scan_loc2 = (int) CETB_LOC2;
+      last_scan_loc2 = gsx->scans_loc2-1;
+      timedecode( *(gsx->scantime[first_scan_loc2]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+      timedecode( *(gsx->scantime[first_scan_loc2]+last_scan_loc2), \
+		  &iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
+      printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME, \
+	     *(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);    
+      printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME, \
+	     *(gsx->scantime[first_scan_loc2]+last_scan_loc2),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
+      
+      printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);
+      printf("last scan: %lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]+last_scan_loc2), \
+	     iyeare,idaye,imone,jdaye,ihoure,imine,isece);
+      printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+    }
 
     iday=jday;    /* use day of year (jday) for day search */
     idaye=jdaye;    
@@ -1051,6 +1071,11 @@ int main(int argc,char *argv[])
 		rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
 		//x_rel=ix1*2.5; y_rel=iy1*5;
 		sum=ssmi_response(x_rel,y_rel,theta,thetai,ibeam);
+		if ( NULL != gsx ) {
+		  gsx_count = gsx_ibeam_to_cetb_ssmi_channel[ibeam];
+		  sum = gsx_ssmi_response( x_rel, y_rel, theta, thetai, \
+					   *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
+		}
 
 		if (sum > response_threshold) {
 		  if (flatten) sum=1.0;    /* optionally flatten response */
@@ -2411,6 +2436,55 @@ float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibe
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
   along_beam_size=geom[(ibeam-1)*4  ];
   cross_beam_size=geom[(ibeam-1)*4+1];
+  t1=2*x/cross_beam_size;
+  t2=2*y/along_beam_size;
+  
+  weight=expf((t1*t1+t2*t2)*lnonehalf);
+   
+  return(weight);
+}
+
+/* *********************************************************************** */
+
+float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
+{
+  /* Compute an estimate of the ssmi beam response (weight) in normal space
+     given a location (in km, N-E=(x,y)), azimuth angle (theta),
+     3dB antenna pattern scale factor (bigang), and the footprint
+     sizes in cross track and along track.  
+
+     inputs:
+       x_rel,y_rel : relative offset from beam center in km
+       theta : pattern rotation in deg
+       thetai : incidence angle in deg (not used)
+       ibeam : beam number
+
+     Convert km location to coordinate system with axis
+     lined up with the elliptical antenna pattern
+
+                The rotation matrix looks like this where theta is a
+		CCW rotation of the input coordinates x,y
+
+		--  --   ---                      ---  --   --
+		|    |   |                          |  |     |
+		| x1 |   | cos(theta)   -sin(theta) |  |  x  |
+		|    | = |                          |  |     |
+		| y1 |   | sin(theta)    cos(theta) |  |  y  |
+		|    |   |                          |  |     |
+		-- --    ---                      ---  --   --
+  */
+
+  static float lnonehalf=-0.6931471;  /* ln(0.5) */
+  float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
+
+  /* rotate coordinate system to align with look direction */
+  x=cos(theta*DTR)*x_rel - sin(theta*DTR)*y_rel;
+  y=sin(theta*DTR)*x_rel + cos(theta*DTR)*y_rel;
+  
+  /* compute approximate antenna response
+     Antenna weighting is estimation from SSMI Users Guide 21-27 */
+  along_beam_size=semimajor;
+  cross_beam_size=semiminor;
   t1=2*x/cross_beam_size;
   t2=2*y/along_beam_size;
   

@@ -35,6 +35,7 @@ static int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, 
 static int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int measurements );
 static int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements );
 static int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements );
+static int get_gsx_byscan_variables( gsx_class *this, int count, int scans );
 
 /*
  * this function takes a gsx file name and opens it as a netCDF4
@@ -434,6 +435,7 @@ int get_gsx_positions( gsx_class *this ) {
     } else {
       return 0;
     }
+
     if ( status = nc_inq_varid( this->fileid, gsx_latitudes[i], &varid ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
 	       __FUNCTION__, this->fileid, gsx_latitudes[i], nc_strerror( status ) );
@@ -461,6 +463,14 @@ int get_gsx_positions( gsx_class *this ) {
       return -1;
     }
     status = get_gsx_eazs( this, varid, i, scans, measurements );
+
+    if ( status = nc_inq_varid( this->fileid, gsx_latitudes[i], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_latitudes[i], nc_strerror( status ) );
+      return -1;
+    }
+    status = get_gsx_byscan_variables( this, i, scans );
+      
   }    
 
   return status;
@@ -838,5 +848,75 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
   return status;
 }
 
+/*
+ * function to retrieve the variables that are one per scan line
+ *
+ *  Input:
+ *    gsx_class *this - pointer to gsx structure
+ *    int count - 0, 1, 2 corresponding to loc1, loc2 or loc3
+ *    int scans - number of scan lines in the file
+ *
+ *  Result:
+ *    status == 0 on success, != 0 on failure
+ *
+ */
+int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
+  int status=0;
+  int varid;
+
+  if ( this->short_sensor != CETB_AMSRE ) { // because there is no sc lat and lon in AMSRE
+    if ( status = nc_inq_varid( this->fileid, gsx_sc_latitudes[count], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_sc_latitudes[count], nc_strerror( status ) );
+      return -1;
+    }
+    this->sc_latitude[count] = (float *)malloc( sizeof(float)*scans );
+    if ( NULL != this->sc_latitude[count] ) {
+      if ( status = nc_get_var_float( this->fileid, varid, this->sc_latitude[count] ) ) {
+	fprintf( stderr, "%s: error %s retrieving sc_latitudes\n", __FUNCTION__, nc_strerror( status ) );
+	status = -1;
+      }
+    } else {
+      status = -1;
+    }
+
+    if ( status = nc_inq_varid( this->fileid, gsx_sc_longitudes[count], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_sc_longitudes[count], nc_strerror( status ) );
+      return -1;
+    }
+    this->sc_longitude[count] = (float *)malloc( sizeof(float)*scans );
+    if ( NULL != this->sc_longitude[count] ) {
+      if ( status = nc_get_var_float( this->fileid, varid, this->sc_longitude[count] ) ) {
+	fprintf( stderr, "%s: error %s retrieving sc_longitudes\n", __FUNCTION__, nc_strerror( status ) );
+	status = -1;
+      }
+    } else {
+      status = -1;
+    }
+  }
+  
+  if ( status = nc_inq_varid( this->fileid, gsx_scantime[count], &varid ) ) {
+      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	       __FUNCTION__, this->fileid, gsx_scantime[count], nc_strerror( status ) );
+      return -1;
+  }
+  this->scantime[count] = (double *)malloc( sizeof(double)*scans );
+  if ( NULL != this->scantime[count] ) {
+    if ( status = nc_get_var_double( this->fileid, varid, this->scantime[count] ) ) {
+      fprintf( stderr, "%s: error %s retrieving scantimes\n", __FUNCTION__, nc_strerror( status ) );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
+  return status;
+}
+
+
+
+
       
+
   
