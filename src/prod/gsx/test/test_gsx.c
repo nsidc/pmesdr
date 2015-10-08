@@ -331,22 +331,31 @@ void test_gsx_loc1_variables ( void ) {
   gsx = gsx_init( file_name );
   if ( NULL != gsx ) {
     fprintf( stderr, "\n%s: netcdf file '%s' has these loc1 variables\n", __FUNCTION__, gsx->source_file ); 
-    fprintf( stderr, "\t on latitude_loc1, longitude_loc1 eia_loc1, eaz_loc1\n" );
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \n",	\
+    fprintf( stderr, "\t on latitude_loc1, longitude_loc1 eia_loc1, eaz_loc1, sc_lat_loc1, sc_lon_loc1, scantime\n" );
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t %f \t %f\n",	\
 	     *(gsx->latitude[i]+1000), \
 	     *(gsx->longitude[i]+1000), \
 	     *(gsx->eia[i]+1000),	\
-	     *(gsx->eaz[i]+1000) );
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \n", \
+	     *(gsx->eaz[i]+1000),
+	     *(gsx->sc_latitude[i]+(1000/gsx->measurements_loc1)),
+	     *(gsx->sc_longitude[i]+(1000/gsx->measurements_loc1)),
+	     *(gsx->scantime[i]+(1000/gsx->measurements_loc1)) );
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t %f \t %f\n", \
 	     *(gsx->latitude[i]+1001), \
 	     *(gsx->longitude[i]+1001), \
 	     *(gsx->eia[i]+1001),	\
-	     *(gsx->eaz[i]+1001) );
+	     *(gsx->eaz[i]+1001),
+	     *(gsx->sc_latitude[i]+(1001/gsx->measurements_loc1)),
+	     *(gsx->sc_longitude[i]+(1001/gsx->measurements_loc1)),
+	     *(gsx->scantime[i]+(1001/gsx->measurements_loc1)) );
 
     TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
     TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
     TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
     TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->sc_latitude[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->sc_longitude[i] );
+    TEST_ASSERT_TRUE( NULL != gsx->scantime[i] );
   }
 
   gsx_close( gsx );

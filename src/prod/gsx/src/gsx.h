@@ -43,6 +43,7 @@ typedef struct {
   float *eaz[GSX_MAX_DIMS];
   float *brightness_temps[GSX_MAX_CHANNELS];
   int orbit;
+  cetb_direction_id pass_direction;
 } gsx_class;
 
 static const char *gsx_variable_attributes[] = {
@@ -79,6 +80,24 @@ static const char *gsx_eazs[] = {
   "earth_azimuth_angle_loc1",
   "earth_azimuth_angle_loc2",
   "earth_azimuth_angle_loc3"
+};
+
+static const char *gsx_sc_latitudes[] = {
+  "spacecraft_latitude_loc1",
+  "spacecraft_latitude_loc2",
+  "spacecraft_latitude_loc3"
+};
+
+static const char *gsx_sc_longitudes[] = {
+  "spacecraft_longitude_loc1",
+  "spacecraft_longitude_loc2",
+  "spacecraft_longitude_loc3"
+};
+
+static const char *gsx_scantime[] = {
+  "scan_time_loc1",
+  "scan_time_loc2",
+  "scan_time_loc3"
 };
 
 static const char *gsx_ssmi_channel_name[] = {
@@ -144,6 +163,23 @@ static const int gsx_ibeam_to_cetb_amsre_channel[] = {
   12,
   13,
   14
+};
+
+typedef enum {
+  CETB_NOLOC=-1,
+  CETB_LOC1,
+  CETB_LOC2,
+  CETB_LOC3,
+  CETB_NUM_LOCSS
+} cetb_loc_id;
+
+/*
+ * Sensor names
+ */
+static const char *cetb_loc_id_name[] = {
+  "_LOC1",
+  "_LOC2",
+  "_LOC3"
 };
 
 /*
