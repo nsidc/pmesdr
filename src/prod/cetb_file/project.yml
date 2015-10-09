@@ -46,6 +46,12 @@
     - *common_defines
     - TEST
 
+:flags:
+  :test:
+    :compile:
+      :*:
+        - -g
+
 :cmock:
   :mock_prefix: mock_
   :when_no_prototypes: :warn

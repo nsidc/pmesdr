@@ -26,12 +26,14 @@ typedef struct {
   int fid;
   char *filename;
   cetb_platform_id platform_id;
+  cetb_region_id region_id;
+  int factor;
   cetb_sensor_id sensor_id;
   cetb_reconstruction_id reconstruction_id;
 } cetb_file_class;
 
 cetb_file_class *cetb_file_init( char *dirname,
-				 cetb_region_id region_id,
+				 int region_number,
 				 int factor,
 				 cetb_platform_id platform_id,
 				 cetb_sensor_id sensor_id,

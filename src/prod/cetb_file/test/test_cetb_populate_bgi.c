@@ -16,7 +16,7 @@ cetb_file_class *cetb;
 int status;
 char test_filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
-cetb_region_id region_id;
+int region_number;
 int factor;
 cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
@@ -37,7 +37,7 @@ void setUp( void ) {
   status = 0;
   strcpy( test_filename, "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.BGI.CSU.v0.1.nc" );
   strcpy( dirname, "./test" );
-  region_id = CETB_EASE2_N;
+  region_number = cetb_region_number[ CETB_EASE2_N ];
   factor = 0;
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
@@ -49,7 +49,7 @@ void setUp( void ) {
   producer_id = CETB_CSU;
 
   cetb = cetb_file_init( dirname,
-			 region_id, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
