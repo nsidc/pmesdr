@@ -9,10 +9,20 @@
 
 typedef enum {
   CETB_NO_REGION=-1,
-  CETB_EASE2_N=308,
+  CETB_EASE2_N,
   CETB_EASE2_S,
-  CETB_EASE2_T
+  CETB_EASE2_T,
+  CETB_NUM_REGIONS
 } cetb_region_id;
+
+/*
+ * CETB Region Numbers to match meas_meta convetions
+ */
+static const int cetb_region_number[] = {
+  308,
+  309,
+  310,
+};
 
 /*
  * CETB Region Names
@@ -37,6 +47,8 @@ static const char *cetb_region_id_name[] = {
 /*
  * Grid resolution strings: string to match the names specified on the ATBD,
  * which in turn match the authoritative gpd filenames
+ * In the case of N or S projections, these are exact.
+ * For T projections, they are nominal (but used tin the gpd names, nonetheless).
  */
 static const char *cetb_resolution_name[] = {
   "25km",
@@ -44,6 +56,16 @@ static const char *cetb_resolution_name[] = {
   "6.25km",
   "3.125km",
   "1.5625km"
+};
+
+/*
+ * Exact scale is a function of projection (N, S, T) and resolution factor
+ * N,S grids are exact divisors of 25.0 km, T grids are slightly different
+ */
+static double cetb_exact_scale_m[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
+  { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_N */
+  { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_S */
+  { 25025.26000, 12512.63000, 6256.31500, 3128.15750, 1564.07875 } /* row indexed by EASE2_T */
 };
 
 /*
