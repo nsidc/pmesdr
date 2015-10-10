@@ -54,6 +54,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
 int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int number_of_iterations,
 				  int median_flag );
+int cetb_file_add_grd_parameters( cetb_file_class *this,
+				  int median_flag );
 void cetb_file_close( cetb_file_class *this );
 
 #endif // cetb_file_H

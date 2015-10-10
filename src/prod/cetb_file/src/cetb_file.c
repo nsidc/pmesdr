@@ -485,6 +485,46 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
 }
 
 /*
+ * cetb_file_add_grd_parameters - Add GRD-specific global file attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *    median_filter : integer median_filtering flag: 0=off, 1=on
+ *
+ * output : n/a
+ *
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is populated with SIR-specific global attributes
+ *
+ */
+int cetb_file_add_grd_parameters( cetb_file_class *this,
+				  int median_filter ) {
+
+  int status;
+  
+  if ( !this ) {
+    fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
+    return 1;
+  }
+
+  if ( CETB_GRD != this->reconstruction_id ) {
+    fprintf( stderr, "%s: Cannot set GRD parameters on non-SIR file.\n", __FUNCTION__ );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "grd_median_filter",
+				NC_INT, 1, &median_filter ) ) {
+    fprintf( stderr, "%s: Error setting grd_median_filter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  return 0;
+  
+}
+
+/*
  * cetb_file_close - close the CETB file and free all memory
  *                   associated with this object
  *
@@ -885,8 +925,7 @@ static int valid_platform_id( cetb_platform_id platform_id ) {
  */
 static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
 
-  if ( CETB_SIR == reconstruction_id
-       || CETB_BGI == reconstruction_id ) {
+  if ( 0 <= reconstruction_id && reconstruction_id < CETB_NUM_RECONSTRUCTIONS ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid reconstruction_id=%d\n", __FUNCTION__, reconstruction_id );
