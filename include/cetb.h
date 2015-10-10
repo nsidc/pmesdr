@@ -188,7 +188,10 @@ static const char *cetb_direction_id_name[] = {
 typedef enum {
   CETB_UNKNOWN_RECONSTRUCTION=-1,
   CETB_SIR,
-  CETB_BGI
+  CETB_BGI,
+  CETB_GRD,
+  CETB_NUM_RECONSTRUCTIONS
+
 } cetb_reconstruction_id;
 
 /*
@@ -196,7 +199,8 @@ typedef enum {
  */
 static const char *cetb_reconstruction_id_name[] = {
   "SIR",
-  "BGI"
+  "BGI",
+  "GRD"
 };
 
 /*
