@@ -23,7 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef JANUSicc
+#include <libgen.h>
+#include <err.h>
+#if defined(__INTEL__)
 #include <mathimf.h>
 #else
 #include <math.h>
@@ -103,6 +105,64 @@ void no_trailing_blanks(char *s)
   }
   if (n<0) s[n]='\0';  
   return;
+}
+
+/**
+ * Break a path up into a filename and directory name.
+ * This calls \e basename and \e dirname.
+ *
+ * \param[in] path The path name to split.
+ * \param[out] fname The file name at the end of path name.
+ * \param[out] dname The directory name leading up to the file name.
+ *
+ * \retval 0 If there were no errors.
+ * \retval 1 If there was an error.
+ **/
+
+int
+filepath(const char *path, char **fname, char **dname)
+{
+  char *fpath = NULL;
+  char *fptr  = NULL;
+  char *dpath = NULL;
+  char *dptr  = NULL;
+
+  /* Warning: The non-GNU version of basename can modify path. */
+
+  if (! path) {
+    warnx("unable to break null path into filename and dirname");
+    return(EXIT_FAILURE);
+  }
+
+  if (fname != NULL) {
+    fpath = malloc(strlen(path) +1);
+    memset(fpath, 0, sizeof(fpath));
+    strcpy(fpath, path);
+    fptr = basename(fpath);
+    *fname = malloc(strlen(fptr) +1);
+    memset(*fname, 0, sizeof(*fname));
+    strcpy(*fname, fptr);
+    if (fpath != NULL) {
+      free(fpath);
+    }
+  }
+
+  if (dname != NULL) {
+    dpath = malloc(strlen(path) +1);
+    memset(dpath, 0, sizeof(dpath));
+    strcpy(dpath, path);
+    dptr = dirname(dpath);
+    *dname = malloc(strlen(dptr) +1);
+    memset(*dname, 0, sizeof(*dname));
+    strcpy(*dname, dptr);
+    if (dpath != NULL) {
+      free(dpath);
+    }
+  }
+
+  return(EXIT_SUCCESS);
+
+
 }
 
 void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
@@ -282,6 +342,8 @@ int read_ssmiCSU_TB(char *fname, ssmiCSU *d, int verbose);
 void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat);
 
 #endif
+/* patch to get efov values until gsx is corrected */
+static float *efov_ssmi_response( int count );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
@@ -319,6 +381,8 @@ int main(int argc,char *argv[])
   char fname[250], mname[250];
   char line[1025], outpath[250];
   char ftempname[250];
+  char *fpath = NULL;
+  char *dpath = NULL;
   char *option;
   
   int i,j,k,n;
@@ -386,11 +450,12 @@ int main(int argc,char *argv[])
   gsx_class *gsx=NULL;
   int gsx_count;
   char *csu;
-  char *gsx_fname;
+  char *gsx_fname=NULL;
   int csu_length;
   int first_file=0;
   int first_scan_loc2;
   int last_scan_loc2;
+  float *efov;
 
 #ifdef DEBUG_RESPONSE
   FILE *resp_debug;
@@ -532,7 +597,12 @@ int main(int argc,char *argv[])
     
   label_330:; /* read next input line (file name) from meta file */
     /* before reading in the next file, free the memory from the previous gsx pointer */
-    if ( NULL != gsx ) gsx_close( gsx );
+    if ( NULL != gsx ) {
+      gsx_close( gsx );
+      if ( NULL != gsx_fname ) {
+	free( gsx_fname );
+      }
+    }
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
@@ -577,20 +647,26 @@ int main(int argc,char *argv[])
 #else
     file_read_error=read_ssmiCSU_TB(fname, d, 1);
 #endif
+    /* Break the filename out into the directory and filename */
+    filepath(fname, &fpath, &dpath);
     /*
      * read file into gsx_class variable
      * if it's a CSU file get the GSX filename by prepending GSX to the name
      * temporary section to get GSX file from CSU ncdf file to test reading in gsx data
      */
-    csu = strstr( fname, "CSU" );
+    csu = strstr( fpath, "CSU" );
     if ( NULL != csu ) {
-      gsx = NULL;
+      gsx_fname = (char *)malloc( strlen(fname)+5 );
+      memset(gsx_fname, 0, sizeof(gsx_fname));
+      sprintf(gsx_fname, "%s/GSX_%s", dpath, fpath);
+#if 0
       csu = strrchr( fname, '/' );
       gsx_fname = (char *)malloc( strlen(fname)+4 );
       csu_length = (int)(csu-fname)+1;
       strncpy( gsx_fname, fname, csu_length );
       strncpy( gsx_fname+strlen(gsx_fname), "GSX_", 4 );
       strcpy( gsx_fname+strlen(gsx_fname), fname+csu_length );
+#endif
       gsx = gsx_init( gsx_fname ); // for now a NULL return will come back from a bad filename OR an RSS binary file
     }
 
@@ -1072,9 +1148,12 @@ int main(int argc,char *argv[])
 		//x_rel=ix1*2.5; y_rel=iy1*5;
 		sum=ssmi_response(x_rel,y_rel,theta,thetai,ibeam);
 		if ( NULL != gsx ) {
-		  gsx_count = gsx_ibeam_to_cetb_ssmi_channel[ibeam];
+		  gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+		  /* patch here until we have the correct efov values in ssmi gsx */
+		  efov = efov_ssmi_response( gsx_count );
 		  sum = gsx_ssmi_response( x_rel, y_rel, theta, thetai, \
-					   *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
+					   *(efov), *(efov+1) );
+		  free( efov );
 		}
 
 		if (sum > response_threshold) {
@@ -2444,6 +2523,24 @@ float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibe
   return(weight);
 }
 
+float *efov_ssmi_response( int count ) {
+  float *efov;
+
+  static float geom[]={
+    69.0, 43.0,
+    69.0, 43.0,
+    60.0, 40.0,
+    37.0, 28.0,
+    37.0, 29.0,
+    15.0, 13.0,
+    15.0, 13.0};
+
+  efov = (float *) malloc( 2 * sizeof( float ) );
+  *efov = geom[count*2];
+  *(efov+1) = geom[count*2+1];
+
+  return efov;
+}
 /* *********************************************************************** */
 
 float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
