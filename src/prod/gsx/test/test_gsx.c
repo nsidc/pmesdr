@@ -68,6 +68,17 @@ void test_gsx_version(void)
   gsx_close( gsx );
 }
 
+void test_orbit_number(void)
+{
+  gsx_class *gsx;
+
+  fprintf( stderr, "\n%s: gsx orbit number test\n", __FUNCTION__ );
+  gsx = gsx_init( file_name );
+  fprintf( stderr, "\t: orbit number %d\n", gsx->orbit );
+  TEST_ASSERT_TRUE( 0 != gsx->orbit );
+  gsx_close( gsx );
+}
+
 void test_gsx_dim_names ( void )
 {
   gsx_class *gsx;
