@@ -27,13 +27,14 @@
 
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
+static int fetch_crs( cetb_file_class *this, int template_fid );
 static char *pmesdr_release_version( void );
 static char *pmesdr_top_dir( void );
 static int valid_date( int year, int doy );
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
 static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id );
-static int valid_region_id( cetb_region_id region_id );
+static cetb_region_id valid_region_id( int region_number );
 static int valid_resolution_factor( int factor );
 static int valid_sensor_id( cetb_sensor_id sensor_id );
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
@@ -124,7 +125,7 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
  *
  *  input :
  *    dirname : directory location for cetb file
- *    region_id : projection id
+ *    region_number : meas_meta region number (308, 309, 310)
  *    factor : grid resolution factor
  *    platform_id : satellite platform id
  *    sensor_id : passive microwave sensor id
@@ -141,7 +142,7 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
  *
  */
 cetb_file_class *cetb_file_init( char *dirname,
-				 cetb_region_id region_id,
+				 int region_number,
 				 int factor,
 				 cetb_platform_id platform_id,
 				 cetb_sensor_id sensor_id,
@@ -154,8 +155,9 @@ cetb_file_class *cetb_file_init( char *dirname,
 
   cetb_file_class *this=NULL;
   char *channel_str=NULL;
+  cetb_region_id region_id;
 
-  if ( STATUS_OK != valid_region_id( region_id ) ) return NULL;
+  if ( CETB_NO_REGION == ( region_id = valid_region_id( region_number ) ) ) return NULL;
   if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
   if ( STATUS_OK != valid_platform_id( platform_id ) ) return NULL;
   if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
@@ -177,13 +179,15 @@ cetb_file_class *cetb_file_init( char *dirname,
     return NULL;
   }
   this->platform_id = platform_id;
+  this->region_id = region_id;
+  this->factor = factor;
   this->sensor_id = sensor_id;
   this->reconstruction_id = reconstruction_id;
   
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
   	    dirname,
-  	    cetb_region_id_name[ region_id - CETB_EASE2_N ],
+  	    cetb_region_id_name[ region_id ],
   	    cetb_resolution_name[ factor ],
   	    cetb_platform_id_name[ platform_id ],
   	    cetb_sensor_id_name[ sensor_id ],
@@ -202,7 +206,7 @@ cetb_file_class *cetb_file_init( char *dirname,
 
 /*
  * cetb_file_open - Open the file associated with this object and
- *                  populate its global file attributes
+ *                  populate its global file attributes and metadata
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
@@ -315,6 +319,12 @@ int cetb_file_open( cetb_file_class *this ) {
     return 1;
   }
 
+  status = fetch_crs( this, template_fid );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error fetching crs from template.\n", __FUNCTION__ ); 
+    return 1;
+  }
+  
   if ( status = nc_close( template_fid ) ) {
     fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
 	     __FUNCTION__, template_filename, nc_strerror( status ) );
@@ -475,6 +485,46 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
 }
 
 /*
+ * cetb_file_add_grd_parameters - Add GRD-specific global file attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *    median_filter : integer median_filtering flag: 0=off, 1=on
+ *
+ * output : n/a
+ *
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is populated with SIR-specific global attributes
+ *
+ */
+int cetb_file_add_grd_parameters( cetb_file_class *this,
+				  int median_filter ) {
+
+  int status;
+  
+  if ( !this ) {
+    fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
+    return 1;
+  }
+
+  if ( CETB_GRD != this->reconstruction_id ) {
+    fprintf( stderr, "%s: Cannot set GRD parameters on non-SIR file.\n", __FUNCTION__ );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "grd_median_filter",
+				NC_INT, 1, &median_filter ) ) {
+    fprintf( stderr, "%s: Error setting grd_median_filter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  return 0;
+  
+}
+
+/*
  * cetb_file_close - close the CETB file and free all memory
  *                   associated with this object
  *
@@ -590,6 +640,95 @@ static char *current_time_stamp( void ) {
 
 }
   
+/*
+ * fetch_crs - Fetches the coordinate reference system (crs)
+ * projection information from the template file.
+ *
+ *  input : 
+ *    this : pointer to initialized cetb_file_class object
+ *    template_fid : fileID for to the template file
+ *
+ *  output : n/a
+ *
+ *  result : 0 success, otherwise error
+ *
+ */
+static int fetch_crs( cetb_file_class *this, int template_fid ) {
+
+  int status;
+  int crs_id;
+  char att_name[ MAX_STR_LENGTH ] = "";
+  char crs_name[ MAX_STR_LENGTH ] = "crs_";
+  char long_name[ MAX_STR_LENGTH ] = "";
+  
+  /* Copy/set the coordinate reference system (crs) metadata */
+  strcat( crs_name, cetb_region_id_name[ this->region_id ] );
+  if ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) {
+    fprintf( stderr, "%s: Error getting template file crs variable_id: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  
+  if ( status = nc_copy_var( template_fid, crs_id, this->fid ) ) {
+      fprintf( stderr, "%s: Error copying crs: %s.\n",
+  	       __FUNCTION__, nc_strerror( status ) );
+      return 1;
+    }
+
+  if ( status = nc_inq_varid( this->fid, crs_name, &crs_id ) ) {
+    fprintf( stderr, "%s: Error getting output file crs variable_id: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_rename_var( this->fid, crs_id, "crs" ) ) {
+    fprintf( stderr, "%s: Error renaming crs variable: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  /*
+   * Put the dataset into define mode so that "dimensions,
+   * variables and attributes can be added/renamed and attributes
+   * can be deleted"
+   */
+  if ( status = nc_redef( this->fid ) ) {
+    fprintf( stderr, "%s: Error changing to netcdf define mode: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  /*
+   * Set the TBD placeholder items to values for this projection/resolution:
+   * long_name = <region_id_name><resolution(km)> (basically the .gpd name)
+   * scale_factor_at_projection_origin = actual value (function of projection
+   *                                     and resolution/scale)
+   */
+  strcat( long_name, cetb_region_id_name[ this->region_id ] );
+  strcat( long_name, cetb_resolution_name[ this->factor ] );
+  if ( status = nc_put_att_text( this->fid, crs_id, "long_name",
+				 strlen( long_name ),
+				 long_name ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "long_name", long_name, nc_strerror( status ) );
+    return 1;
+  }
+  
+  strcpy( att_name, "scale_factor_at_projection_origin" );
+  if ( status = nc_put_att_double( this->fid, crs_id, att_name, 
+				   NC_DOUBLE, 1,
+				   &cetb_exact_scale_m[ this->region_id ][ this->factor ] ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, att_name, nc_strerror( status ) );
+    return 1;
+  }
+
+  
+
+  return 0;
+
+}
+
 /*
  * pmesdr_release_version - Fetches the PMESDR software project release version id
  #                          from the project VERSION file.
@@ -728,7 +867,7 @@ static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id dir
       return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
+	       cetb_region_id_name[ region_id ],
 	       direction_id );
       return STATUS_FAILURE;
     }
@@ -739,13 +878,13 @@ static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id dir
       return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id - CETB_EASE2_N ],
+	       cetb_region_id_name[ region_id ],
 	       direction_id );
       return STATUS_FAILURE;
     }
   } else {
       fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id - CETB_EASE2_N ] );
+	       cetb_region_id_name[ region_id ] );
       return STATUS_FAILURE;
   }
 
@@ -786,8 +925,7 @@ static int valid_platform_id( cetb_platform_id platform_id ) {
  */
 static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
 
-  if ( CETB_SIR == reconstruction_id
-       || CETB_BGI == reconstruction_id ) {
+  if ( 0 <= reconstruction_id && reconstruction_id < CETB_NUM_RECONSTRUCTIONS ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid reconstruction_id=%d\n", __FUNCTION__, reconstruction_id );
@@ -807,16 +945,19 @@ static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_region_id( cetb_region_id region_id ) {
+static cetb_region_id valid_region_id( int region_number ) {
 
-  if ( CETB_EASE2_N == region_id
-       || CETB_EASE2_S == region_id
-       || CETB_EASE2_T == region_id ) {
-    return STATUS_OK;
-  } else {
-    fprintf( stderr, "%s: Invalid region_id=%d\n", __FUNCTION__, region_id );
-    return STATUS_FAILURE;
-  }    
+  int i;
+  cetb_region_id region_id=CETB_NO_REGION;
+
+  for ( i = 0; i < CETB_NUM_REGIONS; i++ ) {
+    if ( region_number == cetb_region_number[ i ] ) {
+      region_id = ( cetb_region_id ) i;
+      break;
+    }
+  }
+
+  return region_id;
   
 }
 
