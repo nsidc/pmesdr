@@ -180,6 +180,7 @@ int get_gsx_dims( gsx_class *this ) {
   }
   
   for ( i = 0; i < this->dims; i++ ) {
+    memset( (void*)dim_name, 0, NC_MAX_NAME+1 );
     if ( status = nc_inq_dimname( this->fileid, i, dim_name ) ) {
       fprintf ( stderr, "%s: couldn't get dim name info error %s\n", __FUNCTION__, nc_strerror( status ) );
       return -1;
@@ -397,6 +398,7 @@ int get_gsx_variable_attributes( gsx_class *this ) {
     if ( status = nc_inq_varid( this->fileid, efov, &varid ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
 	       __FUNCTION__, this->fileid, efov, nc_strerror( status ) );
+      free( efov );
       return -1;
     }
     this->efov[count] = (float*)malloc(2*sizeof(float));
@@ -404,8 +406,10 @@ int get_gsx_variable_attributes( gsx_class *this ) {
       fprintf( stderr, "%s: couldn't get efov %s for error : %s\n",	\
 	       __FUNCTION__, efov, nc_strerror( status ) );
       free( this->efov[count] );
+      free( efov );
       return -1;
     }
+    if ( NULL != efov ) free( efov );
   }
 
   status = get_gsx_positions( this );
@@ -722,6 +726,11 @@ gsx_class *get_gsx_file( char *filename ){
   }
 
   this->gsx_version = (char *)malloc( (size_t)(att_len+1) );
+  if ( NULL == this->gsx_version ) {
+    fprintf( stderr, "%s: couldn't allocate gsx_version\n", __FUNCTION__ );
+    free( this );
+    return NULL;
+  }
   if ( status = nc_get_att_text( this->fileid, NC_GLOBAL, "gsx_version", this->gsx_version ) ) { 
     fprintf( stderr, "%s: couldn't get gsx version, error : %s\n", __FUNCTION__, nc_strerror( status ) );
     gsx_close( this );
