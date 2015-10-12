@@ -291,11 +291,8 @@ int get_gsx_global_attributes( gsx_class *this ) {
  */
 int get_gsx_global_variables( gsx_class *this ) {
   int status;
-  int att_len;
-  int channel_number;
   char *channel_list;
   char *delim=",";
-  int count;
   char *token;
   char *channel_ptr;
   char *space=" ";
@@ -314,7 +311,6 @@ int get_gsx_global_variables( gsx_class *this ) {
   while ( NULL != channel_ptr ) {
     token = strsep( &channel_ptr, delim );
     if ( 0 == strncmp( space, token, 1 ) ) token++;
-    att_len = strlen( token );
     /* now match the channel name to the channel enum */
     status = assign_channels( this, token );
   }
