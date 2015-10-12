@@ -599,9 +599,7 @@ int main(int argc,char *argv[])
     /* before reading in the next file, free the memory from the previous gsx pointer */
     if ( NULL != gsx ) {
       gsx_close( gsx );
-      if ( NULL != gsx_fname ) {
-	free( gsx_fname );
-      }
+      free( gsx_fname );
     }
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
@@ -1281,7 +1279,7 @@ int main(int argc,char *argv[])
   printf("\n");
 
   /* close input meta file */	    
-  close(file_id);
+  fclose(file_id);
   printf("Setup program successfully completed\n");
 
   return(0); /* successful termination */
@@ -2554,7 +2552,8 @@ float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, flo
        x_rel,y_rel : relative offset from beam center in km
        theta : pattern rotation in deg
        thetai : incidence angle in deg (not used)
-       ibeam : beam number
+       semimajor : semi major axis in km
+       semiminor : semi minor axis in km
 
      Convert km location to coordinate system with axis
      lined up with the elliptical antenna pattern
