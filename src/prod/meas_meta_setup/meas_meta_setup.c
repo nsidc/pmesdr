@@ -23,7 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef JANUSicc
+#include <libgen.h>
+#include <err.h>
+#if defined(__INTEL__)
 #include <mathimf.h>
 #else
 #include <math.h>
@@ -103,6 +105,64 @@ void no_trailing_blanks(char *s)
   }
   if (n<0) s[n]='\0';  
   return;
+}
+
+/**
+ * Break a path up into a filename and directory name.
+ * This calls \e basename and \e dirname.
+ *
+ * \param[in] path The path name to split.
+ * \param[out] fname The file name at the end of path name.
+ * \param[out] dname The directory name leading up to the file name.
+ *
+ * \retval 0 If there were no errors.
+ * \retval 1 If there was an error.
+ **/
+
+int
+filepath(const char *path, char **fname, char **dname)
+{
+  char *fpath = NULL;
+  char *fptr  = NULL;
+  char *dpath = NULL;
+  char *dptr  = NULL;
+
+  /* Warning: The non-GNU version of basename can modify path. */
+
+  if (! path) {
+    warnx("unable to break null path into filename and dirname");
+    return(EXIT_FAILURE);
+  }
+
+  if (fname != NULL) {
+    fpath = malloc(strlen(path) +1);
+    memset(fpath, 0, sizeof(fpath));
+    strcpy(fpath, path);
+    fptr = basename(fpath);
+    *fname = malloc(strlen(fptr) +1);
+    memset(*fname, 0, sizeof(*fname));
+    strcpy(*fname, fptr);
+    if (fpath != NULL) {
+      free(fpath);
+    }
+  }
+
+  if (dname != NULL) {
+    dpath = malloc(strlen(path) +1);
+    memset(dpath, 0, sizeof(dpath));
+    strcpy(dpath, path);
+    dptr = dirname(dpath);
+    *dname = malloc(strlen(dptr) +1);
+    memset(*dname, 0, sizeof(*dname));
+    strcpy(*dname, dptr);
+    if (dpath != NULL) {
+      free(dpath);
+    }
+  }
+
+  return(EXIT_SUCCESS);
+
+
 }
 
 void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
@@ -267,6 +327,7 @@ typedef struct { /* ssmiCSU data file contents */
 
 /* BYU SSM/I approximate spatial response computation */
 float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibeam);
+static float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
 
 #ifdef RSS
 
@@ -281,6 +342,8 @@ int read_ssmiCSU_TB(char *fname, ssmiCSU *d, int verbose);
 void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat);
 
 #endif
+/* patch to get efov values until gsx is corrected */
+static float *efov_ssmi_response( int count );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
@@ -318,6 +381,8 @@ int main(int argc,char *argv[])
   char fname[250], mname[250];
   char line[1025], outpath[250];
   char ftempname[250];
+  char *fpath = NULL;
+  char *dpath = NULL;
   char *option;
   
   int i,j,k,n;
@@ -385,9 +450,12 @@ int main(int argc,char *argv[])
   gsx_class *gsx=NULL;
   int gsx_count;
   char *csu;
-  char *gsx_fname;
+  char *gsx_fname=NULL;
   int csu_length;
   int first_file=0;
+  int first_scan_loc2;
+  int last_scan_loc2;
+  float *efov;
 
 #ifdef DEBUG_RESPONSE
   FILE *resp_debug;
@@ -529,7 +597,10 @@ int main(int argc,char *argv[])
     
   label_330:; /* read next input line (file name) from meta file */
     /* before reading in the next file, free the memory from the previous gsx pointer */
-    if ( NULL != gsx ) gsx_close( gsx );
+    if ( NULL != gsx ) {
+      gsx_close( gsx );
+      free( gsx_fname );
+    }
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
@@ -574,20 +645,26 @@ int main(int argc,char *argv[])
 #else
     file_read_error=read_ssmiCSU_TB(fname, d, 1);
 #endif
+    /* Break the filename out into the directory and filename */
+    filepath(fname, &fpath, &dpath);
     /*
      * read file into gsx_class variable
      * if it's a CSU file get the GSX filename by prepending GSX to the name
      * temporary section to get GSX file from CSU ncdf file to test reading in gsx data
      */
-    csu = strstr( fname, "CSU" );
+    csu = strstr( fpath, "CSU" );
     if ( NULL != csu ) {
-      gsx = NULL;
+      gsx_fname = (char *)malloc( strlen(fname)+5 );
+      memset(gsx_fname, 0, sizeof(gsx_fname));
+      sprintf(gsx_fname, "%s/GSX_%s", dpath, fpath);
+#if 0
       csu = strrchr( fname, '/' );
       gsx_fname = (char *)malloc( strlen(fname)+4 );
       csu_length = (int)(csu-fname)+1;
       strncpy( gsx_fname, fname, csu_length );
       strncpy( gsx_fname+strlen(gsx_fname), "GSX_", 4 );
       strcpy( gsx_fname+strlen(gsx_fname), fname+csu_length );
+#endif
       gsx = gsx_init( gsx_fname ); // for now a NULL return will come back from a bad filename OR an RSS binary file
     }
 
@@ -631,13 +708,30 @@ int main(int argc,char *argv[])
 #else
     timedecode(d->SCAN_TIME[0],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
     timedecode(d->SCAN_TIME[nscans-1],&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-#endif    
+#endif
     printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);    
     printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
 
     printf("first scan:%lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);
     printf("last scan: %lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);
     printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+
+    if ( gsx != NULL ) {
+      first_scan_loc2 = (int) CETB_LOC2;
+      last_scan_loc2 = gsx->scans_loc2-1;
+      timedecode( *(gsx->scantime[first_scan_loc2]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+      timedecode( *(gsx->scantime[first_scan_loc2]+last_scan_loc2), \
+		  &iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
+      printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME, \
+	     *(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);    
+      printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME, \
+	     *(gsx->scantime[first_scan_loc2]+last_scan_loc2),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
+      
+      printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);
+      printf("last scan: %lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]+last_scan_loc2), \
+	     iyeare,idaye,imone,jdaye,ihoure,imine,isece);
+      printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+    }
 
     iday=jday;    /* use day of year (jday) for day search */
     idaye=jdaye;    
@@ -1051,6 +1145,14 @@ int main(int argc,char *argv[])
 		rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
 		//x_rel=ix1*2.5; y_rel=iy1*5;
 		sum=ssmi_response(x_rel,y_rel,theta,thetai,ibeam);
+		if ( NULL != gsx ) {
+		  gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+		  /* patch here until we have the correct efov values in ssmi gsx */
+		  efov = efov_ssmi_response( gsx_count );
+		  sum = gsx_ssmi_response( x_rel, y_rel, theta, thetai, \
+					   *(efov), *(efov+1) );
+		  free( efov );
+		}
 
 		if (sum > response_threshold) {
 		  if (flatten) sum=1.0;    /* optionally flatten response */
@@ -1177,7 +1279,7 @@ int main(int argc,char *argv[])
   printf("\n");
 
   /* close input meta file */	    
-  close(file_id);
+  fclose(file_id);
   printf("Setup program successfully completed\n");
 
   return(0); /* successful termination */
@@ -2411,6 +2513,74 @@ float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibe
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
   along_beam_size=geom[(ibeam-1)*4  ];
   cross_beam_size=geom[(ibeam-1)*4+1];
+  t1=2*x/cross_beam_size;
+  t2=2*y/along_beam_size;
+  
+  weight=expf((t1*t1+t2*t2)*lnonehalf);
+   
+  return(weight);
+}
+
+float *efov_ssmi_response( int count ) {
+  float *efov;
+
+  static float geom[]={
+    69.0, 43.0,
+    69.0, 43.0,
+    60.0, 40.0,
+    37.0, 28.0,
+    37.0, 29.0,
+    15.0, 13.0,
+    15.0, 13.0};
+
+  efov = (float *) malloc( 2 * sizeof( float ) );
+  *efov = geom[count*2];
+  *(efov+1) = geom[count*2+1];
+
+  return efov;
+}
+/* *********************************************************************** */
+
+float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
+{
+  /* Compute an estimate of the ssmi beam response (weight) in normal space
+     given a location (in km, N-E=(x,y)), azimuth angle (theta),
+     3dB antenna pattern scale factor (bigang), and the footprint
+     sizes in cross track and along track.  
+
+     inputs:
+       x_rel,y_rel : relative offset from beam center in km
+       theta : pattern rotation in deg
+       thetai : incidence angle in deg (not used)
+       semimajor : semi major axis in km
+       semiminor : semi minor axis in km
+
+     Convert km location to coordinate system with axis
+     lined up with the elliptical antenna pattern
+
+                The rotation matrix looks like this where theta is a
+		CCW rotation of the input coordinates x,y
+
+		--  --   ---                      ---  --   --
+		|    |   |                          |  |     |
+		| x1 |   | cos(theta)   -sin(theta) |  |  x  |
+		|    | = |                          |  |     |
+		| y1 |   | sin(theta)    cos(theta) |  |  y  |
+		|    |   |                          |  |     |
+		-- --    ---                      ---  --   --
+  */
+
+  static float lnonehalf=-0.6931471;  /* ln(0.5) */
+  float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
+
+  /* rotate coordinate system to align with look direction */
+  x=cos(theta*DTR)*x_rel - sin(theta*DTR)*y_rel;
+  y=sin(theta*DTR)*x_rel + cos(theta*DTR)*y_rel;
+  
+  /* compute approximate antenna response
+     Antenna weighting is estimation from SSMI Users Guide 21-27 */
+  along_beam_size=semimajor;
+  cross_beam_size=semiminor;
   t1=2*x/cross_beam_size;
   t2=2*y/along_beam_size;
   
