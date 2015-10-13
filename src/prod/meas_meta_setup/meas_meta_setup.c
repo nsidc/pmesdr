@@ -42,17 +42,7 @@
    the code should be recompiled using the appropriate define flags.
 
    The compile script should externally set RSS and CSU flags; otherwise
-   uncomment the following block and set the flags as desired
-
-*/
-//#define RSS
-//#undef RSS   /* uncomment for RSS, uncomment out for CSU */
-//#ifndef RSS
-//#define CSU
-//#endif
-
-#define DEBUG_RESPONSE   /* if defined, outputs response debug info to file */
-#undef DEBUG_RESPONSE   /* if not defined (normal case) do not output response debug info to file */
+   uncomment the following block and set the flags as desired */
 
 #define NSAVE 50            /* maximum number of regions to output */
 #define MAXFILL 2000        /* maximum number of pixels in response function */
@@ -61,9 +51,6 @@
 			       set to 0 to not include az ang (smaller file) */
 #define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
 				  use 0 to not use pre compute files*/ 
-#define SHORTLOC /* if defined use short ints to store precomputed locations */
-//#undef SHORTLOC  /* undefine to use floats to store precomputed locations  (more memory used) */
-
 #define DTR 1.7453292519943295e-2      /* degrees to radians */
 #define RTD 57.29577951308233          /* radians to degrees */
 #define PI  3.141592653589793 
@@ -170,7 +157,7 @@ void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
   int imon, mday;
   float secs;
   /* '19970600301015123.150300 '1997 1 3 60 1 51 23 */
-  sscanf(time_tag,"%4d%3d%2d%2d%2d%2d%7.4f",iyear,iday,&imon,&mday,ihour,imin,&secs);
+  sscanf(time_tag,"%4d%3d%2d%2d%2d%2d%7f",iyear,iday,&imon,&mday,ihour,imin,&secs);
   return;                                                                                                                 
 }
 
@@ -456,12 +443,7 @@ int main(int argc,char *argv[])
   int first_scan_loc2;
   int last_scan_loc2;
   float *efov;
-
-#ifdef DEBUG_RESPONSE
-  FILE *resp_debug;
-  char debug_response_out_name[]="debug_response.out";  
-  float plat, plon;
-#endif
+  int status;
 
 #ifdef RSS
   char fcdr_input[]="SSM/I RSS V7 binary";  
@@ -654,17 +636,13 @@ int main(int argc,char *argv[])
      */
     csu = strstr( fpath, "CSU" );
     if ( NULL != csu ) {
-      gsx_fname = (char *)malloc( strlen(fname)+5 );
+      status = posix_memalign( (void**)&gsx_fname, ALIGNMENT, ( strlen(fname)+5 ) );
+      if ( 0 != status ) {
+	fprintf( stderr, "%s: couldn't allocate memory for gsx_fname %s\n", __FUNCTION__, fname );
+	exit -1;
+      }
       memset(gsx_fname, 0, sizeof(gsx_fname));
       sprintf(gsx_fname, "%s/GSX_%s", dpath, fpath);
-#if 0
-      csu = strrchr( fname, '/' );
-      gsx_fname = (char *)malloc( strlen(fname)+4 );
-      csu_length = (int)(csu-fname)+1;
-      strncpy( gsx_fname, fname, csu_length );
-      strncpy( gsx_fname+strlen(gsx_fname), "GSX_", 4 );
-      strcpy( gsx_fname+strlen(gsx_fname), fname+csu_length );
-#endif
       gsx = gsx_init( gsx_fname ); // for now a NULL return will come back from a bad filename OR an RSS binary file
     }
 
@@ -1099,17 +1077,6 @@ int main(int argc,char *argv[])
 	  if (iy2+iysize1<0) iysize1=1-iy2; 
 	  if (iy2+iysize2>=nsy) iysize2=nsy-iy2;
 
-#ifdef DEBUG_RESPONSE
-	  if (mod(mcnt,7) != 1 || mcnt > 535 || mcnt < 500) goto label_3400;  /* reduce count */
-	  printf(" Az comp: %d %d %f %f %f %f\n",ix2,iy2,theta,azang,
-		 dmod(theta-azang+720.0,360.0),dscale);
-	  fprintf(resp_debug,"%d %d %d %d %f %f %f %f\n", iscan, iregion, ibeam, i, clat, clon, sc_last_lat, sc_last_lon);	  
-	  fprintf(resp_debug,"%d %d %f %f %f %f %d %d %d\n",
-		  ix2,iy2,theta,azang,dmod(theta-azang+720.0,360.0),dscale,nsx,nsy,iadd);
-	  fprintf(resp_debug,"%f %d %d %d %d %d %d %d\n",
-		  dscale,box_size,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2);
-#endif
-
 #ifdef RSS
 	  //  printf(" Azimuth angle comparison: %f %f %f\n",theta,azang,dmod(theta-azang+720.0,360.0));
 	  theta=azang;   /* use azimuth angle from file */
@@ -1126,19 +1093,8 @@ int main(int argc,char *argv[])
 	      iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
 	      if (iadd1 >= 0 & iadd1 < nsx*nsy) {		  
 		/* get pre-computed lat/lon of pixel */
-#ifdef SHORTLOC
 		alat1=latlon_store[iadd1*2+  noffset[iregion]]/200.0;
 		alon1=latlon_store[iadd1*2+1+noffset[iregion]]/175.0;
-#else
-		alat1=flatlon_store[iadd1*2+  noffset[iregion]];
-		alon1=flatlon_store[iadd1*2+1+noffset[iregion]];
-#endif
-
-		/* compute lat/lon of pixel as a check of the pre-computed location */
-		//pixtolatlon(((float) ix)+0.5, ((float) iy)+0.5, &clon, &clat,
-		// 	  projt, xdeg, ydeg, ascale, bscale, a0, b0);
-		//clat=nint(clat*200.0)/200.0; clon=nint(clon*175.0)/175.0;
-		//printf("Loc check: %d %f %f  %f %f\n",iadd1,alat1,clat,alon1,clon);
 
 		/* compute antenna pattern response at each pixel based on beam number, 
 		   location, and projection rotation and scaling */
@@ -1164,19 +1120,7 @@ int main(int argc,char *argv[])
 		    count=MAXFILL;
 		  }
 		
-#ifdef DEBUG_RESPONSE
-		} else
-		  sum=-sum;
-
-		x=ix+0.5;  /* compute exact lat/lon of each pixel in response array */
-		y=iy+0.5;
-		pixtolatlon(x, y, &plon, &plat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
-		fprintf(resp_debug,"%d %d %f %f %f %d %f %f %f %f\n",
-			ix,iy,x_rel,y_rel,sum,iadd1,alon1,alat1,plon,plat);
-#else
 		}
-#endif
-
 	      }
 	    }
 	  }
@@ -1264,10 +1208,6 @@ int main(int argc,char *argv[])
     printf("Done with setup records %d %d\n",irec,krec);
   }
 
-#ifdef DEBUG_RESPONSE
-  fclose(resp_debug);
-#endif
-  
   /* close output setup files */
   for (j=0; j<save_area.nregions; j++) {
     printf("\nRegion %d %s beam %d records %d\n",save_area.sav_regnum[j],
@@ -1855,7 +1795,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," Response_Multiplier=%f",RESPONSEMULT);
+		      sprintf(lin," Response_Multiplier=%d",RESPONSEMULT);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
@@ -1957,12 +1897,7 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
   /* allocate memory for storage of location arrays */
   *noffset=malloc(sizeof(int)*(a->nregions+1));
-#ifdef SHORTLOC
   *latlon_store=malloc(sizeof(short int)*nspace);
-#else
-  *flatlon_store=malloc(sizeof(float)*nspace);
-  *latlon_store = (short int *) *flatlon_store;  
-#endif
   if (*noffset==NULL || *latlon_store==NULL) {
     fprintf(stderr,"*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
     exit(-1);
@@ -1983,17 +1918,10 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 		    a->sav_a0[iregion],     a->sav_b0[iregion]);
 
     /* hash file name */
-#ifdef SHORTLOC
     sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
 	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
 	    abs(nint(a->sav_a0[iregion])), abs(nint(a->sav_b0[iregion])),
 	    abs(nint(a->sav_xdeg[iregion])),abs(nint(a->sav_ydeg[iregion])));
-#else
-    sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.floc",
-	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    abs(nint(a->sav_a0[iregion])), abs(nint(a->sav_b0[iregion])),
-	    abs(nint(a->sav_xdeg[iregion])) ,abs(nint(a->sav_ydeg[iregion])));
-#endif
 
     if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
@@ -2002,13 +1930,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  iadd=a->sav_nsx[iregion]*iy+ix; /* zero-based lexicographic pixel address */
 	  iadd0=2*iadd+(*noffset)[iregion-1];
 	  iadd=2*iadd+(*noffset)[iregion];	  
-#ifdef SHORTLOC	
 	  (*latlon_store)[iadd]=  (*latlon_store)[iadd0];	  
 	  (*latlon_store)[iadd+1]=(*latlon_store)[iadd0+1];
-#else	
-	  (*flatlon_store)[iadd]=  (*flatlon_store)[iadd0];	  
-	  (*flatlon_store)[iadd+1]=(*flatlon_store)[iadd0+1];
-#endif	
 	}
       }      
 
@@ -2026,19 +1949,12 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  printf("... could not open precompute file %s will recompute\n",line);	
 	  goto label_skip;
 	}
-#ifdef SHORTLOC
+
 	if (fread(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
 	  printf("*** error reading precompute file %s\n",line);	
 	  fclose(f);
 	  goto label_skip;
 	}
-#else
-	if (fread(&(*flatlon_store)[(*noffset)[iregion]], 4, nsize*2, f)!=2*nsize) {
-	  printf("*** error reading precompute file %s\n",line);	
-	  fclose(f);
-	  goto label_skip;
-	}
-#endif
 	fclose(f);
 	goto label_read;
       }
@@ -2058,13 +1974,9 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  if (iadd<0) iadd=0;
 	  if (iadd>=nsize) iadd=0;
 	  iadd=2*iadd+(*noffset)[iregion];
-#ifdef SHORTLOC	
+
 	  (*latlon_store)[iadd]=  nint(clat*200.0);
 	  (*latlon_store)[iadd+1]=nint(clon*175.0);
-#else	
-	  (*flatlon_store)[iadd]=  clat;
-	  (*flatlon_store)[iadd+1]=clon;
-#endif	
 	}
       }
 
@@ -2077,19 +1989,12 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  printf("	*** error opening output precompute file %s\n",line);	
 	  goto label_read;
 	}      
-#ifdef SHORTLOC
+
 	if (fwrite(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
 	  fprintf(stderr,"*** error writing location file -- file is now invald\n");
 	  fclose(f);
 	  exit(-1);
 	}
-#else
-	if (fwrite(&(*flatlon_store)[(*noffset)[iregion]], 4, nsize*2, f)!=2*nsize) {
-	  fprintf(stderr,"*** error writing location file -- file is now invald\n");
-	  fclose(f);
-	  exit(-1);
-	}
-#endif
 	fclose(f);
       }
     }    
@@ -2523,6 +2428,7 @@ float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibe
 
 float *efov_ssmi_response( int count ) {
   float *efov;
+  int status;
 
   static float geom[]={
     69.0, 43.0,
@@ -2533,7 +2439,10 @@ float *efov_ssmi_response( int count ) {
     15.0, 13.0,
     15.0, 13.0};
 
-  efov = (float *) malloc( 2 * sizeof( float ) );
+  status = posix_memalign( (void**)&efov, ALIGNMENT, ( 2 * sizeof( float ) ) );
+  if ( 0 != status ) {
+    return NULL;
+  }
   *efov = geom[count*2];
   *(efov+1) = geom[count*2+1];
 
