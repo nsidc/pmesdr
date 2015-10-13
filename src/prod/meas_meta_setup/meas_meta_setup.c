@@ -284,9 +284,6 @@ typedef struct { /* ssmiCSU data file contents */
   float  CEL_LON[HI_SCAN*HSCANS];  /* lon : Longitude (hi-res)            */
   float  CEL_EIA[HI_SCAN*HSCANS];  /* eia : Earth incidence angle (hi-res) */
   float  CEL_SUN[HI_SCAN*HSCANS];  /* glint : Sun glint angle (hi-res)       */
-  //float  CEL_AZM[HI_SCAN*HSCANS];  /* Scan azimuth angle        */ 
-  //float  CEL_LND[HI_SCAN*HSCANS];  /* land flag        */
-  //short int CEL_ICE[HI_SCAN*HSCANS]; /* ice flag */
   float  CEL_LAT_lo[LO_SCAN*LSCANS]; /* lat : Latitude (lo-res)             */
   float  CEL_LON_lo[LO_SCAN*LSCANS]; /* lon : Longitude (lo-res)            */
   float  CEL_EIA_lo[LO_SCAN*LSCANS]; /* eia : Earth incidence angle (lo-res) */
@@ -361,7 +358,7 @@ int main(int argc,char *argv[])
 {
   region_save save_area;
 
-  int nscans, lrev=0;
+  int nscans;
 
   int ret_status=1;
 
@@ -393,7 +390,6 @@ int main(int argc,char *argv[])
   int iday,iyear,imon,ihour,imin,isec,jday;
   int idaye,iyeare,imone,ihoure,imine,isece,jdaye;
 
-  int nbeams=7;
   int inlonrange,ilow,ihigh,nmeas;
   float a,b,rat,theta_orb,scan_ang,esep_ang,ang2,theta;
   
@@ -425,7 +421,6 @@ int main(int argc,char *argv[])
   int KSAT=13;                    /* assign a default value */
   int quality_mask=0;             /* default: no mask applied */
 
-  int irev = 0; /* rev counter */
   int irec = 0; /* input cells counter */
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
@@ -525,7 +520,6 @@ int main(int argc,char *argv[])
   response_threshold=pow(10.,0.1*response_threshold);  
  
   /* set some sensor-specific constants */
-  nbeams=7;          /* number of beams */     
   scan_ang=102.0;    /* azimuth angle of the scan from left measurement to right measurement at subsat point */
 
   /* set sensor specific quality control flag mask */
@@ -581,8 +575,8 @@ int main(int argc,char *argv[])
     /* before reading in the next file, free the memory from the previous gsx pointer */
     if ( NULL != gsx ) {
       gsx_close( gsx );
-      free( gsx_fname );
     }
+    free( gsx_fname );
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
@@ -665,11 +659,13 @@ int main(int argc,char *argv[])
     }
     printf("Satellite %d  orbit %d  scans %d\n",d->KSAT,d->IORBIT,d->NUMSCAN);
     fflush( stderr );
-    if ( NULL != gsx ) fprintf( stderr, "%s: Satellite %d  platform %d  scans %d\n", \
-	     __FUNCTION__, gsx->short_sensor, gsx->short_platform, gsx->scans_loc1 );
+    if ( NULL != gsx ) fprintf( stderr, "%s: Satellite %s  orbit %d  lo scans %d hi scans %d\n", \
+				__FUNCTION__, cetb_platform_id_name[gsx->short_platform], \
+				gsx->orbit, gsx->scans_loc1, gsx->scans_loc2 );
 
     /* extract values of interest */
     nscans=d->NUMSCAN;
+    if ( NULL != gsx ) nscans = gsx->scans_loc2;
 #ifdef RSS
     convert_time(d->ASTART_TIME,&iyear,&iday,&ihour,&imin);
 #else
@@ -759,25 +755,17 @@ int main(int argc,char *argv[])
       
       if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-      if (d->ORBIT[iscan] == 0.0) goto label_350; /* skip further processing of this scan */
+      if ( NULL == gsx ) { //only do these checks if not reading from a GSX file
+	if (d->ORBIT[iscan] == 0.0) goto label_350; /* skip further processing of this scan */
       
-      if (d->IORBIT != lrev && d->IORBIT > 0) {
-	irev++;
-	lrev=d->IORBIT;
+	/* check scan measurement quality */
+	if ((quality_mask & d->IQUAL_FLAG[iscan]) != 0)
+	  goto label_350; /* skip to next scan if data bad */
+	/* reject scans that are not part of current orbit (RSS only) */
+	if (d->ORBIT[iscan]-d->IORBIT < 0.0 || d->ORBIT[iscan]-d->IORBIT > 1.0)
+	  goto label_350; /* skip to next scan */
       }
 
-      /* check scan measurement quality */
-      if ((quality_mask & d->IQUAL_FLAG[iscan]) != 0)
-	goto label_350; /* skip to next scan if data bad */
-
-#ifdef RSS
-      /* reject scans that are not part of current orbit (RSS only) */
-      if (d->ORBIT[iscan]-d->IORBIT < 0.0 || d->ORBIT[iscan]-d->IORBIT > 1.0)
-	goto label_350; /* skip to next scan */
-#endif
-   
-      //printf("scan %d of %d: %lf %d %d\n",iscan,nscans,d->ORBIT[iscan],d->IQUAL_FLAG[iscan],d->IORBIT);
- 
       /* scan time.  All measurements in this scan assigned this time */
 #ifdef RSS
       timedecode(d->SCAN_TIME[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,2000);
@@ -788,7 +776,11 @@ int main(int argc,char *argv[])
       timedecode(d->SCAN_TIME[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
       //printf("CSU hi scan:%d %d %d %d %d %d %d\n",iyear,iday,imon,jday,ihour,imin,isec);
       iday=jday;
-#endif    
+#endif
+      if ( NULL !=gsx ) {
+	timedecode(*(gsx->scantime[1]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+	iday = jday;
+      }
     
       /* check to see if day is in desired range */
       if (iasc >= 3 && iasc <= 5) { /* if local time of day discrimination is used */
@@ -835,6 +827,17 @@ int main(int argc,char *argv[])
 	ascend=1;
       sc_last_lat=d->SC_LAT[iscan];
       sc_last_lon=d->SC_LON[iscan];
+
+      /* if ( NULL != gsx ) {  */
+      /*  	/\* set asc/dsc flag for measurements *\/  */
+      /*  	if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) //d->SC_LAT[iscan]-sc_last_lat < 0.0)   */
+      /*  	  ascend=0;  */
+      /*  	else  */
+      /*  	  ascend=1;  */
+      /*  	sc_last_lat = *(gsx->sc_latitude[1]+iscan); //d->SC_LAT[iscan];  */
+      /*  	sc_last_lon = *(gsx->sc_longitude[1]+iscan); //d->SC_LON[iscan];  */
+      /* }  */
+   
 
       /* extract TB measurements for each scan.  the logic here works through
 	 both hi and lo (A and B) scans with a single loop */
@@ -919,7 +922,23 @@ int main(int argc,char *argv[])
 	    //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
 	  }
 #endif
-
+	  if ( NULL != gsx ) {
+	    if (nmeas==LO_SCAN) {
+	      thetai = *(gsx->eia[0]+i+ilow*LO_SCAN); //d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
+	      azang = *(gsx->eaz[0]+i+ilow*LO_SCAN); //d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
+	      cen_lat = *(gsx->latitude[0]+i+ilow*LO_SCAN); //d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
+	      cen_lon = *(gsx->longitude[0]+i+ilow*LO_SCAN); //d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
+	      //printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
+	    } else {	      
+	      thetai = *(gsx->eia[1]+i+iscan*HI_SCAN); //d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
+	      azang = *(gsx->eaz[1]+i+iscan*HI_SCAN);  //d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
+	      cen_lon = *(gsx->longitude[1]+i+iscan*HI_SCAN); //d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
+	      cen_lat = *(gsx->latitude[1]+i+iscan*HI_SCAN); //d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
+	      cen_lat = *(gsx->latitude[0]+(i/2)+(iscan/2)*LO_SCAN); //d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
+	      //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
+	    }
+	  }
+	    
 	  //printf("Record %d %d %f %f %f %f\n", iscan,ihigh,cen_lon,cen_lat,tb,thetai);	  
 
 	  if (tb == 0.0) goto label_3400; /* skip bad measurements */
@@ -1081,7 +1100,7 @@ int main(int argc,char *argv[])
 	  //  printf(" Azimuth angle comparison: %f %f %f\n",theta,azang,dmod(theta-azang+720.0,360.0));
 	  theta=azang;   /* use azimuth angle from file */
 #endif
-
+	  // if ( NULL != gsx ) theta = azang;
 	  /* for each pixel in the search box compute the normalized 
 	     footprint gain response function
 	     keep only those which exceed specified threshold */
@@ -1188,7 +1207,6 @@ int main(int argc,char *argv[])
     /* input file has been processed */
     if (shortf) {
       printf("\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
-      printf("Output Cells/Records: %d  Revs: %d  Last rev: %d\n",jrec,irev,lrev);
       printf("Region counts: ");
       for (j=0; j<save_area.nregions; j++)
 	printf(" %d",jrec2[j]);
@@ -1202,7 +1220,7 @@ int main(int argc,char *argv[])
   
       if (iday <= dend)
 	printf("*** DAY RANGE IS NOT FINISHED ***\n");
-      printf("End of day period reached %d %d  %d\n",iday,dend,irev);
+      printf("End of day period reached %d %d \n",iday,dend);
     }
                /* input file loop */
     printf("Done with setup records %d %d\n",irec,krec);
@@ -1756,7 +1774,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," Response_threshold=%f",response_threshold);
+		      sprintf(lin," Response_threshold=%f",*response_threshold);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
