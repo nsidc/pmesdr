@@ -821,22 +821,23 @@ int main(int argc,char *argv[])
       if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
 
       /* set asc/dsc flag for measurements */
-      if (d->SC_LAT[iscan]-sc_last_lat < 0.0) 
-	ascend=0;
-      else
-	ascend=1;
-      sc_last_lat=d->SC_LAT[iscan];
-      sc_last_lon=d->SC_LON[iscan];
+      if ( NULL == gsx ) {
+	if (d->SC_LAT[iscan]-sc_last_lat < 0.0) 
+	  ascend=0;
+	else
+	  ascend=1;
+	sc_last_lat=d->SC_LAT[iscan];
+	sc_last_lon=d->SC_LON[iscan];
+      } else {
 
-      /* if ( NULL != gsx ) {  */
       /*  	/\* set asc/dsc flag for measurements *\/  */
-      /*  	if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) //d->SC_LAT[iscan]-sc_last_lat < 0.0)   */
-      /*  	  ascend=0;  */
-      /*  	else  */
-      /*  	  ascend=1;  */
-      /*  	sc_last_lat = *(gsx->sc_latitude[1]+iscan); //d->SC_LAT[iscan];  */
-      /*  	sc_last_lon = *(gsx->sc_longitude[1]+iscan); //d->SC_LON[iscan];  */
-      /* }  */
+	if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) //d->SC_LAT[iscan]-sc_last_lat < 0.0)   
+	  ascend=0;  
+	else  
+	  ascend=1;  
+	sc_last_lat = *(gsx->sc_latitude[1]+iscan); //d->SC_LAT[iscan];
+	sc_last_lon = *(gsx->sc_longitude[1]+iscan); //d->SC_LON[iscan];  
+      }  
    
 
       /* extract TB measurements for each scan.  the logic here works through
