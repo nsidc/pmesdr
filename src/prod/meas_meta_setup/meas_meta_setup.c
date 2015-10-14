@@ -373,6 +373,7 @@ int main(int argc,char *argv[])
   int dend2, ilenyear, nrec, iscan, iscan1, iasc, ii, nsum;
   char *s;
   float ant_az, cen_lat, cen_lon, ctime, lata, az_bias;
+  float cen_lat_extra;
   double cave;  
 
   /* output record information */
@@ -907,19 +908,21 @@ int main(int argc,char *argv[])
 	  azang=  d->CEL_AZM[ihigh+iscan*HI_SCAN]; /* nominal azimuth angle */
 	  cen_lon=d->CEL_LON[ihigh+iscan*HI_SCAN]; /* nominal longitude */
 	  cen_lat=d->CEL_LAT[ihigh+iscan*HI_SCAN]; /* nominal latitude */
+	  cen_lat_extra = cen_lat;
 #else
 	  if (nmeas==LO_SCAN) {
 	    thetai= d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
 	    //azang=  d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
 	    cen_lon=d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
 	    cen_lat=d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
+	    cen_lat_extra = cen_lat;
 	    //printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
 	  } else {	      
 	    thetai= d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
 	    //azang=  d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
 	    cen_lon=d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
 	    cen_lat=d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
-	    cen_lat=d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
+	    cen_lat_extra=d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
 	    //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
 	  }
 #endif
@@ -929,20 +932,21 @@ int main(int argc,char *argv[])
 	      azang = *(gsx->eaz[0]+i+ilow*LO_SCAN); //d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
 	      cen_lat = *(gsx->latitude[0]+i+ilow*LO_SCAN); //d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
 	      cen_lon = *(gsx->longitude[0]+i+ilow*LO_SCAN); //d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
+	      cen_lat_extra = cen_lat;
 	      //printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
 	    } else {	      
 	      thetai = *(gsx->eia[1]+i+iscan*HI_SCAN); //d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
 	      azang = *(gsx->eaz[1]+i+iscan*HI_SCAN);  //d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
 	      cen_lon = *(gsx->longitude[1]+i+iscan*HI_SCAN); //d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
 	      cen_lat = *(gsx->latitude[1]+i+iscan*HI_SCAN); //d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
-	      cen_lat = *(gsx->latitude[0]+(i/2)+(iscan/2)*LO_SCAN); //d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
+	      cen_lat_extra = *(gsx->latitude[0]+(i/2)+(iscan/2)*LO_SCAN); //d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
 	      //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
 	    }
 	  }
 	    
 	  //printf("Record %d %d %f %f %f %f\n", iscan,ihigh,cen_lon,cen_lat,tb,thetai);	  
 
-	  if (tb == 0.0) goto label_3400; /* skip bad measurements */
+	  if (tb <= 0.0) goto label_3400; /* skip bad measurements */
 	  if (thetai == 0.0) goto label_3400; /* skip bad measurements */
 	  
 	  /* compute angle between satellite nadir track and true north at the measurement position */
@@ -991,7 +995,7 @@ int main(int argc,char *argv[])
 	  tsplit1=save_area.sav_tsplit1[iregion]*60;
 	  tsplit2=save_area.sav_tsplit2[iregion]*60;
 
-	  cy=cen_lat;
+	  cy=cen_lat_extra;
 	  cx=cen_lon;
 	  if (cx >  180.0) cx=cx-360.0;
 	  if (cx < -180.0) cx=cx+360.0;
