@@ -440,6 +440,10 @@ int main(int argc,char *argv[])
   int last_scan_loc2;
   float *efov;
   int status;
+  int hi_scan;
+  int lo_scan;
+  int hscans;
+  int lscans;
 
 #ifdef RSS
   char fcdr_input[]="SSM/I RSS V7 binary";  
@@ -459,6 +463,11 @@ int main(int argc,char *argv[])
   }
 #endif
 
+  hi_scan = HI_SCAN;
+  lo_scan = LO_SCAN;
+  hscans = HSCANS;
+  lscans = LSCANS;
+  
   for (n=0; n<NSAVE; n++)
     jrec2[n] = 0;  /* measurements for each output region */
   
@@ -666,15 +675,19 @@ int main(int argc,char *argv[])
 
     /* extract values of interest */
     nscans=d->NUMSCAN;
-    if ( NULL != gsx ) nscans = gsx->scans_loc2;
-#ifdef RSS
-    convert_time(d->ASTART_TIME,&iyear,&iday,&ihour,&imin);
-#else
-    convert_time(d->ASTART_TIME,&iyear,&iday,&ihour,&imin);
-    sscanf(d->ASTART_TIME,"%4d-%2d-%2dT%2d:%2d",&iyear,&imon,&iday,&ihour,&imin);
-#endif
+    if ( NULL != gsx ) {
+      nscans = gsx->scans_loc2;
+      lo_scan = gsx->measurements_loc1;
+      hi_scan = gsx->measurements_loc2;
+    }
+/* #ifdef RSS */
+/*     convert_time(d->ASTART_TIME,&iyear,&iday,&ihour,&imin); */
+/* #else */
+/*     convert_time(d->ASTART_TIME,&iyear,&iday,&ihour,&imin); */
+/*     sscanf(d->ASTART_TIME,"%4d-%2d-%2dT%2d:%2d",&iyear,&imon,&iday,&ihour,&imin); */
+/* #endif */
 
-    printf("start time: '%s' %d %d %d %d\n",d->ASTART_TIME,iyear,iday,ihour,imin);
+/*     printf("start time: '%s' %d %d %d %d\n",d->ASTART_TIME,iyear,iday,ihour,imin); */
 
     /* time of first and last scans */
 #ifdef RSS
@@ -845,7 +858,7 @@ int main(int argc,char *argv[])
 	 both hi and lo (A and B) scans with a single loop */
 
       iscan1=(iscan % 2);
-      for (i=0; i < HI_SCAN; i++) { /* measurements loop to label_3401 */
+      for (i=0; i < hi_scan; i++) { /* measurements loop to label_3401 */
 	irec=irec+1;	/* count of pulses examined */
 
 	/* for each output region and section */
@@ -855,15 +868,15 @@ int main(int argc,char *argv[])
 
 	  /* determine indexing for hi and low scans */
 	  if (ibeam < 6) { /* ssmi 19..37 GHz */
-	    if (i > LO_SCAN-1) goto label_3400; /* skip non-existing low res measurements */
+	    if (i > lo_scan-1) goto label_3400; /* skip non-existing low res measurements */
 	    if (iscan1 -= 0) goto label_3400; /* skip every other along-track index */
 	    ilow=iscan/2;
 	    ihigh=i*2;
-	    nmeas=LO_SCAN;
+	    nmeas=lo_scan;
 	  } else { 	/* ssmi 85 GHz */
 	    ilow=iscan;
 	    ihigh=i;
-	    nmeas=HI_SCAN;	    
+	    nmeas=hi_scan;	    
 	  }
 
 	  /* for this beam, get measurement, geometry, and location */
@@ -872,74 +885,74 @@ int main(int argc,char *argv[])
 	  }
 	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
-	    tb=d->CEL_19H[i+ilow*LO_SCAN];             /*Tb measurement value */
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb=d->CEL_19H[i+ilow*lo_scan];             /*Tb measurement value */
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 2:
-	    tb=d->CEL_19V[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb=d->CEL_19V[i+ilow*lo_scan];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;	    
 	  case 3:
-	    tb=d->CEL_22V[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb=d->CEL_22V[i+ilow*lo_scan];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 4:
-	    tb=d->CEL_37H[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb=d->CEL_37H[i+ilow*lo_scan];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 5:
-	    tb=d->CEL_37V[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb=d->CEL_37V[i+ilow*lo_scan];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 6:
-	    tb=d->CEL_85H[i+iscan*HI_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
+	    tb=d->CEL_85H[i+iscan*hi_scan];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
 	    break;
 	  case 7:
-	    tb=d->CEL_85V[i+iscan*HI_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
+	    tb=d->CEL_85V[i+iscan*hi_scan];
+	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
 	    break;
 	  default:
 	    printf("**** beam specification error \n");
 	  }
 
 #ifdef RSS
-	  thetai= d->CEL_EIA[ihigh+iscan*HI_SCAN]; /* nominal incidence angle */
-	  azang=  d->CEL_AZM[ihigh+iscan*HI_SCAN]; /* nominal azimuth angle */
-	  cen_lon=d->CEL_LON[ihigh+iscan*HI_SCAN]; /* nominal longitude */
-	  cen_lat=d->CEL_LAT[ihigh+iscan*HI_SCAN]; /* nominal latitude */
+	  thetai= d->CEL_EIA[ihigh+iscan*hi_scan]; /* nominal incidence angle */
+	  azang=  d->CEL_AZM[ihigh+iscan*hi_scan]; /* nominal azimuth angle */
+	  cen_lon=d->CEL_LON[ihigh+iscan*hi_scan]; /* nominal longitude */
+	  cen_lat=d->CEL_LAT[ihigh+iscan*hi_scan]; /* nominal latitude */
 	  cen_lat_extra = cen_lat;
 #else
-	  if (nmeas==LO_SCAN) {
-	    thetai= d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
-	    //azang=  d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
-	    cen_lon=d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
-	    cen_lat=d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
+	  if (nmeas==lo_scan) {
+	    thetai= d->CEL_EIA_lo[i+ilow*lo_scan]; /* nominal incidence angle */
+	    //azang=  d->CEL_AZM_lo[i+ilow*lo_scan]; /* nominal azimuth angle */
+	    cen_lon=d->CEL_LON_lo[i+ilow*lo_scan]; /* nominal longitude */
+	    cen_lat=d->CEL_LAT_lo[i+ilow*lo_scan]; /* nominal latitude */
 	    cen_lat_extra = cen_lat;
 	    //printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
 	  } else {	      
-	    thetai= d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
-	    //azang=  d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
-	    cen_lon=d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
-	    cen_lat=d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
-	    cen_lat_extra=d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
+	    thetai= d->CEL_EIA[i+iscan*hi_scan]; /* nominal incidence angle */
+	    //azang=  d->CEL_AZM[i+iscan*hi_scan]; /* nominal azimuth angle */
+	    cen_lon=d->CEL_LON[i+iscan*hi_scan]; /* nominal longitude */
+	    cen_lat=d->CEL_LAT[i+iscan*hi_scan]; /* nominal latitude */
+	    cen_lat_extra=d->CEL_LAT_lo[i/2+(iscan/2)*lo_scan]; /* nominal latitude */
 	    //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
 	  }
 #endif
 	  if ( NULL != gsx ) {
-	    if (nmeas==LO_SCAN) {
-	      thetai = *(gsx->eia[0]+i+ilow*LO_SCAN); //d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
-	      azang = *(gsx->eaz[0]+i+ilow*LO_SCAN); //d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
-	      cen_lat = *(gsx->latitude[0]+i+ilow*LO_SCAN); //d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
-	      cen_lon = *(gsx->longitude[0]+i+ilow*LO_SCAN); //d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
+	    if (nmeas==lo_scan) {
+	      thetai = *(gsx->eia[0]+i+ilow*lo_scan); //d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
+	      azang = *(gsx->eaz[0]+i+ilow*lo_scan); //d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
+	      cen_lat = *(gsx->latitude[0]+i+ilow*lo_scan); //d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
+	      cen_lon = *(gsx->longitude[0]+i+ilow*lo_scan); //d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
 	      cen_lat_extra = cen_lat;
 	      //printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
 	    } else {	      
-	      thetai = *(gsx->eia[1]+i+iscan*HI_SCAN); //d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
-	      azang = *(gsx->eaz[1]+i+iscan*HI_SCAN);  //d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
-	      cen_lon = *(gsx->longitude[1]+i+iscan*HI_SCAN); //d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
-	      cen_lat = *(gsx->latitude[1]+i+iscan*HI_SCAN); //d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
-	      cen_lat_extra = *(gsx->latitude[0]+(i/2)+(iscan/2)*LO_SCAN); //d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
+	      thetai = *(gsx->eia[1]+i+iscan*hi_scan); //d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
+	      azang = *(gsx->eaz[1]+i+iscan*hi_scan);  //d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
+	      cen_lon = *(gsx->longitude[1]+i+iscan*hi_scan); //d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
+	      cen_lat = *(gsx->latitude[1]+i+iscan*hi_scan); //d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
+	      cen_lat_extra = *(gsx->latitude[0]+(i/2)+(iscan/2)*lo_scan); //d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
 	      //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
 	    }
 	  }
