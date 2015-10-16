@@ -190,6 +190,11 @@ typedef struct { /* BYU region information storage */
   float sav_km[NSAVE];  
 } region_save;  
 
+#define HI_SCAN 128
+#define LO_SCAN  64
+#define HSCANS 3600
+#define LSCANS 1800
+#define NUMCHAR  23
 
 /****************************************************************************/
 
@@ -237,7 +242,8 @@ typedef struct { /* ssmiRSS V7 data file organization */
 
 } ssmiRSSv7;
 
-#else
+#endif
+#ifdef CSU
 
 /* declarations for reading CSU sensor swath TB files */
 
@@ -318,8 +324,8 @@ static float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thet
 /* RMS SSM/I V7 binary reader */
 int read_ssmiRSS_TB_V07_binary(char *fname, ssmiRSSv7 *d, int verbose);
 void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat);
-
-#else
+#endif
+#ifdef CSU
 
 /* CSU SSM/I netcdf reader */
 int read_ssmiCSU_TB(char *fname, ssmiCSU *d, int verbose);
@@ -453,7 +459,8 @@ int main(int argc,char *argv[])
     fprintf(stderr,"*** could not allocate startup\n");
     exit(-1);
   }
-#else
+#endif
+#ifdef CSU
   char fcdr_input[]="SSM/I CSU netcdf";  
   ssmiCSU *d;
   d=(ssmiCSU *) malloc(sizeof(ssmiCSU));
@@ -471,7 +478,7 @@ int main(int argc,char *argv[])
   for (n=0; n<NSAVE; n++)
     jrec2[n] = 0;  /* measurements for each output region */
   
-  printf("Code version: %s\n",fcdr_input);  
+  //printf("Code version: %s\n",fcdr_input);  
   printf("MEaSures Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
 
   /* optionally get the box size of pixels to use for calculating MRF for each */
@@ -539,7 +546,8 @@ int main(int argc,char *argv[])
 #ifdef RSS
   /* for ssmi RSS V7 get max/min nominal lats for each A scan measurement */
   read_ssmiRSS_minmaxlat(minlat,maxlat);
-#else
+#endif
+#ifdef CSU
   /* for ssmi RSS V7 get max/min nominal lats for each A scan measurement */
   read_ssmiRSS_minmaxlat(minlat,maxlat);
 #endif
@@ -628,7 +636,8 @@ int main(int argc,char *argv[])
     /* read measurement data from file */    
 #ifdef RSS
     file_read_error=read_ssmiRSS_TB_V07_binary(fname, d, 1);
-#else
+#endif
+#ifdef CSU
     file_read_error=read_ssmiCSU_TB(fname, d, 1);
 #endif
     /* Break the filename out into the directory and filename */
@@ -648,6 +657,8 @@ int main(int argc,char *argv[])
       memset(gsx_fname, 0, sizeof(gsx_fname));
       sprintf(gsx_fname, "%s/GSX_%s", dpath, fpath);
       gsx = gsx_init( gsx_fname ); // for now a NULL return will come back from a bad filename OR an RSS binary file
+    } else {
+      gsx = gsx_init( fname ); // Read in an RSS GSX file
     }
 
     /* if this is the first file to be read, then write out the final header info for downstream processing */
@@ -667,14 +678,14 @@ int main(int argc,char *argv[])
       fprintf(stderr,"*** error reading %s\n  skipping...\n",fname);
       goto label_330;   /* skip reading file on error */
     }
-    printf("Satellite %d  orbit %d  scans %d\n",d->KSAT,d->IORBIT,d->NUMSCAN);
+    // printf("Satellite %d  orbit %d  scans %d\n",d->KSAT,d->IORBIT,d->NUMSCAN);
     fflush( stderr );
     if ( NULL != gsx ) fprintf( stderr, "%s: Satellite %s  orbit %d  lo scans %d hi scans %d\n", \
 				__FUNCTION__, cetb_platform_id_name[gsx->short_platform], \
 				gsx->orbit, gsx->scans_loc1, gsx->scans_loc2 );
 
     /* extract values of interest */
-    nscans=d->NUMSCAN;
+    //nscans=d->NUMSCAN;
     if ( NULL != gsx ) {
       nscans = gsx->scans_loc2;
       lo_scan = gsx->measurements_loc1;
@@ -693,16 +704,17 @@ int main(int argc,char *argv[])
 #ifdef RSS
     timedecode(d->SCAN_TIME[0],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,2000);
     timedecode(d->SCAN_TIME[nscans-1],&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,2000);
-#else
+#endif
+#ifdef CSU
     timedecode(d->SCAN_TIME[0],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
     timedecode(d->SCAN_TIME[nscans-1],&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
 #endif
-    printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);    
-    printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
+    //printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);    
+    //printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
 
-    printf("first scan:%lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);
-    printf("last scan: %lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);
-    printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+    //printf("first scan:%lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);
+    //printf("last scan: %lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);
+    //printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
 
     if ( gsx != NULL ) {
       first_scan_loc2 = (int) CETB_LOC2;
@@ -710,9 +722,9 @@ int main(int argc,char *argv[])
       timedecode( *(gsx->scantime[first_scan_loc2]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
       timedecode( *(gsx->scantime[first_scan_loc2]+last_scan_loc2), \
 		  &iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-      printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME, \
+      printf("* start time:  %lf  %d %d %d %d %d %d %d\n", \
 	     *(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);    
-      printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME, \
+      printf("* stop time:   %lf  %d %d %d %d %d %d %d\n", \
 	     *(gsx->scantime[first_scan_loc2]+last_scan_loc2),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
       
       printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);
@@ -769,22 +781,24 @@ int main(int argc,char *argv[])
       
       if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-      if ( NULL == gsx ) { //only do these checks if not reading from a GSX file
-	if (d->ORBIT[iscan] == 0.0) goto label_350; /* skip further processing of this scan */
+      /* if ( NULL == gsx ) { //only do these checks if not reading from a GSX file */
+      /* 	if (d->ORBIT[iscan] == 0.0) goto label_350; /\* skip further processing of this scan *\/ */
       
-	/* check scan measurement quality */
-	if ((quality_mask & d->IQUAL_FLAG[iscan]) != 0)
-	  goto label_350; /* skip to next scan if data bad */
-	/* reject scans that are not part of current orbit (RSS only) */
-	if (d->ORBIT[iscan]-d->IORBIT < 0.0 || d->ORBIT[iscan]-d->IORBIT > 1.0)
-	  goto label_350; /* skip to next scan */
-      }
+      /* 	/\* check scan measurement quality *\/ */
+      /* 	if ((quality_mask & d->IQUAL_FLAG[iscan]) != 0) */
+      /* 	  goto label_350; /\* skip to next scan if data bad *\/ */
+      /* 	/\* reject scans that are not part of current orbit (RSS only) *\/ */
+      /* 	if (d->ORBIT[iscan]-d->IORBIT < 0.0 || d->ORBIT[iscan]-d->IORBIT > 1.0) */
+      /* 	  goto label_350; /\* skip to next scan *\/ */
+      /* } */
 
+      if ( *(gsx->scantime[1]+iscan) <= 0.0 ) goto label_350; // do not process this scan - until gsx is fixed
       /* scan time.  All measurements in this scan assigned this time */
 #ifdef RSS
       timedecode(d->SCAN_TIME[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,2000);
       iday=jday;      
-#else
+#endif
+#ifdef CSU
       //timedecode(d->SCAN_TIME_lo[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
       //printf("CSU lo scan:%d %d %d %d %d %d %d\n",iyear,iday,imon,jday,ihour,imin,isec);
       timedecode(d->SCAN_TIME[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
@@ -811,15 +825,20 @@ int main(int argc,char *argv[])
       /* compute days since start of image data if cross year boundary */
       ktime=(iyear-year)*365;   /* days */
       if (ktime > 0) { /* more than a year */
-	if (isleapyear(year)) ktime=ktime+1;
-      }  else
-	if (ktime<0) printf("*possible bug in ktime\n");
+	if (isleapyear(year)) {
+	  ktime=ktime+1;
+	}
+      }  else {
+	if (ktime<0) {
+	  printf("*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
+	}
+      }
       
       /* compute time in mins since start of image data (assumes mstart=0) */
       ktime=((ktime+iday-dstart)*24+ihour)*60+imin;
 
       /* compute the orientation of the nadir track with respect to north */
-      eqlon=360.0*(d->ORBIT[iscan]-d->IORBIT);
+      //eqlon=360.0*(d->ORBIT[iscan]-d->IORBIT);
       if (eqlon<0.0) eqlon=eqlon+360.0;      
 
       /*
@@ -835,14 +854,14 @@ int main(int argc,char *argv[])
       if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
 
       /* set asc/dsc flag for measurements */
-      if ( NULL == gsx ) {
-	if (d->SC_LAT[iscan]-sc_last_lat < 0.0) 
-	  ascend=0;
-	else
-	  ascend=1;
-	sc_last_lat=d->SC_LAT[iscan];
-	sc_last_lon=d->SC_LON[iscan];
-      } else {
+      /* if ( NULL == gsx ) { */
+      /* 	if (d->SC_LAT[iscan]-sc_last_lat < 0.0)  */
+      /* 	  ascend=0; */
+      /* 	else */
+      /* 	  ascend=1; */
+      /* 	sc_last_lat=d->SC_LAT[iscan]; */
+      /* 	sc_last_lon=d->SC_LON[iscan]; */
+      /* } else { */
 
       /*  	/\* set asc/dsc flag for measurements *\/  */
 	if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) //d->SC_LAT[iscan]-sc_last_lat < 0.0)   
@@ -851,7 +870,7 @@ int main(int argc,char *argv[])
 	  ascend=1;  
 	sc_last_lat = *(gsx->sc_latitude[1]+iscan); //d->SC_LAT[iscan];
 	sc_last_lon = *(gsx->sc_longitude[1]+iscan); //d->SC_LON[iscan];  
-      }  
+	//      }  
    
 
       /* extract TB measurements for each scan.  the logic here works through
@@ -885,31 +904,31 @@ int main(int argc,char *argv[])
 	  }
 	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
-	    tb=d->CEL_19H[i+ilow*lo_scan];             /*Tb measurement value */
+	    //tb=d->CEL_19H[i+ilow*lo_scan];             /*Tb measurement value */
 	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 2:
-	    tb=d->CEL_19V[i+ilow*lo_scan];
+	    //tb=d->CEL_19V[i+ilow*lo_scan];
 	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;	    
 	  case 3:
-	    tb=d->CEL_22V[i+ilow*lo_scan];
+	    //tb=d->CEL_22V[i+ilow*lo_scan];
 	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 4:
-	    tb=d->CEL_37H[i+ilow*lo_scan];
+	    //tb=d->CEL_37H[i+ilow*lo_scan];
 	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 5:
-	    tb=d->CEL_37V[i+ilow*lo_scan];
+	    //tb=d->CEL_37V[i+ilow*lo_scan];
 	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 6:
-	    tb=d->CEL_85H[i+iscan*hi_scan];
+	    //tb=d->CEL_85H[i+iscan*hi_scan];
 	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
 	    break;
 	  case 7:
-	    tb=d->CEL_85V[i+iscan*hi_scan];
+	    //tb=d->CEL_85V[i+iscan*hi_scan];
 	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
 	    break;
 	  default:
@@ -922,7 +941,8 @@ int main(int argc,char *argv[])
 	  cen_lon=d->CEL_LON[ihigh+iscan*hi_scan]; /* nominal longitude */
 	  cen_lat=d->CEL_LAT[ihigh+iscan*hi_scan]; /* nominal latitude */
 	  cen_lat_extra = cen_lat;
-#else
+#endif
+#ifdef CSU
 	  if (nmeas==lo_scan) {
 	    thetai= d->CEL_EIA_lo[i+ilow*lo_scan]; /* nominal incidence angle */
 	    //azang=  d->CEL_AZM_lo[i+ilow*lo_scan]; /* nominal azimuth angle */
@@ -940,20 +960,30 @@ int main(int argc,char *argv[])
 	  }
 #endif
 	  if ( NULL != gsx ) {
-	    if (nmeas==lo_scan) {
-	      thetai = *(gsx->eia[0]+i+ilow*lo_scan); //d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
-	      azang = *(gsx->eaz[0]+i+ilow*lo_scan); //d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
-	      cen_lat = *(gsx->latitude[0]+i+ilow*lo_scan); //d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
-	      cen_lon = *(gsx->longitude[0]+i+ilow*lo_scan); //d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
-	      cen_lat_extra = cen_lat;
-	      //printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
-	    } else {	      
-	      thetai = *(gsx->eia[1]+i+iscan*hi_scan); //d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
-	      azang = *(gsx->eaz[1]+i+iscan*hi_scan);  //d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
-	      cen_lon = *(gsx->longitude[1]+i+iscan*hi_scan); //d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
-	      cen_lat = *(gsx->latitude[1]+i+iscan*hi_scan); //d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
-	      cen_lat_extra = *(gsx->latitude[0]+(i/2)+(iscan/2)*lo_scan); //d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
+	    switch ( gsx->input_provider ) {
+	    case ( CETB_CSU ):
+	      if (nmeas==lo_scan) {
+		thetai = *(gsx->eia[0]+i+ilow*lo_scan); //d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
+		azang = *(gsx->eaz[0]+i+ilow*lo_scan); //d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
+		cen_lat = *(gsx->latitude[0]+i+ilow*lo_scan); //d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
+		cen_lon = *(gsx->longitude[0]+i+ilow*lo_scan); //d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
+		cen_lat_extra = cen_lat;
+		//printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
+	      } else {	      
+		thetai = *(gsx->eia[1]+i+iscan*hi_scan); //d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
+		azang = *(gsx->eaz[1]+i+iscan*hi_scan);  //d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
+		cen_lon = *(gsx->longitude[1]+i+iscan*hi_scan); //d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
+		cen_lat = *(gsx->latitude[1]+i+iscan*hi_scan); //d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
+		cen_lat_extra = *(gsx->latitude[0]+(i/2)+(iscan/2)*lo_scan); //d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
 	      //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
+	      }
+	      break;
+	    case ( CETB_RSS ):
+	      thetai = *(gsx->eia[1]+ihigh+iscan*hi_scan); //d->CEL_EIA[ihigh+iscan*hi_scan]; /* nominal incidence angle */
+	      azang =  *(gsx->eaz[1]+ihigh+iscan*hi_scan); //d->CEL_AZM[ihigh+iscan*hi_scan]; /* nominal azimuth angle */
+	      cen_lon = *(gsx->longitude[1]+ihigh+iscan*hi_scan); //d->CEL_LON[ihigh+iscan*hi_scan]; /* nominal longitude */
+	      cen_lat = *(gsx->latitude[1]+ihigh+iscan*hi_scan); //d->CEL_LAT[ihigh+iscan*hi_scan]; /* nominal latitude */
+	      cen_lat_extra = cen_lat;
 	    }
 	  }
 	    
@@ -1118,7 +1148,7 @@ int main(int argc,char *argv[])
 	  //  printf(" Azimuth angle comparison: %f %f %f\n",theta,azang,dmod(theta-azang+720.0,360.0));
 	  theta=azang;   /* use azimuth angle from file */
 #endif
-	  // if ( NULL != gsx ) theta = azang;
+	  if ( NULL != gsx ) theta = azang;
 	  /* for each pixel in the search box compute the normalized 
 	     footprint gain response function
 	     keep only those which exceed specified threshold */
@@ -2140,8 +2170,8 @@ void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat)
     fscanf(f,"%f %f",&minlat[i],&maxlat[i]);
   fclose(f);
 }
-
-#else
+#endif
+#ifdef CSU
 
 #include <netcdf.h>
 
