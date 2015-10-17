@@ -56,6 +56,9 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int median_flag );
 int cetb_file_add_grd_parameters( cetb_file_class *this,
 				  int median_flag );
+int cetb_file_set_dimensions( cetb_file_class *this,
+			      size_t rows,
+			      size_t cols );
 void cetb_file_close( cetb_file_class *this );
 
 #endif // cetb_file_H

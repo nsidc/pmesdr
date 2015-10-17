@@ -4,7 +4,6 @@
  * 06-Jul-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
-#include <malloc.h>
 #include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +27,7 @@
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
+static int fetch_global_atts( cetb_file_class *this, int template_fid );
 static char *pmesdr_release_version( void );
 static char *pmesdr_top_dir( void );
 static int valid_date( int year, int doy );
@@ -206,7 +206,9 @@ cetb_file_class *cetb_file_init( char *dirname,
 
 /*
  * cetb_file_open - Open the file associated with this object and
- *                  populate its global file attributes and metadata
+ *                  populate its global file attributes,
+ *                  projection/grid metadata and
+ *                  dimension variables
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
@@ -224,12 +226,7 @@ int cetb_file_open( cetb_file_class *this ) {
   int status;
   char template_filename[ FILENAME_MAX ];
   char *ptr_path;
-  char *time_stamp;
-  char *software_version;
   int template_fid;
-  int num_attributes;
-  int i;
-  char attribute_name[ MAX_STR_LENGTH ];
   FILE *filep;
 
   if ( !this->filename ) {
@@ -257,68 +254,14 @@ int cetb_file_open( cetb_file_class *this ) {
   	     __FUNCTION__, template_filename, nc_strerror( status ) );
     return 0;
   }
-  if ( status = nc_inq_natts( template_fid, &num_attributes ) ) {
-    fprintf( stderr, "%s: "
-  	     "Error getting num attributes in cetb_filename=%s: %s.\n",
-  	     __FUNCTION__, template_filename, nc_strerror( status ) );
-    return 1;
-  }
 
-  /*
-   * Copy all global attributes from template file to CETB file
-   */
-  for ( i = 0; i < num_attributes; i++ ) { 
-    if ( status = nc_inq_attname( template_fid, NC_GLOBAL,
-  				  i, attribute_name ) ) {
-      fprintf( stderr, "%s: Error getting attribute index %d: %s.\n",
-  	       __FUNCTION__, i, nc_strerror( status ) );
-      return 1;
-    }
-    if ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
-  			       this->fid, NC_GLOBAL ) ) {
-      fprintf( stderr, "%s: Error copying %s: %s.\n",
-  	       __FUNCTION__, attribute_name, nc_strerror( status ) );
-      return 1;
-    }
-  }
-
-  /*
-   * Set the global attributes that need to be specific for this file:
-   */
-  software_version = pmesdr_release_version();
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "software_version_id",
-				 strlen( software_version ),
-				 software_version ) ) {
-    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "software_version_id", software_version, nc_strerror( status ) );
+  status = fetch_global_atts( this, template_fid );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error fetching global attributes from template.\n",
+	     __FUNCTION__ ); 
     return 1;
   }
   
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "platform",
-   				 strlen( cetb_gcmd_platform_keyword[ this->platform_id ] ),
-  				 cetb_gcmd_platform_keyword[ this->platform_id ] ) ) {
-     fprintf( stderr, "%s: Error setting %s: %s.\n",
-   	     __FUNCTION__, "platform", nc_strerror( status ) );
-     return 1;
-   }
-
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "sensor",
-  				 strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
-  				 cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) {
-    fprintf( stderr, "%s: Error setting %s: %s.\n",
-  	     __FUNCTION__, "sensor", nc_strerror( status ) );
-    return 1;
-  }
-
-  time_stamp = current_time_stamp();
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
-  				 strlen( time_stamp ), 
-  				 time_stamp ) ) {
-    fprintf( stderr, "%s: Error setting %s: %s.\n",
-  	     __FUNCTION__, "date_created", nc_strerror( status ) );
-    return 1;
-  }
-
   status = fetch_crs( this, template_fid );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error fetching crs from template.\n", __FUNCTION__ ); 
@@ -329,9 +272,6 @@ int cetb_file_open( cetb_file_class *this ) {
     fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
 	     __FUNCTION__, template_filename, nc_strerror( status ) );
   }
-
-  free( software_version );
-  free( time_stamp );
 
   return 0;
   
@@ -525,6 +465,114 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
 }
 
 /*
+ * cetb_file_set_dimensions - Sets dimension variables (time, rows, cols) in the output file
+ *
+ *  input : 
+ *    this : pointer to initialized cetb_file_class object
+ *
+ *  output : n/a
+ *
+ *  result : 0 success, otherwise error
+ *           Upon successful completion, the required dimension variables
+ *           (time, rows, cols )
+ *           will be populated in the output file.
+ *           The varids for each will be stored in the cetb object state data
+ *           
+ *
+ */
+int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) {
+
+  long int i;
+  int status;
+  int dim_ids[ 1 ];
+  int rows_dim_id;
+  int rows_var_id;
+  double *vals;
+  double half_rows;
+  double half_pixel_m;
+  double valid_range[ 2 ];
+
+  if ( status = nc_def_dim( this->fid, "rows", rows, &rows_dim_id ) ) {
+    fprintf( stderr, "%s: Error setting rows dim: %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  dim_ids[ 0 ] = rows_dim_id;
+  if ( status = nc_def_var( this->fid, "rows", NC_DOUBLE, 1, dim_ids, &rows_var_id ) ) {
+    fprintf( stderr, "%s: Error defining rows variable : %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  /*
+   * Allocate and populate the array of y-dimension values
+   * For the EASE2_N25km grid, for example, this needs to be
+   * the coordinate in meters of the center of each cell from top
+   * to bottom.
+   */
+  vals = (double *)calloc( rows, sizeof( double ) );
+  if ( !vals ) { 
+    perror( __FUNCTION__ );
+    return 1;
+  }
+  half_rows = (double) rows / 2.D;
+  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
+  for ( i = 0; i < rows; i++ ) {
+    vals[ rows - i - 1 ]
+      = ( (double) i - half_rows ) * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+  }
+  
+  if ( status = nc_put_var_double( this->fid, rows_var_id, vals ) ) {
+    fprintf( stderr, "%s: Error setting rows values: %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_put_att_text( this->fid, rows_var_id, "standard_name",
+				 strlen("projection_y_coordinate"), "projection_y_coordinate" ) ) {
+    fprintf( stderr, "%s: Error setting rows standard_name: %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  if ( status = nc_put_att_text( this->fid, rows_var_id, "units", strlen("meters"), "meters" ) ) {
+    fprintf( stderr, "%s: Error setting rows units: %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  if ( status = nc_put_att_text( this->fid, rows_var_id, "axis", strlen("Y"), "Y" ) ) {
+    fprintf( stderr, "%s: Error setting rows axis: %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  valid_range[ 0 ] = ( (double) ( 0 ) - half_rows )
+    * cetb_exact_scale_m[ this->region_id ][ this->factor ];
+  valid_range[ 1 ] = ( (double) ( rows ) - half_rows )
+    * cetb_exact_scale_m[ this->region_id ][ this->factor ];
+  if ( status = nc_put_att_double( this->fid, rows_var_id, "valid_range", NC_DOUBLE, 2, valid_range ) ) {
+    fprintf( stderr, "%s: Error setting rows valid_range: %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  /* if ( status = nc_def_dim( this->fid, "projection_x_coordinate", cols, &dim_id ) ) { */
+  /*   fprintf( stderr, "%s: Error setting col dim: %s.\n", */
+  /* 	     __FUNCTION__, nc_strerror( status ) ); */
+  /*   return 1; */
+  /* } */
+
+  /* if ( status = nc_def_dim( this->fid, "time", (size_t) 1, &dim_id ) ) { */
+  /*   fprintf( stderr, "%s: Error setting time dim: %s.\n", */
+  /* 	     __FUNCTION__, nc_strerror( status ) ); */
+  /*   return 1; */
+  /* } */
+
+  free( vals );
+  
+  return 0;
+  
+}
+
+/*
  * cetb_file_close - close the CETB file and free all memory
  *                   associated with this object
  *
@@ -576,7 +624,7 @@ void cetb_file_close( cetb_file_class *this ) {
  *  result : (newly-allocated) channel string, with frequency and polarization,  e.g. "19H", or
  *           NULL on error
  */
-static char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
+char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
 
   char *channel_str = NULL;
   
@@ -614,7 +662,7 @@ static char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
  *           Any errors that occur will be written to stderr
  *
  */
-static char *current_time_stamp( void ) {
+char *current_time_stamp( void ) {
 
   char *p;
   time_t curtime;
@@ -641,8 +689,100 @@ static char *current_time_stamp( void ) {
 }
   
 /*
+ * fetch_global_atts - Fetches the global file attributes
+ *                     from the template file to the output file.
+ *
+ *  input : 
+ *    this : pointer to initialized cetb_file_class object
+ *    template_fid : fileID for the template file
+ *
+ *  output : n/a
+ *
+ *  result : 0 success, otherwise error
+ *           Upon successful completion, the global file attributes
+ *           will be populated in the output file
+ *
+ */
+int fetch_global_atts( cetb_file_class *this, int template_fid ) {
+
+  int i;
+  int status;
+  int num_attributes;
+  char attribute_name[ MAX_STR_LENGTH ];
+  char *time_stamp;
+  char *software_version;
+
+  if ( status = nc_inq_natts( template_fid, &num_attributes ) ) {
+    fprintf( stderr, "%s: "
+  	     "Error getting num attributes from cetb template file: %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  /*
+   * Copy all global attributes from template file to CETB file
+   */
+  for ( i = 0; i < num_attributes; i++ ) { 
+    if ( status = nc_inq_attname( template_fid, NC_GLOBAL,
+  				  i, attribute_name ) ) {
+      fprintf( stderr, "%s: Error getting attribute index %d: %s.\n",
+  	       __FUNCTION__, i, nc_strerror( status ) );
+      return 1;
+    }
+    if ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
+  			       this->fid, NC_GLOBAL ) ) {
+      fprintf( stderr, "%s: Error copying %s: %s.\n",
+  	       __FUNCTION__, attribute_name, nc_strerror( status ) );
+      return 1;
+    }
+  }
+
+  /*
+   * Set the global attributes that need to be specific for this file:
+   */
+  software_version = pmesdr_release_version();
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "software_version_id",
+				 strlen( software_version ),
+				 software_version ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "software_version_id", software_version, nc_strerror( status ) );
+    return 1;
+  }
+  free( software_version );
+  
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "platform",
+   				 strlen( cetb_gcmd_platform_keyword[ this->platform_id ] ),
+  				 cetb_gcmd_platform_keyword[ this->platform_id ] ) ) {
+     fprintf( stderr, "%s: Error setting %s: %s.\n",
+   	     __FUNCTION__, "platform", nc_strerror( status ) );
+     return 1;
+   }
+
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "sensor",
+  				 strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
+  				 cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "sensor", nc_strerror( status ) );
+    return 1;
+  }
+
+  time_stamp = current_time_stamp();
+  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
+  				 strlen( time_stamp ), 
+  				 time_stamp ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "date_created", nc_strerror( status ) );
+    return 1;
+  }
+  free( time_stamp );
+
+  return 0;
+  
+}
+
+/*
  * fetch_crs - Fetches the coordinate reference system (crs)
- * projection information from the template file.
+ *             projection information from the template file to the output file.
  *
  *  input : 
  *    this : pointer to initialized cetb_file_class object
@@ -651,9 +791,12 @@ static char *current_time_stamp( void ) {
  *  output : n/a
  *
  *  result : 0 success, otherwise error
+ *           Upon successful completion, the projection metadata
+ *           in variable crs
+ *           will be populated in the output file
  *
  */
-static int fetch_crs( cetb_file_class *this, int template_fid ) {
+int fetch_crs( cetb_file_class *this, int template_fid ) {
 
   int status;
   int crs_id;
@@ -742,7 +885,7 @@ static int fetch_crs( cetb_file_class *this, int template_fid ) {
  *           Any errors that occur will be written to stderr
  *
  */
-static char *pmesdr_release_version( void ) {
+char *pmesdr_release_version( void ) {
 
   int status;
   char filename[ FILENAME_MAX ];
@@ -793,7 +936,7 @@ static char *pmesdr_release_version( void ) {
  *           Any errors that occur will be written to stderr
  *
  */
-static char *pmesdr_top_dir( void ) {
+char *pmesdr_top_dir( void ) {
 
   char *ptr_path;
 
@@ -822,7 +965,7 @@ static char *pmesdr_top_dir( void ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_date( int year, int doy ) {
+int valid_date( int year, int doy ) {
 
   int doy_min = 1;
   int doy_max = 365;
@@ -858,7 +1001,7 @@ static int valid_date( int year, int doy ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
+int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
 
   if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
@@ -901,7 +1044,7 @@ static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id dir
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_platform_id( cetb_platform_id platform_id ) {
+int valid_platform_id( cetb_platform_id platform_id ) {
 
   if ( 0 <= platform_id && platform_id < CETB_NUM_PLATFORMS ) {
     return STATUS_OK;
@@ -923,7 +1066,7 @@ static int valid_platform_id( cetb_platform_id platform_id ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
+int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
 
   if ( 0 <= reconstruction_id && reconstruction_id < CETB_NUM_RECONSTRUCTIONS ) {
     return STATUS_OK;
@@ -945,7 +1088,7 @@ static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static cetb_region_id valid_region_id( int region_number ) {
+cetb_region_id valid_region_id( int region_number ) {
 
   int i;
   cetb_region_id region_id=CETB_NO_REGION;
@@ -972,7 +1115,7 @@ static cetb_region_id valid_region_id( int region_number ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_resolution_factor( int factor ) {
+int valid_resolution_factor( int factor ) {
 
   if ( CETB_MIN_RESOLUTION_FACTOR <= factor
        && factor <= CETB_MAX_RESOLUTION_FACTOR ) {
@@ -995,7 +1138,7 @@ static int valid_resolution_factor( int factor ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_sensor_id( cetb_sensor_id sensor_id ) {
+int valid_sensor_id( cetb_sensor_id sensor_id ) {
 
   if ( 0 <= sensor_id && sensor_id < CETB_NUM_SENSORS ) {
     return STATUS_OK;
@@ -1017,7 +1160,7 @@ static int valid_sensor_id( cetb_sensor_id sensor_id ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-static int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
+int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
 
   if ( CETB_CSU == producer_id
        || CETB_RSS == producer_id ) {
