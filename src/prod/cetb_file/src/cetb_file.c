@@ -30,6 +30,11 @@ static int fetch_crs( cetb_file_class *this, int template_fid );
 static int fetch_global_atts( cetb_file_class *this, int template_fid );
 static char *pmesdr_release_version( void );
 static char *pmesdr_top_dir( void );
+static int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
+			  const char *standard_name,
+			  const char *units,
+			  const char *axis,
+			  double *valid_range );
 static int valid_date( int year, int doy );
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
@@ -484,88 +489,64 @@ int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) 
 
   long int i;
   int status;
-  int dim_ids[ 1 ];
-  int rows_dim_id;
-  int rows_var_id;
   double *vals;
-  double half_rows;
   double half_pixel_m;
   double valid_range[ 2 ];
 
-  if ( status = nc_def_dim( this->fid, "rows", rows, &rows_dim_id ) ) {
-    fprintf( stderr, "%s: Error setting rows dim: %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-  dim_ids[ 0 ] = rows_dim_id;
-  if ( status = nc_def_var( this->fid, "rows", NC_DOUBLE, 1, dim_ids, &rows_var_id ) ) {
-    fprintf( stderr, "%s: Error defining rows variable : %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-
+  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
+  
   /*
-   * Allocate and populate the array of y-dimension values
-   * For the EASE2_N25km grid, for example, this needs to be
-   * the coordinate in meters of the center of each cell from top
-   * to bottom.
+   * Allocate and populate the array of y-dimension values This
+   * is the coordinate in meters of the center of each cell
+   * decreasing from a maximum at the top row to the bottom row.
    */
   vals = (double *)calloc( rows, sizeof( double ) );
-  if ( !vals ) { 
+  if ( !vals ) {
     perror( __FUNCTION__ );
     return 1;
   }
-  half_rows = (double) rows / 2.D;
-  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
   for ( i = 0; i < rows; i++ ) {
     vals[ rows - i - 1 ]
-      = ( (double) i - half_rows ) * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+      = ( (double) i - ( (double) rows / 2.D ) )
+      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
   }
   
-  if ( status = nc_put_var_double( this->fid, rows_var_id, vals ) ) {
-    fprintf( stderr, "%s: Error setting rows values: %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
+  valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
+  valid_range[ 1 ] = vals[ 0 ] + half_pixel_m;
+  status = set_dimension( this, "rows", rows, vals,
+			  "projection_y_coordinate", "meters", "Y",
+			  valid_range );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "rows" );
     return 1;
   }
-
-  if ( status = nc_put_att_text( this->fid, rows_var_id, "standard_name",
-				 strlen("projection_y_coordinate"), "projection_y_coordinate" ) ) {
-    fprintf( stderr, "%s: Error setting rows standard_name: %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
+  free( vals );
+  
+  /*
+   * Allocate and populate the array of x-dimension values. This
+   * is the coordinate in meters of the center of each cell
+   * increasing from the minimum at the left to the maximum at
+   * the right
+   */
+  vals = (double *)calloc( cols, sizeof( double ) );
+  if ( !vals ) {
+    perror( __FUNCTION__ );
     return 1;
   }
-  if ( status = nc_put_att_text( this->fid, rows_var_id, "units", strlen("meters"), "meters" ) ) {
-    fprintf( stderr, "%s: Error setting rows units: %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
+  for ( i = 0; i < cols; i++ ) {
+    vals[ i ] = ( (double) i - ( (double) cols / 2.D ) )
+      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+  }
+  
+  valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
+  valid_range[ 1 ] = vals[ cols - 1 ] + half_pixel_m;
+  status = set_dimension( this, "cols", cols, vals,
+			  "projection_x_coordinate", "meters", "X",
+			  valid_range );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "cols" );
     return 1;
   }
-  if ( status = nc_put_att_text( this->fid, rows_var_id, "axis", strlen("Y"), "Y" ) ) {
-    fprintf( stderr, "%s: Error setting rows axis: %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-  valid_range[ 0 ] = ( (double) ( 0 ) - half_rows )
-    * cetb_exact_scale_m[ this->region_id ][ this->factor ];
-  valid_range[ 1 ] = ( (double) ( rows ) - half_rows )
-    * cetb_exact_scale_m[ this->region_id ][ this->factor ];
-  if ( status = nc_put_att_double( this->fid, rows_var_id, "valid_range", NC_DOUBLE, 2, valid_range ) ) {
-    fprintf( stderr, "%s: Error setting rows valid_range: %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-
-  /* if ( status = nc_def_dim( this->fid, "projection_x_coordinate", cols, &dim_id ) ) { */
-  /*   fprintf( stderr, "%s: Error setting col dim: %s.\n", */
-  /* 	     __FUNCTION__, nc_strerror( status ) ); */
-  /*   return 1; */
-  /* } */
-
-  /* if ( status = nc_def_dim( this->fid, "time", (size_t) 1, &dim_id ) ) { */
-  /*   fprintf( stderr, "%s: Error setting time dim: %s.\n", */
-  /* 	     __FUNCTION__, nc_strerror( status ) ); */
-  /*   return 1; */
-  /* } */
-
   free( vals );
   
   return 0;
@@ -951,6 +932,64 @@ char *pmesdr_top_dir( void ) {
 
 }
 
+/*
+ *
+ */
+int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
+		   const char *standard_name,
+		   const char *units,
+		   const char *axis,
+		   double *valid_range ) {
+
+  int status;
+  int dim_id;
+  int var_id;
+  int dim_ids[ 1 ];
+
+  if ( status = nc_def_dim( this->fid, name, size, &dim_id ) ) {
+    fprintf( stderr, "%s: Error setting %s dim: %s.\n",
+  	     __FUNCTION__, name, nc_strerror( status ) );
+    return 1;
+  }
+  dim_ids[ 0 ] = dim_id;
+  if ( status = nc_def_var( this->fid, name, NC_DOUBLE, 1, dim_ids, &var_id ) ) {
+    fprintf( stderr, "%s: Error defining %s variable : %s.\n",
+  	     __FUNCTION__, name, nc_strerror( status ) );
+    return 1;
+  }
+  if ( status = nc_put_var_double( this->fid, var_id, vals ) ) {
+    fprintf( stderr, "%s: Error setting %s values: %s.\n",
+	     __FUNCTION__, name, nc_strerror( status ) );
+    return 1;
+  }
+  if ( status = nc_put_att_text( this->fid, var_id, "standard_name",
+  				 strlen(standard_name), standard_name ) ) {
+    fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+  	     __FUNCTION__, name, standard_name, nc_strerror( status ) );
+    return 1;
+  }
+  if ( status = nc_put_att_text( this->fid, var_id, "units",
+				 strlen(units), units ) ) {
+    fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+  	     __FUNCTION__, name, units, nc_strerror( status ) );
+    return 1;
+  }
+  if ( status = nc_put_att_text( this->fid, var_id, "axis",
+				 strlen(axis), axis ) ) {
+    fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+  	     __FUNCTION__, name, axis, nc_strerror( status ) );
+    return 1;
+  }
+  if ( status = nc_put_att_double( this->fid, var_id, "valid_range",
+				   NC_DOUBLE, 2, valid_range ) ) {
+    fprintf( stderr, "%s: Error setting %s valid_range: %s.\n",
+  	     __FUNCTION__, name, nc_strerror( status ) );
+    return 1;
+  }
+
+  return 0;
+  
+}
 
 /*
  * valid_date - checks for valid years (1978 or later) and
