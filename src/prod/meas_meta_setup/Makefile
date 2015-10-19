@@ -1,8 +1,6 @@
 #========================================================================
-# Makefile for meas_meta_setup_RSS utility
+# Makefile for meas_meta_setup utility
 #
-
-
 # 2014-04-14 M. J. Brodzik 303-492-8263 brodzik@nsidc.org
 # National Snow & Ice Data Center, University of Colorado, Boulder
 # Copyright (C) 2014 Regents of University of Colorado and Brigham-Young University
@@ -39,16 +37,16 @@ endif
 #       these may be things that are machine-specific
 #
 CONFIG_CFLAGS = -O3 -m64
-ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
-  CONFIG_CFLAGS = 
-endif 
+
 
 #
 #	system libraries
 #
 SYSLIBS = -lm
 
+#
+#	system libraries and include directories
+#
 ifeq ($(LOCALE),NSIDCsnow)
   $(warning Build location: $(LOCALE))
   NETCDF4_INCDIR = /usr/include
@@ -85,36 +83,35 @@ else
   HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
   ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
 endif
+
 #
 # end configuration section
 #------------------------------------------------------------------------
-MEAS_INCDIR = ../../../sirlib/c/include
-MEAS_LIBDIR = ../../../sirlib/c
-#LIBS = -L$(LIBDIR) -L$(MEAS_LIBDIR) -lgsx -lcsir $(SYSLIBS)
+MEAS_INCDIR = ../../sirlib/c/include
+MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lgsx -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-#CFLAGS = -D'RSS=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS)
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
+  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div # -Zp8 # 
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'RSS=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) -g
 endif
 DEPEND_LIBS = $(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a
 
-SRCS = ../meas_meta_setup.c
-OBJS = meas_meta_setup_RSS.o
+SRCS = meas_meta_setup.c
+OBJS = meas_meta_setup.o
 HDRS = $(INCDIR)/gsx.h $(MEAS_INCDIR)/sir3.h
-BIN = meas_meta_setup_RSS
+BIN = meas_meta_setup
 
 all : $(BIN)
 
 $(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
-meas_meta_setup_RSS.o : $(SRCS) $(HDRS)
+meas_meta_setup.o : $(SRCS) $(HDRS)
 	$(CC) -c $(CFLAGS) -o $@ $(SRCS)
 
 install :
@@ -123,6 +120,30 @@ install :
 
 clean :
 	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
+
+csu_ease :
+	$(RM) $(TESTDIR)/setupCSU/e2n
+	$(MKDIR) $(TESTDIR)/setupCSU/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	)
+	$(RM) $(TESTDIR)/setupCSU/e2s
+	$(MKDIR) $(TESTDIR)/setupCSU/e2s
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
+	)
+	$(RM) $(TESTDIR)/setupCSU/e2t
+	$(MKDIR) $(TESTDIR)/setupCSU/e2t
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
+	)
+
+csu_quick :
+	$(RM) $(TESTDIR)/setupCSU/e2n
+	$(MKDIR) $(TESTDIR)/setupCSU/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	)
 
 rss_ease :
 	$(RM) $(TESTDIR)/setupRSS/e2n
@@ -150,4 +171,6 @@ rss_quick :
 	($(CD) $(TOPDIR)/sample_data;		\
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 	\
 	)
+
+
 
