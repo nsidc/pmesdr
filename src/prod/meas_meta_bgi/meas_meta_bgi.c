@@ -35,7 +35,10 @@
 #include "nr.h"
 #include "nrutil.h"
 
-#define VERSION 2.1
+void dlubksb(double **a, int n, int *indx, double b[]);
+void dludcmp(double **a, int n, int *indx, double *d);
+
+#define VERSION 2.4
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
@@ -60,7 +63,7 @@ int   HS=20;                  /* measurement headersize in bytes */
    from the true noise variance it can be held constant and bgi_gamma can be adjusted and will take care of
    any deviations in delta2 */
 
-double bgi_gamma=2.6703537554;    /*0.85*3.1415926535;/* default BGI gamma parameter */
+double bgi_gamma=1.3351768777757; /*0.85*0.5*3.1415926535 default BGI gamma parameter */
 float delta2=1.0;                 /* default BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor (fixed)*/
 float ithres=0.125;               /* default minimum gain threshold */
@@ -183,11 +186,12 @@ int main(int argc, char **argv)
   int nmax, mdim, mdim2, mwork, k, dx, dy, i1, j1;
   int *ix0, *iy0, *ind, *adds;
   char **indx;
-  float sum, **z, **zc, *u, *v, *u1, *v1, *c, *work, *tb2, *patarr;
-  float p,value1, value2;
+  float sum, *patarr;  
+  double **z, **zc, *u, *v, *u1, *v1, *c, *work, *tb2;
+  double p, value1, value2;
   int *fill_array;
   short int *weight_array;
-  float *aveweights, tbave;
+  double dsum, *aveweights, tbave;
   
 /* begin program */  
 
@@ -580,18 +584,18 @@ int main(int argc, char **argv)
   /* allocate index array and BGI working arrays*/
 
   indx = (char **) malloc(sizeof(char *)*nsize*nmax);
-  z = matrix(1,nmax,1,nmax);
-  zc = matrix(1,nmax,1,nmax);
-  u = vector(1,nmax);
-  u1 = vector(1,nmax);
-  v = vector(1,nmax); 
-  aveweights = vector(1,nmax); 
-  v1 = vector(1,nmax); 
+  z = dmatrix(1,nmax,1,nmax);
+  zc = dmatrix(1,nmax,1,nmax);
+  u = dvector(1,nmax);
+  u1 = dvector(1,nmax);
+  v = dvector(1,nmax); 
+  aveweights = dvector(1,nmax); 
+  v1 = dvector(1,nmax); 
   ind = ivector(1,nmax);
   adds = ivector(1,nmax);  
-  work = vector(1,nmax);
-  c = vector(1,nmax);
-  tb2 = vector(1,nmax);
+  work = dvector(1,nmax);
+  c = dvector(1,nmax);
+  tb2 = dvector(1,nmax);
   patarr = (float *) malloc(sizeof(float)*mdim*mdim*nmax);
   ix0 = (int *) malloc(sizeof(int)*(nmax+1));
   iy0 = (int *) malloc(sizeof(int)*(nmax+1));
@@ -660,17 +664,17 @@ int main(int argc, char **argv)
 	  weight_array = (short int *) store;
 	  m++;
 	  v[m] = 0.0000001;  /* a very small, non-zero value */
-	  sum = 0.0;
+	  dsum = 0.0;
 	  for (i=0; i < count; i++) 
 	    if (fill_array[i]>0) {
 	      if (fill_array[i]-1 == its) {
 		v[m] = weight_array[i]*wscale;
 		aveweights[m] = weight_array[i]*wscale;
 	      }
-	      sum += weight_array[i]*wscale;
+	      dsum += weight_array[i]*wscale;
 	    }
 	  tb2[m] = tbval;
-	  if (sum > 0.0) v[m]=v[m]/sum;
+	  if (dsum > 0.0) v[m]=v[m]/dsum;
 	  u[m]=1.0;
 	  adds[m] = iadd;
 	
@@ -698,13 +702,13 @@ int main(int argc, char **argv)
       if (m > 0) {  /* measurements are available for this pixel */
 
 	/* compute AVE estimate */
-	sum = 0.0;	
+	dsum = 0.0;	
 	tbave = 0.0;  
 	for (i=1; i <= m; i++) {
-	  sum = sum + aveweights[i];
+	  dsum = dsum + aveweights[i];
 	  tbave = tbave + aveweights[i] * tb2[i];
 	}
-        tbave = tbave / sum; /* AVE Tb estimate */
+        tbave = tbave / dsum; /* AVE Tb estimate */
 
 	/* check for measurements at the same (quantized) center location and average */
 	dx=0;
@@ -722,8 +726,8 @@ int main(int argc, char **argv)
 	      for (j=i+1; j <= m; j++) {
 		if (adds[i]==adds[j]) {  /* average in redundant meaurement */
 		  dy++;
-		  v[dx]=(v[dx]*dy+v[j])/(float) dy;
-		  tb2[dx]=(tb2[dx]*dy+tb2[j])/(float) dy;
+		  v[dx]=(v[dx]*(dy-1)+v[j])/(float) dy;       /* fix DGL 10/6/2015 */
+		  tb2[dx]=(tb2[dx]*(dy-1)+tb2[j])/(float) dy; /* fix DGL 10/6/2015 */
 		  for (ix=0; ix<mdim*mdim; ix++)
 		    //patarr[ix*nmax+dx-1]=(patarr[ix*nmax+dx-1]*dy+patarr[ix*nmax+j-1])/(float) dy;
 		    patarr2d(ix,dx)=(patarr2d(ix,dx)*(dy-1)+patarr2d(ix,j))/(float) dy;
@@ -740,6 +744,8 @@ int main(int argc, char **argv)
 	      if (dx != i) {		  
 		v[dx]=v[i];
 		tb2[dx]=tb2[i];
+		ix0[dx]=ix0[i]; /* fix added DGL 10/16/2015 */
+		iy0[dx]=iy0[i]; /* fix added DGL 10/16/2015 */
 		for (ix=0; ix<mdim*mdim; ix++)
 		  //patarr[ix*nmax+dx-1]=patarr[ix*nmax+i-1];
 		  patarr2d(ix,dx)=patarr2d(ix,i);
@@ -754,15 +760,15 @@ int main(int argc, char **argv)
 	    dx = ix0[i] - ix0[j];
 	    dy = iy0[i] - iy0[j];
 	    z[i][j] = 0.0;
-	    sum=0.0;
+	    dsum=0.0;
 	    for (j1=1; j1 <= mdim; j1++)
 	      for (i1=1; i1 <= mdim; i1++) {
 		ix=i1-dx;
 		iy=j1-dy;
 		if (ix > 0 && iy > 0 && ix <= mdim && iy <= mdim)
-		  sum = sum + patarr3d(i1,j1,i)*patarr3d(ix,iy,j);
+		  dsum = dsum + patarr3d(i1,j1,i)*patarr3d(ix,iy,j);
 	      } 
-	    z[i][j] = sum * cos(bgi_gamma);
+	    z[i][j] = dsum * cos(bgi_gamma);
 	    if (i == j) 
 	      z[i][j] =  z[i][j] + omega * sin(bgi_gamma) * delta2;
 	    else
@@ -770,7 +776,7 @@ int main(int argc, char **argv)
 	  }
 
 	/* Do LU decomposition */
-	ludcmp(z,m,ind,&p);
+	dludcmp(z,m,ind,&p);
 
 	for (i=1;i<=m;i++) {
 	  u1[i]=u[i];
@@ -780,7 +786,7 @@ int main(int argc, char **argv)
 	}
       
       /* solve linear system z x = u [compute z^-1 u]  (u and z destroyed in process) */
-	lubksb(z,m,ind,u1);
+	dlubksb(z,m,ind,u1);
 
       /* comute u^t z^-1 u */
 	value2 = 0.0;
@@ -792,7 +798,7 @@ int main(int argc, char **argv)
 	    z[i][j] = zc[i][j];
 
       /* solve linear system z x = v [compute z^-1 v]  (v and z destroyed in process) */
-	lubksb(z,m,ind,v1);
+	dlubksb(z,m,ind,v1);
 
       /* comute u^t z^-1 v */
 	value1 = 0.0;
@@ -804,19 +810,19 @@ int main(int argc, char **argv)
 	  work[i] =  cos(bgi_gamma) *v[i] + u[i] * (1.0 - cos(bgi_gamma)  * value1)/value2;
       
       /* solve linear system z c = work [compute z^-1 work]  (destroyed in process) */
-	lubksb(zc,m,ind,work);
+	dlubksb(zc,m,ind,work);
       
       /* compute BG pixel estimate value */
-	sum = 0.0;
+	dsum = 0.0;
 	for (i=1; i <= m; i++)
-	  sum = sum + work[i] * tb2[i];
-	a_val[its] = sum;
+	  dsum = dsum + work[i] * tb2[i];
+	a_val[its] = (float) dsum;
 	
 	amin=a_val[its];
 
       /* simple Q/A test and replace for bad BGI estimates */
         if (abs(a_val[its] - tbave) > difthres)
-	  a_val[its]=tbave;	
+	  a_val[its]=(float) tbave;	
 
       /* set data to 600.0 if it is OOR */
        	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
@@ -1035,10 +1041,10 @@ char *addpath(char *outpath, char *name, char *temp)
 
 /* Numerical Recipes routines */
 
-void lubksb(float **a, int n, int *indx, float b[])
+void dlubksb(double **a, int n, int *indx, double b[])
 {
 	int i,ii=0,ip,j;
-	float sum;
+	double sum;
 
 	for (i=1;i<=n;i++) {
 		ip=indx[i];
@@ -1058,13 +1064,13 @@ void lubksb(float **a, int n, int *indx, float b[])
 
 #define TINY 1.0e-20;
 
-void ludcmp(float **a, int n, int *indx, float *d)
+void dludcmp(double **a, int n, int *indx, double *d)
 {
 	int i,imax,j,k;
-	float big,dum,sum,temp;
-	float *vv;
+	double big,dum,sum,temp;
+	double *vv;
 
-	vv=vector(1,n);
+	vv=dvector(1,n);
 	*d=1.0;
 	for (i=1;i<=n;i++) {
 		big=0.0;
@@ -1106,7 +1112,7 @@ void ludcmp(float **a, int n, int *indx, float *d)
 			for (i=j+1;i<=n;i++) a[i][j] *= dum;
 		}
 	}
-	free_vector(vv,1,n);
+	free_dvector(vv,1,n);
 }
 #undef TINY
 
