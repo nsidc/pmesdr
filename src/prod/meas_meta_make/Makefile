@@ -92,6 +92,36 @@ rss_ease :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta 13 \
 	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/RSS_regress_list
 
+rss_full :
+	$(RM) $(TESTDIR)/rss_e2s
+	$(MKDIR) $(TESTDIR)/rss_e2s
+	$(RM) $(TESTDIR)/rss_e2n
+	$(MKDIR) $(TESTDIR)/rss_e2n
+	$(RM) $(TESTDIR)/rss_e2t
+	$(MKDIR) $(TESTDIR)/rss_e2t
+	$(CD) $(TOPDIR)/sample_data
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/RSS_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/RSS_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/RSS_regress_list_full
+
+rss_ten :
+	$(RM) $(TESTDIR)/rss_e2s
+	$(MKDIR) $(TESTDIR)/rss_e2s
+	$(RM) $(TESTDIR)/rss_e2n
+	$(MKDIR) $(TESTDIR)/rss_e2n
+	$(RM) $(TESTDIR)/rss_e2t
+	$(MKDIR) $(TESTDIR)/rss_e2t
+	$(CD) $(TOPDIR)/sample_data
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/RSS_regress_list_ten
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/RSS_regress_list_ten
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/RSS_regress_list_ten
+
 # the list of files to be processed (held in RSS_regress_list) must be relative to the directory
 # from which the program is called - i.e. cd to the $(TOPDIR)/sample_data directory before invoking
 # the application
@@ -116,6 +146,36 @@ csu_ease :
 	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta 13 \
 	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
+
+csu_full :
+	$(RM) $(TESTDIR)/csu_e2n
+	$(MKDIR) $(TESTDIR)/csu_e2n
+	$(RM) $(TESTDIR)/csu_e2s
+	$(MKDIR) $(TESTDIR)/csu_e2s
+	$(RM) $(TESTDIR)/csu_e2t
+	$(MKDIR) $(TESTDIR)/csu_e2t
+	$(CD) $(TOPDIR)/sample_data
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/CSU_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list_full
+
+csu_ten :
+	$(RM) $(TESTDIR)/csu_e2n
+	$(MKDIR) $(TESTDIR)/csu_e2n
+	$(RM) $(TESTDIR)/csu_e2s
+	$(MKDIR) $(TESTDIR)/csu_e2s
+	$(RM) $(TESTDIR)/csu_e2t
+	$(MKDIR) $(TESTDIR)/csu_e2t
+	$(CD) $(TOPDIR)/sample_data
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/CSU_regress_list_ten
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list_ten
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta 13 \
+	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list_ten
 
 csu_quick :
 	$(RM) $(TESTDIR)/csu_e2n
