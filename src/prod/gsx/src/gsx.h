@@ -35,14 +35,22 @@ typedef struct {
   float fillvalue[GSX_MAX_CHANNELS];
   float *efov[GSX_MAX_CHANNELS];
   float *latitude[GSX_MAX_DIMS];
+  float fill_latitude[GSX_MAX_DIMS];
   float *longitude[GSX_MAX_DIMS];
+  float fill_longitude[GSX_MAX_DIMS];
   float *sc_latitude[GSX_MAX_DIMS];
+  float fill_sc_latitude[GSX_MAX_DIMS];
   float *sc_longitude[GSX_MAX_DIMS];
+  float fill_sc_longitude[GSX_MAX_DIMS];
   double *scantime[GSX_MAX_DIMS];
+  double fill_scantime[GSX_MAX_DIMS];
   float *eia[GSX_MAX_DIMS];
+  float fill_eia[GSX_MAX_DIMS];
   float *eaz[GSX_MAX_DIMS];
+  float fill_eaz[GSX_MAX_DIMS];
   float *brightness_temps[GSX_MAX_CHANNELS];
   int orbit;
+  int fill_orbit;
   cetb_direction_id pass_direction;
 } gsx_class;
 
