@@ -35,8 +35,8 @@
 #include "nr.h"
 #include "nrutil.h"
 
-void dlubksb(double **a, int n, int *indx, double b[]);
-void dludcmp(double **a, int n, int *indx, double *d);
+static void dlubksb(double **a, int n, int *indx, double b[]);
+static void dludcmp(double **a, int n, int *indx, double *d);
 
 #define VERSION 2.4
 
@@ -59,11 +59,17 @@ int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
 
 /* the following BG parameters are subjectively set */
+
 /* note that delta2 is not independent of bgi_gamma, but as long as it is not too far (within a few deg**2)
    from the true noise variance it can be held constant and bgi_gamma can be adjusted and will take care of
    any deviations in delta2 */
 
-double bgi_gamma=1.3351768777757; /*0.85*0.5*3.1415926535 default BGI gamma parameter */
+/* although the value of gamma is "subjectively" set, we have run tests for different values
+ * of gamma and shown that the lower noise variance and most faithful reconstruction of the
+ * original signal occur at .85*PI/2
+ */
+
+double bgi_gamma=0.85*M_PI*0.5;   /*0.85*0.5*3.1415926535 default BGI gamma parameter */
 float delta2=1.0;                 /* default BGI assumed noise variance */
 float omega=0.001;                /* BGI scale factor (fixed)*/
 float ithres=0.125;               /* default minimum gain threshold */
@@ -726,10 +732,9 @@ int main(int argc, char **argv)
 	      for (j=i+1; j <= m; j++) {
 		if (adds[i]==adds[j]) {  /* average in redundant meaurement */
 		  dy++;
-		  v[dx]=(v[dx]*(dy-1)+v[j])/(float) dy;       /* fix DGL 10/6/2015 */
-		  tb2[dx]=(tb2[dx]*(dy-1)+tb2[j])/(float) dy; /* fix DGL 10/6/2015 */
+		  v[dx]=(v[dx]*(dy-1)+v[j])/(float) dy;       
+		  tb2[dx]=(tb2[dx]*(dy-1)+tb2[j])/(float) dy; 
 		  for (ix=0; ix<mdim*mdim; ix++)
-		    //patarr[ix*nmax+dx-1]=(patarr[ix*nmax+dx-1]*dy+patarr[ix*nmax+j-1])/(float) dy;
 		    patarr2d(ix,dx)=(patarr2d(ix,dx)*(dy-1)+patarr2d(ix,j))/(float) dy;
 		  adds[j]=-1;
 		}
@@ -744,10 +749,9 @@ int main(int argc, char **argv)
 	      if (dx != i) {		  
 		v[dx]=v[i];
 		tb2[dx]=tb2[i];
-		ix0[dx]=ix0[i]; /* fix added DGL 10/16/2015 */
-		iy0[dx]=iy0[i]; /* fix added DGL 10/16/2015 */
+		ix0[dx]=ix0[i]; 
+		iy0[dx]=iy0[i]; 
 		for (ix=0; ix<mdim*mdim; ix++)
-		  //patarr[ix*nmax+dx-1]=patarr[ix*nmax+i-1];
 		  patarr2d(ix,dx)=patarr2d(ix,i);
 	      }	      
 	    }

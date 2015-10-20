@@ -61,7 +61,7 @@ export meas_home=$PMESDR_TOP_DIR
 export SIR_areas=$PMESDR_TOP_DIR/ref/locs
 export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
 export RSS_path=$PMESDR_TOP_DIR/ref
-regression_yyyymmdd=20150914
+regression_yyyymmdd=20151019
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
 # netCDF libraries are different, depending on compiler
