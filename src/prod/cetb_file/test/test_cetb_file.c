@@ -5,8 +5,12 @@
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
 #include <string.h>
+#include <udunits2.h>
+
 #include "unity.h"
+#include "calcalcs.h"
 #include "cetb_file.h"
+#include "utCalendar2_cal.h"
 
 /*
  * global variables used in multiple tests

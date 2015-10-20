@@ -7,8 +7,12 @@
 #include <malloc.h>
 #include <netcdf.h>
 #include <string.h>
+#include <udunits2.h>
+
 #include "unity.h"
+#include "calcalcs.h"
 #include "cetb_file.h"
+#include "utCalendar2_cal.h"
 
 /*
  * global variables used in multiple tests
@@ -48,7 +52,7 @@ void setUp( void ) {
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
   year = 1991;
-  doy = 1;
+  doy = 153;
   beam_id = 1;
   direction_id = CETB_ASC_PASSES;
   reconstruction_id = CETB_SIR;
@@ -58,7 +62,7 @@ void setUp( void ) {
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_T25km.F13_SSMI.1991001.19H.A.SIR.CSU.v0.1.nc",
+  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc",
 			    cetb->filename );
   status = cetb_file_open( cetb );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
@@ -107,7 +111,7 @@ void test_cetb_dimensions( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "cetb_file_set_dimensions" );
   cetb_file_close( cetb );
 
-  status = nc_open( "./test/EASE2_T25km.F13_SSMI.1991001.19H.A.SIR.CSU.v0.1.nc",
+  status = nc_open( "./test/EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc",
 		    NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 

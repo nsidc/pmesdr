@@ -25,6 +25,8 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
 typedef struct {
   int fid;
   char *filename;
+  int year;
+  int doy;
   cetb_platform_id platform_id;
   cetb_region_id region_id;
   int factor;

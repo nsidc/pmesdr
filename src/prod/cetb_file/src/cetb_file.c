@@ -12,9 +12,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <udunits2.h>
 
+#include "calcalcs.h"
 #include "cetb.h"
 #include "cetb_file.h"
+#include "utCalendar2_cal.h"
 
 /*********************************************************************
  * Internal data and function prototypes
@@ -43,6 +46,7 @@ static cetb_region_id valid_region_id( int region_number );
 static int valid_resolution_factor( int factor );
 static int valid_sensor_id( cetb_sensor_id sensor_id );
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
+static int yyyydoy_to_days_since_epoch( int year, int doy, double *days_since_epoch );
 
 /*********************************************************************
  * Public functions
@@ -183,12 +187,14 @@ cetb_file_class *cetb_file_init( char *dirname,
     perror( __FUNCTION__ );
     return NULL;
   }
+  this->year = year;
+  this->doy = doy;
   this->platform_id = platform_id;
   this->region_id = region_id;
   this->factor = factor;
   this->sensor_id = sensor_id;
   this->reconstruction_id = reconstruction_id;
-  
+
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
   	    dirname,
@@ -492,6 +498,7 @@ int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) 
   double *vals;
   double half_pixel_m;
   double valid_range[ 2 ];
+  double days_since_epoch;
 
   half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
   
@@ -548,6 +555,19 @@ int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) 
     return 1;
   }
   free( vals );
+
+  /*
+   * Work on the time dimension: convert the date to "days since 1972"
+   */
+  if ( STATUS_OK !=
+       ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
+					       &days_since_epoch ) ) ) {
+    fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
+    return 1;
+  }
+
+  fprintf( stderr, "year=%d, doy=%d, days_since_epoch=%lf\n",
+  	   this->year, this->doy, days_since_epoch );
   
   return 0;
   
@@ -1211,3 +1231,72 @@ int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
   
 }
 
+/*
+ * yyyydoy_to_days_since_epoch - convert data date to epoch-specific date
+ *
+ *  input :
+ *    year : year
+ *    doy  : day of year
+ *
+ *  output :
+ *    days_since_epoch : days since 1972
+ *
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
+ *
+ */
+int yyyydoy_to_days_since_epoch( int year, int doy, double *days_since_epoch ) {
+
+  int status;
+  char *calendar = "Standard";
+  calcalcs_cal *cal;
+  int month;
+  int day;
+  char *units = "days since 1972-01-01 00:00";
+  ut_system *u_system;
+  ut_unit *u_1;
+
+  if ( NULL == ( cal = ccs_init_calendar( calendar ) ) ) {
+    fprintf( stderr, "%s: Error initializing calendar.\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+
+  if ( 0 != ( status = ccs_doy2date( cal, year, doy, &month, &day ) ) ) {
+    fprintf( stderr, "%s: Error in ccs_doy2date for year=%d, doy=%d: %d\n",
+  	     __FUNCTION__, year, doy, status );
+    return STATUS_FAILURE;
+  }
+
+  ccs_free_calendar( cal );
+
+  /*
+   * Per udunits posting at
+   * https://www.unidata.ucar.edu/support/help/MailArchives/udunits/msg00757.html
+   * use this to suppress warnings and then reactivate them
+   * during/after read of units file
+   */
+  ut_set_error_message_handler( ut_ignore );
+  if ( NULL == ( u_system = ut_read_xml( NULL ) ) ) {
+    fprintf( stderr, "%s: Error initializing udunits-2 unit system\n",
+  	     __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+  ut_set_error_message_handler( ut_write_to_stderr );
+
+  /* Parse the units string */
+  if ( NULL == ( u_1 = ut_parse( u_system, units, UT_ASCII ) ) ) {
+    fprintf( stderr, "%s: Error parsing units string=\"%s\"\n",
+  	     __FUNCTION__, units );
+    return STATUS_FAILURE;
+  }
+
+  status = utInvCalendar2_cal( year, month, day, 0, 0, 0.D,
+			       u_1, days_since_epoch, calendar );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: utInvCalendar2_cal error: %d\n",
+     	     __FUNCTION__, status );
+    return STATUS_FAILURE;
+  }
+  
+  return STATUS_OK;
+  
+}
