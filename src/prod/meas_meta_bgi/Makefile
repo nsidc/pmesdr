@@ -78,14 +78,12 @@ else ifeq ($(LOCALE),int.nsidc.org)
   ZLIB_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  NETCDF4_LIBDIR = $(shell nc-config --libs)
-  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.11/szip/2.1/zlib/1.2.78/jpeglib/8d/intel/13.0.0/lib
-  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.7/lib
+  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_LIBDIR = ${CURC_HDF5_LIB}
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  NETCDF4_LIBDIR = $(shell nc-config --libs)
-  HDF5_LIBDIR = /curc/tools/x_86_64/rh6/hdf5/1.8.13/szip/2.1/zlib/1.2.8/jpeglib/9a/openmpi/1.8.2/gcc/4.9.1/lib
-  ZLIB_LIBDIR = /curc/tools/x_86_64/rh6/zlib/1.2.8/gcc/4.9.1/lib
+  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_LIBDIR = ${CURC_HDF5_LIB}
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
