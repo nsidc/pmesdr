@@ -79,6 +79,7 @@
       - -lhdf5_hl
       - -lhdf5
       - -lz
+      - -ludunits2
       - -o ${2}      
 
 :plugins:
