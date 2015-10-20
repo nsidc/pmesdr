@@ -335,6 +335,51 @@ void test_gsx_efov ( void ) {
   gsx_close( gsx );
 }
 
+void test_gsx_fill_values_loc1 ( void ) {
+  gsx_class *gsx;
+  int i=0;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ) {
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_latitude[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_longitude[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eia[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eaz[i] );
+    TEST_ASSERT_TRUE( -1.e+30 == gsx->fill_scantime[i] );
+  }
+  gsx_close( gsx );
+}
+
+void test_gsx_fill_values_loc2 ( void ) {
+  gsx_class *gsx;
+  int i=1;
+
+  gsx = gsx_init( file_name );
+  if ( ( NULL != gsx ) && ( gsx->scans_loc2 != 0 ) ) {
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_latitude[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_longitude[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eia[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eaz[i] );
+    TEST_ASSERT_TRUE( -1.e+30 == gsx->fill_scantime[i] );
+  }
+  gsx_close( gsx );
+}
+
+void test_gsx_fill_values_loc3 ( void ) {
+  gsx_class *gsx;
+  int i=2;
+
+  gsx = gsx_init( file_name );
+  if ( ( NULL != gsx ) && ( gsx->scans_loc3 != 0 ) ) {
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_latitude[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_longitude[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eia[i] );
+    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eaz[i] );
+    TEST_ASSERT_TRUE( -1.e+30 == gsx->fill_scantime[i] );
+  }
+  gsx_close( gsx );
+}
+
 void test_gsx_loc1_variables ( void ) {
   gsx_class *gsx;
   int i=0;
