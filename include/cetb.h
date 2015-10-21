@@ -7,6 +7,9 @@
 #ifndef cetb_H
 #define cetb_H
 
+/* alignment is needed for memory allocations across applications in this system */
+#define CETB_MEM_ALIGNMENT 64
+
 typedef enum {
   CETB_NO_REGION=-1,
   CETB_EASE2_N,

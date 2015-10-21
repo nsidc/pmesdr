@@ -7,7 +7,6 @@
 #ifndef gsx_H
 #define gsx_H
 
-#define ALIGNMENT 64
 #define GSX_MAX_DIMS 3 // max number of positional variables in file, i.e. _loc1, _loc2, _loc3
 #define GSX_MAX_CHANNELS 20 // max expected number of channels per platform
 #define SENSOR_MAX 10 // max number of characters in the short sensor name
