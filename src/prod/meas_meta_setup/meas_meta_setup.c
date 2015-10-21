@@ -87,64 +87,6 @@ void no_trailing_blanks(char *s)
   return;
 }
 
-/**
- * Break a path up into a filename and directory name.
- * This calls \e basename and \e dirname.
- *
- * \param[in] path The path name to split.
- * \param[out] fname The file name at the end of path name.
- * \param[out] dname The directory name leading up to the file name.
- *
- * \retval 0 If there were no errors.
- * \retval 1 If there was an error.
- **/
-
-int
-filepath(const char *path, char **fname, char **dname)
-{
-  char *fpath = NULL;
-  char *fptr  = NULL;
-  char *dpath = NULL;
-  char *dptr  = NULL;
-
-  /* Warning: The non-GNU version of basename can modify path. */
-
-  if (! path) {
-    warnx("unable to break null path into filename and dirname");
-    return(EXIT_FAILURE);
-  }
-
-  if (fname != NULL) {
-    fpath = malloc(strlen(path) +1);
-    memset(fpath, 0, sizeof(fpath));
-    strcpy(fpath, path);
-    fptr = basename(fpath);
-    *fname = malloc(strlen(fptr) +1);
-    memset(*fname, 0, sizeof(*fname));
-    strcpy(*fname, fptr);
-    if (fpath != NULL) {
-      free(fpath);
-    }
-  }
-
-  if (dname != NULL) {
-    dpath = malloc(strlen(path) +1);
-    memset(dpath, 0, sizeof(dpath));
-    strcpy(dpath, path);
-    dptr = dirname(dpath);
-    *dname = malloc(strlen(dptr) +1);
-    memset(*dname, 0, sizeof(*dname));
-    strcpy(*dname, dptr);
-    if (dpath != NULL) {
-      free(dpath);
-    }
-  }
-
-  return(EXIT_SUCCESS);
-
-
-}
-
 void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
 { /* convert ascii time tag into year, day, hour, minute */
   int imon, mday;
@@ -161,7 +103,6 @@ int isleapyear(int year)
   else
     return(0);
 }
-
 
 /****************************************************************************/
 
@@ -236,8 +177,6 @@ int main(int argc,char *argv[])
   char fname[250], mname[250];
   char line[1025], outpath[250];
   char ftempname[250];
-  char *fpath = NULL;
-  char *dpath = NULL;
   char *option;
   
   int i,j,k,n;
@@ -461,8 +400,6 @@ int main(int argc,char *argv[])
     printf("Opening input TB file %d '%s'\n",nfile,fname);
 
     /* read measurement data from file */    
-    /* Break the filename out into the directory and filename */
-    filepath(fname, &fpath, &dpath);
     /*
      * read file into gsx_class variable
      */
@@ -554,7 +491,7 @@ int main(int argc,char *argv[])
       
       if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-      if ( *(gsx->scantime[1]+iscan) == gsx->fill_scantime ) goto label_350; // do not process this scan - until gsx is fixed
+      if ( *(gsx->scantime[1]+iscan) == gsx->fill_scantime[1] ) goto label_350; // do not process this scan - until gsx is fixed
       /* scan time.  All measurements in this scan assigned this time */
       if ( NULL !=gsx ) {
 	timedecode(*(gsx->scantime[1]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
