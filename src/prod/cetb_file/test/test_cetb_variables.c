@@ -4,6 +4,7 @@
  * 01-Sep-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
+#include <float.h>
 #include <malloc.h>
 #include <netcdf.h>
 #include <string.h>
@@ -80,11 +81,14 @@ void test_cetb_dimensions( void ) {
   int dim_id;
   int rows_var_id;
   int cols_var_id;
+  int times_var_id;
+  int date_var_id;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   size_t dim_len;
   size_t expected_rows=cetb_grid_rows[ region_id ][ factor ];
   size_t expected_cols=cetb_grid_cols[ region_id ][ factor ];
+  size_t expected_times=1;
   double half_pixel_m = cetb_exact_scale_m[ region_id ][ factor ] / 2.D;
   double value;
   double expected_rows_valid_range[ 2 ] = {
@@ -95,6 +99,7 @@ void test_cetb_dimensions( void ) {
     0.D - ( cetb_exact_scale_m[ region_id ][ factor ] * cetb_grid_cols[ region_id ][ factor ] / 2.D ),
     cetb_exact_scale_m[ region_id ][ factor ] * cetb_grid_cols[ region_id ][ factor ] / 2.D
   };
+  double expected_times_valid_range[ 2 ] = { 0.D, DBL_MAX };
   /* center of any top row pixel */
   double expected_first_y=expected_rows_valid_range[ 1 ] - half_pixel_m;
   /* center of any bottom row pixel*/
@@ -103,6 +108,8 @@ void test_cetb_dimensions( void ) {
   double expected_first_x=expected_cols_valid_range[ 0 ] + half_pixel_m;
   /* center of any right col pixel*/
   double expected_last_x=expected_cols_valid_range[ 1 ] - half_pixel_m;
+  /* 1991 doy 153, in days since 1972 */
+  double expected_time=7092.D;
   size_t index[] = { 0 };
   char *att_p;
   double valid_range[ 2 ];
@@ -178,6 +185,44 @@ void test_cetb_dimensions( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_cols_valid_range[ 0 ], valid_range[ 0 ], "cols valid_range min" );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_cols_valid_range[ 1 ], valid_range[ 1 ], "cols valid_range max" );
+
+  /* Confirm the expected time dimension is in the output file */
+  status = nc_inq_dimid( nc_fileid, "time", &dim_id );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
+  status = nc_inq_dimlen( nc_fileid, dim_id, &dim_len );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+  TEST_ASSERT_TRUE( expected_times == dim_len );
+
+  /* Confirm the expected dimension values are in the output file */
+  status = nc_inq_varid( nc_fileid, "time", &times_var_id );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+  index[ 0 ] = 0;
+  status = nc_get_var1_double( nc_fileid, times_var_id, index, &value );
+  TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_time, value, "time_value" );
+
+  /* Confirm the expected dimension attributes are in the output file */
+  att_p = get_text_att( nc_fileid, times_var_id, "standard_name" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "time", att_p, "time standard_name" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, times_var_id, "long_name" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "ANSI date", att_p, "time long_name" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, times_var_id, "units" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "days since 1972-01-01 00:00:00",
+				    att_p, "time units" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, times_var_id, "calendar" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "gregorian", att_p, "time calendar" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, times_var_id, "axis" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "T", att_p, "time axis" );
+  free( att_p );
+  status = nc_get_att_double( nc_fileid, times_var_id, "valid_range", valid_range );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_times_valid_range[ 0 ],
+				    valid_range[ 0 ], "time valid_range min" );
+  TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_times_valid_range[ 1 ],
+				    valid_range[ 1 ], "time valid_range max" );
 
   nc_close( nc_fileid );
   

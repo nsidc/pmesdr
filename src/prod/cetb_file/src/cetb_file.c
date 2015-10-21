@@ -4,6 +4,7 @@
  * 06-Jul-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
+#include <float.h>
 #include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +36,9 @@ static char *pmesdr_release_version( void );
 static char *pmesdr_top_dir( void );
 static int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
 			  const char *standard_name,
+			  const char *long_name,
 			  const char *units,
+			  const char *calendar,
 			  const char *axis,
 			  double *valid_range );
 static int valid_date( int year, int doy );
@@ -46,7 +49,9 @@ static cetb_region_id valid_region_id( int region_number );
 static int valid_resolution_factor( int factor );
 static int valid_sensor_id( cetb_sensor_id sensor_id );
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
-static int yyyydoy_to_days_since_epoch( int year, int doy, double *days_since_epoch );
+static int yyyydoy_to_days_since_epoch( int year, int doy,
+					const char *units,
+					double *days_since_epoch );
 
 /*********************************************************************
  * Public functions
@@ -498,6 +503,7 @@ int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) 
   double *vals;
   double half_pixel_m;
   double valid_range[ 2 ];
+  char *units = "days since 1972-01-01 00:00:00";
   double days_since_epoch;
 
   half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
@@ -521,7 +527,10 @@ int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) 
   valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ 0 ] + half_pixel_m;
   status = set_dimension( this, "rows", rows, vals,
-			  "projection_y_coordinate", "meters", "Y",
+			  "projection_y_coordinate", NULL,
+			  "meters",
+			  NULL,
+			  "Y",
 			  valid_range );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "rows" );
@@ -548,7 +557,10 @@ int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) 
   valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ cols - 1 ] + half_pixel_m;
   status = set_dimension( this, "cols", cols, vals,
-			  "projection_x_coordinate", "meters", "X",
+			  "projection_x_coordinate", NULL,
+			  "meters",
+			  NULL,
+			  "X",
 			  valid_range );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "cols" );
@@ -557,18 +569,31 @@ int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) 
   free( vals );
 
   /*
-   * Work on the time dimension: convert the date to "days since 1972"
+   * Work on the time dimension:
+   * convert the date to "days since 1972" and save that in the time dimension
+   * and save the formatted date string in its own variable
    */
   if ( STATUS_OK !=
        ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
+					       units,
 					       &days_since_epoch ) ) ) {
     fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
     return 1;
   }
 
-  fprintf( stderr, "year=%d, doy=%d, days_since_epoch=%lf\n",
-  	   this->year, this->doy, days_since_epoch );
-  
+  valid_range[ 0 ] = 0.D;
+  valid_range[ 1 ] = DBL_MAX;
+  status = set_dimension( this, "time", 1, &days_since_epoch,
+			  "time", "ANSI date",
+			  units,
+			  "gregorian",
+			  "T",
+			  valid_range );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
+    return 1;
+  }
+
   return 0;
   
 }
@@ -957,7 +982,9 @@ char *pmesdr_top_dir( void ) {
  */
 int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
 		   const char *standard_name,
+		   const char *long_name,
 		   const char *units,
+		   const char *calendar,
 		   const char *axis,
 		   double *valid_range ) {
 
@@ -988,12 +1015,34 @@ int set_dimension( cetb_file_class *this, const char *name, size_t size, double 
   	     __FUNCTION__, name, standard_name, nc_strerror( status ) );
     return 1;
   }
+  
+  /* long_name attribute isn't required for all variables, only for time */
+  if ( NULL != long_name ) {
+    if ( status = nc_put_att_text( this->fid, var_id, "long_name",
+				   strlen(long_name), long_name ) ) {
+      fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+	       __FUNCTION__, name, long_name, nc_strerror( status ) );
+      return 1;
+    }
+  }
+  
   if ( status = nc_put_att_text( this->fid, var_id, "units",
 				 strlen(units), units ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
   	     __FUNCTION__, name, units, nc_strerror( status ) );
     return 1;
   }
+
+  /* calendar attribute isn't required for all variables, only for time */
+  if ( NULL != calendar ) {
+    if ( status = nc_put_att_text( this->fid, var_id, "calendar",
+				   strlen(calendar), calendar ) ) {
+      fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+	       __FUNCTION__, name, calendar, nc_strerror( status ) );
+      return 1;
+    }
+  }
+  
   if ( status = nc_put_att_text( this->fid, var_id, "axis",
 				 strlen(axis), axis ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
@@ -1244,14 +1293,15 @@ int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-int yyyydoy_to_days_since_epoch( int year, int doy, double *days_since_epoch ) {
+int yyyydoy_to_days_since_epoch( int year, int doy,
+				 const char *units,
+				 double *days_since_epoch ) {
 
   int status;
   char *calendar = "Standard";
   calcalcs_cal *cal;
   int month;
   int day;
-  char *units = "days since 1972-01-01 00:00";
   ut_system *u_system;
   ut_unit *u_1;
 
