@@ -10,6 +10,7 @@
 #include "cetb.h"
 
 #define CETB_FILE_FORMAT_VERSION "v0.1"
+#define CETB_FILE_ALIGNMENT 64
 
 /*
  * These 2 functions are temporary, and should not be needed once

@@ -27,6 +27,7 @@
 #define STATUS_FAILURE 1
 #define MAX_STR_LENGTH 256
 
+static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -181,17 +182,17 @@ cetb_file_class *cetb_file_init( char *dirname,
   if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) return NULL;
   if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
 
-  this = (cetb_file_class *)calloc(1, sizeof( cetb_file_class ) );
-  if ( !this ) { 
-    perror( __FUNCTION__ );
+  if ( STATUS_OK
+       != allocate_clean_aligned_memory( ( void * )&this, sizeof( cetb_file_class ) ) ) {
     return NULL;
   }
+  
   this->fid = 0;
-  this->filename = (char *) calloc(1, FILENAME_MAX );
-  if ( !(this->filename ) ) { 
-    perror( __FUNCTION__ );
+  if ( STATUS_OK
+       != allocate_clean_aligned_memory( ( void * )&(this->filename), FILENAME_MAX + 1 ) ) {
     return NULL;
   }
+  
   this->year = year;
   this->doy = doy;
   this->platform_id = platform_id;
@@ -258,10 +259,9 @@ int cetb_file_open( cetb_file_class *this ) {
     return 1;
   }
 
-  status = set_all_dimensions( this );
-  if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting dimensions on cetb_filename=%s: %s.\n",
-  	     __FUNCTION__, this->filename, nc_strerror( status ) );
+  if ( STATUS_OK != set_all_dimensions( this ) ) {
+    fprintf( stderr, "%s: Error setting dimensions on cetb_filename=%s.\n",
+  	     __FUNCTION__, this->filename );
     return 1;
   }
 
@@ -524,6 +524,30 @@ void cetb_file_close( cetb_file_class *this ) {
  *********************************************************************/
 
 /*
+ * allocate_clean_aligned_memory - allocate aligned memory that is
+ *                                 zeroed out.
+ *
+ * input:
+ *   this : void ** address of pointer to new memory
+ *   size : size_t size of memory to allocate
+ *
+ * output: n/a
+ *
+ * returns : STATUS_OK for success, or error message to stderr and STATUS_FAILURE
+ * 
+ */
+int allocate_clean_aligned_memory( void **this, size_t size ) {
+
+  if ( 0 != posix_memalign( this, CETB_FILE_ALIGNMENT, size ) ) {
+    perror( __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+  memset( *this, 0, size );
+  return STATUS_OK;
+
+}
+
+/*
  * channel_name - Determine the frequency and polarization string from
  *               the input sensor and beam_id
  *               Beam_id values must correspond to the values
@@ -582,9 +606,8 @@ char *current_time_stamp( void ) {
   time_t curtime;
   struct tm *loctime;
 
-  p = (char *)calloc( 1, MAX_STR_LENGTH + 1  );
-  if ( !p ) {
-    perror( __FUNCTION__ );
+  if ( STATUS_OK
+       != allocate_clean_aligned_memory( ( void * )&p, MAX_STR_LENGTH + 1 ) ) {
     return NULL;
   }
 
@@ -821,7 +844,11 @@ char *pmesdr_release_version( void ) {
 	     __FUNCTION__, filename, strerror( errno ) );
     return NULL;
   }
-  version_str = (char *)calloc( 1, fileinfo.st_size + 1  );
+  if ( STATUS_OK
+       != allocate_clean_aligned_memory( ( void * )&version_str, fileinfo.st_size + 1 ) ) {
+    return NULL;
+  }
+  
 
   if ( !( filep = fopen( filename, "rt" ) ) ) { 
     fprintf( stderr, "%s: Error opening software version file %s: %s.\n",
@@ -899,11 +926,11 @@ int set_all_dimensions( cetb_file_class *this ) {
    * is the coordinate in meters of the center of each cell
    * decreasing from a maximum at the top row to the bottom row.
    */
-  vals = (double *)calloc( rows, sizeof( double ) );
-  if ( !vals ) {
-    perror( __FUNCTION__ );
-    return 1;
+  if ( STATUS_OK
+       != allocate_clean_aligned_memory( ( void * )&vals, rows * sizeof( double ) ) ) {
+    return STATUS_FAILURE;
   }
+
   for ( i = 0; i < rows; i++ ) {
     vals[ rows - i - 1 ]
       = ( (double) i - ( (double) rows / 2.D ) )
@@ -920,7 +947,7 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  valid_range );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "rows" );
-    return 1;
+    return STATUS_FAILURE;
   }
   free( vals );
   
@@ -930,11 +957,11 @@ int set_all_dimensions( cetb_file_class *this ) {
    * increasing from the minimum at the left to the maximum at
    * the right
    */
-  vals = (double *)calloc( cols, sizeof( double ) );
-  if ( !vals ) {
-    perror( __FUNCTION__ );
-    return 1;
+  if ( STATUS_OK
+       != allocate_clean_aligned_memory( ( void * )&vals, cols * sizeof( double ) ) ) {
+    return STATUS_FAILURE;
   }
+
   for ( i = 0; i < cols; i++ ) {
     vals[ i ] = ( (double) i - ( (double) cols / 2.D ) )
       * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
@@ -950,7 +977,7 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  valid_range );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "cols" );
-    return 1;
+    return STATUS_FAILURE;
   }
   free( vals );
 
@@ -964,7 +991,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   					       units,
   					       &days_since_epoch ) ) ) {
     fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
-    return 1;
+    return STATUS_FAILURE;
   }
 
   valid_range[ 0 ] = 0.D;
@@ -977,10 +1004,10 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  valid_range );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
-    return 1;
+    return STATUS_FAILURE;
   }
 
-  return 0;
+  return STATUS_OK;
   
 }
 
