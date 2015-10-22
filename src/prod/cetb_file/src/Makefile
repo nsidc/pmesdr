@@ -34,6 +34,8 @@ ifeq ($(LOCALE),JANUSicc)
   AR = xiar
 endif
 
+CALCALCS_INCDIR = calcalcs_1.0
+
 #
 #       debug or optimization settings
 #       these may be things that are machine-specific
@@ -48,22 +50,22 @@ SYSLIBS = -lm
 #
 # end configuration section
 #------------------------------------------------------------------------
-CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS)
+CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) -m64 $(CONFIG_CFLAGS)
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) $(CONFIG_CFLAGS) -g
+  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(CONFIG_CFLAGS) -g
 endif
 DEPEND_LIBS = 
 
-SRCS = cetb_file.c
-OBJS = cetb_file.o
-HDRS = cetb_file.h
+SRCS = cetb_file.c calcalcs_1.0/calcalcs.c
+OBJS = cetb_file.o calcalcs_1.0/calcalcs.o
+HDRS = cetb_file.h calcalcs_1.0/calcalcs.h
 
 all : libcetb.a $(LIBDIR)/libcetb.a
 
