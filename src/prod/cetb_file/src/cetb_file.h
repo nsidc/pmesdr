@@ -33,6 +33,8 @@ typedef struct {
   int factor;
   cetb_sensor_id sensor_id;
   cetb_reconstruction_id reconstruction_id;
+  long int cols;
+  long int rows;
 } cetb_file_class;
 
 cetb_file_class *cetb_file_init( char *dirname,
@@ -47,6 +49,12 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_reconstruction_id reconstruction_id,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
+int cetb_file_add_tb( cetb_file_class *this,
+		      float *data,
+		      long int cols,
+		      long int rows,
+		      float fill_value,
+		      float missing_value );
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  double gamma,
 				  float dimensional_tuning_parameter,

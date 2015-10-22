@@ -200,6 +200,8 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->factor = factor;
   this->sensor_id = sensor_id;
   this->reconstruction_id = reconstruction_id;
+  this->cols = (long int) 0;
+  this->rows = (long int) 0;
 
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
@@ -298,6 +300,45 @@ int cetb_file_open( cetb_file_class *this ) {
 
   return 0;
   
+}
+
+/*
+ * cetb_file_add_tb - Add a TB array to the output file
+ *                    TBs will be packed as ushorts and standard
+ *                    variable attributes will be included.
+ *
+ * input :
+ *    this : pointer to initialized/opened cetb_file_class object
+ *    data : pointer to beginning of TB float data array
+ *    cols, rows : number of columns/rows (must match expected dimensions
+ *                 in the cetb_file)
+ *    fill_value : data fill_value
+ *    missing_value : data missing_value
+ *
+ * output :
+ *
+ *  result : 0 on success
+ *           1 if an error occurs; error message will be written to stderr
+ *           The data array is packed and added to the CETB file
+ *
+ */
+int cetb_file_add_tb( cetb_file_class *this,
+		      float *data,
+		      long int cols,
+		      long int rows,
+		      float fill_value,
+		      float missing_value ) {
+
+  /* Check that dimensions match what's expected for this file */
+  if ( this->cols != cols || this->rows != rows ) {
+    fprintf( stderr,
+	     "%s: dimensions mismatch, expected (%ld,%ld) but got=(%ld,%ld)\n",
+	     __FUNCTION__, this->cols, this->rows, cols, rows ); 
+    return 1;
+  }
+
+  return 0;
+
 }
 
 /*
@@ -894,13 +935,16 @@ char *pmesdr_top_dir( void ) {
 
 /*
  * set_all_dimensions - Sets dimension variables (time, rows, cols) in the output file
+ *                      to the expected size for the grid that will be stored here
+ *                      grid is determined by region_id and factor
  *
  *  input : 
- *    this : pointer to initialized cetb_file_class object
+ *    this : pointer to initialized/opened cetb_file_class object
  *
  *  output : n/a
  *
- *  result : 0 success, otherwise error
+ *  result : STATUS_OK on success, otherwise STATUS_FAILURE and
+ *           reason writtent to stderr
  *           Upon successful completion, the required dimension variables
  *           (time, rows, cols )
  *           will be populated in the output file.
@@ -950,6 +994,7 @@ int set_all_dimensions( cetb_file_class *this ) {
     return STATUS_FAILURE;
   }
   free( vals );
+  this->rows = (long int) rows;
   
   /*
    * Allocate and populate the array of x-dimension values. This
@@ -980,6 +1025,7 @@ int set_all_dimensions( cetb_file_class *this ) {
     return STATUS_FAILURE;
   }
   free( vals );
+  this->cols = (long int) cols;
 
   /*
    * Work on the time dimension:
@@ -1012,7 +1058,26 @@ int set_all_dimensions( cetb_file_class *this ) {
 }
 
 /*
+ * set_dimension - Sets a single dimension variable, time, rows, or cols in the output file
  *
+ *  input : 
+ *    this : pointer to initialized/opened cetb_file_class object
+ *    name : name of new dimension variable
+ *    size : size of dimension variable
+ *    vals : pointer to values for this variable
+ *    standard_name : CF standard name
+ *    long_name : only needed for time dimension
+ *    units : dimension CF units
+ *    calendar : only needed for time dimension
+ *    axis : dimension axis
+ *    valid_range : 2-element array with dimension valid_range
+ *
+ *  output : n/a
+ *
+ *  result : STATUS_OK on success, otherwise STATUS_FAILURE and
+ *           reason written to stderr
+ *           Upon successful completion, the dimension variable
+ *           will be populated in the output file.
  */
 int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
 		   const char *standard_name,
