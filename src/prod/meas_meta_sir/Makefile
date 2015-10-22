@@ -73,11 +73,15 @@ else ifeq ($(LOCALE),int.nsidc.org)
   ZLIB_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
 else
   $(warning Assuming default LOCALE=BYU)
@@ -93,13 +97,13 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
+CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div # -Zp8
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I../meas_undump -g
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I../meas_undump -g
 endif
 DEPEND_LIBS = $(LIBDIR)/libcetb.a $(MEAS_LIBDIR)/libcsir.a
 

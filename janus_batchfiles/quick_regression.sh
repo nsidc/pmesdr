@@ -37,7 +37,7 @@ if [ $? -ne 0 ]; then
   echo 'csu_quick make failed'
   exit -1
 fi
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup/meas_meta_setup_RSS
+cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
 pwd
 echo 'running setup'
 make rss_quick
@@ -45,7 +45,7 @@ if [ $? -ne 0 ]; then
   echo 'rss_quick setup failed'
   exit -1
 fi
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup/meas_meta_setup_CSU
+cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
 pwd
 echo 'running setup'
 make csu_quick
