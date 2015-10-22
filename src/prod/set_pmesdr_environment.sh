@@ -64,37 +64,35 @@ export RSS_path=$PMESDR_TOP_DIR/ref
 regression_yyyymmdd=20151019
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
-# netCDF libraries are different, depending on compiler
-icc_netcdf=netcdf/netcdf4-4.3_hdf5-1.8.11_hdf4-4.2.9_szip-2.1_zlib-1.2.78_jpeglib-8d_intel-13.0.0
-gcc_netcdf=netcdf/netcdf4-4.3.2_hdf5-1.8.13_hdf4-4.2.10_szip-2.1_zlib-1.2.8_jpeglib-9a_openmpi-1.8.2_gcc-4.9.1
-
 # Determine the LOCALE, a function of host and compiler.
 # Janus needs to load compiler-specific modules before building
 if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
 
-  module load slurm
+  ml slurm
   export PMESDR_COMPARE_TOLERANCE=0.25
   export PMESDR_MAX_DIFF_PIXELS=30
 
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
-    module unload $icc_netcdf
-    module load $gcc_netcdf
+    ml -intel
+    ml gcc
+    ml netcdf
     export LOCALE=JANUSgcc
   fi
 
   if [[ "$compiler" == "icc" ]]; then
     echo "Setting netcdf for the icc compiler"
-    module unload $gcc_netcdf
-    module load $icc_netcdf
+    ml -gcc
+    ml intel
+    ml netcdf
     export LOCALE=JANUSicc
   fi
 
   if [[ $do_anaconda == 1 ]]; then
-    module load python/anaconda-2.1.0
-    export PATH=~/.conda/envs/pmesdr/bin:$PATH
+    ml python
+    ml netcdf4-python
   else
-    module unload python/anaconda-2.1.0
+    ml -python
   fi
 
   module list

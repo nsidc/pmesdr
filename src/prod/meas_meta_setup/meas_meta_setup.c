@@ -858,6 +858,10 @@ int main(int argc,char *argv[])
   }
   printf("\n");
 
+  /* free latlon_store, noffset and flatlon_store */
+  free( latlon_store );
+  free( noffset );
+  free( flatlon_store );
   /* close input meta file */	    
   fclose(file_id);
   printf("Setup program successfully completed\n");
@@ -1524,6 +1528,7 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
   float x,y,clat,clon;
   FILE *f;
   char tempname[180],lastname[180]="\0",line[1024];
+  int dumb;
 
   p=getenv("SIR_areas");
   if (p==NULL) p=local;
@@ -1536,10 +1541,16 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     nspace=nspace+2*a->sav_nsx[iregion]*a->sav_nsy[iregion];
 
   /* allocate memory for storage of location arrays */
-  *noffset=malloc(sizeof(int)*(a->nregions+1));
-  *latlon_store=malloc(sizeof(short int)*nspace);
-  if (*noffset==NULL || *latlon_store==NULL) {
-    fprintf(stderr,"*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
+  //  *noffset=malloc(sizeof(int)*(a->nregions+1));
+  dumb = posix_memalign( (void**)&(*noffset), CETB_MEM_ALIGNMENT, sizeof(int)*(a->nregions+1) );
+  if ( 0 != dumb ) {
+    fprintf( stderr, "*** Inadequate memory for data file storage 'noffset' \n" );
+    exit ( -1 );
+  }
+  //*latlon_store=malloc(sizeof(short int)*nspace);
+  dumb = posix_memalign( (void**)&(*latlon_store), CETB_MEM_ALIGNMENT, sizeof(short int)*nspace );
+  if ( 0 != dumb ) {
+    fprintf(stderr, "*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
     exit(-1);
   }
 
