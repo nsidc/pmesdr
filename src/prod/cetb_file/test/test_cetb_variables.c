@@ -13,7 +13,6 @@
 #include "unity.h"
 #include "calcalcs.h"
 #include "cetb_file.h"
-#include "utCalendar2_cal.h"
 
 /*
  * global variables used in multiple tests
@@ -67,7 +66,7 @@ void setUp( void ) {
 			    cetb->filename );
   status = cetb_file_open( cetb );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-
+  cetb_file_close( cetb );
   
 }
 
@@ -113,10 +112,6 @@ void test_cetb_dimensions( void ) {
   size_t index[] = { 0 };
   char *att_p;
   double valid_range[ 2 ];
-
-  status = cetb_file_set_dimensions( cetb, rows, cols );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "cetb_file_set_dimensions" );
-  cetb_file_close( cetb );
 
   status = nc_open( "./test/EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc",
 		    NC_NOWRITE, &nc_fileid );

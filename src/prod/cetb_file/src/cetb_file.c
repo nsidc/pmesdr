@@ -18,7 +18,6 @@
 #include "calcalcs.h"
 #include "cetb.h"
 #include "cetb_file.h"
-#include "utCalendar2_cal.h"
 
 /*********************************************************************
  * Internal data and function prototypes
@@ -34,6 +33,7 @@ static int fetch_crs( cetb_file_class *this, int template_fid );
 static int fetch_global_atts( cetb_file_class *this, int template_fid );
 static char *pmesdr_release_version( void );
 static char *pmesdr_top_dir( void );
+static int set_all_dimensions( cetb_file_class *this );
 static int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
 			  const char *standard_name,
 			  const char *long_name,
@@ -254,6 +254,13 @@ int cetb_file_open( cetb_file_class *this ) {
   /* Create a new cetb file */
   if ( status = nc_create( this->filename, NC_NETCDF4, &(this->fid) ) ) {
     fprintf( stderr, "%s: Error creating cetb_filename=%s: %s.\n",
+  	     __FUNCTION__, this->filename, nc_strerror( status ) );
+    return 1;
+  }
+
+  status = set_all_dimensions( this );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting dimensions on cetb_filename=%s: %s.\n",
   	     __FUNCTION__, this->filename, nc_strerror( status ) );
     return 1;
   }
@@ -481,124 +488,6 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
 }
 
 /*
- * cetb_file_set_dimensions - Sets dimension variables (time, rows, cols) in the output file
- *
- *  input : 
- *    this : pointer to initialized cetb_file_class object
- *
- *  output : n/a
- *
- *  result : 0 success, otherwise error
- *           Upon successful completion, the required dimension variables
- *           (time, rows, cols )
- *           will be populated in the output file.
- *           The varids for each will be stored in the cetb object state data
- *           
- *
- */
-int cetb_file_set_dimensions( cetb_file_class *this, size_t rows, size_t cols ) {
-
-  long int i;
-  int status;
-  double *vals;
-  double half_pixel_m;
-  double valid_range[ 2 ];
-  char *units = "days since 1972-01-01 00:00:00";
-  double days_since_epoch;
-
-  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
-  
-  /*
-   * Allocate and populate the array of y-dimension values This
-   * is the coordinate in meters of the center of each cell
-   * decreasing from a maximum at the top row to the bottom row.
-   */
-  vals = (double *)calloc( rows, sizeof( double ) );
-  if ( !vals ) {
-    perror( __FUNCTION__ );
-    return 1;
-  }
-  for ( i = 0; i < rows; i++ ) {
-    vals[ rows - i - 1 ]
-      = ( (double) i - ( (double) rows / 2.D ) )
-      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
-  }
-  
-  valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
-  valid_range[ 1 ] = vals[ 0 ] + half_pixel_m;
-  status = set_dimension( this, "rows", rows, vals,
-			  "projection_y_coordinate", NULL,
-			  "meters",
-			  NULL,
-			  "Y",
-			  valid_range );
-  if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "rows" );
-    return 1;
-  }
-  free( vals );
-  
-  /*
-   * Allocate and populate the array of x-dimension values. This
-   * is the coordinate in meters of the center of each cell
-   * increasing from the minimum at the left to the maximum at
-   * the right
-   */
-  vals = (double *)calloc( cols, sizeof( double ) );
-  if ( !vals ) {
-    perror( __FUNCTION__ );
-    return 1;
-  }
-  for ( i = 0; i < cols; i++ ) {
-    vals[ i ] = ( (double) i - ( (double) cols / 2.D ) )
-      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
-  }
-  
-  valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
-  valid_range[ 1 ] = vals[ cols - 1 ] + half_pixel_m;
-  status = set_dimension( this, "cols", cols, vals,
-			  "projection_x_coordinate", NULL,
-			  "meters",
-			  NULL,
-			  "X",
-			  valid_range );
-  if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "cols" );
-    return 1;
-  }
-  free( vals );
-
-  /*
-   * Work on the time dimension:
-   * convert the date to "days since 1972" and save that in the time dimension
-   * and save the formatted date string in its own variable
-   */
-  if ( STATUS_OK !=
-       ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
-					       units,
-					       &days_since_epoch ) ) ) {
-    fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
-    return 1;
-  }
-
-  valid_range[ 0 ] = 0.D;
-  valid_range[ 1 ] = DBL_MAX;
-  status = set_dimension( this, "time", 1, &days_since_epoch,
-			  "time", "ANSI date",
-			  units,
-			  "gregorian",
-			  "T",
-			  valid_range );
-  if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
-    return 1;
-  }
-
-  return 0;
-  
-}
-
-/*
  * cetb_file_close - close the CETB file and free all memory
  *                   associated with this object
  *
@@ -621,7 +510,6 @@ void cetb_file_close( cetb_file_class *this ) {
 	       __FUNCTION__, this->filename, nc_strerror( status ) );
     }
     fprintf( stderr, "> %s: Wrote cetb file=%s\n", __FUNCTION__, this->filename );
-
     free( this->filename );
   }
   
@@ -978,6 +866,125 @@ char *pmesdr_top_dir( void ) {
 }
 
 /*
+ * set_all_dimensions - Sets dimension variables (time, rows, cols) in the output file
+ *
+ *  input : 
+ *    this : pointer to initialized cetb_file_class object
+ *
+ *  output : n/a
+ *
+ *  result : 0 success, otherwise error
+ *           Upon successful completion, the required dimension variables
+ *           (time, rows, cols )
+ *           will be populated in the output file.
+ */
+int set_all_dimensions( cetb_file_class *this ) {
+
+  long int i;
+  int status;
+  double *vals;
+  double half_pixel_m;
+  double valid_range[ 2 ];
+  char *units = "days since 1972-01-01 00:00:00";
+  double days_since_epoch;
+  size_t rows;
+  size_t cols;
+
+  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
+  rows = cetb_grid_rows[ this->region_id ][ this->factor ];
+  cols = cetb_grid_cols[ this->region_id ][ this->factor ];
+
+  /*
+   * Allocate and populate the array of y-dimension values This
+   * is the coordinate in meters of the center of each cell
+   * decreasing from a maximum at the top row to the bottom row.
+   */
+  vals = (double *)calloc( rows, sizeof( double ) );
+  if ( !vals ) {
+    perror( __FUNCTION__ );
+    return 1;
+  }
+  for ( i = 0; i < rows; i++ ) {
+    vals[ rows - i - 1 ]
+      = ( (double) i - ( (double) rows / 2.D ) )
+      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+  }
+  
+  valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
+  valid_range[ 1 ] = vals[ 0 ] + half_pixel_m;
+  status = set_dimension( this, "rows", rows, vals,
+			  "projection_y_coordinate", NULL,
+			  "meters",
+			  NULL,
+			  "Y",
+			  valid_range );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "rows" );
+    return 1;
+  }
+  free( vals );
+  
+  /*
+   * Allocate and populate the array of x-dimension values. This
+   * is the coordinate in meters of the center of each cell
+   * increasing from the minimum at the left to the maximum at
+   * the right
+   */
+  vals = (double *)calloc( cols, sizeof( double ) );
+  if ( !vals ) {
+    perror( __FUNCTION__ );
+    return 1;
+  }
+  for ( i = 0; i < cols; i++ ) {
+    vals[ i ] = ( (double) i - ( (double) cols / 2.D ) )
+      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+  }
+  
+  valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
+  valid_range[ 1 ] = vals[ cols - 1 ] + half_pixel_m;
+  status = set_dimension( this, "cols", cols, vals,
+			  "projection_x_coordinate", NULL,
+			  "meters",
+			  NULL,
+			  "X",
+			  valid_range );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "cols" );
+    return 1;
+  }
+  free( vals );
+
+  /*
+   * Work on the time dimension:
+   * convert the date to "days since 1972" and save that in the time dimension
+   * and save the formatted date string in its own variable
+   */
+  if ( STATUS_OK !=
+       ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
+  					       units,
+  					       &days_since_epoch ) ) ) {
+    fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
+    return 1;
+  }
+
+  valid_range[ 0 ] = 0.D;
+  valid_range[ 1 ] = DBL_MAX;
+  status = set_dimension( this, "time", 1, &days_since_epoch,
+			  "time", "ANSI date",
+			  units,
+			  "gregorian",
+			  "T",
+			  valid_range );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
+    return 1;
+  }
+
+  return 0;
+  
+}
+
+/*
  *
  */
 int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
@@ -1299,11 +1306,13 @@ int yyyydoy_to_days_since_epoch( int year, int doy,
 
   int status;
   char *calendar = "Standard";
-  calcalcs_cal *cal;
+  calcalcs_cal *cal = NULL;
   int month;
   int day;
-  ut_system *u_system;
-  ut_unit *u_1;
+  int date_jday;
+  int epoch_jday;
+  ut_system *u_system = NULL;
+  ut_unit *u_1 = NULL;
 
   if ( NULL == ( cal = ccs_init_calendar( calendar ) ) ) {
     fprintf( stderr, "%s: Error initializing calendar.\n", __FUNCTION__ );
@@ -1316,37 +1325,22 @@ int yyyydoy_to_days_since_epoch( int year, int doy,
     return STATUS_FAILURE;
   }
 
+  if ( 0 != ( status = ccs_date2jday( cal, year, month, day, &date_jday ) ) ) {
+    fprintf( stderr, "%s: Error in ccs_date2jday for date: %d\n",
+  	     __FUNCTION__, status );
+    return STATUS_FAILURE;
+  }
+      
+  if ( 0 != ( status = ccs_date2jday( cal, 1972, 1, 1, &epoch_jday ) ) ) {
+    fprintf( stderr, "%s: Error in ccs_date2jday for epoch: %d\n",
+  	     __FUNCTION__, status );
+    return STATUS_FAILURE;
+  }
+
+  *days_since_epoch = (double) date_jday - (double) epoch_jday;
+
   ccs_free_calendar( cal );
 
-  /*
-   * Per udunits posting at
-   * https://www.unidata.ucar.edu/support/help/MailArchives/udunits/msg00757.html
-   * use this to suppress warnings and then reactivate them
-   * during/after read of units file
-   */
-  ut_set_error_message_handler( ut_ignore );
-  if ( NULL == ( u_system = ut_read_xml( NULL ) ) ) {
-    fprintf( stderr, "%s: Error initializing udunits-2 unit system\n",
-  	     __FUNCTION__ );
-    return STATUS_FAILURE;
-  }
-  ut_set_error_message_handler( ut_write_to_stderr );
-
-  /* Parse the units string */
-  if ( NULL == ( u_1 = ut_parse( u_system, units, UT_ASCII ) ) ) {
-    fprintf( stderr, "%s: Error parsing units string=\"%s\"\n",
-  	     __FUNCTION__, units );
-    return STATUS_FAILURE;
-  }
-
-  status = utInvCalendar2_cal( year, month, day, 0, 0, 0.D,
-			       u_1, days_since_epoch, calendar );
-  if ( 0 != status ) {
-    fprintf( stderr, "%s: utInvCalendar2_cal error: %d\n",
-     	     __FUNCTION__, status );
-    return STATUS_FAILURE;
-  }
-  
   return STATUS_OK;
   
 }
