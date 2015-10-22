@@ -1,5 +1,5 @@
 /*
- * test_cetb_variables - Unit tests for populating cetb_file objects for variable data
+ * test_cetb_dimensions - Unit tests for populating cetb_file objects with dimension data
  *
  * 01-Sep-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
