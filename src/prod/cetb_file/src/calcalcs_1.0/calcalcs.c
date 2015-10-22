@@ -28,6 +28,10 @@
 
 #include "calcalcs.h"
 
+/* posix_memalign wants this to be a power of 2 and multiple of sizeof( void *) */
+#define CALCALCS_ALIGNMENT 64 
+static int allocate_aligned_memory ( void **this, size_t size, const char *purpose );
+
 static int c_isleap_gregorian	( int year, int *leap );
 static int c_isleap_gregorian_y0( int year, int *leap );
 static int c_isleap_julian   	( int year, int *leap );
@@ -123,13 +127,18 @@ calcalcs_cal *ccs_init_calendar( const char *calname )
 			use_specified_xition_date = 1;
 			}
 
-		retval = (calcalcs_cal *)malloc( sizeof(calcalcs_cal) );
-		if( retval == NULL ) {
-			fprintf( stderr, "Error, cannot allocate space for the calcalcs calendar. Returning NULL\n" );
-			return( NULL );
-			}
+		if( 0 != allocate_aligned_memory( (void *)&retval,
+						  sizeof(calcalcs_cal),
+						  "Error, cannot allocate space for the calcalcs calendar. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
+						  
 		retval->sig  = CCS_VALID_SIG;
-		retval->name = (char *)malloc( sizeof(char) * (strlen(calname)+1) );
+		if( 0 != allocate_aligned_memory( (void *)&(retval->name),
+						  sizeof(char) * (strlen(calname)+1),
+						  "Error, cannot allocate space for the calcalcs calendar name. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
 		strcpy( retval->name, calname );
 
 		retval->mixed = 1;
@@ -163,13 +172,18 @@ calcalcs_cal *ccs_init_calendar( const char *calname )
 		/* This is a "regular" Gregorian calendar, which does not include "year 0".
 		 * See also calendar gregorian_y0, which does include a year 0, below
 		 */
-		retval = (calcalcs_cal *)malloc( sizeof(calcalcs_cal) );
-		if( retval == NULL ) {
-			fprintf( stderr, "Error, cannot allocate space for the calcalcs calendar\n" );
-			return( NULL );
-			}
+		if( 0 != allocate_aligned_memory( (void *)&retval,
+						  sizeof(calcalcs_cal),
+						  "Error, cannot allocate space for the calcalcs calendar. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
+						  
 		retval->sig  = CCS_VALID_SIG;
-		retval->name = (char *)malloc( sizeof(char) * (strlen(calname)+1) );
+		if( 0 != allocate_aligned_memory( (void *)&(retval->name),
+						  sizeof(char) * (strlen(calname)+1),
+						  "Error, cannot allocate space for the calcalcs calendar name. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
 		strcpy( retval->name, calname );
 		retval->ndays_reg  = 365;
 		retval->ndays_leap = 366;
@@ -187,13 +201,18 @@ calcalcs_cal *ccs_init_calendar( const char *calname )
 
 		/* This is a Gregorian calendar that includes "year 0".
 		 */
-		retval = (calcalcs_cal *)malloc( sizeof(calcalcs_cal) );
-		if( retval == NULL ) {
-			fprintf( stderr, "Error, cannot allocate space for the calcalcs calendar\n" );
-			return( NULL );
-			}
+		if( 0 != allocate_aligned_memory( (void *)&retval,
+						  sizeof(calcalcs_cal),
+						  "Error, cannot allocate space for the calcalcs calendar. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
+						  
 		retval->sig  = CCS_VALID_SIG;
-		retval->name = (char *)malloc( sizeof(char) * (strlen(calname)+1) );
+		if( 0 != allocate_aligned_memory( (void *)&(retval->name),
+						  sizeof(char) * (strlen(calname)+1),
+						  "Error, cannot allocate space for the calcalcs calendar name. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
 		strcpy( retval->name, calname );
 		retval->ndays_reg  = 365;
 		retval->ndays_leap = 366;
@@ -208,13 +227,18 @@ calcalcs_cal *ccs_init_calendar( const char *calname )
 
 	else if( (strcasecmp( calname, "julian" ) == 0 ) ||
 	   	 (strcasecmp( calname, "proleptic_julian" ) == 0 )) {
-		retval = (calcalcs_cal *)malloc( sizeof(calcalcs_cal) );
-		if( retval == NULL ) {
-			fprintf( stderr, "Error, cannot allocate space for the calcalcs calendar\n" );
-			return( NULL );
-			}
+		if( 0 != allocate_aligned_memory( (void *)&retval,
+						  sizeof(calcalcs_cal),
+						  "Error, cannot allocate space for the calcalcs calendar. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
+
 		retval->sig  = CCS_VALID_SIG;
-		retval->name = (char *)malloc( sizeof(char) * (strlen(calname)+1) );
+		if( 0 != allocate_aligned_memory( (void *)&(retval->name),
+						  sizeof(char) * (strlen(calname)+1),
+						  "Error, cannot allocate space for the calcalcs calendar name. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
 		strcpy( retval->name, calname );
 		retval->ndays_reg  = 365;
 		retval->ndays_leap = 366;
@@ -230,13 +254,18 @@ calcalcs_cal *ccs_init_calendar( const char *calname )
 	else if( (strcasecmp(calname,"noleap")==0) ||
 	         (strcasecmp(calname,"no_leap")==0) ||
 		 (strcasecmp(calname,"365_day")==0)) {
-		retval = (calcalcs_cal *)malloc( sizeof(calcalcs_cal) );
-		if( retval == NULL ) {
-			fprintf( stderr, "Error, cannot allocate space for the calcalcs calendar\n" );
-			return( NULL );
-			}
+		if( 0 != allocate_aligned_memory( (void *)&retval,
+						  sizeof(calcalcs_cal),
+						  "Error, cannot allocate space for the calcalcs calendar. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
+						  
 		retval->sig  = CCS_VALID_SIG;
-		retval->name = (char *)malloc( sizeof(char) * (strlen("noleap")+1) );
+		if( 0 != allocate_aligned_memory( (void *)&(retval->name),
+						  sizeof(char) * (strlen("noleap")+1),
+						  "Error, cannot allocate space for the calcalcs calendar name. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
 		strcpy( retval->name, "noleap" );
 		retval->ndays_reg  = 365;
 		retval->ndays_leap = 365;
@@ -250,13 +279,18 @@ calcalcs_cal *ccs_init_calendar( const char *calname )
 		}
 
 	else if( strcasecmp(calname,"360_day")==0) {
-		retval = (calcalcs_cal *)malloc( sizeof(calcalcs_cal) );
-		if( retval == NULL ) {
-			fprintf( stderr, "Error, cannot allocate space for the calcalcs calendar\n" );
-			return( NULL );
-			}
+		if( 0 != allocate_aligned_memory( (void *)&retval,
+						  sizeof(calcalcs_cal),
+						  "Error, cannot allocate space for the calcalcs calendar. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
+						  
 		retval->sig  = CCS_VALID_SIG;
-		retval->name = (char *)malloc( sizeof(char) * (strlen(calname)+1) );
+		if( 0 != allocate_aligned_memory( (void *)&(retval->name),
+						  sizeof(char) * (strlen(calname)+1),
+						  "Error, cannot allocate space for the calcalcs calendar name. Returning NULL\n" ) ) {
+		        return( NULL );
+		        }
 		strcpy( retval->name, calname );
 		retval->ndays_reg  = 360;
 		retval->ndays_leap = 360;
@@ -691,25 +725,25 @@ static void ccs_gxd_add_country( char *code, char *longname, int year, int month
 		exit( -1 );
 		}
 
-	ccs_xition_dates[ccs_n_country_codes] = (ccs_country_code *)malloc( sizeof( ccs_country_code ));
-	if( ccs_xition_dates[ccs_n_country_codes] == NULL ) {
-		fprintf( stderr, "calcalcs routine ccs_gxd_add_country: Error trying to allocate space for country code %s\n",
-			code );
+	if( 0 != allocate_aligned_memory( (void *)&ccs_xition_dates[ccs_n_country_codes],
+					  sizeof( ccs_country_code ),
+					  "calcalcs routine ccs_gxd_add_country: Error trying to allocate space for country code " ) ) {
+		fprintf( stderr, "%s\n", code );
 		exit(-1);
 		}
 
-	ccs_xition_dates[ccs_n_country_codes]->code = (char *)malloc( sizeof(char) * (strlen(code)+1) );
-	if( ccs_xition_dates[ccs_n_country_codes]->code == NULL ) {
-		fprintf( stderr, "calcalcs routine ccs_gxd_add_country: Error trying to allocate space for country code named %s\n",
-			code );
+	if( 0 != allocate_aligned_memory( (void *)&(ccs_xition_dates[ccs_n_country_codes]->code),
+					  sizeof(char) * (strlen(code)+1),
+					  "calcalcs routine ccs_gxd_add_country: Error trying to allocate space for country code named " ) ) {
+		fprintf( stderr, "%s\n", code );
 		exit(-1);
 		}
 	strcpy( ccs_xition_dates[ccs_n_country_codes]->code, code );
 
-	ccs_xition_dates[ccs_n_country_codes]->longname = (char *)malloc( sizeof(char) * (strlen(longname)+1) );
-	if( ccs_xition_dates[ccs_n_country_codes]->longname == NULL ) {
-		fprintf( stderr, "calcalcs routine ccs_gxd_add_country: Error trying to allocate space for country code long name %s\n",
-			longname );
+	if( 0 != allocate_aligned_memory( (void *)&(ccs_xition_dates[ccs_n_country_codes]->longname),
+					  sizeof(char) * (strlen(longname)+1),
+					  "calcalcs routine ccs_gxd_add_country: Error trying to allocate space for country code long name " ) ) {
+		fprintf( stderr, "%s\n", longname );
 		exit(-1);
 		}
 	strcpy( ccs_xition_dates[ccs_n_country_codes]->longname, longname );
@@ -899,6 +933,18 @@ int c_isleap_julian( int year, int *leap )
 
 	*leap = ((tyear % 4) == 0);
 
+	return(0);
+}
+
+/*==================================================================================================
+ * Returns 0 on success, <0 on error.
+ */
+int allocate_aligned_memory( void **this, size_t size, const char *purpose )
+{
+        if ( 0 != posix_memalign( this, CALCALCS_ALIGNMENT, size ) ) {
+                perror( purpose );
+		return(-1);
+	}
 	return(0);
 }
 

@@ -5,8 +5,8 @@
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
 #include <float.h>
-#include <malloc.h>
 #include <netcdf.h>
+#include <stdlib.h>
 #include <string.h>
 #include <udunits2.h>
 
@@ -220,7 +220,7 @@ void test_cetb_dimensions( void ) {
 				    valid_range[ 1 ], "time valid_range max" );
 
   nc_close( nc_fileid );
-  
+
 }
 
 
@@ -232,7 +232,7 @@ static char *get_text_att( int fileid, int varid, const char *name ) {
 
   status = nc_inq_attlen( fileid, varid, name, &att_len );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
-  p = malloc( att_len + 1 );
+  status = posix_memalign( ( void * )&p, CETB_FILE_ALIGNMENT, att_len + 1 );
   status = nc_get_att_text( fileid, varid, name, p );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
   p[ att_len ] = '\0';
