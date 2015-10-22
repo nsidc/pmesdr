@@ -11,7 +11,6 @@
 #include "unity.h"
 #include "calcalcs.h"
 #include "cetb_file.h"
-#include "utCalendar2_cal.h"
 
 /*
  * global variables used in multiple tests
