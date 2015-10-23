@@ -6,7 +6,10 @@
  */
 #include <netcdf.h>
 #include <string.h>
+#include <udunits2.h>
+
 #include "unity.h"
+#include "calcalcs.h"
 #include "cetb_file.h"
 
 /*
