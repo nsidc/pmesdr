@@ -26,3 +26,4 @@ src/prod/cetb_file/test/EASE*nc
 /src/prod/meas_meta_sir/meas_meta_sir
 /src/prod/meas_undump/meas_undump
 /src/sirlib/c/csirexample
+*.dat
