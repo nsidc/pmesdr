@@ -71,10 +71,12 @@ else ifeq ($(LOCALE),JANUSicc)
   NETCDF4_INCDIR = ${CURC_NETCDF_LIB}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
@@ -89,12 +91,12 @@ CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) -m64 $(CONFIG_CFLAGS)
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -g
+  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -g
 endif
 DEPEND_LIBS = 
 
