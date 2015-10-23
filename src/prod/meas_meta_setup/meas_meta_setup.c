@@ -858,10 +858,6 @@ int main(int argc,char *argv[])
   }
   printf("\n");
 
-  /* free latlon_store, noffset and flatlon_store */
-  free( latlon_store );
-  free( noffset );
-  free( flatlon_store );
   /* close input meta file */	    
   fclose(file_id);
   printf("Setup program successfully completed\n");
