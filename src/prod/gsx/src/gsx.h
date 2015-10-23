@@ -8,7 +8,7 @@
 #define gsx_H
 
 #define ALIGNMENT 64
-#define GSX_MAX_DIMS 3 // max number of dimension variables in file
+#define GSX_MAX_DIMS 3 // max number of positional variables in file, i.e. _loc1, _loc2, _loc3
 #define GSX_MAX_CHANNELS 20 // max expected number of channels per platform
 #define SENSOR_MAX 10 // max number of characters in the short sensor name
 #define PLATFORM_MAX 10 // max number of characters in the short platform name
@@ -43,6 +43,7 @@ typedef struct {
   float *eaz[GSX_MAX_DIMS];
   float *brightness_temps[GSX_MAX_CHANNELS];
   int orbit;
+  cetb_direction_id pass_direction;
 } gsx_class;
 
 static const char *gsx_variable_attributes[] = {
@@ -54,7 +55,10 @@ static const char *gsx_variable_attributes[] = {
   "coordinates",
   "gsx_field_of_view",
   "gsx_azimuth_angle",
-  "gsx_incidence_angle"
+  "gsx_incidence_angle",
+  "origin_method",
+  "gsx_total_counts",
+  "gsx_out_of_bounds"
 };
 
 static const char *gsx_latitudes[] = {
@@ -79,6 +83,24 @@ static const char *gsx_eazs[] = {
   "earth_azimuth_angle_loc1",
   "earth_azimuth_angle_loc2",
   "earth_azimuth_angle_loc3"
+};
+
+static const char *gsx_sc_latitudes[] = {
+  "spacecraft_latitude_loc1",
+  "spacecraft_latitude_loc2",
+  "spacecraft_latitude_loc3"
+};
+
+static const char *gsx_sc_longitudes[] = {
+  "spacecraft_longitude_loc1",
+  "spacecraft_longitude_loc2",
+  "spacecraft_longitude_loc3"
+};
+
+static const char *gsx_scantime[] = {
+  "scan_time_loc1",
+  "scan_time_loc2",
+  "scan_time_loc3"
 };
 
 static const char *gsx_ssmi_channel_name[] = {
@@ -108,6 +130,23 @@ static const char *gsx_amsre_channel_name[] = {
   "brightness_temperature_89V_B"
 };
 
+
+typedef enum {
+  CETB_NOLOC=-1,
+  CETB_LOC1,
+  CETB_LOC2,
+  CETB_LOC3,
+  CETB_NUM_LOCSS
+} cetb_loc_id;
+
+/*
+ * Sensor names
+ */
+static const char *cetb_loc_id_name[] = {
+  "_LOC1",
+  "_LOC2",
+  "_LOC3"
+};
 
 /*
  * public functions

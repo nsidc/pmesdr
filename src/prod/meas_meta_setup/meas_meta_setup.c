@@ -23,7 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef JANUSicc
+#include <libgen.h>
+#include <err.h>
+#if defined(__INTEL__)
 #include <mathimf.h>
 #else
 #include <math.h>
@@ -40,17 +42,7 @@
    the code should be recompiled using the appropriate define flags.
 
    The compile script should externally set RSS and CSU flags; otherwise
-   uncomment the following block and set the flags as desired
-
-*/
-//#define RSS
-//#undef RSS   /* uncomment for RSS, uncomment out for CSU */
-//#ifndef RSS
-//#define CSU
-//#endif
-
-#define DEBUG_RESPONSE   /* if defined, outputs response debug info to file */
-#undef DEBUG_RESPONSE   /* if not defined (normal case) do not output response debug info to file */
+   uncomment the following block and set the flags as desired */
 
 #define NSAVE 50            /* maximum number of regions to output */
 #define MAXFILL 2000        /* maximum number of pixels in response function */
@@ -59,9 +51,6 @@
 			       set to 0 to not include az ang (smaller file) */
 #define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
 				  use 0 to not use pre compute files*/ 
-#define SHORTLOC /* if defined use short ints to store precomputed locations */
-//#undef SHORTLOC  /* undefine to use floats to store precomputed locations  (more memory used) */
-
 #define DTR 1.7453292519943295e-2      /* degrees to radians */
 #define RTD 57.29577951308233          /* radians to degrees */
 #define PI  3.141592653589793 
@@ -84,13 +73,6 @@ int nint(float r)
   return(ret_val);
 }
 
-void set_mask(int *quality_mask, int sensor)
-{
-  /* depending on sensor, set mask to not consider some bits */
-
-  *quality_mask = 0x0FFF;
-}
-
 void no_trailing_blanks(char *s)
 {  /* remove trailing blanks (spaces) and line feeds from string */
   int n=strlen(s);
@@ -105,12 +87,70 @@ void no_trailing_blanks(char *s)
   return;
 }
 
+/**
+ * Break a path up into a filename and directory name.
+ * This calls \e basename and \e dirname.
+ *
+ * \param[in] path The path name to split.
+ * \param[out] fname The file name at the end of path name.
+ * \param[out] dname The directory name leading up to the file name.
+ *
+ * \retval 0 If there were no errors.
+ * \retval 1 If there was an error.
+ **/
+
+int
+filepath(const char *path, char **fname, char **dname)
+{
+  char *fpath = NULL;
+  char *fptr  = NULL;
+  char *dpath = NULL;
+  char *dptr  = NULL;
+
+  /* Warning: The non-GNU version of basename can modify path. */
+
+  if (! path) {
+    warnx("unable to break null path into filename and dirname");
+    return(EXIT_FAILURE);
+  }
+
+  if (fname != NULL) {
+    fpath = malloc(strlen(path) +1);
+    memset(fpath, 0, sizeof(fpath));
+    strcpy(fpath, path);
+    fptr = basename(fpath);
+    *fname = malloc(strlen(fptr) +1);
+    memset(*fname, 0, sizeof(*fname));
+    strcpy(*fname, fptr);
+    if (fpath != NULL) {
+      free(fpath);
+    }
+  }
+
+  if (dname != NULL) {
+    dpath = malloc(strlen(path) +1);
+    memset(dpath, 0, sizeof(dpath));
+    strcpy(dpath, path);
+    dptr = dirname(dpath);
+    *dname = malloc(strlen(dptr) +1);
+    memset(*dname, 0, sizeof(*dname));
+    strcpy(*dname, dptr);
+    if (dpath != NULL) {
+      free(dpath);
+    }
+  }
+
+  return(EXIT_SUCCESS);
+
+
+}
+
 void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
 { /* convert ascii time tag into year, day, hour, minute */
   int imon, mday;
   float secs;
   /* '19970600301015123.150300 '1997 1 3 60 1 51 23 */
-  sscanf(time_tag,"%4d%3d%2d%2d%2d%2d%7.4f",iyear,iday,&imon,&mday,ihour,imin,&secs);
+  sscanf(time_tag,"%4d%3d%2d%2d%2d%2d%7f",iyear,iday,&imon,&mday,ihour,imin,&secs);
   return;                                                                                                                 
 }
 
@@ -143,144 +183,22 @@ typedef struct { /* BYU region information storage */
   float sav_km[NSAVE];  
 } region_save;  
 
-
-/****************************************************************************/
-
-#ifdef RSS
-
-/* declarations for RSS sensor swath TB files */
-
-#define HI_SCAN 128
-#define LO_SCAN  64
-#define HSCANS 3600
-#define LSCANS 1800
-#define NUMCHAR  25
-
-typedef struct { /* ssmiRSS V7 data file organization */
-  int    KSAT;                     /* Spacecraft ID */
-  int    IORBIT;                   /* Orbit (i.e. granule) number */
-  int    NUMSCAN;                  /* Number of high res scans    */
-  char   ASTART_TIME[NUMCHAR];     /* pass start date/time */
-  double SCAN_TIME[HSCANS];        /* Time in seconds from start of 2000 */
-  double ORBIT[HSCANS];            /* orbit number (hi-res)     */
-  float  SC_LAT[HSCANS];           /* Spacecraft latitude            */
-  float  SC_LON[HSCANS];           /* Spacecraft longitude            */
-  float  SC_ALT[HSCANS];           /* Spacecraft altitude            */
-  int    IQUAL_FLAG[HSCANS];       /* Quality Flag (hi-res)          */
-  float  CEL_LAT[HI_SCAN*HSCANS];  /* Latitude (hi-res)             */
-  float  CEL_LON[HI_SCAN*HSCANS];  /* Longitude (hi-res)            */
-  float  CEL_EIA[HI_SCAN*HSCANS];  /* Earth incidence angle (hi-res) */
-  float  CEL_SUN[HI_SCAN*HSCANS];  /* Sun glint angle (hi-res)       */
-  float  CEL_AZM[HI_SCAN*HSCANS];  /* Scan azimuth angle        */
-  float  CEL_LND[HI_SCAN*HSCANS];  /* land flag        */
-  short int CEL_ICE[HI_SCAN*HSCANS]; /* ice flag */
-  float  CEL_85V[HI_SCAN*HSCANS];  /* tb85v : 85 GHz V-Pol TBs (hi-res)      */
-  float  CEL_85H[HI_SCAN*HSCANS];  /* tb85h : 85 GHz H-Pol TBs (hi-res)      */
-  float  CEL_19V[ LO_SCAN*LSCANS]; /* tb19v : 19 GHz V-Pol TBs (lo-res       */
-  float  CEL_19H[ LO_SCAN*LSCANS]; /* tb19h : 19 GHz H-Pol TBs               */
-  float  CEL_22V[ LO_SCAN*LSCANS]; /* tb22v : 22 GHz V-Pol TBs               */
-  float  CEL_37V[ LO_SCAN*LSCANS]; /* tb37v : 37 GHz V-Pol TBs               */
-  float  CEL_37H[ LO_SCAN*LSCANS]; /* tb37h : 37 GHz H-Pol TBs               */
- 
-  /* fortran array declaration and access from fortran reader
-  real*4 CEL_LAT(128,3600)
-  do i=1,3600
-       do j=1,128
-	    CEL_LAT(j,i) */
-
-} ssmiRSSv7;
-
-#else
-
-/* declarations for reading CSU sensor swath TB files */
-
 #define HI_SCAN 128
 #define LO_SCAN  64
 #define HSCANS 3600
 #define LSCANS 1800
 #define NUMCHAR  23
 
-typedef struct { /* ssmiCSU data file contents */
-  int    KSAT;                     /* scid : Spacecraft ID */
-  int    IORBIT;                   /* orbit_number : Orbit (i.e. granule) number */
-  int    NUMSCAN;                  /* nhscan : Number of high res scans    */
-  int    nlscan;                      /* Number of low res scans        */
-  char   title[100];                  /* Title                          */
-  char   author[100];                 /* Author                         */
-  char   email[100];                  /* Email                          */
-  char   url[100];                    /* URL                            */
-  char   institution[100];            /* Institution                    */
-  char   version[100];                /* Version number                 */
-  char   revision_date[100];          /* Revision Date                  */
-  char   platform[100];               /* Satellite/Platform ID          */
-  char   sensor[100];                 /* Sensor name                    */
-  char   startdate[100];              /* Granule start date/time        */
-  char   enddate[100];                /* Granule end date/time          */
-  char   created[100];                /* File creation date             */
-  char   inpfile[100];                /* Input data file name           */
-  char   outfile[100];                /* Output data file name          */
-  char   ASTART_TIME[NUMCHAR];        /* datetimehr : scan date/time */
-  double SCAN_TIME[HSCANS];       /* xtime : Time in seconds from 1/1/87    */
-  double ORBIT[HSCANS];           /* rev : orbit number (hi-res)     */
-  float  SC_LAT[HSCANS];          /* sclat : Spacecraft latitude            */
-  float  SC_LON[HSCANS];          /* sclon : Spacecraft longitude            */
-  float  SC_ALT[HSCANS];          /* sclalt : Spacecraft altitude            */
-  char   ASTART_TIME_lo[NUMCHAR];         /* datetimehr : scan date/time */
-  double SCAN_TIME_lo[LSCANS];       /* xtime : Time in seconds from 1/1/87    */
-  double ORBIT_lo[LSCANS];           /* rev : orbit number (lo-res)      */
-  float  SC_LAT_lo[LSCANS];          /* sclat : Spacecraft latitude            */
-  float  SC_LON_lo[LSCANS];          /* sclon : Spacecraft longitude            */
-  float  SC_ALT_lo[LSCANS];          /* sclalt : Spacecraft altitude            */
-  int    IQUAL_FLAG[HSCANS];       /* qual : Quality Flag (hi-res)          */
-  int    IQUAL_FLAG_lo[LSCANS];      /* qual : Quality Flag (lo-res)          */
-  float  CEL_LAT[HI_SCAN*HSCANS];  /* lat : Latitude (hi-res)             */
-  float  CEL_LON[HI_SCAN*HSCANS];  /* lon : Longitude (hi-res)            */
-  float  CEL_EIA[HI_SCAN*HSCANS];  /* eia : Earth incidence angle (hi-res) */
-  float  CEL_SUN[HI_SCAN*HSCANS];  /* glint : Sun glint angle (hi-res)       */
-  //float  CEL_AZM[HI_SCAN*HSCANS];  /* Scan azimuth angle        */ 
-  //float  CEL_LND[HI_SCAN*HSCANS];  /* land flag        */
-  //short int CEL_ICE[HI_SCAN*HSCANS]; /* ice flag */
-  float  CEL_LAT_lo[LO_SCAN*LSCANS]; /* lat : Latitude (lo-res)             */
-  float  CEL_LON_lo[LO_SCAN*LSCANS]; /* lon : Longitude (lo-res)            */
-  float  CEL_EIA_lo[LO_SCAN*LSCANS]; /* eia : Earth incidence angle (lo-res) */
-  float  CEL_SUN_lo[LO_SCAN*LSCANS]; /* glint : Sun glint angle (lo-res)       */
-  float  CEL_85V[HI_SCAN*HSCANS];  /* tb85v : 85 GHz V-Pol TBs (hi-res)      */
-  float  CEL_85H[HI_SCAN*HSCANS];  /* tb85h : 85 GHz H-Pol TBs (hi-res)      */
-  float  CEL_19V[ LO_SCAN*LSCANS]; /* tb19v : 19 GHz V-Pol TBs (lo-res)      */
-  float  CEL_19H[ LO_SCAN*LSCANS]; /* tb19h : 19 GHz H-Pol TBs               */
-  float  CEL_22V[ LO_SCAN*LSCANS]; /* tb22v : 22 GHz V-Pol TBs               */
-  float  CEL_37V[ LO_SCAN*LSCANS]; /* tb37v : 37 GHz V-Pol TBs               */
-  float  CEL_37H[ LO_SCAN*LSCANS]; /* tb37h : 37 GHz H-Pol TBs               */
- 
-  /* fortran array declaration and access from fortran reader
-  real*4 CEL_LAT(128,3600)
-  do i=1,3600
-       do j=1,128
-	    CEL_LAT(j,i) */
+/****************************************************************************/
 
-} ssmiCSU;
-
-#endif
 /********************************************************************/
 
 /* function prototypes */
 
 /* BYU SSM/I approximate spatial response computation */
 float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibeam);
+static float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
 
-#ifdef RSS
-
-/* RMS SSM/I V7 binary reader */
-int read_ssmiRSS_TB_V07_binary(char *fname, ssmiRSSv7 *d, int verbose);
-void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat);
-
-#else
-
-/* CSU SSM/I netcdf reader */
-int read_ssmiCSU_TB(char *fname, ssmiCSU *d, int verbose);
-void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat);
-
-#endif
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
@@ -304,20 +222,21 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 
-
 /****************************************************************************/
 
 int main(int argc,char *argv[])
 {
   region_save save_area;
 
-  int nscans, lrev=0;
+  int nscans;
 
   int ret_status=1;
 
   char fname[250], mname[250];
   char line[1025], outpath[250];
   char ftempname[250];
+  char *fpath = NULL;
+  char *dpath = NULL;
   char *option;
   
   int i,j,k,n;
@@ -341,9 +260,8 @@ int main(int argc,char *argv[])
   int iday,iyear,imon,ihour,imin,isec,jday;
   int idaye,iyeare,imone,ihoure,imine,isece,jdaye;
 
-  int nbeams=7;
   int inlonrange,ilow,ihigh,nmeas;
-  float a,b,rat,theta_orb,scan_ang,esep_ang,ang2,theta;
+  float a,b,rat,theta_orb,esep_ang,ang2,theta;
   
   int ib,ibeam,icc,icmax,icmin,nfile,file_read_error;  
   float cx,cy,lath,latl,lonh,lonl;
@@ -371,9 +289,7 @@ int main(int argc,char *argv[])
   int median_flag=0;              /* default: do not use median filter */
   int inc_correct=0;              /* default: do not do incidence angle correction */
   int KSAT=13;                    /* assign a default value */
-  int quality_mask=0;             /* default: no mask applied */
 
-  int irev = 0; /* rev counter */
   int irec = 0; /* input cells counter */
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
@@ -385,38 +301,26 @@ int main(int argc,char *argv[])
   gsx_class *gsx=NULL;
   int gsx_count;
   char *csu;
-  char *gsx_fname;
+  char *gsx_fname=NULL;
   int csu_length;
   int first_file=0;
+  int first_scan_loc2;
+  int last_scan_loc2;
+  int status;
+  int hi_scan;
+  int lo_scan;
+  int hscans;
+  int lscans;
 
-#ifdef DEBUG_RESPONSE
-  FILE *resp_debug;
-  char debug_response_out_name[]="debug_response.out";  
-  float plat, plon;
-#endif
-
-#ifdef RSS
-  char fcdr_input[]="SSM/I RSS V7 binary";  
-  ssmiRSSv7 *d;
-  d=(ssmiRSSv7 *) malloc(sizeof(ssmiRSSv7));
-  if (d==NULL) {
-    fprintf(stderr,"*** could not allocate startup\n");
-    exit(-1);
-  }
-#else
-  char fcdr_input[]="SSM/I CSU netcdf";  
-  ssmiCSU *d;
-  d=(ssmiCSU *) malloc(sizeof(ssmiCSU));
-  if (d==NULL) {
-    fprintf(stderr,"*** could not allocate startup\n");
-    exit(-1);
-  }
-#endif
-
+  hi_scan = HI_SCAN;
+  lo_scan = LO_SCAN;
+  hscans = HSCANS;
+  lscans = LSCANS;
+  
   for (n=0; n<NSAVE; n++)
     jrec2[n] = 0;  /* measurements for each output region */
   
-  printf("Code version: %s\n",fcdr_input);  
+  //printf("Code version: %s\n",fcdr_input);  
   printf("MEaSures Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
 
   /* optionally get the box size of pixels to use for calculating MRF for each */
@@ -474,22 +378,6 @@ int main(int argc,char *argv[])
   /* convert response threshold from dB to normal space */
   response_threshold=pow(10.,0.1*response_threshold);  
  
-  /* set some sensor-specific constants */
-  nbeams=7;          /* number of beams */     
-  scan_ang=102.0;    /* azimuth angle of the scan from left measurement to right measurement at subsat point */
-
-  /* set sensor specific quality control flag mask */
-  set_mask(&quality_mask, 1);  /* sensor=SSM/I=1 */
-
-
-#ifdef RSS
-  /* for ssmi RSS V7 get max/min nominal lats for each A scan measurement */
-  read_ssmiRSS_minmaxlat(minlat,maxlat);
-#else
-  /* for ssmi RSS V7 get max/min nominal lats for each A scan measurement */
-  read_ssmiRSS_minmaxlat(minlat,maxlat);
-#endif
-
   /* Set flag for local time of day filtered images */
   ltdflag=0;
   for (i=0; i<save_area.nregions; i++)
@@ -529,7 +417,10 @@ int main(int argc,char *argv[])
     
   label_330:; /* read next input line (file name) from meta file */
     /* before reading in the next file, free the memory from the previous gsx pointer */
-    if ( NULL != gsx ) gsx_close( gsx );
+    if ( NULL != gsx ) {
+      gsx_close( gsx );
+    }
+    free( gsx_fname );
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
@@ -569,27 +460,12 @@ int main(int argc,char *argv[])
     printf("Opening input TB file %d '%s'\n",nfile,fname);
 
     /* read measurement data from file */    
-#ifdef RSS
-    file_read_error=read_ssmiRSS_TB_V07_binary(fname, d, 1);
-#else
-    file_read_error=read_ssmiCSU_TB(fname, d, 1);
-#endif
+    /* Break the filename out into the directory and filename */
+    filepath(fname, &fpath, &dpath);
     /*
      * read file into gsx_class variable
-     * if it's a CSU file get the GSX filename by prepending GSX to the name
-     * temporary section to get GSX file from CSU ncdf file to test reading in gsx data
      */
-    csu = strstr( fname, "CSU" );
-    if ( NULL != csu ) {
-      gsx = NULL;
-      csu = strrchr( fname, '/' );
-      gsx_fname = (char *)malloc( strlen(fname)+4 );
-      csu_length = (int)(csu-fname)+1;
-      strncpy( gsx_fname, fname, csu_length );
-      strncpy( gsx_fname+strlen(gsx_fname), "GSX_", 4 );
-      strcpy( gsx_fname+strlen(gsx_fname), fname+csu_length );
-      gsx = gsx_init( gsx_fname ); // for now a NULL return will come back from a bad filename OR an RSS binary file
-    }
+    gsx = gsx_init( fname ); // Read in a GSX file
 
     /* if this is the first file to be read, then write out the final header info for downstream processing */
     if ( 0 == first_file ) {
@@ -602,41 +478,31 @@ int main(int argc,char *argv[])
     
     if ( NULL == gsx ) {
       fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
-      //goto label_330;
+      goto label_330;  // skip reading file on error
     }
-    if (file_read_error < 0) {
-      fprintf(stderr,"*** error reading %s\n  skipping...\n",fname);
-      goto label_330;   /* skip reading file on error */
-    }
-    printf("Satellite %d  orbit %d  scans %d\n",d->KSAT,d->IORBIT,d->NUMSCAN);
-    fflush( stderr );
-    if ( NULL != gsx ) fprintf( stderr, "%s: Satellite %d  platform %d  scans %d\n", \
-	     __FUNCTION__, gsx->short_sensor, gsx->short_platform, gsx->scans_loc1 );
+
+    fprintf( stderr, "%s: Satellite %s  orbit %d  lo scans %d hi scans %d\n", \
+				__FUNCTION__, cetb_platform_id_name[gsx->short_platform], \
+				gsx->orbit, gsx->scans_loc1, gsx->scans_loc2 );
 
     /* extract values of interest */
-    nscans=d->NUMSCAN;
-#ifdef RSS
-    convert_time(d->ASTART_TIME,&iyear,&iday,&ihour,&imin);
-#else
-    convert_time(d->ASTART_TIME,&iyear,&iday,&ihour,&imin);
-    sscanf(d->ASTART_TIME,"%4d-%2d-%2dT%2d:%2d",&iyear,&imon,&iday,&ihour,&imin);
-#endif
+    nscans = gsx->scans_loc2;
+    lo_scan = gsx->measurements_loc1;
+    hi_scan = gsx->measurements_loc2;
 
-    printf("start time: '%s' %d %d %d %d\n",d->ASTART_TIME,iyear,iday,ihour,imin);
-
-    /* time of first and last scans */
-#ifdef RSS
-    timedecode(d->SCAN_TIME[0],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,2000);
-    timedecode(d->SCAN_TIME[nscans-1],&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,2000);
-#else
-    timedecode(d->SCAN_TIME[0],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
-    timedecode(d->SCAN_TIME[nscans-1],&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-#endif    
-    printf("* start time: %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);    
-    printf("* stop time:  %s %lf  %d %d %d %d %d %d %d\n",d->ASTART_TIME,d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
-
-    printf("first scan:%lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[0],iyear,iday,imon,jday,ihour,imin,isec);
-    printf("last scan: %lf %d %d %d %d %d %d %d\n",d->SCAN_TIME[nscans-1],iyeare,idaye,imone,jdaye,ihoure,imine,isece);
+    first_scan_loc2 = (int) CETB_LOC2;
+    last_scan_loc2 = gsx->scans_loc2-1;
+    timedecode( *(gsx->scantime[first_scan_loc2]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+    timedecode( *(gsx->scantime[first_scan_loc2]+last_scan_loc2),	\
+		&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
+    printf("* start time:  %lf  %d %d %d %d %d %d %d\n",		\
+	   *(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);    
+    printf("* stop time:   %lf  %d %d %d %d %d %d %d\n",		\
+	   *(gsx->scantime[first_scan_loc2]+last_scan_loc2),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
+      
+    printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);
+    printf("last scan: %lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]+last_scan_loc2), \
+	   iyeare,idaye,imone,jdaye,ihoure,imine,isece);
     printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
 
     iday=jday;    /* use day of year (jday) for day search */
@@ -681,42 +547,18 @@ int main(int argc,char *argv[])
     /* for each scan in file */
     nrec=0;
     for (iscan=0; iscan<nscans; iscan++) { /*350*/
-      //printf("Scan %d %s\n",iscan,timetags[iscan]);
+
       krec=krec+1;	/* count total scans read */
       nrec=nrec+1;      /* count scans read in file */
       
       if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-      if (d->ORBIT[iscan] == 0.0) goto label_350; /* skip further processing of this scan */
-      
-      if (d->IORBIT != lrev && d->IORBIT > 0) {
-	irev++;
-	lrev=d->IORBIT;
-      }
-
-      /* check scan measurement quality */
-      if ((quality_mask & d->IQUAL_FLAG[iscan]) != 0)
-	goto label_350; /* skip to next scan if data bad */
-
-#ifdef RSS
-      /* reject scans that are not part of current orbit (RSS only) */
-      if (d->ORBIT[iscan]-d->IORBIT < 0.0 || d->ORBIT[iscan]-d->IORBIT > 1.0)
-	goto label_350; /* skip to next scan */
-#endif
-   
-      //printf("scan %d of %d: %lf %d %d\n",iscan,nscans,d->ORBIT[iscan],d->IQUAL_FLAG[iscan],d->IORBIT);
- 
+      if ( *(gsx->scantime[1]+iscan) <= 0.0 ) goto label_350; // do not process this scan - until gsx is fixed
       /* scan time.  All measurements in this scan assigned this time */
-#ifdef RSS
-      timedecode(d->SCAN_TIME[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,2000);
-      iday=jday;      
-#else
-      //timedecode(d->SCAN_TIME_lo[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
-      //printf("CSU lo scan:%d %d %d %d %d %d %d\n",iyear,iday,imon,jday,ihour,imin,isec);
-      timedecode(d->SCAN_TIME[iscan],&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
-      //printf("CSU hi scan:%d %d %d %d %d %d %d\n",iyear,iday,imon,jday,ihour,imin,isec);
-      iday=jday;
-#endif    
+      if ( NULL !=gsx ) {
+	timedecode(*(gsx->scantime[1]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+	iday = jday;
+      }
     
       /* check to see if day is in desired range */
       if (iasc >= 3 && iasc <= 5) { /* if local time of day discrimination is used */
@@ -733,21 +575,23 @@ int main(int argc,char *argv[])
       /* compute days since start of image data if cross year boundary */
       ktime=(iyear-year)*365;   /* days */
       if (ktime > 0) { /* more than a year */
-	if (isleapyear(year)) ktime=ktime+1;
-      }  else
-	if (ktime<0) printf("*possible bug in ktime\n");
+	if (isleapyear(year)) {
+	  ktime=ktime+1;
+	}
+      }  else {
+	if (ktime<0) {
+	  printf("*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
+	}
+      }
       
       /* compute time in mins since start of image data (assumes mstart=0) */
       ktime=((ktime+iday-dstart)*24+ihour)*60+imin;
 
       /* compute the orientation of the nadir track with respect to north */
-      eqlon=360.0*(d->ORBIT[iscan]-d->IORBIT);
       if (eqlon<0.0) eqlon=eqlon+360.0;      
-
       /*
         find the longitude of the equator crossing of the middle measurement to use in computing the
         longitudes that separate ascending and descending for this rev */
-
       xhigh_lon=eqlon+90.0;
       xlow_lon =eqlon-90.0;
 	   
@@ -756,19 +600,19 @@ int main(int argc,char *argv[])
       if (xlow_lon  >  180.0) xlow_lon =xlow_lon -360.0;
       if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
 
-      /* set asc/dsc flag for measurements */
-      if (d->SC_LAT[iscan]-sc_last_lat < 0.0) 
-	ascend=0;
-      else
-	ascend=1;
-      sc_last_lat=d->SC_LAT[iscan];
-      sc_last_lon=d->SC_LON[iscan];
+      /*  	/\* set asc/dsc flag for measurements *\/  */
+	if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) //d->SC_LAT[iscan]-sc_last_lat < 0.0)   
+	  ascend=0;  
+	else  
+	  ascend=1;  
+	sc_last_lat = *(gsx->sc_latitude[1]+iscan); //d->SC_LAT[iscan];
+	sc_last_lon = *(gsx->sc_longitude[1]+iscan); //d->SC_LON[iscan];  
 
       /* extract TB measurements for each scan.  the logic here works through
 	 both hi and lo (A and B) scans with a single loop */
 
       iscan1=(iscan % 2);
-      for (i=0; i < HI_SCAN; i++) { /* measurements loop to label_3401 */
+      for (i=0; i < hi_scan; i++) { /* measurements loop to label_3401 */
 	irec=irec+1;	/* count of pulses examined */
 
 	/* for each output region and section */
@@ -778,15 +622,15 @@ int main(int argc,char *argv[])
 
 	  /* determine indexing for hi and low scans */
 	  if (ibeam < 6) { /* ssmi 19..37 GHz */
-	    if (i > LO_SCAN-1) goto label_3400; /* skip non-existing low res measurements */
+	    if (i > lo_scan-1) goto label_3400; /* skip non-existing low res measurements */
 	    if (iscan1 -= 0) goto label_3400; /* skip every other along-track index */
 	    ilow=iscan/2;
 	    ihigh=i*2;
-	    nmeas=LO_SCAN;
+	    nmeas=lo_scan;
 	  } else { 	/* ssmi 85 GHz */
 	    ilow=iscan;
 	    ihigh=i;
-	    nmeas=HI_SCAN;	    
+	    nmeas=hi_scan;	    
 	  }
 
 	  /* for this beam, get measurement, geometry, and location */
@@ -795,65 +639,44 @@ int main(int argc,char *argv[])
 	  }
 	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
-	    tb=d->CEL_19H[i+ilow*LO_SCAN];             /*Tb measurement value */
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 2:
-	    tb=d->CEL_19V[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;	    
 	  case 3:
-	    tb=d->CEL_22V[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 4:
-	    tb=d->CEL_37H[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 5:
-	    tb=d->CEL_37V[i+ilow*LO_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+ilow*LO_SCAN);
+	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
 	    break;
 	  case 6:
-	    tb=d->CEL_85H[i+iscan*HI_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
+	    tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
 	    break;
 	  case 7:
-	    tb=d->CEL_85V[i+iscan*HI_SCAN];
-	    if ( NULL != gsx ) tb = *(gsx->brightness_temps[gsx_count]+i+iscan*HI_SCAN);
+	    tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
 	    break;
 	  default:
 	    printf("**** beam specification error \n");
 	  }
 
-#ifdef RSS
-	  thetai= d->CEL_EIA[ihigh+iscan*HI_SCAN]; /* nominal incidence angle */
-	  azang=  d->CEL_AZM[ihigh+iscan*HI_SCAN]; /* nominal azimuth angle */
-	  cen_lon=d->CEL_LON[ihigh+iscan*HI_SCAN]; /* nominal longitude */
-	  cen_lat=d->CEL_LAT[ihigh+iscan*HI_SCAN]; /* nominal latitude */
-#else
-	  if (nmeas==LO_SCAN) {
-	    thetai= d->CEL_EIA_lo[i+ilow*LO_SCAN]; /* nominal incidence angle */
-	    //azang=  d->CEL_AZM_lo[i+ilow*LO_SCAN]; /* nominal azimuth angle */
-	    cen_lon=d->CEL_LON_lo[i+ilow*LO_SCAN]; /* nominal longitude */
-	    cen_lat=d->CEL_LAT_lo[i+ilow*LO_SCAN]; /* nominal latitude */
-	    //printf("lo Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);    
+	  if (nmeas==lo_scan) {
+	    thetai = *(gsx->eia[0]+i+ilow*lo_scan);  /* nominal incidence angle */
+	    azang = *(gsx->eaz[0]+i+ilow*lo_scan);  /* nominal azimuth angle */
+	    cen_lat = *(gsx->latitude[0]+i+ilow*lo_scan);  /* nominal longitude */
+	    cen_lon = *(gsx->longitude[0]+i+ilow*lo_scan);  /* nominal latitude */
 	  } else {	      
-	    thetai= d->CEL_EIA[i+iscan*HI_SCAN]; /* nominal incidence angle */
-	    //azang=  d->CEL_AZM[i+iscan*HI_SCAN]; /* nominal azimuth angle */
-	    cen_lon=d->CEL_LON[i+iscan*HI_SCAN]; /* nominal longitude */
-	    cen_lat=d->CEL_LAT[i+iscan*HI_SCAN]; /* nominal latitude */
-	    cen_lat=d->CEL_LAT_lo[i/2+(iscan/2)*LO_SCAN]; /* nominal latitude */
-	    //printf("hi Record %d %d %f %f %f %f\n", iscan,i,cen_lon,cen_lat,tb,thetai);	  
+	    thetai = *(gsx->eia[1]+i+iscan*hi_scan);  /* nominal incidence angle */
+	    azang = *(gsx->eaz[1]+i+iscan*hi_scan);  /* nominal azimuth angle */
+	    cen_lon = *(gsx->longitude[1]+i+iscan*hi_scan);  /* nominal longitude */
+	    cen_lat = *(gsx->latitude[1]+i+iscan*hi_scan);  /* nominal latitude */
 	  }
-#endif
-
-	  //printf("Record %d %d %f %f %f %f\n", iscan,ihigh,cen_lon,cen_lat,tb,thetai);	  
-
-	  if (tb == 0.0) goto label_3400; /* skip bad measurements */
+	    
+	  if (tb <= 0.0) goto label_3400; /* skip bad measurements */
 	  if (thetai == 0.0) goto label_3400; /* skip bad measurements */
-	  
-	  /* compute angle between satellite nadir track and true north at the measurement position */
 	  
 	  /* first, determine if measurement is in the longitude range for ascending or descending */
 	  inlonrange=0;
@@ -863,30 +686,6 @@ int main(int argc,char *argv[])
 	    if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
 	  }
 	  
-	  /* then, compute the angle of the subfootprint ground track with respect to north */
-	  a=cos(minlat[ihigh]*DTR);	  
-	  b=cos(cen_lat*DTR);
-	  if (b > 0.0) b=0.001;
-	  if (cen_lat > 0.0) a=cos(maxlat[ihigh]*DTR);
-	  rat=a/b;
-	  if (rat >  1.0) rat=1.0;
-	  if (rat < -1.0) rat=-1.0;  /* was 1.0 */
-	  if (ascend && inlonrange || (!ascend) && (!inlonrange))
-	    theta_orb=-asin(rat)*RTD; /* ascending */
-	  else
-	    theta_orb=-180.0+asin(rat)*RTD; /* descending */
-
-	  /* compute the angle between the consecutive ellipses at the subsatellite ground point */
-	  esep_ang=scan_ang/(nmeas-1.0);
-	  
-	  /* compute the angle between the line extending from the sub sat point
-	     through the measurement point and the satellite path at the measurement */
-	  ang2=scan_ang/2.0-(nmeas-i)*esep_ang;
-	         
-	  /* compute the estimated orientation of the antenna illumination ellipse
-	     on the earth's surface with respect to north */
-	  theta=ang2+theta_orb;
-
 	  /* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc) */
 	  iasc=save_area.sav_ascdes[iregion];
 	  if (iasc != 0)
@@ -911,8 +710,6 @@ int main(int argc,char *argv[])
 	  lonl=save_area.sav_lonl[iregion];
 	  dateline=save_area.sav_dateline[iregion];
 
-	  //printf("center %d %d %f %f %f %f %f %f\n",i,iscan,cx,cy,lonl,lonh,latl,lath);
-
 	  /* if a local-time-of-day image, compute the local time and see if it fits within LTOD window.
 	     Note: data may be next UTC day */
 
@@ -925,7 +722,6 @@ int main(int argc,char *argv[])
 	      } else /* iasc==4 evening */
 	      if (ctime <= tsplit2 || ctime >= tsplit1+(24*60)) goto label_3400;
 	  } 
-
 
 	  if (dateline) { /* convert lon to ascending order */
 	    if (lonl < 0.0) lonl=lonl+360.0;
@@ -975,17 +771,11 @@ int main(int argc,char *argv[])
 	  y=iy2+0.5;
 	  pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
 
-	  //printf(" Check: %6d %4d,%4d %6.2f,%6.2f %6.2f,%6.2f %6.2f,%6.2f\n",iadd,ix2,iy2,x,y,cx,cy,clon,clat);			
-	  //printf("    %1d %4d,%4d %1d %f %f %f %f %f %f\n",iregion,nsx,nsy,projt, xdeg, ydeg, ascale, bscale, a0, b0);
-
-	  //printf("Keeping %f %f %d %d %d  %d %d %d\n",x,y,ix2,iy2,iadd,iregion,ibeam,iscan,ii);
-	  
 	  /* define size of box centered at(ix2,iy2) in which the gain response 
 	     is computed for each pixel in the box and tested to see if
 	     the response exceeds a threshold.  if so, it is used */
 
-	  box_size = box_size_by_channel( ibeam, CETB_SSMI ); // pending adding gsx->short_sensor
-	  if ( NULL != gsx ) box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
+	  box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
 	  if ( box_size < 0 ) {
 	    exit -1;
 	  }
@@ -1005,22 +795,7 @@ int main(int argc,char *argv[])
 	  if (iy2+iysize1<0) iysize1=1-iy2; 
 	  if (iy2+iysize2>=nsy) iysize2=nsy-iy2;
 
-#ifdef DEBUG_RESPONSE
-	  if (mod(mcnt,7) != 1 || mcnt > 535 || mcnt < 500) goto label_3400;  /* reduce count */
-	  printf(" Az comp: %d %d %f %f %f %f\n",ix2,iy2,theta,azang,
-		 dmod(theta-azang+720.0,360.0),dscale);
-	  fprintf(resp_debug,"%d %d %d %d %f %f %f %f\n", iscan, iregion, ibeam, i, clat, clon, sc_last_lat, sc_last_lon);	  
-	  fprintf(resp_debug,"%d %d %f %f %f %f %d %d %d\n",
-		  ix2,iy2,theta,azang,dmod(theta-azang+720.0,360.0),dscale,nsx,nsy,iadd);
-	  fprintf(resp_debug,"%f %d %d %d %d %d %d %d\n",
-		  dscale,box_size,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2);
-#endif
-
-#ifdef RSS
-	  //  printf(" Azimuth angle comparison: %f %f %f\n",theta,azang,dmod(theta-azang+720.0,360.0));
-	  theta=azang;   /* use azimuth angle from file */
-#endif
-
+	  theta = azang;
 	  /* for each pixel in the search box compute the normalized 
 	     footprint gain response function
 	     keep only those which exceed specified threshold */
@@ -1032,26 +807,15 @@ int main(int argc,char *argv[])
 	      iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
 	      if (iadd1 >= 0 & iadd1 < nsx*nsy) {		  
 		/* get pre-computed lat/lon of pixel */
-#ifdef SHORTLOC
 		alat1=latlon_store[iadd1*2+  noffset[iregion]]/200.0;
 		alon1=latlon_store[iadd1*2+1+noffset[iregion]]/175.0;
-#else
-		alat1=flatlon_store[iadd1*2+  noffset[iregion]];
-		alon1=flatlon_store[iadd1*2+1+noffset[iregion]];
-#endif
-
-		/* compute lat/lon of pixel as a check of the pre-computed location */
-		//pixtolatlon(((float) ix)+0.5, ((float) iy)+0.5, &clon, &clat,
-		// 	  projt, xdeg, ydeg, ascale, bscale, a0, b0);
-		//clat=nint(clat*200.0)/200.0; clon=nint(clon*175.0)/175.0;
-		//printf("Loc check: %d %f %f  %f %f\n",iadd1,alat1,clat,alon1,clon);
 
 		/* compute antenna pattern response at each pixel based on beam number, 
 		   location, and projection rotation and scaling */
 		rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
-		//x_rel=ix1*2.5; y_rel=iy1*5;
-		sum=ssmi_response(x_rel,y_rel,theta,thetai,ibeam);
-
+		gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+		sum = gsx_ssmi_response( x_rel, y_rel, theta, thetai,	\
+					 *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
 		if (sum > response_threshold) {
 		  if (flatten) sum=1.0;    /* optionally flatten response */
 		  fill_array[count]=iadd1; /* address of pixel */
@@ -1062,23 +826,10 @@ int main(int argc,char *argv[])
 		    count=MAXFILL;
 		  }
 		
-#ifdef DEBUG_RESPONSE
-		} else
-		  sum=-sum;
-
-		x=ix+0.5;  /* compute exact lat/lon of each pixel in response array */
-		y=iy+0.5;
-		pixtolatlon(x, y, &plon, &plat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
-		fprintf(resp_debug,"%d %d %f %f %f %d %f %f %f %f\n",
-			ix,iy,x_rel,y_rel,sum,iadd1,alon1,alat1,plon,plat);
-#else
 		}
-#endif
-
 	      }
 	    }
 	  }
-	  
 	  
 	  /* write measurement and addresses to setup output file */
 	  if (count > 1) {
@@ -1103,8 +854,6 @@ int main(int argc,char *argv[])
 	      tbmax=max(tbmax,tb);
 	      tbmin=min(tbmin,tb);
 	    }	    
-
-	    //printf("Write %f %f %d %d %d  %d %d %d %d\n",tb,thetai,count,ktime,iadd,iregion,ibeam,iscan,ii);	    
 
 	    /* write measurement information record to output .setup file */
 	    cnt=4*5;
@@ -1142,7 +891,6 @@ int main(int argc,char *argv[])
     /* input file has been processed */
     if (shortf) {
       printf("\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
-      printf("Output Cells/Records: %d  Revs: %d  Last rev: %d\n",jrec,irev,lrev);
       printf("Region counts: ");
       for (j=0; j<save_area.nregions; j++)
 	printf(" %d",jrec2[j]);
@@ -1156,16 +904,12 @@ int main(int argc,char *argv[])
   
       if (iday <= dend)
 	printf("*** DAY RANGE IS NOT FINISHED ***\n");
-      printf("End of day period reached %d %d  %d\n",iday,dend,irev);
+      printf("End of day period reached %d %d \n",iday,dend);
     }
                /* input file loop */
     printf("Done with setup records %d %d\n",irec,krec);
   }
 
-#ifdef DEBUG_RESPONSE
-  fclose(resp_debug);
-#endif
-  
   /* close output setup files */
   for (j=0; j<save_area.nregions; j++) {
     printf("\nRegion %d %s beam %d records %d\n",save_area.sav_regnum[j],
@@ -1177,7 +921,7 @@ int main(int argc,char *argv[])
   printf("\n");
 
   /* close input meta file */	    
-  close(file_id);
+  fclose(file_id);
   printf("Setup program successfully completed\n");
 
   return(0); /* successful termination */
@@ -1714,7 +1458,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," Response_threshold=%f",response_threshold);
+		      sprintf(lin," Response_threshold=%f",*response_threshold);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
@@ -1753,7 +1497,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," Response_Multiplier=%f",RESPONSEMULT);
+		      sprintf(lin," Response_Multiplier=%d",RESPONSEMULT);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
@@ -1855,12 +1599,7 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
   /* allocate memory for storage of location arrays */
   *noffset=malloc(sizeof(int)*(a->nregions+1));
-#ifdef SHORTLOC
   *latlon_store=malloc(sizeof(short int)*nspace);
-#else
-  *flatlon_store=malloc(sizeof(float)*nspace);
-  *latlon_store = (short int *) *flatlon_store;  
-#endif
   if (*noffset==NULL || *latlon_store==NULL) {
     fprintf(stderr,"*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
     exit(-1);
@@ -1881,17 +1620,10 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 		    a->sav_a0[iregion],     a->sav_b0[iregion]);
 
     /* hash file name */
-#ifdef SHORTLOC
     sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
 	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
 	    abs(nint(a->sav_a0[iregion])), abs(nint(a->sav_b0[iregion])),
 	    abs(nint(a->sav_xdeg[iregion])),abs(nint(a->sav_ydeg[iregion])));
-#else
-    sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.floc",
-	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    abs(nint(a->sav_a0[iregion])), abs(nint(a->sav_b0[iregion])),
-	    abs(nint(a->sav_xdeg[iregion])) ,abs(nint(a->sav_ydeg[iregion])));
-#endif
 
     if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
@@ -1900,13 +1632,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  iadd=a->sav_nsx[iregion]*iy+ix; /* zero-based lexicographic pixel address */
 	  iadd0=2*iadd+(*noffset)[iregion-1];
 	  iadd=2*iadd+(*noffset)[iregion];	  
-#ifdef SHORTLOC	
 	  (*latlon_store)[iadd]=  (*latlon_store)[iadd0];	  
 	  (*latlon_store)[iadd+1]=(*latlon_store)[iadd0+1];
-#else	
-	  (*flatlon_store)[iadd]=  (*flatlon_store)[iadd0];	  
-	  (*flatlon_store)[iadd+1]=(*flatlon_store)[iadd0+1];
-#endif	
 	}
       }      
 
@@ -1924,19 +1651,12 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  printf("... could not open precompute file %s will recompute\n",line);	
 	  goto label_skip;
 	}
-#ifdef SHORTLOC
+
 	if (fread(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
 	  printf("*** error reading precompute file %s\n",line);	
 	  fclose(f);
 	  goto label_skip;
 	}
-#else
-	if (fread(&(*flatlon_store)[(*noffset)[iregion]], 4, nsize*2, f)!=2*nsize) {
-	  printf("*** error reading precompute file %s\n",line);	
-	  fclose(f);
-	  goto label_skip;
-	}
-#endif
 	fclose(f);
 	goto label_read;
       }
@@ -1956,13 +1676,9 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  if (iadd<0) iadd=0;
 	  if (iadd>=nsize) iadd=0;
 	  iadd=2*iadd+(*noffset)[iregion];
-#ifdef SHORTLOC	
+
 	  (*latlon_store)[iadd]=  nint(clat*200.0);
 	  (*latlon_store)[iadd+1]=nint(clon*175.0);
-#else	
-	  (*flatlon_store)[iadd]=  clat;
-	  (*flatlon_store)[iadd+1]=clon;
-#endif	
 	}
       }
 
@@ -1975,19 +1691,12 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  printf("	*** error opening output precompute file %s\n",line);	
 	  goto label_read;
 	}      
-#ifdef SHORTLOC
+
 	if (fwrite(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
 	  fprintf(stderr,"*** error writing location file -- file is now invald\n");
 	  fclose(f);
 	  exit(-1);
 	}
-#else
-	if (fwrite(&(*flatlon_store)[(*noffset)[iregion]], 4, nsize*2, f)!=2*nsize) {
-	  fprintf(stderr,"*** error writing location file -- file is now invald\n");
-	  fclose(f);
-	  exit(-1);
-	}
-#endif
 	fclose(f);
       }
     }    
@@ -1998,367 +1707,6 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
 /* *********************************************************************** */
 
-#ifdef RSS
-
-void Ferror(int *err, int i)
-{
-  fprintf(stderr,"*** file read error at %d ***\n",i); fflush(stderr);
-  *err=-1;
-  return;
-}
-
-int Sread(float *val, short int *b, int r, int c, FILE *fid, float sc, float off, int flag)
-{ /* binary RSS SSM/I V7 file reader */
-  int i, j;
-
-  if (fread(b, 2, r*c, fid) != r*c) return(0);
-
-  for (i=0; i<c; i++)
-    for (j=0; j<r; j++)
-      if (b[i*r+j] > 0 || flag)
-	val[i*r+j]=b[i*r+j]*sc+off;
-      else
-	val[i*r+j]=0.0;
-    return(1);
-}
-
-
-int read_ssmiRSS_TB_V07_binary(char *fname, ssmiRSSv7 *d, int verbose)
-{
-  FILE *fid;  
-  int ierr=0, i, j;
-  short int b[HI_SCAN*HSCANS];  /* read buffer */
-
-  fid=fopen(fname,"r");
-  if (fid==NULL) {
-    fprintf(stderr,"*** could not open TB file %s\n",fname);
-    return(-2);   /* skip reading file on error */
-  }
-
-  if (fread(&d->KSAT,    4, 1, fid)!=1) Ferror(&ierr, 0);
-  if (fread(&d->IORBIT,  4, 1, fid)!=1) Ferror(&ierr, 1);
-  if (fread(&d->NUMSCAN, 4, 1, fid)!=1) Ferror(&ierr, 2);
-  if (verbose) {
-    printf("Input file %s\n",fname);    
-    printf(" SSMI Hi rec scans = %d\n\n",d->NUMSCAN);
-  }
-  if (fread(&d->ASTART_TIME, NUMCHAR-1, 1, fid)!=1) Ferror(&ierr, 3);
-  d->ASTART_TIME[NUMCHAR-1]='\0';  
-  if (fread(&d->SCAN_TIME, 8, HSCANS, fid)!=HSCANS) Ferror(&ierr, 4);
-  if (fread(&d->ORBIT,  8, HSCANS, fid)!=HSCANS) Ferror(&ierr, 5);
-  if (fread(&d->SC_LAT, 4, HSCANS, fid)!=HSCANS) Ferror(&ierr, 6);
-  if (fread(&d->SC_LON, 4, HSCANS, fid)!=HSCANS) Ferror(&ierr, 7);
-  if (fread(&d->SC_ALT, 4, HSCANS, fid)!=HSCANS) Ferror(&ierr, 8);
-  if (fread(&d->IQUAL_FLAG, 4, HSCANS, fid)!=HSCANS) Ferror(&ierr, 9);
-  /* using address of zero index in call to Sread to make compiler happy */
-  if (Sread(&d->CEL_LAT[0], b, HI_SCAN, HSCANS, fid, 0.01,   0., 1)==0) Ferror(&ierr, 10);
-  if (Sread(&d->CEL_LON[0], b, HI_SCAN, HSCANS, fid, 0.01, 180., 1)==0) Ferror(&ierr, 11);
-  if (Sread(&d->CEL_EIA[0], b, HI_SCAN, HSCANS, fid, 0.002, 45., 1)==0) Ferror(&ierr, 12);
-  if (Sread(&d->CEL_AZM[0], b, HI_SCAN, HSCANS, fid, 0.01, 180., 1)==0) Ferror(&ierr, 13);
-  if (Sread(&d->CEL_SUN[0], b, HI_SCAN, HSCANS, fid, 0.01,   0., 1)==0) Ferror(&ierr, 14);
-  if (Sread(&d->CEL_LND[0], b, HI_SCAN, HSCANS, fid, 0.4,    0., 1)==0) Ferror(&ierr, 15);
-  if (fread(&d->CEL_ICE, 2, HI_SCAN*HSCANS, fid)!=HI_SCAN*HSCANS) Ferror(&ierr, 16);
-  if (Sread(&d->CEL_85V[0], b, HI_SCAN, HSCANS, fid, 0.01, 100., 0)==0) Ferror(&ierr, 17);
-  if (Sread(&d->CEL_85H[0], b, HI_SCAN, HSCANS, fid, 0.01, 100., 0)==0) Ferror(&ierr, 18);
-  if (Sread(&d->CEL_19V[0], b, LO_SCAN, LSCANS, fid, 0.01, 100., 0)==0) Ferror(&ierr, 19);
-  if (Sread(&d->CEL_19H[0], b, LO_SCAN, LSCANS, fid, 0.01, 100., 0)==0) Ferror(&ierr, 20);
-  if (Sread(&d->CEL_22V[0], b, LO_SCAN, LSCANS, fid, 0.01, 100., 0)==0) Ferror(&ierr, 21);
-  if (Sread(&d->CEL_37V[0], b, LO_SCAN, LSCANS, fid, 0.01, 100., 0)==0) Ferror(&ierr, 22);
-  if (Sread(&d->CEL_37H[0], b, LO_SCAN, LSCANS, fid, 0.01, 100., 0)==0) Ferror(&ierr, 23);
-
-  /* close input file */
-  fclose(fid);
-
-  return(ierr);
-}
-
-void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat)
-{ /* read fine with min and max latitudes for each scan position from file 
-     the location of this file is specified in the environment variable 'RSS_path' */
-
-  char *p, line[260];
-  //char RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
-  char RSS_path[]="../../ref/"; /* default location */
-  int i;
-  FILE *f;
-  
-  p=getenv("RSS_path");
-  if (p == NULL)
-    p=RSS_path;
-
-  sprintf(line,"%s/minmaxlat.dat",p);
-    printf("Read ssmiRSS minmax lat file: %s\n",line);
-  f=fopen(line,"r");
-  if (f==NULL) {
-    fprintf(stderr,"*** failed to open file %s\n",line);
-    exit(-1);
-  }
-  for (i=0; i<HI_SCAN; i++)
-    fscanf(f,"%f %f",&minlat[i],&maxlat[i]);
-  fclose(f);
-}
-
-#else
-
-#include <netcdf.h>
-
-#define ERRCODE -1 /* Handle errors by printing an error message */
-#define ERR(e, ierr) { printf("Error: %s %d\n", nc_strerror(e), ierr=ERRCODE); }
-
-int read_ssmiCSU_TB(char *inpfile, ssmiCSU *d, int verbose)       
-{ /* Read ssmi CSU NetCDF FCDR File */
-
-  char  *p;
-  int    i,n;
-  int    ncid;
-  int    retval;
-  char   space[100];
-  int    ierr=0;  
-
-  /* netdef varid variables */
-  int    recid;
-  int    nlscan_dimid;
-  int    nhscan_dimid;
-  int    revlr_varid;
-  int    scantimelr_varid;
-  int    scandatelr_varid;
-  int    sclatlr_varid;
-  int    sclonlr_varid;
-  int    scaltlr_varid;
-  int    sclathr_varid;
-  int    sclonhr_varid;
-  int    scalthr_varid;
-  int    lat_lr_varid;
-  int    lon_lr_varid;
-  int    eia_lr_varid;
-  int    sun_lr_varid;
-  int    qual_lr_varid;
-  int    revhr_varid;
-  int    scantimehr_varid;
-  int    scandatehr_varid;
-  int    lat_hr_varid;
-  int    lon_hr_varid;
-  int    eia_hr_varid;
-  int    sun_hr_varid;
-  int    qual_hr_varid;
-  int    tb19v_varid;
-  int    tb19h_varid;
-  int    tb22v_varid;
-  int    tb37v_varid;
-  int    tb37h_varid;
-  int    tb85v_varid;
-  int    tb85h_varid;
-
-  /* Declare header variables */
-  size_t nscan;
-  int    scid;
-  int    orbitnumber;
-  char   title[100];
-  char   author[100];
-  char   email[100];
-  char   url[100];
-  char   institution[100];
-  char   version[100];
-  char   revision_date[100];
-  char   platform[100];
-  char   sensor[100];
-  char   orbit_number[100];
-  char   source[100];
-  char   filename[100];
-  char   startdate[100];
-  char   enddate[100];
-  char   created[100];
-
-  /* Declare buffer variable */
-  unsigned char buffer[HSCANS*HI_SCAN]; /* working buffer larger than largest data element */  
-
-  /* Open NetCDF File and get variable information */
-  if (verbose) {
-    printf("Open file %s\n",inpfile); 
-  }  
-  if (retval = nc_open(inpfile, NC_NOWRITE, &ncid))              ERR(retval, ierr);
-  //printf("file opened %d\n",retval, &ierr);  
-  if (retval = nc_inq_unlimdim(ncid, &recid))                    ERR(retval, ierr);
-  if (retval = nc_inq_dimid(ncid, "nscan_lores", &nlscan_dimid)) ERR(retval, ierr);
-  if (retval = nc_inq_dimid(ncid, "nscan_hires", &nhscan_dimid)) ERR(retval, ierr);
-  if (retval = nc_inq_dimlen(ncid, nlscan_dimid, &nscan))        ERR(retval, ierr);
-  d->nlscan = nscan;
-  if (retval = nc_inq_dimlen(ncid, nhscan_dimid, &nscan))        ERR(retval, ierr);
-  d->NUMSCAN = nscan;
-  if (verbose) {
-    printf(" SSMI Lo res scans  = %d\n",d->nlscan);
-    printf(" SSMI Hi res scans  = %d\n\n",d->NUMSCAN);
-  }
-
-  /* Read in Global attribute metadata fields */
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "title",               title))         ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "creator_name",        author))        ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "creator_email",       email))         ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "creator_url",         url))           ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "institution",         institution))   ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "product_version",     version))       ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "revision_date",       revision_date)) ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "platform",            platform))      ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "sensor",              sensor))        ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "orbit_number",        orbit_number))  ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "source",              source))        ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "id",                  filename))      ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "time_coverage_start", startdate))     ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "time_coverage_end",   enddate))       ERR(retval, ierr);
-  if (retval = nc_get_att_text(ncid, NC_GLOBAL, "date_created",        created))       ERR(retval, ierr);
-
-  if (verbose) {
-    printf(" Title         = %s\n",title);
-    printf(" Author        = %s\n",author);
-    printf(" Contact       = %s\n",email);
-    printf(" URL           = %s\n",url);
-    printf(" Institution   = %s\n",institution);
-    printf(" Version       = %s\n",version);
-    printf(" Revision Date = %s\n",revision_date);
-    printf(" Satellite     = %s\n",platform);
-    printf(" Sensor        = %s\n",sensor);
-    printf(" Orbit Number  = %s\n",orbit_number);
-    printf(" Source File   = %s\n",source);
-    printf(" Filename      = %s\n",filename);
-    printf(" Granule Start = %s\n",startdate);
-    printf(" Granule End   = %s\n",enddate);
-    printf(" Creation Date = %s\n\n",created);
-  }
-
-  if (d->nlscan > 0) {
-    /* Read netcdf varids */
-    if (retval = nc_inq_varid(ncid, "orbit_lores",          &revlr_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "scan_time_lores",      &scantimelr_varid)) ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "scan_datetime_lores",  &scandatelr_varid)) ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "spacecraft_lat_lores", &sclatlr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "spacecraft_lon_lores", &sclonlr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "spacecraft_alt_lores", &scaltlr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "lat_lores",            &lat_lr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "lon_lores",            &lon_lr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "eia_lores",            &eia_lr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "sun_glint_lores",      &sun_lr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "quality_lores",        &qual_lr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "fcdr_tb19v",           &tb19v_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "fcdr_tb19h",           &tb19h_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "fcdr_tb22v",           &tb22v_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "fcdr_tb37v",           &tb37v_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "fcdr_tb37h",           &tb37h_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "orbit_hires",          &revhr_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "scan_time_hires",      &scantimehr_varid)) ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "scan_datetime_hires",  &scandatehr_varid)) ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "spacecraft_lat_hires", &sclathr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "spacecraft_lon_hires", &sclonhr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "spacecraft_alt_hires", &scalthr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "lat_hires",            &lat_hr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "lon_hires",            &lon_hr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "eia_hires",            &eia_hr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "sun_glint_hires",      &sun_hr_varid))     ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "quality_hires",        &qual_hr_varid))    ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "fcdr_tb85v",           &tb85v_varid))      ERR(retval, ierr);
-    if (retval = nc_inq_varid(ncid, "fcdr_tb85h",           &tb85h_varid))      ERR(retval, ierr);
-
-    /* read netcdf data arrays */
-    if (retval = nc_get_var_double(ncid,scantimelr_varid, &d->SCAN_TIME_lo[0])) ERR(retval, ierr);
-    //if (retval = nc_get_var_text(ncid,  scandatelr_varid, &datetimelr[0][0]))   ERR(retval, ierr);
-    if (retval = nc_get_var_double(ncid,revlr_varid,      &d->ORBIT_lo[0]))     ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, sclatlr_varid,    &d->SC_LAT_lo[0]))    ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, sclonlr_varid,    &d->SC_LON_lo[0]))    ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, scaltlr_varid,    &d->SC_ALT_lo[0]))    ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, lat_lr_varid,     &d->CEL_LAT_lo[0]))   ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, lon_lr_varid,     &d->CEL_LON_lo[0]))   ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, eia_lr_varid,     &d->CEL_EIA_lo[0]))   ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, tb19v_varid,      &d->CEL_19V[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, tb19h_varid,      &d->CEL_19H[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, tb22v_varid,      &d->CEL_22V[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, tb37v_varid,      &d->CEL_37V[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, tb37h_varid,      &d->CEL_37H[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_double(ncid,scantimehr_varid, &d->SCAN_TIME[0]))    ERR(retval, ierr);
-    //if (retval = nc_get_var_text(ncid,  scandatehr_varid, &datetimehr[0]))   ERR(retval, ierr);
-    if (retval = nc_get_var_double(ncid,revhr_varid,      &d->ORBIT[0]))        ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, sclathr_varid,    &d->SC_LAT[0]))       ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, sclonhr_varid,    &d->SC_LON[0]))       ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, scalthr_varid,    &d->SC_ALT[0]))       ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, lat_hr_varid,     &d->CEL_LAT[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, lon_hr_varid,     &d->CEL_LON[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, eia_hr_varid,     &d->CEL_EIA[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, tb85v_varid,      &d->CEL_85V[0]))      ERR(retval, ierr);
-    if (retval = nc_get_var_float(ncid, tb85h_varid,      &d->CEL_85H[0]))      ERR(retval, ierr);
-
-    /* read signed char variables into buffer and convert to ints */
-    if (retval = nc_get_var_schar(ncid, sun_lr_varid,     buffer))              ERR(retval, ierr);
-    for (i=0; i<d->nlscan*LO_SCAN; i++) d->CEL_SUN_lo[i]=buffer[i];
-    if (retval = nc_get_var_schar(ncid, qual_lr_varid,    buffer))              ERR(retval, ierr);
-    for (i=0; i<d->nlscan*LO_SCAN; i++) d->IQUAL_FLAG_lo[i]=buffer[i];
-    if (retval = nc_get_var_schar(ncid, sun_hr_varid,     buffer))              ERR(retval, ierr);
-    for (i=0; i<d->NUMSCAN*HI_SCAN; i++) d->CEL_SUN[i]=buffer[i];
-    if (retval = nc_get_var_schar(ncid, qual_hr_varid,    buffer))              ERR(retval, ierr);
-    for (i=0; i<d->NUMSCAN*HI_SCAN; i++) d->IQUAL_FLAG[i]=buffer[i];
-  }
-
-  /* Close the output data file, freeing all netcdf resources. */
-  if (retval = nc_close(ncid)) ERR(retval, ierr);
-
-  /* Load header variables into output header data structure */
-  p=rindex(platform,'F');
-  sscanf(p+1,"%2d",&scid);
-  sscanf(orbit_number,"%5d",&orbitnumber);
-  d->KSAT   = scid;
-  d->IORBIT = orbitnumber;
-  if (verbose) {
-    printf("Spacecraft ID = %2d\n",scid);
-    printf("Orbit Number  = %5d\n",orbitnumber);
-  }
-
-  /* copy string header values */
-  strncpy(&d->ASTART_TIME[0],startdate,NUMCHAR);
-  strncpy(&d->title[0],title,100);
-  strncpy(&d->author[0],author,100);
-  strncpy(&d->email[0],email,100);
-  strncpy(&d->url[0],url,100);
-  strncpy(&d->institution[0],institution,100);
-  strncpy(&d->version[0],version,100);
-  strncpy(&d->revision_date[0],revision_date,100);
-  strncpy(&d->platform[0],platform,100);
-  strncpy(&d->sensor[0],sensor,100);
-  strncpy(&d->startdate[0],startdate,100);
-  strncpy(&d->enddate[0],enddate,100);
-  strncpy(&d->created[0],created,100);
-  strncpy(&d->inpfile[0],source,100);
-  strncpy(&d->outfile[0],filename,100);
-
-  /* Return to main program */
-  return(ierr);
-}
-
-void read_ssmiRSS_minmaxlat(float *minlat, float *maxlat)
-{ /* read fine with min and max latitudes for each scan position from file 
-     the location of this file is specified in the environment variable 'RSS_path' */
-
-  char *p, line[260];
-  //char RSS_path[]="/auto/users/long/research/NSIDC/RSS/";
-  char RSS_path[]="../../ref/"; /* default location */
-  int i;
-  FILE *f;
-  
-  p=getenv("RSS_path");
-  if (p == NULL)
-    p=RSS_path;
-
-  sprintf(line,"%s/minmaxlat.dat",p);
-    printf("Read ssmiRSS minmax lat file: %s\n",line);
-  f=fopen(line,"r");
-  if (f==NULL) {
-    fprintf(stderr,"*** failed to open file %s\n",line);
-    exit(-1);
-  }
-  for (i=0; i<HI_SCAN; i++)
-    fscanf(f,"%f %f",&minlat[i],&maxlat[i]);
-  fclose(f);
-}
-
-#endif
-
-    
 /* *********************************************************************** */
 
 float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibeam)
@@ -2419,7 +1767,55 @@ float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibe
   return(weight);
 }
 
+/* *********************************************************************** */
 
+float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
+{
+  /* Compute an estimate of the ssmi beam response (weight) in normal space
+     given a location (in km, N-E=(x,y)), azimuth angle (theta),
+     3dB antenna pattern scale factor (bigang), and the footprint
+     sizes in cross track and along track.  
+
+     inputs:
+       x_rel,y_rel : relative offset from beam center in km
+       theta : pattern rotation in deg
+       thetai : incidence angle in deg (not used)
+       semimajor : semi major axis in km
+       semiminor : semi minor axis in km
+
+     Convert km location to coordinate system with axis
+     lined up with the elliptical antenna pattern
+
+                The rotation matrix looks like this where theta is a
+		CCW rotation of the input coordinates x,y
+
+		--  --   ---                      ---  --   --
+		|    |   |                          |  |     |
+		| x1 |   | cos(theta)   -sin(theta) |  |  x  |
+		|    | = |                          |  |     |
+		| y1 |   | sin(theta)    cos(theta) |  |  y  |
+		|    |   |                          |  |     |
+		-- --    ---                      ---  --   --
+  */
+
+  static float lnonehalf=-0.6931471;  /* ln(0.5) */
+  float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
+
+  /* rotate coordinate system to align with look direction */
+  x=cos(theta*DTR)*x_rel - sin(theta*DTR)*y_rel;
+  y=sin(theta*DTR)*x_rel + cos(theta*DTR)*y_rel;
+  
+  /* compute approximate antenna response
+     Antenna weighting is estimation from SSMI Users Guide 21-27 */
+  along_beam_size=semimajor;
+  cross_beam_size=semiminor;
+  t1=2*x/cross_beam_size;
+  t2=2*y/along_beam_size;
+  
+  weight=expf((t1*t1+t2*t2)*lnonehalf);
+   
+  return(weight);
+}
 
 /* *********************************************************************** */
 
