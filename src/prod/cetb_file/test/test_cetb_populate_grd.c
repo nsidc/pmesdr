@@ -17,7 +17,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char filename[ FILENAME_MAX ];
+char test_filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 int region_number;
 int factor;
@@ -38,7 +38,7 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( filename, "" );
+  strcpy( test_filename, "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.GRD.CSU.v0.1.nc" );
   strcpy( dirname, "./test" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
   factor = 0;
@@ -48,15 +48,14 @@ void setUp( void ) {
   doy = 1;
   beam_id = 1;
   direction_id = CETB_MORNING_PASSES;
-  reconstruction_id = CETB_SIR;
+  reconstruction_id = CETB_GRD;
   producer_id = CETB_CSU;
 
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id );
-  TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
-			    cetb->filename );
+  TEST_ASSERT_NOT_NULL_MESSAGE( cetb, "Error calling cetb_file_init" );
+  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   
 }
 
@@ -64,37 +63,30 @@ void tearDown( void ) {
 
 }
 
-void test_cetb_populate_sir_parameters( void ) {
+void test_cetb_populate_grd_parameters( void ) {
 
   int nc_fileid=0;
-  int nits=20;
   int median_filter=1;
-  int expected_nits=20;
   int expected_median_filter=1;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
-  status = cetb_file_add_sir_parameters( cetb, nits, median_filter );
-  TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_sir_parameters" );
+  status = cetb_file_add_grd_parameters( cetb, median_filter );
+  TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_grd_parameters" );
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  status = nc_open( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
-		    NC_NOWRITE, &nc_fileid );
+  status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
-  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "sir_number_of_iterations", &nits );
-  TEST_ASSERT_TRUE( NC_NOERR == status );
-  TEST_ASSERT_EQUAL_INT( expected_nits, nits );
-
-  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "sir_median_filter", &median_filter );
+  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "grd_median_filter", &median_filter );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_INT( expected_median_filter, median_filter );
   nc_close( nc_fileid );
   
 }
 
-void test_cetb_populate_bgi_parameters_on_sir_file( void ) {
+void test_cetb_populate_bgi_parameters_on_grd_file( void ) {
 
   int nc_fileid=0;
   double gamma=0.0D;
@@ -107,8 +99,8 @@ void test_cetb_populate_bgi_parameters_on_sir_file( void ) {
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
   status = cetb_file_add_bgi_parameters( cetb, gamma, dimensional_tuning_parameter,
-					 noise_variance,
-					 db_threshold, diff_threshold, median_filter );
+  					 noise_variance,
+  					 db_threshold, diff_threshold, median_filter );
   TEST_ASSERT_TRUE_MESSAGE( 0 != status, "cetb_file_add_bgi_parameters" );
   cetb_file_close( cetb );
 

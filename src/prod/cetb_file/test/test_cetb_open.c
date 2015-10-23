@@ -5,8 +5,12 @@
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
 #include <netcdf.h>
+#include <stdlib.h>
 #include <string.h>
+#include <udunits2.h>
+
 #include "unity.h"
+#include "calcalcs.h"
 #include "cetb_file.h"
 
 /*
@@ -14,7 +18,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char filename[ FILENAME_MAX ];
+char test_filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 int region_number;
 int factor;
@@ -35,8 +39,10 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( filename, "" );
-  strcpy( dirname, "./test" );
+  strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
+  strcat( dirname, "/src/prod/cetb_file/test" );
+  strcpy( test_filename, dirname );
+  strcat( test_filename, "/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
   factor = 0;
   platform_id = CETB_F13;
@@ -52,8 +58,7 @@ void setUp( void ) {
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
-			    cetb->filename );
+  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   
 }
 

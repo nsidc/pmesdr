@@ -68,7 +68,25 @@ static const char *cetb_resolution_name[] = {
 static double cetb_exact_scale_m[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_N */
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_S */
-  { 25025.26000, 12512.63000, 6256.31500, 3128.15750, 1564.07875 } /* row indexed by EASE2_T */
+  { 25025.26000, 12512.63000, 6256.31500, 3128.15750, 1564.07875 }  /* row indexed by EASE2_T */
+};
+
+/*
+ * Number of rows is a function of projection (N, S, T) and resolution factor
+ */
+static long int cetb_grid_rows[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
+  { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_N */
+  { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_S */
+  { 540, 1080, 2160, 4320,  8640 }  /* row indexed by EASE2_T */
+};
+
+/*
+ * Number of cols is a function of projection (N, S, T) and resolution factor
+ */
+static long int cetb_grid_cols[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
+  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_N */
+  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S */
+  { 1388, 2776, 5552, 11104, 22208 }  /* row indexed by EASE2_T */
 };
 
 /*
