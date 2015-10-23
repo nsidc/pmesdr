@@ -37,7 +37,7 @@ if [ $? -ne 0 ]; then
   echo 'csu_ease make failed'
   exit -1
 fi
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup/meas_meta_setup_RSS
+cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
 pwd
 echo 'running setup'
 make rss_ease
@@ -45,7 +45,7 @@ if [ $? -ne 0 ]; then
   echo 'rss_ease setup failed'
   exit -1
 fi
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup/meas_meta_setup_CSU
+cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
 pwd
 echo 'running setup'
 make csu_ease
