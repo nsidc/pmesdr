@@ -5,8 +5,12 @@
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
 #include <netcdf.h>
+#include <stdlib.h>
 #include <string.h>
+#include <udunits2.h>
+
 #include "unity.h"
+#include "calcalcs.h"
 #include "cetb_file.h"
 
 /*
@@ -27,7 +31,6 @@ cetb_direction_id direction_id;
 cetb_reconstruction_id reconstruction_id;
 cetb_swath_producer_id producer_id;
 
-
 void setUp( void ) {
   /*
    * Default values for globals
@@ -35,8 +38,10 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( test_filename, "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.BGI.CSU.v0.1.nc" );
-  strcpy( dirname, "./test" );
+  strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
+  strcat( dirname, "/src/prod/cetb_file/test" );
+  strcpy( test_filename, dirname );
+  strcat( test_filename, "/EASE2_N25km.F13_SSMI.1991001.19H.M.BGI.CSU.v0.1.nc" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
   factor = 0;
   platform_id = CETB_F13;
