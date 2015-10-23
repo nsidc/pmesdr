@@ -34,7 +34,8 @@ ifeq ($(LOCALE),JANUSicc)
   AR = xiar
 endif
 
-CALCALCS_INCDIR = calcalcs_1.0
+CALCALCS_DIR = $(TOPDIR)/src/prod/cetb_file/src/calcalcs_1.0
+CALCALCS_INCDIR = $(CALCALCS_DIR)
 
 #
 #       debug or optimization settings
@@ -97,9 +98,9 @@ ifeq ($(LOCALE),JANUSgcc)
 endif
 DEPEND_LIBS = 
 
-SRCS = cetb_file.c calcalcs_1.0/calcalcs.c
-OBJS = cetb_file.o calcalcs_1.0/calcalcs.o
-HDRS = cetb_file.h calcalcs_1.0/calcalcs.h
+SRCS = cetb_file.c $(CALCALCS_DIR)/calcalcs.c
+OBJS = cetb_file.o $(CALCALCS_DIR)/calcalcs.o
+HDRS = cetb_file.h $(CALCALCS_DIR)/calcalcs.h
 
 all : libcetb.a $(LIBDIR)/libcetb.a
 
