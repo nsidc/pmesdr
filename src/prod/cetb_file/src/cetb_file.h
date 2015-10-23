@@ -35,6 +35,9 @@ typedef struct {
   cetb_reconstruction_id reconstruction_id;
   long int cols;
   long int rows;
+  int cols_dim_id;
+  int rows_dim_id;
+  int time_dim_id;
 } cetb_file_class;
 
 cetb_file_class *cetb_file_init( char *dirname,
