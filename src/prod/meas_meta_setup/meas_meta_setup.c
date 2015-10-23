@@ -51,9 +51,9 @@
 			       set to 0 to not include az ang (smaller file) */
 #define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
 				  use 0 to not use pre compute files*/ 
-#define DTR 1.7453292519943295e-2      /* degrees to radians */
-#define RTD 57.29577951308233          /* radians to degrees */
-#define PI  3.141592653589793 
+#define DTR 2.0*M_PI/360.0       /* degrees to radians */
+//#define RTD 57.29577951308233          /* radians to degrees */
+//#define PI  3.141592653589793 
 
 #define AEARTH 6378.1363              /* SEMI-MAJOR AXIS OF EARTH, a, KM */
 #define FLAT 3.3528131778969144e-3    /* = 1/298.257 FLATNESS, f, f=1-sqrt(1-e**2) */
@@ -87,64 +87,6 @@ void no_trailing_blanks(char *s)
   return;
 }
 
-/**
- * Break a path up into a filename and directory name.
- * This calls \e basename and \e dirname.
- *
- * \param[in] path The path name to split.
- * \param[out] fname The file name at the end of path name.
- * \param[out] dname The directory name leading up to the file name.
- *
- * \retval 0 If there were no errors.
- * \retval 1 If there was an error.
- **/
-
-int
-filepath(const char *path, char **fname, char **dname)
-{
-  char *fpath = NULL;
-  char *fptr  = NULL;
-  char *dpath = NULL;
-  char *dptr  = NULL;
-
-  /* Warning: The non-GNU version of basename can modify path. */
-
-  if (! path) {
-    warnx("unable to break null path into filename and dirname");
-    return(EXIT_FAILURE);
-  }
-
-  if (fname != NULL) {
-    fpath = malloc(strlen(path) +1);
-    memset(fpath, 0, sizeof(fpath));
-    strcpy(fpath, path);
-    fptr = basename(fpath);
-    *fname = malloc(strlen(fptr) +1);
-    memset(*fname, 0, sizeof(*fname));
-    strcpy(*fname, fptr);
-    if (fpath != NULL) {
-      free(fpath);
-    }
-  }
-
-  if (dname != NULL) {
-    dpath = malloc(strlen(path) +1);
-    memset(dpath, 0, sizeof(dpath));
-    strcpy(dpath, path);
-    dptr = dirname(dpath);
-    *dname = malloc(strlen(dptr) +1);
-    memset(*dname, 0, sizeof(*dname));
-    strcpy(*dname, dptr);
-    if (dpath != NULL) {
-      free(dpath);
-    }
-  }
-
-  return(EXIT_SUCCESS);
-
-
-}
-
 void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
 { /* convert ascii time tag into year, day, hour, minute */
   int imon, mday;
@@ -161,7 +103,6 @@ int isleapyear(int year)
   else
     return(0);
 }
-
 
 /****************************************************************************/
 
@@ -183,20 +124,21 @@ typedef struct { /* BYU region information storage */
   float sav_km[NSAVE];  
 } region_save;  
 
+/****************************************************************************/
+/* These #defines will go away as this code relies more and more on gsx     */
+
 #define HI_SCAN 128
 #define LO_SCAN  64
 #define HSCANS 3600
 #define LSCANS 1800
 #define NUMCHAR  23
 
-/****************************************************************************/
-
 /********************************************************************/
 
 /* function prototypes */
 
 /* BYU SSM/I approximate spatial response computation */
-float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibeam);
+
 static float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
 
 static void write_end_header( region_save *save_area );
@@ -235,8 +177,6 @@ int main(int argc,char *argv[])
   char fname[250], mname[250];
   char line[1025], outpath[250];
   char ftempname[250];
-  char *fpath = NULL;
-  char *dpath = NULL;
   char *option;
   
   int i,j,k,n;
@@ -460,8 +400,6 @@ int main(int argc,char *argv[])
     printf("Opening input TB file %d '%s'\n",nfile,fname);
 
     /* read measurement data from file */    
-    /* Break the filename out into the directory and filename */
-    filepath(fname, &fpath, &dpath);
     /*
      * read file into gsx_class variable
      */
@@ -553,7 +491,7 @@ int main(int argc,char *argv[])
       
       if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-      if ( *(gsx->scantime[1]+iscan) <= 0.0 ) goto label_350; // do not process this scan - until gsx is fixed
+      if ( *(gsx->scantime[1]+iscan) == gsx->fill_scantime[1] ) goto label_350; // do not process this scan - until gsx is fixed
       /* scan time.  All measurements in this scan assigned this time */
       if ( NULL !=gsx ) {
 	timedecode(*(gsx->scantime[1]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
@@ -920,6 +858,10 @@ int main(int argc,char *argv[])
   }
   printf("\n");
 
+  /* free latlon_store, noffset and flatlon_store */
+  free( latlon_store );
+  free( noffset );
+  free( flatlon_store );
   /* close input meta file */	    
   fclose(file_id);
   printf("Setup program successfully completed\n");
@@ -1586,6 +1528,7 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
   float x,y,clat,clon;
   FILE *f;
   char tempname[180],lastname[180]="\0",line[1024];
+  int dumb;
 
   p=getenv("SIR_areas");
   if (p==NULL) p=local;
@@ -1598,10 +1541,16 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     nspace=nspace+2*a->sav_nsx[iregion]*a->sav_nsy[iregion];
 
   /* allocate memory for storage of location arrays */
-  *noffset=malloc(sizeof(int)*(a->nregions+1));
-  *latlon_store=malloc(sizeof(short int)*nspace);
-  if (*noffset==NULL || *latlon_store==NULL) {
-    fprintf(stderr,"*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
+  //  *noffset=malloc(sizeof(int)*(a->nregions+1));
+  dumb = posix_memalign( (void**)&(*noffset), CETB_MEM_ALIGNMENT, sizeof(int)*(a->nregions+1) );
+  if ( 0 != dumb ) {
+    fprintf( stderr, "*** Inadequate memory for data file storage 'noffset' \n" );
+    exit ( -1 );
+  }
+  //*latlon_store=malloc(sizeof(short int)*nspace);
+  dumb = posix_memalign( (void**)&(*latlon_store), CETB_MEM_ALIGNMENT, sizeof(short int)*nspace );
+  if ( 0 != dumb ) {
+    fprintf(stderr, "*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
     exit(-1);
   }
 
@@ -1707,97 +1656,37 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
 /* *********************************************************************** */
 
-/* *********************************************************************** */
-
-float ssmi_response(float x_rel, float y_rel, float theta, float thetai, int ibeam)
-{
-  /* Compute an estimate of the ssmi beam response (weight) in normal space
-     given a location (in km, N-E=(x,y)), azimuth angle (theta),
-     3dB antenna pattern scale factor (bigang), and the footprint
-     sizes in cross track and along track.  
-
-     inputs:
-       x_rel,y_rel : relative offset from beam center in km
-       theta : pattern rotation in deg
-       thetai : incidence angle in deg (not used)
-       ibeam : beam number
-
-     Convert km location to coordinate system with axis
-     lined up with the elliptical antenna pattern
-
-                The rotation matrix looks like this where theta is a
-		CCW rotation of the input coordinates x,y
-
-		--  --   ---                      ---  --   --
-		|    |   |                          |  |     |
-		| x1 |   | cos(theta)   -sin(theta) |  |  x  |
-		|    | = |                          |  |     |
-		| y1 |   | sin(theta)    cos(theta) |  |  y  |
-		|    |   |                          |  |     |
-		-- --    ---                      ---  --   --
-  */
-
-  static float lnonehalf=-0.6931471;  /* ln(0.5) */
-  static int NBEAMS=7;  
-  static float geom[]={/* along,cross beam sizes (km) and beamwidth (deg) */
-    /* SSM/I 3dB footprint geometries from (Hollinger, 1990) */
-    69.0, 43.0, 1.93, 1.86,  /* beam 1 19h */
-    69.0, 43.0, 1.93, 1.88,  /* beam 2 19v */
-    60.0, 40.0, 1.83, 1.60,  /* beam 3 22  */
-    37.0, 28.0, 1.27, 1.00,  /* beam 4 37h */
-    37.0, 29.0, 1.31, 1.00,  /* beam 5 37v */
-    15.0, 13.0, 0.60, 0.41,  /* beam 6 85h */
-    15.0, 13.0, 0.60, 0.42}; /* beam 7 85v */
-
-  float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
-
-  /* rotate coordinate system to align with look direction */
-  x=cos(theta*DTR)*x_rel - sin(theta*DTR)*y_rel;
-  y=sin(theta*DTR)*x_rel + cos(theta*DTR)*y_rel;
-  
-  /* compute approximate antenna response
-     Antenna weighting is estimation from SSMI Users Guide 21-27 */
-  along_beam_size=geom[(ibeam-1)*4  ];
-  cross_beam_size=geom[(ibeam-1)*4+1];
-  t1=2*x/cross_beam_size;
-  t2=2*y/along_beam_size;
-  
-  weight=expf((t1*t1+t2*t2)*lnonehalf);
-   
-  return(weight);
-}
-
-/* *********************************************************************** */
+/* *********************************************************************** 
+ * Compute an estimate of the ssmi beam response (weight) in normal space
+ *     given a location (in km, N-E=(x,y)), azimuth angle (theta),
+ *   3dB antenna pattern scale factor (bigang), and the footprint
+ *   sizes in cross track and along track.  
+ *
+ *   inputs:
+ *     x_rel,y_rel : relative offset from beam center in km
+ *     theta : pattern rotation in deg
+ *     thetai : incidence angle in deg (not used)
+ *     semimajor : semi major axis in km
+ *     semiminor : semi minor axis in km
+ *
+ *   Convert km location to coordinate system with axis
+ *   lined up with the elliptical antenna pattern
+ *
+ *              The rotation matrix looks like this where theta is a
+ *		CCW rotation of the input coordinates x,y
+ *
+ *		--  --   ---                      ---  --   --
+ *		|    |   |                          |  |     |
+ *		| x1 |   | cos(theta)   -sin(theta) |  |  x  |
+ *		|    | = |                          |  |     |
+ *		| y1 |   | sin(theta)    cos(theta) |  |  y  |
+ *		|    |   |                          |  |     |
+ *		-- --    ---                      ---  --   --
+ *
+ ************************************************************************/
 
 float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
 {
-  /* Compute an estimate of the ssmi beam response (weight) in normal space
-     given a location (in km, N-E=(x,y)), azimuth angle (theta),
-     3dB antenna pattern scale factor (bigang), and the footprint
-     sizes in cross track and along track.  
-
-     inputs:
-       x_rel,y_rel : relative offset from beam center in km
-       theta : pattern rotation in deg
-       thetai : incidence angle in deg (not used)
-       semimajor : semi major axis in km
-       semiminor : semi minor axis in km
-
-     Convert km location to coordinate system with axis
-     lined up with the elliptical antenna pattern
-
-                The rotation matrix looks like this where theta is a
-		CCW rotation of the input coordinates x,y
-
-		--  --   ---                      ---  --   --
-		|    |   |                          |  |     |
-		| x1 |   | cos(theta)   -sin(theta) |  |  x  |
-		|    | = |                          |  |     |
-		| y1 |   | sin(theta)    cos(theta) |  |  y  |
-		|    |   |                          |  |     |
-		-- --    ---                      ---  --   --
-  */
-
   static float lnonehalf=-0.6931471;  /* ln(0.5) */
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 

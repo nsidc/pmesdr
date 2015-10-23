@@ -27,6 +27,7 @@
 #include <time.h>
 #include <netcdf.h>
 
+#include "cetb.h"
 #include "cetb_file.h"
 #include "ezdump.h"
 #include "sir3.h"
@@ -447,7 +448,7 @@ int main(int argc, char **argv)
   nspace = nls * file_savings;/* space to allocate for measurement storage */
   printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
   /*  space = (char *) malloc(sizeof(char)*nspace); */
-  dumb = posix_memalign( (void**)&space, 64, nspace * sizeof(char) );
+  dumb = posix_memalign( (void**)&space, CETB_MEM_ALIGNMENT, nspace * sizeof(char) );
   if (dumb != 0) {
       eprintf("*** Inadequate memory for data file storage\n");
       exit(-1);
@@ -457,14 +458,31 @@ int main(int argc, char **argv)
 
   nsize = nsx * nsy;
   
-  a_val  = (float *) malloc(sizeof(float)*nsize);
-  a_temp = (float *) malloc(sizeof(float)*nsize);
-  cnts   = (int *) a_temp;  /* share storage space */
-
-  if (a_val == NULL || a_temp == NULL) {
-     eprintf("*** ERROR: inadequate memory for image working storage\n");
-     exit(-1);
+  //  a_val  = (float *) malloc(sizeof(float)*nsize);
+  dumb = posix_memalign( (void**)&a_val, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
+  if (dumb != 0) {
+    eprintf("*** Inadequate memory for data file storage\n");
+    exit(-1);
   }
+
+  //  a_temp = (float *) malloc(sizeof(float)*nsize);
+  dumb = posix_memalign( (void**)&a_temp, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
+  if (dumb != 0) {
+    eprintf("*** Inadequate memory for data file storage\n");
+    exit(-1);
+  }
+  
+  //cnts   = (int *) a_temp;  /* share storage space */
+  dumb = posix_memalign( (void**)&cnts, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
+  if (dumb != 0) {
+    eprintf("*** Inadequate memory for data file storage\n");
+    exit(-1);
+  }
+  
+  //if (a_val == NULL || a_temp == NULL) {
+  // eprintf("*** ERROR: inadequate memory for image working storage\n");
+  // exit(-1);
+  //}
 
    fflush(stdout);  
 
@@ -589,7 +607,12 @@ int main(int argc, char **argv)
 
   /* allocate index array and BGI working arrays*/
 
-  indx = (char **) malloc(sizeof(char *)*nsize*nmax);
+  //  indx = (char **) malloc(sizeof(char *)*nsize*nmax);
+  dumb = posix_memalign( (void**)&indx, CETB_MEM_ALIGNMENT, nsize*nmax*sizeof(char *) );
+  if (dumb != 0) {
+    eprintf("*** Inadequate memory for data file storage\n");
+    exit(-1);
+  }
   z = dmatrix(1,nmax,1,nmax);
   zc = dmatrix(1,nmax,1,nmax);
   u = dvector(1,nmax);
@@ -602,9 +625,25 @@ int main(int argc, char **argv)
   work = dvector(1,nmax);
   c = dvector(1,nmax);
   tb2 = dvector(1,nmax);
-  patarr = (float *) malloc(sizeof(float)*mdim*mdim*nmax);
-  ix0 = (int *) malloc(sizeof(int)*(nmax+1));
-  iy0 = (int *) malloc(sizeof(int)*(nmax+1));
+  //patarr = (float *) malloc(sizeof(float)*mdim*mdim*nmax);
+  dumb = posix_memalign( (void **)&patarr, CETB_MEM_ALIGNMENT, mdim*mdim*nmax*sizeof(float) );
+  if (dumb != 0) {
+    eprintf("*** Inadequate memory for data file storage, patarr\n");
+    exit(-1);
+  }
+  //ix0 = (int *) malloc(sizeof(int)*(nmax+1));
+  dumb = posix_memalign( (void **)&ix0, CETB_MEM_ALIGNMENT, (nmax+1)*sizeof(int) );
+  if (dumb != 0) {
+    eprintf("*** Inadequate memory for data file storage, ix0\n");
+    exit(-1);
+  }
+  //  iy0 = (int *) malloc(sizeof(int)*(nmax+1));
+  dumb = posix_memalign( (void **)&iy0, CETB_MEM_ALIGNMENT, (nmax+1)*sizeof(int) );
+  if (dumb != 0) {
+    eprintf("*** Inadequate memory for data file storage, iy0\n");
+    exit(-1);
+  }
+
   if (indx == NULL || z == NULL || zc == NULL || u == NULL
       || u1 == NULL || v == NULL || aveweights == NULL || v1 == NULL
       || ind == NULL || adds == NULL || work == NULL || c == NULL
