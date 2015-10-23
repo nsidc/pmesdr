@@ -5,6 +5,7 @@
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
 #include <float.h>
+#include <limits.h>
 #include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +42,8 @@ static int set_dimension( cetb_file_class *this, const char *name, size_t size, 
 			  const char *units,
 			  const char *calendar,
 			  const char *axis,
-			  double *valid_range );
+			  double *valid_range,
+			  int *dim_id );
 static int valid_date( int year, int doy );
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
@@ -200,8 +202,9 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->factor = factor;
   this->sensor_id = sensor_id;
   this->reconstruction_id = reconstruction_id;
-  this->cols = (long int) 0;
-  this->rows = (long int) 0;
+  this->cols_dim_id = INT_MIN;
+  this->rows_dim_id = INT_MIN;
+  this->time_dim_id = INT_MIN;
 
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
@@ -329,11 +332,30 @@ int cetb_file_add_tb( cetb_file_class *this,
 		      float fill_value,
 		      float missing_value ) {
 
+  int status;
+  int dim_ids[ ] = { this->time_dim_id, this->cols_dim_id, this->rows_dim_id };
+  int var_id;
+  
   /* Check that dimensions match what's expected for this file */
   if ( this->cols != cols || this->rows != rows ) {
     fprintf( stderr,
-	     "%s: dimensions mismatch, expected (%ld,%ld) but got=(%ld,%ld)\n",
+	     "%s: dimensions mismatch, expected (%ld,%ld) but got (%ld,%ld)\n",
 	     __FUNCTION__, this->cols, this->rows, cols, rows ); 
+    return 1;
+  }
+
+  /*
+   * Define a new variable for TBs in the cetb file This requires
+   * the dimensions ids already defined.  Try to follow DIWG
+   * convention, with "most rapidly-changing dimension last in C
+   * arrays" N.B. This might need to be changed, depending on how
+   * measures program actually stores things.  The test will be
+   * whether we have to reshape arrays when we read them in
+   * python.
+   */
+  if ( status = nc_def_var( this->fid, "TB", NC_USHORT, 3, dim_ids, &var_id ) ) {
+    fprintf( stderr, "%s: Error defining TB variable : %s.\n",
+  	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
@@ -988,7 +1010,8 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  "meters",
 			  NULL,
 			  "Y",
-			  valid_range );
+			  valid_range,
+			  &( this->rows_dim_id ) );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "rows" );
     return STATUS_FAILURE;
@@ -1019,7 +1042,8 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  "meters",
 			  NULL,
 			  "X",
-			  valid_range );
+			  valid_range,
+			  &( this->cols_dim_id ) );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "cols" );
     return STATUS_FAILURE;
@@ -1047,7 +1071,8 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  units,
 			  "gregorian",
 			  "T",
-			  valid_range );
+			  valid_range,
+			  &( this->time_dim_id ) );
   if ( 0 != status ) {
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
     return STATUS_FAILURE;
@@ -1072,7 +1097,8 @@ int set_all_dimensions( cetb_file_class *this ) {
  *    axis : dimension axis
  *    valid_range : 2-element array with dimension valid_range
  *
- *  output : n/a
+ *  output :
+ *    dim_id : the NC dimension id for the newly created variable
  *
  *  result : STATUS_OK on success, otherwise STATUS_FAILURE and
  *           reason written to stderr
@@ -1085,19 +1111,19 @@ int set_dimension( cetb_file_class *this, const char *name, size_t size, double 
 		   const char *units,
 		   const char *calendar,
 		   const char *axis,
-		   double *valid_range ) {
+		   double *valid_range,
+		   int *dim_id ) {
 
   int status;
-  int dim_id;
   int var_id;
   int dim_ids[ 1 ];
 
-  if ( status = nc_def_dim( this->fid, name, size, &dim_id ) ) {
+  if ( status = nc_def_dim( this->fid, name, size, dim_id ) ) {
     fprintf( stderr, "%s: Error setting %s dim: %s.\n",
   	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
   }
-  dim_ids[ 0 ] = dim_id;
+  dim_ids[ 0 ] = *dim_id;
   if ( status = nc_def_var( this->fid, name, NC_DOUBLE, 1, dim_ids, &var_id ) ) {
     fprintf( stderr, "%s: Error defining %s variable : %s.\n",
   	     __FUNCTION__, name, nc_strerror( status ) );
