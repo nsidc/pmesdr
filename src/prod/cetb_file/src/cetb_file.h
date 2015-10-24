@@ -12,6 +12,33 @@
 #define CETB_FILE_FORMAT_VERSION "v0.1"
 #define CETB_FILE_ALIGNMENT 64
 
+/* Values of fill/missing/valid_range are recorded in packed form */
+#define CETB_FILE_PACKING_CONVENTION "netCDF"
+#define CETB_FILE_PACKING_CONVENTION_DESC "unpacked = scale_factor*packed + add_offset"
+#define CETB_FILE_GRID_MAPPING "crs"
+
+/* TB values for output files */
+#define CETB_FILE_TB_FILL_VALUE 0
+#define CETB_FILE_TB_MISSING_VALUE 60000
+#define CETB_FILE_TB_SCALE_FACTOR 0.01
+#define CETB_FILE_TB_ADD_OFFSET 0.0
+#define CETB_FILE_TB_MIN 5000
+#define CETB_FILE_TB_MAX 35000
+
+/* TB std dev values for output files */
+#define CETB_FILE_TB_STDDEV_FILL_VALUE ( NC_MAX_USHORT )
+#define CETB_FILE_TB_STDDEV_MISSING_VALUE ( NC_MAX_USHORT - 1 )
+#define CETB_FILE_TB_STDDEV_SCALE_FACTOR 0.01
+#define CETB_FILE_TB_STDDEV_ADD_OFFSET 0.0
+#define CETB_FILE_TB_STDDEV_MIN 0
+#define CETB_FILE_TB_STDDEV_MAX ( NC_MAX_USHORT - 2 )
+
+/*
+ * ESIP-recommended attribute to assist with mapping to ISO code
+ * for the source of the data.
+ */
+#define CETB_FILE_COVERAGE_CONTENT_TYPE "image"
+
 /*
  * These 2 functions are temporary, and should not be needed once
  * we start passing this information along to bgi/sir in setup files
@@ -52,12 +79,32 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_reconstruction_id reconstruction_id,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
-int cetb_file_add_tb( cetb_file_class *this,
-		      float *data,
-		      long int cols,
-		      long int rows,
-		      float fill_value,
-		      float missing_value );
+int cetb_file_add_uchars( cetb_file_class *this,
+			  char *var_name,
+			  unsigned char *data,
+			  long int cols,
+			  long int rows,
+			  char *standard_name,
+			  char *long_name,
+			  char *units,
+			  unsigned char fill_value,
+			  unsigned char missing_value,
+			  unsigned char min_value,
+			  unsigned char max_value );
+int cetb_file_add_packed_floats( cetb_file_class *this,
+				 char *var_name,
+				 float *data,
+				 long int cols,
+				 long int rows,
+				 char *standard_name,
+				 char *long_name,
+				 char *units,
+				 unsigned short fill_value,
+				 unsigned short missing_value,
+				 unsigned short min_value,
+				 unsigned short max_value,
+				 float scale_factor,
+				 float add_offset );
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  double gamma,
 				  float dimensional_tuning_parameter,
