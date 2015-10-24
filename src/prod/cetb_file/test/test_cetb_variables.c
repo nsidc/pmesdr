@@ -85,8 +85,19 @@ void test_cetb_tbs_wrong_dims( void ) {
   status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
   
-  status = cetb_file_add_tb( cetb, data, cols, rows, 0.0, 1.0 );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 1, status, "cetb_file_add_tb with bad dimensions" );
+  status = cetb_file_add_packed_floats( cetb, "TB", data,
+					cols, rows,
+					"brightness_temperature",
+					"SIR TB",
+					"kelvin",
+					(unsigned short) CETB_FILE_TB_FILL_VALUE,
+					(unsigned short) CETB_FILE_TB_MISSING_VALUE,
+					(unsigned short) CETB_FILE_TB_MIN,
+					(unsigned short) CETB_FILE_TB_MAX,
+					(float) CETB_FILE_TB_SCALE_FACTOR,
+					(float) CETB_FILE_TB_ADD_OFFSET
+					);
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 1, status, "bad dimensions" );
   cetb_file_close( cetb );
 
 }
@@ -95,45 +106,126 @@ void test_cetb_tbs( void ) {
 
   int nc_fileid=0;
   int dim_id;
-  int var_id;
+  int tb_var_id, tb_stddev_var_id, tb_num_samples_var_id, tb_time_var_id;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   size_t dim_len;
   size_t expected_rows=cetb_grid_rows[ region_id ][ factor ];
   size_t expected_cols=cetb_grid_cols[ region_id ][ factor ];
   size_t expected_times=1;
+  char *att_p;
+  size_t att_len;
   float *data;
+  unsigned short fill_value;
+  unsigned short missing_value;
+  unsigned short valid_range[ 2 ];
+  unsigned short expected_tb_valid_range[ 2 ] = {
+    CETB_FILE_TB_MIN,
+    CETB_FILE_TB_MAX
+  };
+  float scale_factor;
+  float add_offset;
 
-  /* status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols ); */
-  /* TEST_ASSERT_EQUAL_INT( 0, status ); */
+  status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT( 0, status );
   
-  /* status = cetb_file_add_tb( cetb, data, cols, rows, 0.0, 1.0 ); */
-  /* TEST_ASSERT_EQUAL_INT_MESSAGE( -1, status, "cetb_file_add_tb" ); */
-  /* cetb_file_close( cetb ); */
+  status = cetb_file_add_packed_floats( cetb, "TB", data,
+					cols, rows,
+					"brightness_temperature",
+					"SIR TB",
+					"kelvin",
+					(unsigned short) CETB_FILE_TB_FILL_VALUE,
+					(unsigned short) CETB_FILE_TB_MISSING_VALUE,
+					(unsigned short) CETB_FILE_TB_MIN,
+					(unsigned short) CETB_FILE_TB_MAX,
+					(float) CETB_FILE_TB_SCALE_FACTOR,
+					(float) CETB_FILE_TB_ADD_OFFSET
+					);
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, __FUNCTION__ );
+  status = cetb_file_add_packed_floats( cetb, "TB_std_dev", data,
+					cols, rows,
+					NULL,
+					"SIR TB Std Dev",
+					"kelvin",
+					(unsigned short) CETB_FILE_TB_STDDEV_FILL_VALUE,
+					(unsigned short) CETB_FILE_TB_STDDEV_MISSING_VALUE,
+					(unsigned short) CETB_FILE_TB_STDDEV_MIN,
+					(unsigned short) CETB_FILE_TB_STDDEV_MAX,
+					(float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
+					(float) CETB_FILE_TB_STDDEV_ADD_OFFSET
+					);
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, __FUNCTION__ );
+  cetb_file_close( cetb );
 
-  /* status = nc_open( test_filename, NC_NOWRITE, &nc_fileid ); */
-  /* TEST_ASSERT_TRUE( NC_NOERR == status ); */
+  status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
 
   /* Confirm the expected TB variable is in the output file */
-  /* status = nc_inq_varid( nc_fileid, "TB", &var_id ); */
-  /* TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) ); */
+  status = nc_inq_varid( nc_fileid, "TB", &tb_var_id );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
 
   /* Confirm the expected dimension attributes are in the output file */
-  /* att_p = get_text_att( nc_fileid, rows_var_id, "standard_name" ); */
-  /* TEST_ASSERT_EQUAL_STRING_MESSAGE( "projection_y_coordinate", att_p, "rows standard_name" ); */
-  /* free( att_p ); */
-  /* att_p = get_text_att( nc_fileid, rows_var_id, "units" ); */
-  /* TEST_ASSERT_EQUAL_STRING_MESSAGE( "meters", att_p, "rows units" ); */
-  /* free( att_p ); */
-  /* att_p = get_text_att( nc_fileid, rows_var_id, "axis" ); */
-  /* TEST_ASSERT_EQUAL_STRING_MESSAGE( "Y", att_p, "rows axis" ); */
-  /* free( att_p ); */
-  /* status = nc_get_att_double( nc_fileid, rows_var_id, "valid_range", valid_range ); */
-  /* TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) ); */
-  /* TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_rows_valid_range[ 0 ], valid_range[ 0 ], "rows valid_range min" ); */
-  /* TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_rows_valid_range[ 1 ], valid_range[ 1 ], "rows valid_range max" ); */
+  att_p = get_text_att( nc_fileid, tb_var_id, "standard_name" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "brightness_temperature", att_p, "TB standard_name" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, tb_var_id, "long_name" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "SIR TB", att_p, "TB long_name" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, tb_var_id, "units" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "kelvin", att_p, "TB units" );
+  free( att_p );
 
-  /* nc_close( nc_fileid ); */
+  /* _FillValue, missing_value and valid_range */
+  status = nc_inq_var_fill( nc_fileid, tb_var_id, NULL, &fill_value );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_TB_FILL_VALUE, fill_value, "TB _FillValue" );
+  status = nc_get_att_ushort( nc_fileid, tb_var_id, "missing_value", &missing_value );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_TB_MISSING_VALUE, missing_value,
+				 "TB missing_value" );
+  
+
+  status = nc_get_att_ushort( nc_fileid, tb_var_id, "valid_range", valid_range );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( expected_tb_valid_range[ 0 ], valid_range[ 0 ],
+				 "tb valid_range min" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( expected_tb_valid_range[ 1 ], valid_range[ 1 ],
+				 "tb valid_range max" );
+
+  /* scale_factor, add_offset, packing_convention, packing_convention_description */
+  att_p = get_text_att( nc_fileid, tb_var_id, "packing_convention" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_PACKING_CONVENTION,
+				    att_p, "TB packing_convention" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, tb_var_id, "packing_convention_description" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_PACKING_CONVENTION_DESC,
+				    att_p, "TB packing_convention_description" );
+  free( att_p );
+  status = nc_get_att_float( nc_fileid, tb_var_id, "scale_factor", &scale_factor );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_FILE_TB_SCALE_FACTOR, scale_factor,
+				   "tb scale_factor" );
+  status = nc_get_att_float( nc_fileid, tb_var_id, "add_offset", &add_offset );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_FILE_TB_ADD_OFFSET, add_offset,
+				   "tb add_offset" );
+
+  att_p = get_text_att( nc_fileid, tb_var_id, "grid_mapping" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_GRID_MAPPING, att_p, "TB grid_mapping" );
+  free( att_p );
+  
+  att_p = get_text_att( nc_fileid, tb_var_id, "coverage_content_type" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_COVERAGE_CONTENT_TYPE, att_p,
+				    "TB coverage_content_type" );
+  free( att_p );
+  
+  /* Confirm the expected TB_std_dev variable is in the output file */
+  status = nc_inq_varid( nc_fileid, "TB_std_dev", &tb_stddev_var_id );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+
+  /* There should not be a standard name for std dev */
+  status = nc_inq_attlen( nc_fileid, tb_stddev_var_id, "standard_name", &att_len );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_std_dev standard_name" );
+
+  nc_close( nc_fileid );
 
 }
 
