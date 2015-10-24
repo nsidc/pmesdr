@@ -81,22 +81,26 @@ void test_cetb_tbs_wrong_dims( void ) {
   size_t rows=2;
   size_t cols=3;
   float *data;
-
+  unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
   status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
   
-  status = cetb_file_add_packed_floats( cetb, "TB", data,
-					cols, rows,
-					"brightness_temperature",
-					"SIR TB",
-					"kelvin",
-					(unsigned short) CETB_FILE_TB_FILL_VALUE,
-					(unsigned short) CETB_FILE_TB_MISSING_VALUE,
-					(unsigned short) CETB_FILE_TB_MIN,
-					(unsigned short) CETB_FILE_TB_MAX,
-					(float) CETB_FILE_TB_SCALE_FACTOR,
-					(float) CETB_FILE_TB_ADD_OFFSET
-					);
+  status = cetb_file_add_var( cetb, "TB",
+			      NC_USHORT,
+			      data,
+			      cols, rows,
+			      "brightness_temperature",
+			      "SIR TB",
+			      "kelvin",
+			      &fill_value,
+			      &missing_value,
+			      &valid_range,
+			      CETB_PACK,
+			      (float) CETB_FILE_TB_SCALE_FACTOR,
+			      (float) CETB_FILE_TB_ADD_OFFSET,
+			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 1, status, "bad dimensions" );
   cetb_file_close( cetb );
 
@@ -115,46 +119,116 @@ void test_cetb_tbs( void ) {
   size_t expected_times=1;
   char *att_p;
   size_t att_len;
-  float *data;
-  unsigned short fill_value;
-  unsigned short missing_value;
-  unsigned short valid_range[ 2 ];
+  float *float_data;
+  unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short valid_range[ 2 ] = {
+    CETB_FILE_TB_MIN,
+    CETB_FILE_TB_MAX
+  };
   unsigned short expected_tb_valid_range[ 2 ] = {
     CETB_FILE_TB_MIN,
     CETB_FILE_TB_MAX
   };
   float scale_factor;
   float add_offset;
+  unsigned char *ubyte_data;
+  unsigned char ubyte_fill_value=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
+  unsigned char ubyte_valid_range[ 2 ] = {
+    CETB_FILE_TB_NUM_SAMPLES_MIN,
+    CETB_FILE_TB_NUM_SAMPLES_MAX
+  };
+  unsigned char ubyte_expected_tb_num_samples_valid_range[ 2 ] = {
+    CETB_FILE_TB_NUM_SAMPLES_MIN,
+    CETB_FILE_TB_NUM_SAMPLES_MAX
+  };
+  int *int_data;
+  int int_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
+  int int_valid_range[ 2 ] = {
+    CETB_FILE_TB_TIME_MIN,
+    CETB_FILE_TB_TIME_MAX
+  };
+  int int_expected_tb_time_valid_range[ 2 ] = {
+    CETB_FILE_TB_TIME_MIN,
+    CETB_FILE_TB_TIME_MAX
+  };
 
-  status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
+  status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
   
-  status = cetb_file_add_packed_floats( cetb, "TB", data,
-					cols, rows,
-					"brightness_temperature",
-					"SIR TB",
-					"kelvin",
-					(unsigned short) CETB_FILE_TB_FILL_VALUE,
-					(unsigned short) CETB_FILE_TB_MISSING_VALUE,
-					(unsigned short) CETB_FILE_TB_MIN,
-					(unsigned short) CETB_FILE_TB_MAX,
-					(float) CETB_FILE_TB_SCALE_FACTOR,
-					(float) CETB_FILE_TB_ADD_OFFSET
-					);
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, __FUNCTION__ );
-  status = cetb_file_add_packed_floats( cetb, "TB_std_dev", data,
-					cols, rows,
-					NULL,
-					"SIR TB Std Dev",
-					"kelvin",
-					(unsigned short) CETB_FILE_TB_STDDEV_FILL_VALUE,
-					(unsigned short) CETB_FILE_TB_STDDEV_MISSING_VALUE,
-					(unsigned short) CETB_FILE_TB_STDDEV_MIN,
-					(unsigned short) CETB_FILE_TB_STDDEV_MAX,
-					(float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
-					(float) CETB_FILE_TB_STDDEV_ADD_OFFSET
-					);
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, __FUNCTION__ );
+  status = cetb_file_add_var( cetb, "TB",
+			      NC_USHORT,
+			      float_data,
+			      cols, rows,
+			      "brightness_temperature",
+			      "SIR TB",
+			      "kelvin",
+			      &fill_value,
+			      &missing_value,
+			      &valid_range,
+			      CETB_PACK,
+			      (float) CETB_FILE_TB_SCALE_FACTOR,
+			      (float) CETB_FILE_TB_ADD_OFFSET,
+			      NULL );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
+  
+  fill_value = CETB_FILE_TB_STDDEV_FILL_VALUE;
+  missing_value = CETB_FILE_TB_STDDEV_MISSING_VALUE;
+  valid_range[ 0 ] = CETB_FILE_TB_STDDEV_MIN;
+  valid_range[ 1 ] = CETB_FILE_TB_STDDEV_MAX;
+  status = cetb_file_add_var( cetb, "TB_std_dev",
+			      NC_USHORT,
+			      float_data,
+			      cols, rows,
+			      NULL,
+			      "SIR TB Std Dev",
+			      "kelvin",
+			      &fill_value,
+			      &missing_value,
+			      &valid_range,
+			      CETB_PACK,
+			      (float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
+			      (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
+			      NULL );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_std_dev" );
+
+  status = allocate_clean_aligned_memory( ( void * )&ubyte_data, sizeof( unsigned char ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ubyte_data" );
+  status = cetb_file_add_var( cetb, "TB_num_samples",
+			      NC_UBYTE,
+			      ubyte_data,
+			      cols, rows,
+			      NULL,
+			      "SIR TB Number of Measurements",
+			      "count",
+			      &ubyte_fill_value,
+			      NULL,
+			      &ubyte_valid_range,
+			      CETB_NO_PACK,
+			      0.0,
+			      0.0,
+			      NULL );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_num_samples" );
+
+  status = allocate_clean_aligned_memory( ( void * )&int_data, sizeof( int ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for int_data" );
+  fprintf( stderr, "before fill=%d\n", int_fill_value );
+  status = cetb_file_add_var( cetb, "TB_time",
+			      NC_INT,
+			      int_data,
+			      cols, rows,
+			      NULL,
+			      "SIR TB Time of Day",
+			      "seconds since 1987-01-01 00:00:00",
+			      &int_fill_value,
+			      NULL,
+			      &int_valid_range,
+			      CETB_NO_PACK,
+			      0.0,
+			      0.0,
+			      "gregorian" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
+
   cetb_file_close( cetb );
 
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
@@ -224,6 +298,36 @@ void test_cetb_tbs( void ) {
   /* There should not be a standard name for std dev */
   status = nc_inq_attlen( nc_fileid, tb_stddev_var_id, "standard_name", &att_len );
   TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_std_dev standard_name" );
+
+  /* Confirm the expected TB_num_samples variable is in the output file */
+  status = nc_inq_varid( nc_fileid, "TB_num_samples", &tb_num_samples_var_id );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+
+  /* There should not be a standard name for num samples */
+  status = nc_inq_attlen( nc_fileid, tb_num_samples_var_id, "standard_name", &att_len );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_num_samples standard_name" );
+
+  status = nc_get_att_ubyte( nc_fileid, tb_num_samples_var_id, "valid_range", ubyte_valid_range );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( ubyte_expected_tb_num_samples_valid_range[ 0 ], ubyte_valid_range[ 0 ],
+				 "tb_num_samples valid_range min" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( ubyte_expected_tb_num_samples_valid_range[ 1 ], ubyte_valid_range[ 1 ],
+				 "tb_num_samples valid_range max" );
+
+  /* Confirm the expected TB_time variable is in the output file */
+  status = nc_inq_varid( nc_fileid, "TB_time", &tb_time_var_id );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+
+  /* There should not be a standard name for time */
+  status = nc_inq_attlen( nc_fileid, tb_time_var_id, "standard_name", &att_len );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_time standard_name" );
+
+  status = nc_get_att_int( nc_fileid, tb_time_var_id, "valid_range", int_valid_range );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( int_expected_tb_time_valid_range[ 0 ], int_valid_range[ 0 ],
+				 "tb_time valid_range min" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( int_expected_tb_time_valid_range[ 1 ], int_valid_range[ 1 ],
+				 "tb_time valid_range max" );
 
   nc_close( nc_fileid );
 
