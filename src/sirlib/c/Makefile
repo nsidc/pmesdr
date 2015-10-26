@@ -52,6 +52,8 @@ libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c
 	$(CC) $(CFLAGS) -c lib/sir_geom.c
 	$(AR) $(ARFLAGS) libcsir.a *.o
 	$(RM) *.o
+	$(MKDIR) $(LIBDIR)
+	$(INSTALL) $(LIB) $(LIBDIR)
 
 clean :
 	$(RM) $(EXES) $(LIB) *.o $(BINDIR)/$(EXES) $(LIBDIR)/$(LIB)
