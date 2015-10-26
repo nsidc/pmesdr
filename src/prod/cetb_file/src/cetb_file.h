@@ -9,6 +9,8 @@
 
 #include "cetb.h"
 
+#include <netcdf.h>
+
 #define CETB_FILE_FORMAT_VERSION "v0.1"
 #define CETB_FILE_ALIGNMENT 64
 #define CETB_PACK 1
@@ -17,6 +19,8 @@
 /* Values of fill/missing/valid_range are recorded in packed form */
 #define CETB_FILE_PACKING_CONVENTION "netCDF"
 #define CETB_FILE_PACKING_CONVENTION_DESC "unpacked = scale_factor*packed + add_offset"
+#define CETB_FILE_UNPACK_DATA( factor, offset, packed ) ( ( (factor) * (packed) ) + (offset) )
+#define CETB_FILE_PACK_DATA( factor, offset, unpacked ) ( ( ( (unpacked) - (offset) ) / (factor) ) + 0.5 )
 #define CETB_FILE_GRID_MAPPING "crs"
 
 /* TB values for output files */
