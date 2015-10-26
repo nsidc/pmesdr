@@ -6,7 +6,6 @@
  */
 #include <float.h>
 #include <limits.h>
-#include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +26,7 @@
 #define STATUS_OK 0
 #define STATUS_FAILURE 1
 #define MAX_STR_LENGTH 256
+#define DEFLATE_LEVEL 9
 
 static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
@@ -365,6 +365,8 @@ int cetb_file_add_var( cetb_file_class *this,
   int status;
   int dim_ids[ ] = { this->time_dim_id, this->cols_dim_id, this->rows_dim_id };
   int var_id;
+  int i;
+  unsigned short *ushort_data;
   char *packing_convention;
   char *packing_convention_description;
   char *grid_mapping;
@@ -397,6 +399,14 @@ int cetb_file_add_var( cetb_file_class *this,
   	     __FUNCTION__, var_name, nc_strerror( status ) );
     return 1;
   }
+
+  /*
+   * Set compression level for this variable
+   * We may need to make this controllable at the caller's level
+   * See this good article by Russ Rew for ideas and how to test:
+   * http://www.unidata.ucar.edu/blogs/developer/en/entry/netcdf_compression
+   */
+  nc_def_var_deflate( this->fid, var_id, 1, 1, DEFLATE_LEVEL );
 
   if ( NULL != standard_name ) {
     if ( status = nc_put_att_text( this->fid, var_id, "standard_name",
@@ -474,6 +484,52 @@ int cetb_file_add_var( cetb_file_class *this,
       return 1;
     }
 
+      /*
+       * Now pack the data
+       * Assumes variable dimensions of 1 time by rows by cols. If
+       * this assumption changes, will need to inquire for the
+       * size of each dimension
+       */
+    if ( NC_USHORT == xtype ) {
+
+      status = allocate_clean_aligned_memory( ( void * )&ushort_data,
+    					      sizeof( unsigned short ) * 1 * rows * cols );
+      if ( STATUS_OK != status ) {
+    	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
+    		 __FUNCTION__, nc_strerror( status ) );
+    	return 1;
+      }
+
+      for ( i = 0; i < ( 1 * rows * cols ); i++ ) {
+	*( ushort_data + i ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+     						    *( (float *)data + i ) ); 
+      }
+      
+      if ( status = nc_put_var( this->fid, var_id, (void *)ushort_data ) ) { 
+    	fprintf( stderr, "%s: Error putting scaled variable: %s.\n",
+    		 __FUNCTION__, nc_strerror( status ) );
+    	return 1;
+      }
+
+      free( ushort_data );
+
+    } else {
+      
+      fprintf ( stderr, "%s: No implementation for packing to netcdf type=%d\n",
+    		__FUNCTION__, xtype );
+      return 1;
+      
+    }
+
+  } else {
+
+    /* Otherwise, just write the data without packing */
+    if ( status = nc_put_var( this->fid, var_id, data ) ) { 
+      fprintf( stderr, "%s: Error putting variable: %s.\n",
+	       __FUNCTION__, nc_strerror( status ) );
+      return 1;
+    }
+
   }
 
   if ( status = nc_put_att_text( this->fid, var_id, "grid_mapping",
@@ -501,6 +557,7 @@ int cetb_file_add_var( cetb_file_class *this,
       return 1;
     }
   }
+
   return 0;
 
 }

@@ -75,6 +75,60 @@ void tearDown( void ) {
 
 }
 
+void test_cetb_tbs_unpacking( void ) {
+
+  int status;
+  int i; 
+  size_t size=3;
+  unsigned short *packed;
+  float *unpacked;
+  float expected[ 3 ] = { 50., 220., 600. };
+
+  cetb_file_close( cetb );
+
+  status = allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for packed array" );
+  status = allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating mamory for unpacked array" );
+
+  packed[ 0 ] = 5000;
+  packed[ 1 ] = 22000;
+  packed[ 2 ] = 60000;
+
+  for ( i = 0; i < size; i++ ) {
+    *( unpacked + i ) = CETB_FILE_UNPACK_DATA( 0.01, 0.0, *( packed + i ) );
+    TEST_ASSERT_EQUAL_FLOAT_MESSAGE( expected[ i ], unpacked[ i ], "bad unpack" );
+  }
+
+}
+
+void test_cetb_tbs_packing( void ) {
+
+  int status;
+  int i; 
+  size_t size=3;
+  unsigned short *packed;
+  float *unpacked;
+  unsigned short expected[ 9 ] = { 20000, 20001, 20001 };
+
+  cetb_file_close( cetb );
+
+  status = allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for packed array" );
+  status = allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating mamory for unpacked array" );
+
+  unpacked[ 0 ] = 200.0049;
+  unpacked[ 1 ] = 200.0050;
+  unpacked[ 2 ] = 200.0051;
+
+  for ( i = 0; i < size; i++ ) {
+    *( packed + i ) = CETB_FILE_PACK_DATA( 0.01, 0.0, *( unpacked + i ) );
+    TEST_ASSERT_EQUAL_INT_MESSAGE( expected[ i ], packed[ i ], "bad pack" );
+  }
+
+}
+
 void test_cetb_tbs_wrong_dims( void ) {
 
   int status;
@@ -108,18 +162,24 @@ void test_cetb_tbs_wrong_dims( void ) {
 
 void test_cetb_tbs( void ) {
 
+  int i;
   int nc_fileid=0;
   int dim_id;
   int tb_var_id, tb_stddev_var_id, tb_num_samples_var_id, tb_time_var_id;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   size_t dim_len;
+  nc_type xtype;
+  int ndims;
+  int natts;
+  int dim_ids[ 3 ];
   size_t expected_rows=cetb_grid_rows[ region_id ][ factor ];
   size_t expected_cols=cetb_grid_cols[ region_id ][ factor ];
   size_t expected_times=1;
   char *att_p;
   size_t att_len;
   float *float_data;
+  unsigned short *tb_data;
   unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
   unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
@@ -152,10 +212,16 @@ void test_cetb_tbs( void ) {
     CETB_FILE_TB_TIME_MIN,
     CETB_FILE_TB_TIME_MAX
   };
+  float sample_tb0 = 50.002;
+  float sample_tb1 = 100.008;
+  float sample_num_samples0 = 254;
+  float sample_num_samples1 = 100;
 
   status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
-  
+
+  float_data[ 0 ] = sample_tb0;
+  float_data[ 1000 ] = sample_tb1;
   status = cetb_file_add_var( cetb, "TB",
 			      NC_USHORT,
 			      float_data,
@@ -194,6 +260,8 @@ void test_cetb_tbs( void ) {
 
   status = allocate_clean_aligned_memory( ( void * )&ubyte_data, sizeof( unsigned char ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ubyte_data" );
+  ubyte_data[ 0 ] = sample_num_samples0;
+  ubyte_data[ 1000 ] = sample_num_samples1;
   status = cetb_file_add_var( cetb, "TB_num_samples",
 			      NC_UBYTE,
 			      ubyte_data,
@@ -212,7 +280,6 @@ void test_cetb_tbs( void ) {
 
   status = allocate_clean_aligned_memory( ( void * )&int_data, sizeof( int ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for int_data" );
-  fprintf( stderr, "before fill=%d\n", int_fill_value );
   status = cetb_file_add_var( cetb, "TB_time",
 			      NC_INT,
 			      int_data,
@@ -238,7 +305,29 @@ void test_cetb_tbs( void ) {
   status = nc_inq_varid( nc_fileid, "TB", &tb_var_id );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
 
-  /* Confirm the expected dimension attributes are in the output file */
+  /* Read the actual TB data */
+  status = nc_inq_var( nc_fileid, tb_var_id, 0, &xtype, &ndims, dim_ids, &natts );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_USHORT, xtype, "unexpected TB data type" );
+
+  status = allocate_clean_aligned_memory( ( void * )&tb_data, sizeof( unsigned short ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ushort_data" );
+
+  status = nc_get_var_ushort( nc_fileid, tb_var_id, tb_data );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb data" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
+						      CETB_FILE_TB_ADD_OFFSET,
+						      sample_tb0 ),
+				 tb_data[ 0 ],
+				 "sample0 tb_data element" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
+						      CETB_FILE_TB_ADD_OFFSET,
+						      sample_tb1 ),
+				 tb_data[ 1000 ],
+				 "sample1 tb_data element" );
+
+
+  /* Confirm the expected variable attributes are in the output file */
   att_p = get_text_att( nc_fileid, tb_var_id, "standard_name" );
   TEST_ASSERT_EQUAL_STRING_MESSAGE( "brightness_temperature", att_p, "TB standard_name" );
   free( att_p );
@@ -313,6 +402,22 @@ void test_cetb_tbs( void ) {
 				 "tb_num_samples valid_range min" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( ubyte_expected_tb_num_samples_valid_range[ 1 ], ubyte_valid_range[ 1 ],
 				 "tb_num_samples valid_range max" );
+
+  /* Read the actual TB_num_samples data */
+  status = nc_inq_var( nc_fileid, tb_num_samples_var_id, 0, &xtype, &ndims, dim_ids, &natts );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_UBYTE, xtype, "unexpected TB_num_samples data type" );
+  
+  /* Zero out the ubyte_data values */
+  for ( i = 0; i < ( rows * cols ); i++ ) {
+    *( ubyte_data + i ) = 255;
+  }
+  status = nc_get_var_ubyte( nc_fileid, tb_num_samples_var_id, ubyte_data );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb_num_samples data" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples0, ubyte_data[ 0 ], 
+				 "sample0 tb_num_samples element" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples1, ubyte_data[ 1000 ], 
+				 "sample1 tb_num_samples element" );
 
   /* Confirm the expected TB_time variable is in the output file */
   status = nc_inq_varid( nc_fileid, "TB_time", &tb_time_var_id );
