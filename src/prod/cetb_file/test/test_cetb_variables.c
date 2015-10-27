@@ -216,6 +216,12 @@ void test_cetb_tbs( void ) {
   float sample_tb1 = 100.008;
   float sample_num_samples0 = 254;
   float sample_num_samples1 = 100;
+  float float_fill_value=-1.;
+  float float_missing_value=-2.;
+  float float_valid_range[ 2 ] = {
+    0.0,
+    10000.
+  };
 
   status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
@@ -257,6 +263,22 @@ void test_cetb_tbs( void ) {
 			      (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_std_dev" );
+
+  status = cetb_file_add_var( cetb, "TB_dump",
+			      NC_FLOAT,
+			      float_data,
+			      cols, rows,
+			      NULL,
+			      "SIR TB Dump Variable",
+			      "kelvin",
+			      &float_fill_value,
+			      &float_missing_value,
+			      &float_valid_range,
+			      CETB_NO_PACK,
+			      0.0,
+			      0.0,
+			      NULL );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_dump" );
 
   status = allocate_clean_aligned_memory( ( void * )&ubyte_data, sizeof( unsigned char ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ubyte_data" );
