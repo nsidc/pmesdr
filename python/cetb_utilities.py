@@ -15,7 +15,6 @@ import inspect
 import numpy as np
 import glob
 import os
-import re
 import sys
 
 def compare_cetb_directories( dir1, dir2,
@@ -53,15 +52,11 @@ def compare_cetb_directories( dir1, dir2,
 
     # Read the files in dir1 and the files in dir2
     list1 = sorted( glob.glob( dir1 + "/*.nc" ) )
-    full_list2 = sorted( glob.glob( dir2 + "/*.nc" ) )
+    list2 = sorted( glob.glob( dir2 + "/*.nc" ) )
 
-    # For now, we will ignore all but SIR or BGI files in dir2
-    list2 = []
-    p = re.compile("(SIR|BGI)")
-    for file in full_list2:
-        if p.search(file):
-            list2.append(file)
-    
+    # For now, we will not tolerate any extra files in our directories.
+    # If we have the same number of files in each directory, we will
+    # just compare them, in order.  (We may need to make this smarter later.)
     if len( list1 ) != len( list2 ):
         sys.stderr.write( "\n" + this_program + ": Number of files in the directories differs.\n" )
         return False
@@ -127,11 +122,9 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         sys.stderr.write( "> " + this_program + ": max_diff_pixels: " + str( max_diff_pixels ) + "\n" )
         sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + str( exclude_out_of_range ) + "\n" )
 
-    # Old cetb nc files can either have "a_image" or "bgi_image" variables (but
-    # not both).
-    # New cetb cd files will only have a single "TB" variable, which is scaled
-    # Figure out which variable name is in the first file, and
-    # then always look for "TB" in the second one
+    # cetb nc files can either have "a_image" or "bgi_image" variables (but
+    # not both).  Figure out which variable name is in the first file, and
+    # then only look for that variable in the 2nd file.
     f1 = Dataset( file1, 'r', 'NETCDF4' )
     keys = f1.variables.keys()
     var_name = 'none'
@@ -153,7 +146,8 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     image1 = f1.variables[ var_name ][ : ]
 
     f2 = Dataset( file2, 'r', 'NETCDF4' )
-    image2 = ( f2.variables[ "TB" ][ : ] )
+    image2 = f2.variables[ var_name ][ : ]
+
     diff = image2 - image1
 
     if statistics:
@@ -193,16 +187,9 @@ def dump_image_statistics( filename, image ):
     Dumps statistics on this image to stderr:
     filename: min, max, mean, stddev
     """
-    try:
-        sys.stderr.write('{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f}\n'
-                         .format(filename, np.amin(image), np.amax(image), np.mean(image), np.std(image)))
-    except ValueError, e:
-        # I'll bet there's a better way to do this, but when the array is all fill-values,
-        # the np.min/max etc functions return a string which makes the formatting {1:8.4f} to float
-        # break...
-        sys.stderr.write('{0}:\n\tmin={1:8} max={2:8} mean={3:8} std={4:8}\n'
-                         .format(filename, np.amin(image), np.amax(image), np.mean(image), np.std(image)))
-        
+    sys.stderr.write( '{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f}\n'
+                      .format( filename, np.min( image ), np.max( image ), np.mean( image ), np.std( image ) ) )
+    
     return
 
 def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, tolerance, exclude_out_of_range=False ):
@@ -221,14 +208,9 @@ def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, toler
     absdiff = abs( my_diff )
     num_diffs = len( absdiff[ absdiff > tolerance ] )
 
-    try:
-        sys.stderr.write('{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f} num[|diff|>{5:.6f}]={6:8d} {7}\n'
-                         .format("difference", np.amin( my_diff ), np.amax( my_diff ),
-                                 np.mean( my_diff ), np.std( my_diff ), tolerance, num_diffs, label))
-    except ValueError, e:
-        sys.stderr.write('{0}:\n\tmin={1:8} max={2:8} mean={3:8} std={4:8} num[|diff|>{5:.6f}]={6:8d} {7}\n'
-                         .format("difference", np.amin( my_diff ), np.amax( my_diff ),
-                                 np.mean( my_diff ), np.std( my_diff ), tolerance, num_diffs, label))
+    sys.stderr.write( '{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f} num[|diff|>{5:.6f}]={6:8d} {7}\n'
+                      .format( "difference", np.min( my_diff ), np.max( my_diff ),
+                               np.mean( my_diff ), np.std( my_diff ), tolerance, num_diffs, label ) )
 
     if ( 0 < num_diffs ):
         my_diff = my_diff[ absdiff > tolerance ]
