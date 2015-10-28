@@ -22,6 +22,8 @@
 #define CETB_FILE_UNPACK_DATA( factor, offset, packed ) ( ( (factor) * (packed) ) + (offset) )
 #define CETB_FILE_PACK_DATA( factor, offset, unpacked ) ( ( ( (unpacked) - (offset) ) / (factor) ) + 0.5 )
 #define CETB_FILE_GRID_MAPPING "crs"
+#define CETB_FILE_TB_STANDARD_NAME "brightness_temperature"
+#define CETB_FILE_TB_UNIT "kelvin"
 
 /* TB values for output files */
 #define CETB_FILE_TB_FILL_VALUE 0
