@@ -145,9 +145,9 @@ void test_cetb_tbs_wrong_dims( void ) {
 			      NC_USHORT,
 			      data,
 			      cols, rows,
-			      "brightness_temperature",
+			      CETB_FILE_TB_STANDARD_NAME,
 			      "SIR TB",
-			      "kelvin",
+			      CETB_FILE_TB_UNIT,
 			      &fill_value,
 			      &missing_value,
 			      &valid_range,
@@ -232,9 +232,9 @@ void test_cetb_tbs( void ) {
 			      NC_USHORT,
 			      float_data,
 			      cols, rows,
-			      "brightness_temperature",
+			      CETB_FILE_TB_STANDARD_NAME,
 			      "SIR TB",
-			      "kelvin",
+			      CETB_FILE_TB_UNIT,
 			      &fill_value,
 			      &missing_value,
 			      &valid_range,
@@ -254,7 +254,7 @@ void test_cetb_tbs( void ) {
 			      cols, rows,
 			      NULL,
 			      "SIR TB Std Dev",
-			      "kelvin",
+			      CETB_FILE_TB_UNIT,
 			      &fill_value,
 			      &missing_value,
 			      &valid_range,
@@ -270,7 +270,7 @@ void test_cetb_tbs( void ) {
 			      cols, rows,
 			      NULL,
 			      "SIR TB Dump Variable",
-			      "kelvin",
+			      CETB_FILE_TB_UNIT,
 			      &float_fill_value,
 			      &float_missing_value,
 			      &float_valid_range,
@@ -351,13 +351,13 @@ void test_cetb_tbs( void ) {
 
   /* Confirm the expected variable attributes are in the output file */
   att_p = get_text_att( nc_fileid, tb_var_id, "standard_name" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "brightness_temperature", att_p, "TB standard_name" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_TB_STANDARD_NAME, att_p, "TB standard_name" );
   free( att_p );
   att_p = get_text_att( nc_fileid, tb_var_id, "long_name" );
   TEST_ASSERT_EQUAL_STRING_MESSAGE( "SIR TB", att_p, "TB long_name" );
   free( att_p );
   att_p = get_text_att( nc_fileid, tb_var_id, "units" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "kelvin", att_p, "TB units" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_TB_UNIT, att_p, "TB units" );
   free( att_p );
 
   /* _FillValue, missing_value and valid_range */
