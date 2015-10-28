@@ -88,6 +88,8 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOST
     export LOCALE=JANUSicc
   fi
 
+  ml udunits
+  
   if [[ $do_anaconda == 1 ]]; then
     ml python
     ml netcdf4-python
