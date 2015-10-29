@@ -9,8 +9,53 @@
 
 #include "cetb.h"
 
+#include <netcdf.h>
+
 #define CETB_FILE_FORMAT_VERSION "v0.1"
 #define CETB_FILE_ALIGNMENT 64
+#define CETB_PACK 1
+#define CETB_NO_PACK 0
+
+/* Values of fill/missing/valid_range are recorded in packed form */
+#define CETB_FILE_PACKING_CONVENTION "netCDF"
+#define CETB_FILE_PACKING_CONVENTION_DESC "unpacked = scale_factor*packed + add_offset"
+#define CETB_FILE_UNPACK_DATA( factor, offset, packed ) ( ( (factor) * (packed) ) + (offset) )
+#define CETB_FILE_PACK_DATA( factor, offset, unpacked ) ( ( ( (unpacked) - (offset) ) / (factor) ) + 0.5 )
+#define CETB_FILE_GRID_MAPPING "crs"
+#define CETB_FILE_TB_STANDARD_NAME "brightness_temperature"
+#define CETB_FILE_TB_UNIT "kelvin"
+
+/* TB values for output files */
+#define CETB_FILE_TB_FILL_VALUE 0
+#define CETB_FILE_TB_MISSING_VALUE 60000
+#define CETB_FILE_TB_SCALE_FACTOR 0.01
+#define CETB_FILE_TB_ADD_OFFSET 0.0
+#define CETB_FILE_TB_MIN 5000
+#define CETB_FILE_TB_MAX 35000
+
+/* TB std dev values for output files */
+#define CETB_FILE_TB_STDDEV_FILL_VALUE ( NC_MAX_USHORT )
+#define CETB_FILE_TB_STDDEV_MISSING_VALUE ( (NC_MAX_USHORT) - 1 )
+#define CETB_FILE_TB_STDDEV_SCALE_FACTOR 0.01
+#define CETB_FILE_TB_STDDEV_ADD_OFFSET 0.0
+#define CETB_FILE_TB_STDDEV_MIN 0
+#define CETB_FILE_TB_STDDEV_MAX ( (NC_MAX_USHORT) - 2 )
+
+/* TB number of samples values for output files */
+#define CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE 0
+#define CETB_FILE_TB_NUM_SAMPLES_MIN 1
+#define CETB_FILE_TB_NUM_SAMPLES_MAX NC_MAX_CHAR
+
+/* TB time values for output files */
+#define CETB_FILE_TB_TIME_FILL_VALUE NC_MIN_INT
+#define CETB_FILE_TB_TIME_MIN ( (NC_MIN_INT) + 1 )
+#define CETB_FILE_TB_TIME_MAX NC_MAX_INT
+
+/*
+ * ESIP-recommended attribute to assist with mapping to ISO code
+ * for the source of the data.
+ */
+#define CETB_FILE_COVERAGE_CONTENT_TYPE "image"
 
 /*
  * These 2 functions are temporary, and should not be needed once
@@ -52,12 +97,22 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_reconstruction_id reconstruction_id,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
-int cetb_file_add_tb( cetb_file_class *this,
-		      float *data,
-		      long int cols,
-		      long int rows,
-		      float fill_value,
-		      float missing_value );
+int cetb_file_add_var( cetb_file_class *this,
+		       char *var_name,
+		       nc_type xtype,
+		       void *data,
+		       long int cols,
+		       long int rows,
+		       char *standard_name,
+		       char *long_name,
+		       char *units,
+		       void *fill_value_p,
+		       void *missing_value_p,
+		       void *valid_range_p,
+		       int do_pack,
+		       float scale_factor,
+		       float add_offset,
+		       char *calendar );
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  double gamma,
 				  float dimensional_tuning_parameter,
