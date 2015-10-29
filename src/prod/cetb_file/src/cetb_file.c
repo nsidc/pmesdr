@@ -310,6 +310,9 @@ int cetb_file_open( cetb_file_class *this ) {
  *                     Float data will be packed as ushorts,
  *                     integer data will not be packed
  *                     CETB standard variable attributes will be included.
+ *                     meas_meta_ processing convention puts beginning of
+ *                     data in lower-left corner.  So input data will
+ *                     flipped top-to-bottom as it is stored
  *
  * input :
  *    this : pointer to initialized/opened cetb_file_class object
@@ -363,7 +366,10 @@ int cetb_file_add_var( cetb_file_class *this,
 		       char *calendar ) {
 
   int status;
-  int dim_ids[ ] = { this->time_dim_id, this->cols_dim_id, this->rows_dim_id };
+  int dim_ids[ ] = { this->time_dim_id, this->rows_dim_id, this->cols_dim_id };
+  long int row;
+  size_t start[ ] = { 0, 0, 0 };
+  size_t count[ ] = { 0, 0, 0 };
   int var_id;
   int i;
   unsigned short *ushort_data;
@@ -386,13 +392,10 @@ int cetb_file_add_var( cetb_file_class *this,
   }
 
   /*
-   * Define a new variable in the cetb file This requires
-   * the dimensions ids already defined.  Try to follow DIWG
-   * convention, with "most rapidly-changing dimension last in C
-   * arrays" N.B. This might need to be changed, depending on how
-   * measures program actually stores things.  The test will be
-   * whether we have to reshape arrays when we read them in
-   * python.
+   * Define a new variable in the cetb file This requires the
+   * dimensions ids already defined.  The order of dim_ids
+   * follows DIWG convention, with "most rapidly-changing
+   * dimension last in C arrays"
    */
   if ( status = nc_def_var( this->fid, var_name, xtype, 3, dim_ids, &var_id ) ) {
     fprintf( stderr, "%s: Error defining %s variable : %s.\n",
@@ -484,12 +487,46 @@ int cetb_file_add_var( cetb_file_class *this,
       return 1;
     }
 
-      /*
-       * Now pack the data
-       * Assumes variable dimensions of 1 time by rows by cols. If
-       * this assumption changes, will need to inquire for the
-       * size of each dimension
-       */
+    /*
+     * meas_meta_ system stores arrays with the bottom left-hand corner stored first.
+     * nc_convention is to store the array with the top left-hand corner stored first.
+     * Flip the data, here.
+     */
+    /* if ( NC_UBYTE == xtype || NC_CHAR == xtype ) { */
+    /*   sizeof_element = sizeof( char ); */
+    /* } else if ( NC_USHORT == xtype || NC_SHORT == xtype ) { */
+    /*   sizeof_element = sizeof( short ); */
+    /* } else if ( NC_UINT == xtype || NC_INT == xtype ) { */
+    /*   sizeof_element = sizeof( int ); */
+    /* } else if ( NC_FLOAT == xtype ) { */
+    /*   sizeof_element = sizeof( float ); */
+    /* } else { */
+    /*   fprintf( stderr, "%s: Unrecognized xtype=%d\n", */
+    /* 	       __FUNCTION__, xtype ); */
+    /*   return 1; */
+    /* } */
+    /* status = allocate_clean_aligned_memory( &row_buffer, sizeof_element * cols ); */
+    /* if ( STATUS_OK != status ) { */
+    /*   fprintf( stderr, "%s: Error allocating space for row_buffer.\n", __FUNCTION__ ); */
+    /*   return 1; */
+    /* } */
+    /* /\* Flip array rows, top-to-bottom *\/ */
+    /* end_row = rows - 1; */
+    /* for ( row = 0; row < rows/2; row++ ) { */
+    /*   memcpy( ( void *)row_buffer, (void *)( arr + ( row * cols ) ), sizeof_row ); */
+    /*   memcpy( ( void *)( arr + ( row * cols ) ), ( void * )( arr + ( end_row * cols )), sizeof_row ); */
+    /*   memcpy( ( void *)( arr + ( end_row * cols )), ( void * )row_buffer, sizeof_row ); */
+
+    /*   end_row--; */
+    /* } */
+    
+    /*
+     * Now pack the data.
+     * Assumes input data is float *
+     * Assumes variable dimensions of 1 time by rows by cols. If
+     * this assumption changes, will need to inquire for the
+     * size of each dimension
+     */
     if ( NC_USHORT == xtype ) {
 
       status = allocate_clean_aligned_memory( ( void * )&ushort_data,
@@ -504,11 +541,26 @@ int cetb_file_add_var( cetb_file_class *this,
 	*( ushort_data + i ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
      						    *( (float *)data + i ) ); 
       }
-      
-      if ( status = nc_put_var( this->fid, var_id, (void *)ushort_data ) ) { 
-    	fprintf( stderr, "%s: Error putting scaled variable: %s.\n",
-    		 __FUNCTION__, nc_strerror( status ) );
-    	return 1;
+
+      /*
+       * Meas_meta_ processing stores gridded array data from bottom to top.
+       * NetCDF conventions expect it to be stored from top to bottom
+       * So write the data one row at a time, in reverse-row order
+       */
+      for ( row=0; row<rows; row++ ) {
+	start[ 0 ] = 0;   // time start will always be zero
+	start[ 1 ] = rows - row - 1; //destination row is reverse of source row
+	start[ 2 ] = 0;   // column start will always be zero
+	count[ 0 ] = 1;   // time number of elements will always be 1
+	count[ 1 ] = 1;   // one whole row
+	count[ 2 ] = cols;  // all columns in this row
+	if ( status = nc_put_vara_ushort( this->fid, var_id,
+					  start, count,
+					  ushort_data + ( row * cols ) ) ) { 
+	  fprintf( stderr, "%s: Error putting scaled variable for row=%ld: %s.\n",
+		   __FUNCTION__, row, nc_strerror( status ) );
+	  return 1;
+	}
       }
 
       free( ushort_data );
