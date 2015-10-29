@@ -181,6 +181,9 @@ int main(int argc, char **argv)
   char a_name[100], info_name[100], line[100];
 
   cetb_file_class *cetb;
+  unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
+  unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
   int ncerr;
 
   int storage = 0;
@@ -428,12 +431,6 @@ int main(int argc, char **argv)
 
    if ( 0 != cetb_file_open( cetb ) ) {
      fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FUNCTION__, cetb->filename );
-     exit( -1 );
-   }
-     
-   if ( 0 != cetb_file_add_bgi_parameters( cetb, bgi_gamma, omega, delta2,
-					   ithres, difthres, median_flag ) ) {
-     fprintf( stderr, "%s: Error adding BGI parameters to %s.\n", __FUNCTION__, cetb->filename );
      exit( -1 );
    }
      
@@ -885,15 +882,30 @@ int main(int argc, char **argv)
   }
 
   /* output image file */
-
   printf("\n"); 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"bgi_image",a_val,nsx,nsy,anodata_A ) ) ) {
+  if ( 0 != cetb_file_add_var( cetb, "TB", NC_USHORT, a_val,
+			       ( size_t )nsx, ( size_t ) nsy,
+			       CETB_FILE_TB_STANDARD_NAME,
+			       "BGI TB",
+			       CETB_FILE_TB_UNIT,
+			       &tb_fill_value,
+			       &tb_missing_value,
+			       &tb_valid_range,
+			       CETB_PACK,
+			       (float) CETB_FILE_TB_SCALE_FACTOR,
+			       (float) CETB_FILE_TB_ADD_OFFSET,
+			       NULL ) ) {
     errors++;
-    eprintfc("Error dumping A BGI '%s'. \n", a_name );
+    fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
   } else {
-    printf("Dumped A BGI '%s'. \n", a_name );
+    fprintf( stderr, "> %s: Wrote Tb (A) to %s.\n", __FILE__, cetb->filename );
   }
-
+    
+  if ( 0 != cetb_file_add_bgi_parameters( cetb, bgi_gamma, omega, delta2,
+					  ithres, difthres, median_flag ) ) {
+    fprintf( stderr, "%s: Error adding BGI parameters to %s.\n", __FUNCTION__, cetb->filename );
+    exit( -1 );
+  }
   cetb_file_close( cetb );
 
   if (errors == 0) {
