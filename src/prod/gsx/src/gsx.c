@@ -110,6 +110,9 @@ void gsx_close ( gsx_class *this ) {
   if ( status = nc_close( this->fileid ) ) {
     fprintf( stderr, "%s: nc_close error=%s \n",
   	     __FUNCTION__, nc_strerror(status) );
+    free( this );
+    this = NULL;
+    return;
   }
   /* free the malloc'd arrays before you free the gsx_struct */
   free( this->gsx_version );
@@ -877,7 +880,7 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
     return -1;
   }
 
-  status = posix_memalign( (void**)&dimname, CETB_MEM_ALIGNMENT, NC_MAX_NAME+1 );
+  status = posix_memalign( (void**)&dimname, CETB_MEM_ALIGNMENT, sizeof( char )*NC_MAX_NAME+1 );
   if ( 0 != status ) {
     return -1;
   }
