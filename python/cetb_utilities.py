@@ -84,6 +84,17 @@ def compare_cetb_directories( dir1, dir2,
             sys.stderr.write( "\n" + this_program + ": Files differ:\n\t" + list1[ i ] + "\n\t" + list2[ i ] + "\n" )
             all_files_OK = False
 
+        # For SIR files, also check the TB_std_dev data
+        p = re.compile("SIR")
+        if p.search(list2[i]):
+            if not compare_cetb_files( list1[ i ], list2[ i ],
+                                       exclude_out_of_range=exclude_out_of_range,
+                                       statistics=statistics, tolerance=tolerance,
+                                       max_diff_pixels=max_diff_pixels,
+                                       var_name="TB_std_dev", verbose=verbose ):
+                sys.stderr.write( "\n" + this_program + ": Files differ:\n\t" + list1[ i ] + "\n\t" + list2[ i ] + "\n" )
+                all_files_OK = False
+
     if not all_files_OK:
         sys.stderr.write( "\n" + this_program + ": Directories differ.\n" )
     else:
@@ -93,7 +104,7 @@ def compare_cetb_directories( dir1, dir2,
     
 def compare_cetb_files( file1, file2, exclude_out_of_range=False,
                         statistics=False, tolerance=0, max_diff_pixels=0,
-                        verbose=False ):
+                        var_name="TB", verbose=False ):
     """
     status = compare_cetb_files( file1, file2,
                                  exclude_out_of_range=False,
@@ -124,6 +135,7 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         sys.stderr.write( "\n" )
         sys.stderr.write( "> " + this_program + ": file1: " + file1 + "\n" )
         sys.stderr.write( "> " + this_program + ": file2: " + file2 + "\n" )
+        sys.stderr.write( "> " + this_program + ": var_name: " + var_name + "\n" )
         sys.stderr.write( "> " + this_program + ": tolerance: " + str( tolerance ) + "\n" )
         sys.stderr.write( "> " + this_program + ": max_diff_pixels: " + str( max_diff_pixels ) + "\n" )
         sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + str( exclude_out_of_range ) + "\n" )
@@ -137,41 +149,52 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     # files were stored, so do that flip/transpose before doing the comparison
     f1 = Dataset( file1, 'r', 'NETCDF4' )
     keys = f1.variables.keys()
-    var_name = 'none'
-    for key in keys:
-        if ( 'a_image' == key ):
-            var_name = 'a_image'
-            break
-        if ( 'bgi_image' == key ):
-            var_name = 'bgi_image'
-            break
+    old_name = 'none'
+    if ("TB" == var_name):
+        for key in keys:
+            if ('a_image' == key):
+                old_name = 'a_image'
+                break
+            if ( 'bgi_image' == key ):
+                old_name = 'bgi_image'
+                break
 
-    if ( 'none' == var_name ):
-        sys.stderr.write( "\n" + this_program + ": " + file1 + ": " + "contains neither a_image nor bgi_image.\n" )
-        return False
-    
+        if ( 'none' == old_name ):
+            sys.stderr.write( "\n" + this_program + ": " + file1 + ": " +
+                              "contains neither a_image nor bgi_image.\n" )
+            return False
+        
+    elif ("TB_std_dev" == var_name):
+        for key in keys:
+            if ('v_image' == key):
+                old_name = 'v_image'
+                break
+
+        if ( 'none' == old_name ):
+            sys.stderr.write( "\n" + this_program + ": " + file1 + ": " +
+                              "does not contain a v_image.\n" )
+            return False
+    else:
+        sys.stderr.write( "\n" + this_program + ": " + file1 + ": " +
+                          "unrecognized var_name = " + var_name + "\n" )
+
     # Open and read the variable TB data from both files
     # Note this cool netCDF4 trick: just printing the Dataset f
     # with "print( f )" will print out a bunch of stuff from the file
-    image1 = f1.variables[ var_name ][ : ]
+    image1 = f1.variables[ old_name ][ : ]
 
     # Original data needs to be reshaped and flipped to match new data
     rows, cols = np.shape(image1)
-    print ("WARNING: Assuming that regression data contains dump variable names (e.g. 'a_image' etc)")
-    print ("WARNING: Assuming that regression data must be flipped/reshaped to compare to test data.")
-    print ( "Original image1 rows=" + str(rows) )
-    print ( "Original image1 cols=" + str(cols) )
+    print ("WARNING: Assuming that regression file " + file1 +
+           " contains dump variable names (e.g. 'a_image' etc)")
+    print ("WARNING: Assuming that regression data must be flipped/reshaped to compare to test " +
+           var_name + " data.")
     image1 = np.flipud(image1.reshape(cols, rows))
     rows, cols = np.shape(image1)
-    print ( "New      image1 rows=" + str(rows) )
-    print ( "New      image1 cols=" + str(cols) )
 
     f2 = Dataset( file2, 'r', 'NETCDF4' )
-    image2 = ( f2.variables[ "TB" ][ : ] )
+    image2 = ( f2.variables[ var_name ][ : ] )
     time, rows, cols = np.shape(image2)
-    print ( "Original image2 time=" + str(time) )
-    print ( "Original image2 rows=" + str(rows) )
-    print ( "Original image2 cols=" + str(cols) )
 
     diff = image2 - image1
 
