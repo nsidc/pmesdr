@@ -6,7 +6,6 @@
  */
 #include <float.h>
 #include <limits.h>
-#include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +26,7 @@
 #define STATUS_OK 0
 #define STATUS_FAILURE 1
 #define MAX_STR_LENGTH 256
+#define DEFLATE_LEVEL 9
 
 static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
@@ -306,17 +306,33 @@ int cetb_file_open( cetb_file_class *this ) {
 }
 
 /*
- * cetb_file_add_tb - Add a TB array to the output file
- *                    TBs will be packed as ushorts and standard
- *                    variable attributes will be included.
+ * cetb_file_add_var - Add a new variable to the output file
+ *                     Float data will be packed as ushorts,
+ *                     integer data will not be packed
+ *                     CETB standard variable attributes will be included.
  *
  * input :
  *    this : pointer to initialized/opened cetb_file_class object
- *    data : pointer to beginning of TB float data array
+ *    var_name : string variable name to create
+ *               For CETB data:
+ *               "TB"
+ *               "TB_std_dev"
+ *               (other names from SIR/BGI processing)
+ *    data : pointer to beginning of float data array
+ *    standard_name : CF standard_names
+ *                    http://cfconventions.org/standard-names.html
+ *                    or NULL if a standard_name does not exist.
+ *                    For CETB data, only "brightness_temperature"
+ *                    variables should have a standard_name
+ *    long_name : free-text field to describe the variable, may
+ *                be used by application programs for plot/image titles
+ *                e.g. "SIR TB" or "SIR TB Std Dev"
+ *    units : CF unit name
  *    cols, rows : number of columns/rows (must match expected dimensions
  *                 in the cetb_file)
  *    fill_value : data fill_value
  *    missing_value : data missing_value
+ *    min_value, max_value : data valid_range
  *
  * output :
  *
@@ -324,17 +340,42 @@ int cetb_file_open( cetb_file_class *this ) {
  *           1 if an error occurs; error message will be written to stderr
  *           The data array is packed and added to the CETB file
  *
+ * Refs:
+ * Special thanks to the authors of:
+ * http://www.nodc.noaa.gov/data/formats/netcdf/v1.1/
+ *
  */
-int cetb_file_add_tb( cetb_file_class *this,
-		      float *data,
-		      long int cols,
-		      long int rows,
-		      float fill_value,
-		      float missing_value ) {
+int cetb_file_add_var( cetb_file_class *this,
+		       char *var_name,
+		       nc_type xtype,
+		       void *data,
+		       long int cols,
+		       long int rows,
+		       char *standard_name,
+		       char *long_name,
+		       char *units,
+		       void *fill_value_p,
+		       void *missing_value_p,
+		       void *valid_range_p,
+		       int do_pack,
+		       float scale_factor,
+		       float add_offset,
+		       char *calendar ) {
 
   int status;
   int dim_ids[ ] = { this->time_dim_id, this->cols_dim_id, this->rows_dim_id };
   int var_id;
+  int i;
+  unsigned short *ushort_data;
+  char *packing_convention;
+  char *packing_convention_description;
+  char *grid_mapping;
+  char *coverage_content_type;
+  
+  packing_convention = strdup( CETB_FILE_PACKING_CONVENTION );
+  packing_convention_description = strdup( CETB_FILE_PACKING_CONVENTION_DESC );
+  grid_mapping = strdup( CETB_FILE_GRID_MAPPING );
+  coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE );
   
   /* Check that dimensions match what's expected for this file */
   if ( this->cols != cols || this->rows != rows ) {
@@ -345,7 +386,7 @@ int cetb_file_add_tb( cetb_file_class *this,
   }
 
   /*
-   * Define a new variable for TBs in the cetb file This requires
+   * Define a new variable in the cetb file This requires
    * the dimensions ids already defined.  Try to follow DIWG
    * convention, with "most rapidly-changing dimension last in C
    * arrays" N.B. This might need to be changed, depending on how
@@ -353,10 +394,168 @@ int cetb_file_add_tb( cetb_file_class *this,
    * whether we have to reshape arrays when we read them in
    * python.
    */
-  if ( status = nc_def_var( this->fid, "TB", NC_USHORT, 3, dim_ids, &var_id ) ) {
-    fprintf( stderr, "%s: Error defining TB variable : %s.\n",
-  	     __FUNCTION__, nc_strerror( status ) );
+  if ( status = nc_def_var( this->fid, var_name, xtype, 3, dim_ids, &var_id ) ) {
+    fprintf( stderr, "%s: Error defining %s variable : %s.\n",
+  	     __FUNCTION__, var_name, nc_strerror( status ) );
     return 1;
+  }
+
+  /*
+   * Set compression level for this variable
+   * We may need to make this controllable at the caller's level
+   * See this good article by Russ Rew for ideas and how to test:
+   * http://www.unidata.ucar.edu/blogs/developer/en/entry/netcdf_compression
+   */
+  nc_def_var_deflate( this->fid, var_id, 1, 1, DEFLATE_LEVEL );
+
+  if ( NULL != standard_name ) {
+    if ( status = nc_put_att_text( this->fid, var_id, "standard_name",
+				   strlen(standard_name), standard_name ) ) {
+      fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+	       __FUNCTION__, var_name, "standard_name", standard_name, nc_strerror( status ) );
+      return 1;
+    }
+  }
+  
+  if ( status = nc_put_att_text( this->fid, var_id, "long_name",
+				 strlen(long_name), long_name ) ) {
+    fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+	     __FUNCTION__, var_name, "long_name", long_name, nc_strerror( status ) );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_text( this->fid, var_id, "units",
+				 strlen(units), units ) ) {
+    fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+	     __FUNCTION__, var_name, "units", units, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( status = nc_def_var_fill( this->fid, var_id, 0, fill_value_p ) ) {
+    fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+	     __FUNCTION__, var_name, "fill_value", nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( NULL != missing_value_p ) {
+    if ( status = nc_put_att( this->fid, var_id, "missing_value",
+			      xtype, 1, missing_value_p ) ) {
+      fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+	       __FUNCTION__, var_name, "missing_value", nc_strerror( status ) );
+      return 1;
+    }
+  }
+  if ( status = nc_put_att( this->fid, var_id, "valid_range",
+			    xtype, 2, valid_range_p ) ) {
+    fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+  	     __FUNCTION__, var_name, "valid_range", nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( CETB_PACK == do_pack ) {
+    if ( status = nc_put_att_text( this->fid, var_id, "packing_convention",
+				   strlen(packing_convention), packing_convention ) ) {
+      fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+	       __FUNCTION__, var_name, "packing_convention", packing_convention,
+	       nc_strerror( status ) );
+      return 1;
+    }
+  
+    if ( status = nc_put_att_text( this->fid, var_id, "packing_convention_description",
+				   strlen(packing_convention_description),
+				   packing_convention_description ) ) {
+      fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+	       __FUNCTION__, var_name, "packing_convention_description",
+	       packing_convention_description, nc_strerror( status ) );
+      return 1;
+    }
+  
+    if ( status = nc_put_att_float( this->fid, var_id, "scale_factor",
+				    NC_FLOAT, 1, &scale_factor ) ) {
+      fprintf( stderr, "%s: Error setting %s %s %f: %s.\n",
+	       __FUNCTION__, var_name, "scale_factor", scale_factor, nc_strerror( status ) );
+      return 1;
+    }
+
+    if ( status = nc_put_att_float( this->fid, var_id, "add_offset",
+				    NC_FLOAT, 1, &add_offset ) ) {
+      fprintf( stderr, "%s: Error setting %s %s %f: %s.\n",
+	       __FUNCTION__, var_name, "add_offset", add_offset, nc_strerror( status ) );
+      return 1;
+    }
+
+      /*
+       * Now pack the data
+       * Assumes variable dimensions of 1 time by rows by cols. If
+       * this assumption changes, will need to inquire for the
+       * size of each dimension
+       */
+    if ( NC_USHORT == xtype ) {
+
+      status = allocate_clean_aligned_memory( ( void * )&ushort_data,
+    					      sizeof( unsigned short ) * 1 * rows * cols );
+      if ( STATUS_OK != status ) {
+    	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
+    		 __FUNCTION__, nc_strerror( status ) );
+    	return 1;
+      }
+
+      for ( i = 0; i < ( 1 * rows * cols ); i++ ) {
+	*( ushort_data + i ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+     						    *( (float *)data + i ) ); 
+      }
+      
+      if ( status = nc_put_var( this->fid, var_id, (void *)ushort_data ) ) { 
+    	fprintf( stderr, "%s: Error putting scaled variable: %s.\n",
+    		 __FUNCTION__, nc_strerror( status ) );
+    	return 1;
+      }
+
+      free( ushort_data );
+
+    } else {
+      
+      fprintf ( stderr, "%s: No implementation for packing to netcdf type=%d\n",
+    		__FUNCTION__, xtype );
+      return 1;
+      
+    }
+
+  } else {
+
+    /* Otherwise, just write the data without packing */
+    if ( status = nc_put_var( this->fid, var_id, data ) ) { 
+      fprintf( stderr, "%s: Error putting variable: %s.\n",
+	       __FUNCTION__, nc_strerror( status ) );
+      return 1;
+    }
+
+  }
+
+  if ( status = nc_put_att_text( this->fid, var_id, "grid_mapping",
+  				 strlen(grid_mapping),
+				 grid_mapping ) ) {
+    fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+  	     __FUNCTION__, var_name, "grid_mapping", grid_mapping, nc_strerror( status ) );
+    return 1;
+  }
+  
+  if ( status = nc_put_att_text( this->fid, var_id, "coverage_content_type",
+  				 strlen(coverage_content_type),
+				 coverage_content_type ) ) {
+    fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+  	     __FUNCTION__, var_name, "coverage_content_type",
+	     coverage_content_type, nc_strerror( status ) );
+    return 1;
+  }
+  
+  if ( NULL != calendar ) {
+    if ( status = nc_put_att_text( this->fid, var_id, "calendar",
+				   strlen( calendar ), calendar ) ) {
+      fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+	       __FUNCTION__, var_name, "calendar", nc_strerror( status ) );
+      return 1;
+    }
   }
 
   return 0;
@@ -1105,7 +1304,10 @@ int set_all_dimensions( cetb_file_class *this ) {
  *           Upon successful completion, the dimension variable
  *           will be populated in the output file.
  */
-int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
+int set_dimension( cetb_file_class *this,
+		   const char *name,
+		   size_t size,
+		   double *vals,
 		   const char *standard_name,
 		   const char *long_name,
 		   const char *units,

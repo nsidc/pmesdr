@@ -174,7 +174,11 @@ int main(int argc, char **argv)
     grd_pname[100], grd_cname[100], 
     info_name[100], line[100];
 
-  cetb_file_class *cetb;
+  cetb_file_class *cetb_sir;
+  cetb_file_class *cetb_grd;
+  unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
+  unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
   int ncerr;
 
   int storage = 0;
@@ -186,6 +190,13 @@ int main(int argc, char **argv)
   int ibeam = 0;
 
   char *error_msg;
+
+  /*
+   * Set output_debug=1 to get all output images
+   * These files will be very large and should only be generated
+   * for debug purposes
+   */
+  int output_debug = 0; 
 
   /* begin program */
 
@@ -505,26 +516,39 @@ int main(int argc, char **argv)
     * list of GSX version used to create each gsx file used as input
     * and we need to stop specifying any output filenames in the .meta file
     *
-    * Initialize cetb_file.
+    * Initialize 2 cetb_files one for SIR output, the other for GRD output.
     */
-   cetb = cetb_file_init( outpath,
-			  iregion, ascale, CETB_F13, CETB_SSMI,
-			  iyear, isday, ibeam,
-			  cetb_get_direction_id_from_info_name( info_name ),
-			  CETB_SIR,
-			  cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
-   if ( !cetb ) {
-     fprintf( stderr, "%s: Error initializing cetb_file.\n", __FUNCTION__ );
+   cetb_sir = cetb_file_init( outpath,
+			      iregion, ascale, CETB_F13, CETB_SSMI,
+			      iyear, isday, ibeam,
+			      cetb_get_direction_id_from_info_name( info_name ),
+			      CETB_SIR,
+			      cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+   if ( !cetb_sir ) {
+     fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
+	      __FILE__, cetb_reconstruction_id_name[ CETB_SIR ] );
      exit( -1 );
    }
 
-   if ( 0 != cetb_file_open( cetb ) ) {
-     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FUNCTION__, cetb->filename );
+   if ( 0 != cetb_file_open( cetb_sir ) ) {
+     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__, cetb_sir->filename );
      exit( -1 );
    }
      
-   if ( 0 != cetb_file_add_sir_parameters( cetb, nits, median_flag ) ) {
-     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FUNCTION__, cetb->filename );
+   cetb_grd = cetb_file_init( outpath,
+			      iregion, CETB_MIN_RESOLUTION_FACTOR, CETB_F13, CETB_SSMI,
+			      iyear, isday, ibeam,
+			      cetb_get_direction_id_from_info_name( info_name ),
+			      CETB_GRD,
+			      cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+   if ( !cetb_grd ) {
+     fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
+	      __FILE__, cetb_reconstruction_id_name[ CETB_GRD ] );
+     exit( -1 );
+   }
+
+   if ( 0 != cetb_file_open( cetb_grd ) ) {
+     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__, cetb_grd->filename );
      exit( -1 );
    }
      
@@ -846,39 +870,56 @@ done:
     if (median_flag == 1)   /* apply modified median filtering */
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
-    if (its == 0) {  /* output AVE image */
-      if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
-	errors++;
-	eprintfc("\nError dumping Tb (A) AVE '%s'\n", a_name_ave );
-      } else {
-	printf( "\nDumped Tb (A) AVE '%s'\n", a_name_ave );
+    if ( output_debug ) {
+      if (its == 0) {  /* output AVE image */
+	if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+						    "ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
+	  errors++;
+	  eprintfc("\nError dumping Tb (A) AVE '%s'\n", a_name_ave );
+	} else {
+	  printf( "\nDumped Tb (A) AVE '%s'\n", a_name_ave );
+	}
       }
     }
 
-  }
+  }    /* end of loop for each SIR iteration */
   printf(" weight max --> %f Average weight: %.4f\n",tmax,total/nsize);
 
-  /* output SIR image */
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"a_image",a_val,nsx,nsy,anodata_A ) ) ) {
+  if ( 0 != cetb_file_add_var( cetb_sir, "TB", NC_USHORT, a_val,
+			       ( size_t )nsx, ( size_t ) nsy,
+			       CETB_FILE_TB_STANDARD_NAME,
+			       "SIR TB",
+			       CETB_FILE_TB_UNIT,
+			       &tb_fill_value,
+			       &tb_missing_value,
+			       &tb_valid_range,
+			       CETB_PACK,
+			       (float) CETB_FILE_TB_SCALE_FACTOR,
+			       (float) CETB_FILE_TB_ADD_OFFSET,
+			       NULL ) ) {
     errors++;
-    eprintfc("\nError dumping Tb (A) SIR '%s'\n", a_name );
+    fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
   } else {
-    printf( "\nDumped Tb (A) SIR '%s'\n", a_name );
+    fprintf( stderr, "> %s: Wrote Tb (A) to %s.\n", __FILE__, cetb_sir->filename );
   }
+    
+  if ( output_debug ) {
+    /* output other auxilary product images */
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+						"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
+      errors++;
+      eprintfc("Error dumping Istd (I) SIR '%s'\n", i_name );
+    } else {
+      printf( "Dumped Istd (I) SIR '%s'\n", i_name );
+    }
 
-  /* output other auxilary product images */
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
-    errors++;
-    eprintfc("Error dumping Istd (I) SIR '%s'\n", i_name );
-  } else {
-    printf( "Dumped Istd (I) SIR '%s'\n", i_name );
-  }
-
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
-    errors++;
-    eprintfc("Error dumping Iave (J) SIR '%s'\n", j_name );
-  } else {
-    printf( "Dumped Iave (J) SIR '%s'\n", j_name );
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+						"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
+      errors++;
+      eprintfc("Error dumping Iave (J) SIR '%s'\n", j_name );
+    } else {
+      printf( "Dumped Iave (J) SIR '%s'\n", j_name );
+    }
   }
 
 /* create STD and Err images */
@@ -964,18 +1005,32 @@ done1:
   printf(" Tb STD min   max --> %f %f\n",amin,amax);
   printf(" Tb ERR min   max --> %f %f\n",bmin,bmax);
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"v_image",sxy,nsx,nsy,anodata_V ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+					      "v_image",sxy,nsx,nsy,anodata_V ) ) ) {
     errors++;
     eprintfc("Error Dumping Tb STD (V) SIR output '%s'\n", v_name );
   } else {
     printf("Dumped Tb STD (V) SIR output '%s'\n", v_name );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"e_image",sx,nsx,nsy,anodata_E ) ) ) {
+  /* tot is actually NOT the correct value, it's the sum of the weights for each pixel */
+  /* Saving it here as a temporary placeholder */
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+					      "c_image",tot,nsx,nsy,anodata_C ) ) ) {
     errors++;
-    eprintfc("Error Dumping Tb err (E) SIR output '%s' \n", e_name );
+    eprintfc("Error Dumping Tb Count (C) SIR output '%s'\n", c_name );
   } else {
-    printf( "Dumped Tb err (E) SIR output '%s' \n", e_name );
+    printf("Dumped Tb Count (C) SIR output '%s'\n", c_name );
+  }
+
+  if ( output_debug ) {
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+						"e_image",sx,nsx,nsy,anodata_E ) ) ) {
+      errors++;
+      eprintfc("Error Dumping Tb err (E) SIR output '%s' \n", e_name );
+    } else {
+      printf( "Dumped Tb err (E) SIR output '%s' \n", e_name );
+    }
   }
 
 /* create time image */
@@ -1070,7 +1125,8 @@ done2:
   printf(" Time (postfilter) min   max --> %f %f\n",amin,amax);
   */
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"p_image",sxy,nsx,nsy,anodata_P ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+					      "p_image",sxy,nsx,nsy,anodata_P ) ) ) {
     errors++;
     eprintfc("Error Dumped time output (P) SIR '%s'\n", p_name );
   } else {
@@ -1223,87 +1279,119 @@ done3:
   printf(" Non-enhanced/Grid I  min   max --> %f %f\n",bmin,bmax);
   printf(" Non-enhanced/Grid C        max --> %.1f\n",tmax);
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_a_image",a_val,nsx2,nsy2,anodata_A ) ) ) {
+  if ( 0 != cetb_file_add_var( cetb_grd, "TB", NC_USHORT, a_val,
+			       ( size_t )nsx2, ( size_t ) nsy2,
+			       CETB_FILE_TB_STANDARD_NAME,
+			       "GRD TB",
+			       CETB_FILE_TB_UNIT,
+			       &tb_fill_value,
+			       &tb_missing_value,
+			       &tb_valid_range,
+			       CETB_PACK,
+			       (float) CETB_FILE_TB_SCALE_FACTOR,
+			       (float) CETB_FILE_TB_ADD_OFFSET,
+			       NULL ) ) {
     errors++;
-    eprintfc("Error Dumping Grid TB (A) output '%s'\n", grd_aname );
+    fprintf( stderr, "%s: Error writing GRD Tb (A).\n", __FILE__ );
   } else {
-    printf( "Dumped Grid TB (A) output '%s'\n", grd_aname );
+    fprintf( stderr, "> %s: Wrote GRD Tb (A) to %s.\n", __FILE__, cetb_grd->filename );
   }
-
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
+    
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
+					      "grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
     errors++;
     eprintfc( "Error Dumping Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   } else { 
     printf( "Dumped Grid Tb STD (V) output SIR '%s'\n", grd_vname );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
-    errors++;
-    eprintfc( "Error Dumping Grid Istd (I) output '%s'\n", grd_iname );
-  } else { 
-    printf( "Dumped Grid Istd (I) output '%s'\n", grd_iname );
+  if ( output_debug ) {
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
+						"grd_i_image",sx2,nsx2,nsy2,anodata_I ) ) ) {
+      errors++;
+      eprintfc( "Error Dumping Grid Istd (I) output '%s'\n", grd_iname );
+    } else { 
+      printf( "Dumped Grid Istd (I) output '%s'\n", grd_iname );
+    }
+
+    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
+						"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
+      errors++;
+      eprintfc( "Error Dumping Grid Iave (J) output '%s'\n", grd_jname );
+    } else { 
+      printf( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
+    }
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_j_image",sx,nsx2,nsy2,anodata_Ia ) ) ) {
-    errors++;
-    eprintfc( "Error Dumping Grid Iave (J) output '%s'\n", grd_jname );
-  } else { 
-    printf( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
-  }
-
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
+					      "grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
     errors++;
     fprintf(stderr, "Error Dumping Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
   } else {
     printf( "Dumped Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
   }
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
+  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
+					      "grd_p_image",a_temp,nsx2,nsy2,anodata_P ) ) ) {
     errors++;
     eprintfc( "Error Dumping Grid time (P) '%s'\n", grd_pname );
   } else { 
     printf( "Dumped Grid time (P) '%s'\n", grd_pname );
   }
 
-  if (CREATE_NON) {
+  if ( output_debug ) {
+    if (CREATE_NON) {
 
-    /* create NON images with same pixel sizes as enhanced resolution images
-       using grid image data */
+      /* create NON images with same pixel sizes as enhanced resolution images
+	 using grid image data */
 
-    for (i=0; i < nsize; i++)
-      *(sx + i) = anodata_A;
-    for (i=0; i < nsize; i++)
-      *(sx2 + i) = anodata_V;
+      for (i=0; i < nsize; i++)
+	*(sx + i) = anodata_A;
+      for (i=0; i < nsize; i++)
+	*(sx2 + i) = anodata_V;
   
-    for (i=0; i < nsize2; i++) {
-      ix = (i % nsx2) * non_size_x;
-      iy = (i / nsx2) * non_size_y;
+      for (i=0; i < nsize2; i++) {
+	ix = (i % nsx2) * non_size_x;
+	iy = (i / nsx2) * non_size_y;
 
-      for (ii=0; ii < non_size_y; ii++)
-	for (iii=0; iii < non_size_x; iii++) {
-	  iadd = nsx*(iy+ii)+ix+iii;
-	  *(sx + iadd) = *(a_val + i);
-	  *(sx2 + iadd) = *(sy + i);
-	}
-    }
-  
-    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
-      errors++;
-      eprintfc( "Error Dumping Non-enhanced Tb (A) output '%s'\n", non_aname );
-    } else { 
-      printf( "Dumped Non-enhanced Tb (A) output '%s'\n", non_aname );
-    }
+	for (ii=0; ii < non_size_y; ii++)
+	  for (iii=0; iii < non_size_x; iii++) {
+	    iadd = nsx*(iy+ii)+ix+iii;
+	    *(sx + iadd) = *(a_val + i);
+	    *(sx2 + iadd) = *(sy + i);
+	  }
+      }
 
-    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb->fid,"non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
-      errors++;
-      eprintfc( "Error Dumping Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
-    } else { 
-      printf( "Dumped Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
-    }
+      if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+						  "non_a_image",sx,nsx,nsy,anodata_A ) ) ) {
+	errors++;
+	eprintfc( "Error Dumping Non-enhanced Tb (A) output '%s'\n", non_aname );
+      } else { 
+	printf( "Dumped Non-enhanced Tb (A) output '%s'\n", non_aname );
+      }
 
+      if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
+						  "non_v_image",sx2,nsx,nsy,anodata_V ) ) ) {
+	errors++;
+	eprintfc( "Error Dumping Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
+      } else { 
+	printf( "Dumped Non-enhanced Tb STD (V) output SIR '%s'\n", non_vname );
+      }
+
+    }
   }
 
-  cetb_file_close( cetb );
+  if ( 0 != cetb_file_add_grd_parameters( cetb_grd, median_flag ) ) {
+    fprintf( stderr, "%s: Error adding GRD parameters to %s.\n", __FILE__, cetb_grd->filename );
+    exit( -1 );
+  }
+  cetb_file_close( cetb_grd );
+
+  if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag ) ) {
+    fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
+    exit( -1 );
+  }
+  cetb_file_close( cetb_sir );
 
   if (errors == 0) {
     printf("No errors encountered\n");
@@ -1318,7 +1406,7 @@ done3:
       fprintf(omf,"A output file: '%s'\n",a_name);
       fprintf(omf,"I output file: '%s'\n",i_name);
       fprintf(omf,"J output file: '%s'\n",j_name);
-      /* fprintf(omf,"C output file: '%s'\n",c_name); */
+      fprintf(omf,"C output file: '%s'\n",c_name);
       fprintf(omf,"P output file: '%s'\n",p_name);
       fprintf(omf,"V output file: '%s'\n",v_name);
       fprintf(omf,"E output file: '%s'\n",e_name);
