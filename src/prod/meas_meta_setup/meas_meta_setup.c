@@ -5,8 +5,6 @@
   generates radiometer egg (footprint) setup files for radiometer
   MEaSURES processing
 
-  This version is configured for RSS SSMI V7 binary
-
   written by DGL at BYU  02/22/2014 + based on oscat_meta_setup_slice.c and ssmi_meta_setup_v7RSS.f
   revised by DGL at BYU  03/07/2014 + added EASE2 capability
   revised by DGL at BYU  04/11/2014 + added response debug output
@@ -38,11 +36,9 @@
 #define prog_version 0.3 /* program version */
 #define prog_name "meas_meta_setup"
 
-/* This code can read and process several different data sets.  To change data sets
-   the code should be recompiled using the appropriate define flags.
-
-   The compile script should externally set RSS and CSU flags; otherwise
-   uncomment the following block and set the flags as desired */
+/* This code can read and process several different data sets.
+ * In order to achieve that, the input source files must first be processed into GSX files
+ */
 
 #define MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
 #define NSAVE 50            /* maximum number of regions to output */
@@ -53,8 +49,6 @@
 #define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
 				  use 0 to not use pre compute files*/ 
 #define DTR ((2.0*M_PI)/360.0)       /* degrees to radians */
-//#define RTD 57.29577951308233          /* radians to degrees */
-//#define PI  3.141592653589793 
 
 #define AEARTH 6378.1363              /* SEMI-MAJOR AXIS OF EARTH, a, KM */
 #define FLAT 3.3528131778969144e-3    /* = 1/298.257 FLATNESS, f, f=1-sqrt(1-e**2) */
@@ -429,9 +423,9 @@ int main(int argc,char *argv[])
 
     if ( NULL == gsx ) {
       fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
-      goto label_330;  // skip reading file on error
       free( gsx_fname[infile] );
       infile++;
+      goto label_330;  // skip reading file on error
     }
 
     /* if this is the first file to be read, then write out the final header info for downstream processing */
@@ -440,7 +434,8 @@ int main(int argc,char *argv[])
       write_header_info( gsx, &save_area );
       write_end_header( &save_area );
     }
-    
+
+    /* Here is where you might loop through all of the different measurement sets in the file */
     fprintf( stderr, "%s: Satellite %s  orbit %d  lo scans %d hi scans %d\n", \
 				__FUNCTION__, cetb_platform_id_name[gsx->short_platform], \
 				gsx->orbit, gsx->scans_loc1, gsx->scans_loc2 );
