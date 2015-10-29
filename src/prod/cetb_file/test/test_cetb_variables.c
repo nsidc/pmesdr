@@ -226,8 +226,8 @@ void test_cetb_tbs( void ) {
   status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
 
-  float_data[ 0 ] = sample_tb0;
-  float_data[ 1000 ] = sample_tb1;
+  float_data[ 0 ] = sample_tb0;     // First element of array (row=0)
+  float_data[ cols ] = sample_tb1;  // First column of array (row=1)
   status = cetb_file_add_var( cetb, "TB",
 			      NC_USHORT,
 			      float_data,
@@ -340,12 +340,12 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
 						      CETB_FILE_TB_ADD_OFFSET,
 						      sample_tb0 ),
-				 tb_data[ 0 ],
+				 tb_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_data element" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
 						      CETB_FILE_TB_ADD_OFFSET,
 						      sample_tb1 ),
-				 tb_data[ 1000 ],
+				 tb_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_data element" );
 
 
