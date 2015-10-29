@@ -44,6 +44,7 @@
    The compile script should externally set RSS and CSU flags; otherwise
    uncomment the following block and set the flags as desired */
 
+#define MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
 #define NSAVE 50            /* maximum number of regions to output */
 #define MAXFILL 2000        /* maximum number of pixels in response function */
 #define RESPONSEMULT 1000   /* response multiplier */
@@ -51,7 +52,7 @@
 			       set to 0 to not include az ang (smaller file) */
 #define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
 				  use 0 to not use pre compute files*/ 
-#define DTR 2.0*M_PI/360.0       /* degrees to radians */
+#define DTR ((2.0*M_PI)/360.0)       /* degrees to radians */
 //#define RTD 57.29577951308233          /* radians to degrees */
 //#define PI  3.141592653589793 
 
@@ -140,7 +141,7 @@ typedef struct { /* BYU region information storage */
 /* BYU SSM/I approximate spatial response computation */
 
 static float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
-
+static int write_filenames_toheader( gsx_class *gsx, region_save *save_area );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
@@ -241,7 +242,6 @@ int main(int argc,char *argv[])
   gsx_class *gsx=NULL;
   int gsx_count;
   char *csu;
-  char *gsx_fname=NULL;
   int csu_length;
   int first_file=0;
   int first_scan_loc2;
@@ -251,12 +251,15 @@ int main(int argc,char *argv[])
   int lo_scan;
   int hscans;
   int lscans;
+  char *gsx_fname[MAX_INPUT_FILES];
+  long int pos;
 
   hi_scan = HI_SCAN;
   lo_scan = LO_SCAN;
   hscans = HSCANS;
   lscans = LSCANS;
-  
+
+  gsx = NULL;
   for (n=0; n<NSAVE; n++)
     jrec2[n] = 0;  /* measurements for each output region */
   
@@ -352,6 +355,61 @@ int main(int argc,char *argv[])
   krec=0;              /* total scans read */
   flag=1;              /* end flag */
   nfile=0;             /* L1B input file counter */
+  /* Run through all of the input data files so that a list of input can be written out to the setup file */
+  pos = ftell( file_id );
+  fprintf( stderr, "%s: value of pos from ftell is %d\n", __FUNCTION__, (int) pos );
+
+  while(flag) { /* meta file read loop 1050 */     
+    /* printf("Read meta file input file name\n"); */
+    
+    /* before reading in the next file, free the memory from the previous gsx pointer */
+    if ( NULL != gsx ) {
+      gsx_close( gsx );
+      gsx = NULL;
+    }
+    fgets(fname,sizeof(fname),file_id);
+
+    if (ferror(file_id)) {
+      fprintf( stderr, "*** error reading input meta file encountered\n" );
+      exit(-1);
+    }
+
+    if ( strstr(fname,"End_input_file_list") || feof(file_id) ) { /* proper end of meta file */
+      flag=0;
+      gsx_close( gsx );
+      gsx = NULL;
+    } else {
+      /* read name of input swath file */
+      s=strstr(fname,"Input_file");
+      if ( NULL != s ) {/* skip line if not an input file */
+	/* find start of file name and extract it */
+	s=strchr(s,'=');
+	strcpy(ftempname,++s);
+	strcpy(fname, ftempname);
+	no_trailing_blanks(fname);    
+        gsx = gsx_init( fname );
+	status = write_filenames_toheader( gsx, &save_area );
+	status = posix_memalign( (void**)&gsx_fname[nfile], CETB_MEM_ALIGNMENT, strlen(fname)+1 );
+	strcpy( gsx_fname[nfile], fname );
+	nfile++;
+	if ( nfile > MAX_INPUT_FILES ) {
+	  flag = 0;
+	  gsx_close( gsx );
+	  gsx = NULL;
+	}
+      }
+    }
+  }
+
+  for ( i=0; i<nfile; i++ ) {
+    fprintf( stderr, "%s ***** file in the list '%s' \n", __FUNCTION__, gsx_fname[i] );
+    free( gsx_fname[i] );
+  }
+
+  status = fseek( file_id, pos, SEEK_SET );
+  fprintf( stderr, "%s: value of pos for fseek is %d and return status is %d\n", __FUNCTION__, (int) pos, status );
+
+  flag = 1;
   while(flag) { /* meta file read loop 1050 */     
     /* printf("Read meta file input file name\n"); */
     
@@ -360,7 +418,6 @@ int main(int argc,char *argv[])
     if ( NULL != gsx ) {
       gsx_close( gsx );
     }
-    free( gsx_fname );
     fgets(fname,sizeof(fname),file_id);
     /* printf("file %s\n",fname); */
 
@@ -391,7 +448,7 @@ int main(int argc,char *argv[])
     no_trailing_blanks(fname);    
 
     nfile++;
-
+  
     /* initialize last spacecraft position */
     sc_last_lat=-1.e25;
     sc_last_lon=-1.e25;
@@ -405,20 +462,18 @@ int main(int argc,char *argv[])
      */
     gsx = gsx_init( fname ); // Read in a GSX file
 
-    /* if this is the first file to be read, then write out the final header info for downstream processing */
-    if ( 0 == first_file ) {
-      first_file++;
-      if ( NULL != gsx ) {
-	write_header_info( gsx, &save_area );
-      }
-      write_end_header( &save_area );
-    }
-    
     if ( NULL == gsx ) {
       fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
       goto label_330;  // skip reading file on error
     }
 
+    /* if this is the first file to be read, then write out the final header info for downstream processing */
+    if ( 0 == first_file ) {
+      first_file++;
+      write_header_info( gsx, &save_area );
+      write_end_header( &save_area );
+    }
+    
     fprintf( stderr, "%s: Satellite %s  orbit %d  lo scans %d hi scans %d\n", \
 				__FUNCTION__, cetb_platform_id_name[gsx->short_platform], \
 				gsx->orbit, gsx->scans_loc1, gsx->scans_loc2 );
@@ -493,10 +548,8 @@ int main(int argc,char *argv[])
 
       if ( *(gsx->scantime[1]+iscan) == gsx->fill_scantime[1] ) goto label_350; // do not process this scan - until gsx is fixed
       /* scan time.  All measurements in this scan assigned this time */
-      if ( NULL !=gsx ) {
-	timedecode(*(gsx->scantime[1]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
-	iday = jday;
-      }
+      timedecode(*(gsx->scantime[1]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+      iday = jday;
     
       /* check to see if day is in desired range */
       if (iasc >= 3 && iasc <= 5) { /* if local time of day discrimination is used */
@@ -538,13 +591,13 @@ int main(int argc,char *argv[])
       if (xlow_lon  >  180.0) xlow_lon =xlow_lon -360.0;
       if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
 
-      /*  	/\* set asc/dsc flag for measurements *\/  */
-	if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) //d->SC_LAT[iscan]-sc_last_lat < 0.0)   
-	  ascend=0;  
-	else  
-	  ascend=1;  
-	sc_last_lat = *(gsx->sc_latitude[1]+iscan); //d->SC_LAT[iscan];
-	sc_last_lon = *(gsx->sc_longitude[1]+iscan); //d->SC_LON[iscan];  
+      /* set asc/dsc flag for measurements */
+      if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) 
+	ascend=0;  
+      else  
+	ascend=1;  
+      sc_last_lat = *(gsx->sc_latitude[1]+iscan); 
+      sc_last_lon = *(gsx->sc_longitude[1]+iscan); 
 
       /* extract TB measurements for each scan.  the logic here works through
 	 both hi and lo (A and B) scans with a single loop */
@@ -572,9 +625,7 @@ int main(int argc,char *argv[])
 	  }
 
 	  /* for this beam, get measurement, geometry, and location */
-	  if ( NULL != gsx ) {
-	    gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-	  }
+	  gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
 	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
 	  case 1:
 	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
@@ -1992,10 +2043,48 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
       fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+      for(z=0;z<100;z++)lin[z]=' ';
+      sprintf(lin," Pass_direction=%d ", save_area->sav_ascdes[iregion-1]);
+      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+
     }
   }
 }
 
+/* write_filenames_toheader - writes out the input data files that were used to
+ * create the setup files as well as the GSX version used in the processing
+ *
+ * Input:
+ *   gsx structure - holds the filename and the version
+ *   save_area - contains the information on the open output setup files
+ *
+ * Return:
+ *   0 on success, 1 on failure
+ */
+int write_filenames_toheader( gsx_class *gsx, region_save *save_area ) {
+  int cnt=100;
+  char lin[100];
+  int z;
+  int iregion;
+
+  for ( iregion=1; iregion<=save_area->nregions; iregion++ ) { 
+    //fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
+     for(z=0;z<100;z++)lin[z]=' '; 
+     sprintf(lin," Input_file=%s ", gsx->source_file);
+     fprintf( stderr, "**lin**%s \n", lin );
+       /*   fwrite(lin,100,1,save_area->reg_lu[iregion-1]); */
+       /* fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
+  /*   fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
+     for(z=0;z<100;z++)lin[z]=' '; 
+     sprintf(lin," GSX_version=%s ", gsx->gsx_version); 
+     fprintf( stderr, "**lin**%s \n", lin );
+  /*   fwrite(lin,100,1,save_area->reg_lu[iregion-1]); */
+  /*   fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
+   } 
+  fprintf( stderr, "****%s, source file %s, gsx_version %s\n", __FUNCTION__, gsx->source_file, gsx->gsx_version );
+}
 /*
  * write_end_header - writes out the End_file line that is used in sir and bgi
  *
