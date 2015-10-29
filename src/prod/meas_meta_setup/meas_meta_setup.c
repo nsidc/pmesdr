@@ -253,6 +253,7 @@ int main(int argc,char *argv[])
   int lscans;
   char *gsx_fname[MAX_INPUT_FILES];
   long int pos;
+  int infile;
 
   hi_scan = HI_SCAN;
   lo_scan = LO_SCAN;
@@ -296,7 +297,6 @@ int main(int argc,char *argv[])
     printf("   outpath     = output path\n\n");
     exit (-1);
   }
- 
 
   /* get input meta file name */
   sscanf(*argv++,"%s",mname);
@@ -355,12 +355,9 @@ int main(int argc,char *argv[])
   krec=0;              /* total scans read */
   flag=1;              /* end flag */
   nfile=0;             /* L1B input file counter */
-  /* Run through all of the input data files so that a list of input can be written out to the setup file */
-  pos = ftell( file_id );
-  fprintf( stderr, "%s: value of pos from ftell is %d\n", __FUNCTION__, (int) pos );
 
-  while(flag) { /* meta file read loop 1050 */     
-    /* printf("Read meta file input file name\n"); */
+  /* Run through all of the input data files so that a list of them can be written out to the setup file */
+  while(flag) { 
     
     /* before reading in the next file, free the memory from the previous gsx pointer */
     if ( NULL != gsx ) {
@@ -403,51 +400,20 @@ int main(int argc,char *argv[])
 
   for ( i=0; i<nfile; i++ ) {
     fprintf( stderr, "%s ***** file in the list '%s' \n", __FUNCTION__, gsx_fname[i] );
-    free( gsx_fname[i] );
   }
 
   status = fseek( file_id, pos, SEEK_SET );
   fprintf( stderr, "%s: value of pos for fseek is %d and return status is %d\n", __FUNCTION__, (int) pos, status );
 
-  flag = 1;
-  while(flag) { /* meta file read loop 1050 */     
-    /* printf("Read meta file input file name\n"); */
+  for ( infile=0; infile<nfile; infile++ ) { /* meta file read loop 1050 */     
     
-  label_330:; /* read next input line (file name) from meta file */
+  label_330:; /* read next file name from list gsx_fname */
     /* before reading in the next file, free the memory from the previous gsx pointer */
     if ( NULL != gsx ) {
       gsx_close( gsx );
+      gsx = NULL;
     }
-    fgets(fname,sizeof(fname),file_id);
-    /* printf("file %s\n",fname); */
-
-    if (ferror(file_id)) {
-      fprintf( stderr, "*** error reading input meta file encountered\n" );
-      exit(-1);
-    }
-
-    if (strstr(fname,"End_input_file_list")) { /* proper end of meta file */
-      flag=0;
-      goto label_3501;
-    }
-
-    if (feof(file_id)) { /* input meta file error */
-      fprintf(stdout,"*** end of input meta file encountered\n");
-      goto label_3501;
-    }
-
-    /* read name of input swath file */
-    s=strstr(fname,"Input_file");
-    if (s == NULL) /* skip line if not an input file */
-      goto label_330;    
-
-    /* find start of file name and extract it */
-    s=strchr(s,'=');
-    strcpy(ftempname,++s);
-    strcpy(fname, ftempname);
-    no_trailing_blanks(fname);    
-
-    nfile++;
+    strcpy(fname, gsx_fname[infile]);
   
     /* initialize last spacecraft position */
     sc_last_lat=-1.e25;
@@ -456,15 +422,16 @@ int main(int argc,char *argv[])
     /* open and read new input TB file */
     printf("Opening input TB file %d '%s'\n",nfile,fname);
 
-    /* read measurement data from file */    
     /*
-     * read file into gsx_class variable
+     * read data from file into gsx_class variable
      */
     gsx = gsx_init( fname ); // Read in a GSX file
 
     if ( NULL == gsx ) {
       fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
       goto label_330;  // skip reading file on error
+      free( gsx_fname[infile] );
+      infile++;
     }
 
     /* if this is the first file to be read, then write out the final header info for downstream processing */
@@ -897,6 +864,7 @@ int main(int argc,char *argv[])
     }
                /* input file loop */
     printf("Done with setup records %d %d\n",irec,krec);
+    free( gsx_fname[infile] );
   }
 
   /* close output setup files */
@@ -2070,18 +2038,17 @@ int write_filenames_toheader( gsx_class *gsx, region_save *save_area ) {
   int iregion;
 
   for ( iregion=1; iregion<=save_area->nregions; iregion++ ) { 
-    //fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); 
      for(z=0;z<100;z++)lin[z]=' '; 
      sprintf(lin," Input_file=%s ", gsx->source_file);
-     fprintf( stderr, "**lin**%s \n", lin );
-       /*   fwrite(lin,100,1,save_area->reg_lu[iregion-1]); */
-       /* fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
-  /*   fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
+     fwrite(lin,100,1,save_area->reg_lu[iregion-1]); 
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+     
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
      for(z=0;z<100;z++)lin[z]=' '; 
      sprintf(lin," GSX_version=%s ", gsx->gsx_version); 
-     fprintf( stderr, "**lin**%s \n", lin );
-  /*   fwrite(lin,100,1,save_area->reg_lu[iregion-1]); */
-  /*   fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); */
+     fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
    } 
   fprintf( stderr, "****%s, source file %s, gsx_version %s\n", __FUNCTION__, gsx->source_file, gsx->gsx_version );
 }
