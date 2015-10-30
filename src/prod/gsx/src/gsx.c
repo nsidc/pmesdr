@@ -192,12 +192,12 @@ int get_gsx_dims( gsx_class *this ) {
       fprintf ( stderr, "%s: couldn't get dim length, error: %s\n", __FUNCTION__, nc_strerror( status ) );
       return -1;
     }
-    if ( strncmp( dim_name, "scans_loc1", strlen( dim_name ) ) == 0 ) this->scans_loc1 = dim_length;
-    if ( strncmp( dim_name, "scans_loc2", strlen( dim_name ) ) == 0 ) this->scans_loc2 = dim_length;
-    if ( strncmp( dim_name, "scans_loc3", strlen( dim_name ) ) == 0 ) this->scans_loc3 = dim_length;
-    if ( strncmp( dim_name, "measurements_loc1", strlen( dim_name ) ) == 0 ) this->measurements_loc1 = dim_length;
-    if ( strncmp( dim_name, "measurements_loc2", strlen( dim_name ) ) == 0 ) this->measurements_loc2 = dim_length;
-    if ( strncmp( dim_name, "measurements_loc3", strlen( dim_name ) ) == 0 ) this->measurements_loc3 = dim_length;
+    if ( strncmp( dim_name, "scans_loc1", strlen( dim_name ) ) == 0 ) this->scans[0] = dim_length;
+    if ( strncmp( dim_name, "scans_loc2", strlen( dim_name ) ) == 0 ) this->scans[1] = dim_length;
+    if ( strncmp( dim_name, "scans_loc3", strlen( dim_name ) ) == 0 ) this->scans[2] = dim_length;
+    if ( strncmp( dim_name, "measurements_loc1", strlen( dim_name ) ) == 0 ) this->measurements[0] = dim_length;
+    if ( strncmp( dim_name, "measurements_loc2", strlen( dim_name ) ) == 0 ) this->measurements[1] = dim_length;
+    if ( strncmp( dim_name, "measurements_loc3", strlen( dim_name ) ) == 0 ) this->measurements[2] = dim_length;
   }
   
   free( dim_name );
@@ -448,15 +448,9 @@ int get_gsx_positions( gsx_class *this ) {
    */
 
   for ( i=0; i<GSX_MAX_DIMS; i++) {
-    if ( 0 == i && this->scans_loc1 != 0 ) {
-      scans = this->scans_loc1;
-      measurements = this->measurements_loc1;
-    } else if ( 1 == i && this->scans_loc2 != 0 ) {
-      scans = this->scans_loc2;
-      measurements = this->measurements_loc2;
-    } else if ( 2 == i && this->scans_loc3 != 0 ) {
-      scans = this->scans_loc3;
-      measurements = this->measurements_loc3;
+    if ( this->scans[i] != 0 ) {
+      scans = this->scans[i];
+      measurements = this->measurements[i];
     } else {
       return 0;
     }
@@ -874,6 +868,7 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
   int dimid[2];
   char *dimname;
   char *dim_ptr;
+  int i;
   
   if ( status = nc_inq_vardimid( this->fileid, varid, dimid ) ) {
     fprintf( stderr, "%s: couldn't get varid %d dimension ids\n", __FUNCTION__, varid );
@@ -891,23 +886,14 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
     return -1;
   }
   
-  dim_ptr = strstr( dimname, "_loc1" );
-  if ( NULL != dim_ptr ) {
-    *dim1 = this->scans_loc1;
-    *dim2 = this->measurements_loc1;
-    status = 0;
-  }
-  dim_ptr = strstr( dimname, "_loc2" );
-  if ( NULL != dim_ptr ) {
-    *dim1 = this->scans_loc2;
-    *dim2 = this->measurements_loc2;
-    status = 0;
-  }
-  dim_ptr = strstr( dimname, "_loc3" );
-  if ( NULL != dim_ptr ) {
-    *dim1 = this->scans_loc3;
-    *dim2 = this->measurements_loc3;
-    status = 0;
+  for (i=0; i<GSX_MAX_DIMS; i++ ) {
+    dim_ptr = strstr( dimname, cetb_loc_id_name[i] );
+    if ( NULL != dim_ptr ) {
+      *dim1 = this->scans[i];
+      *dim2 = this->measurements[i];
+      status = 0;
+      dim_ptr = NULL;
+    }
   }
   return status;
 }

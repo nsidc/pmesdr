@@ -19,12 +19,8 @@ typedef struct {
   int vars;
   int atts;
   int unlimdims;
-  int scans_loc1;
-  int scans_loc2;
-  int scans_loc3;
-  int measurements_loc1;
-  int measurements_loc2;
-  int measurements_loc3;
+  int scans[GSX_MAX_DIMS];
+  int measurements[GSX_MAX_DIMS];
   char *source_file;
   cetb_sensor_id short_sensor;
   cetb_platform_id short_platform;
@@ -143,16 +139,16 @@ typedef enum {
   CETB_LOC1,
   CETB_LOC2,
   CETB_LOC3,
-  CETB_NUM_LOCSS
+  CETB_NUM_LOCS
 } cetb_loc_id;
 
 /*
  * Sensor names
  */
 static const char *cetb_loc_id_name[] = {
-  "_LOC1",
-  "_LOC2",
-  "_LOC3"
+  "_loc1",
+  "_loc2",
+  "_loc3"
 };
 
 /*
