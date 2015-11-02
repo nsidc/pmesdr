@@ -231,6 +231,16 @@ int get_gsx_global_attributes( gsx_class *this ) {
     return -1;
   }
 
+  /* check to see if there is an orbit direction attribute in the file - they don't all have one */
+
+  temp = get_att_text( this->fileid, NC_GLOBAL, "orbit_direction" );
+  if ( NULL != temp ) { // retrieve the orbit direction
+    if ( 0 == strncmp( "Ascending", temp, strlen(temp) ) )
+      this->pass_direction = CETB_ASC_PASSES;
+    else
+      this->pass_direction = CETB_DES_PASSES;
+  }
+    
   temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
   if ( NULL == temp ) {
     fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
@@ -357,6 +367,8 @@ int get_gsx_variable_attributes( gsx_class *this ) {
   int dim1;
   int dim2;
   char *efov;
+  char *locations;
+  int i;
 
   if ( NULL == this ) {
     return -1;
@@ -389,12 +401,21 @@ int get_gsx_variable_attributes( gsx_class *this ) {
     
     status = get_gsx_temperatures( this, varid, count, dim1, dim2 );
 
+    /* Now get the fill value for this channel */
     if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue ) ) {
       fprintf( stderr, "%s: couldn't get fillvalue from %s\n", __FUNCTION__, this->channel_names[count] );
       return -1;
     }
     this->fillvalue[count] = fillvalue;
 
+    /* Get the coordinate variables for this channel */
+    locations = get_att_text( this->fileid, varid, "coordinates" );
+    for ( i=0; i<GSX_MAX_DIMS; i++ ) {
+      if ( NULL != strstr( locations, cetb_loc_id_name[i] ) )
+	this->channel_dims[count] = (cetb_loc_id) i;
+    }
+	   
+    /* Get the efov values for this channel */
     efov = get_att_text( this->fileid, varid, "gsx_field_of_view" );
     if ( status = nc_inq_varid( this->fileid, efov, &varid ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
@@ -695,6 +716,7 @@ int init_gsx_pointers( gsx_class *this ) {
     this->channel_names[counter] = NULL;
     this->efov[counter] = NULL;
     this->brightness_temps[counter] = NULL;
+    this->channel_dims[counter] = CETB_NOLOC;
   }
   for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
     this->latitude[counter] = NULL;

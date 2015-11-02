@@ -238,8 +238,8 @@ int main(int argc,char *argv[])
   char *csu;
   int csu_length;
   int first_file=0;
-  int first_scan_loc2;
-  int last_scan_loc2;
+  int first_scan_loc;
+  int last_scan_loc;
   int status;
   int hi_scan;
   int lo_scan;
@@ -248,6 +248,8 @@ int main(int argc,char *argv[])
   char *gsx_fname[MAX_INPUT_FILES];
   long int pos;
   int infile;
+  int loc;
+  int imeas;
 
   hi_scan = HI_SCAN;
   lo_scan = LO_SCAN;
@@ -396,10 +398,7 @@ int main(int argc,char *argv[])
     fprintf( stderr, "%s ***** file in the list '%s' \n", __FUNCTION__, gsx_fname[i] );
   }
 
-  status = fseek( file_id, pos, SEEK_SET );
-  fprintf( stderr, "%s: value of pos for fseek is %d and return status is %d\n", __FUNCTION__, (int) pos, status );
-
-  for ( infile=0; infile<nfile; infile++ ) { /* meta file read loop 1050 */     
+  for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
     
   label_330:; /* read next file name from list gsx_fname */
     /* before reading in the next file, free the memory from the previous gsx pointer */
@@ -435,406 +434,381 @@ int main(int argc,char *argv[])
       write_end_header( &save_area );
     }
 
-    /* Here is where you might loop through all of the different measurement sets in the file */
+    /* Here is where you loop through all of the different measurement sets in the file */
     fprintf( stderr, "%s: Satellite %s  orbit %d  lo scans %d hi scans %d\n", \
 				__FUNCTION__, cetb_platform_id_name[gsx->short_platform], \
-				gsx->orbit, gsx->scans_loc1, gsx->scans_loc2 );
-
-    /* extract values of interest */
-    nscans = gsx->scans_loc2;
-    lo_scan = gsx->measurements_loc1;
-    hi_scan = gsx->measurements_loc2;
-
-    first_scan_loc2 = (int) CETB_LOC2;
-    last_scan_loc2 = gsx->scans_loc2-1;
-    timedecode( *(gsx->scantime[first_scan_loc2]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
-    timedecode( *(gsx->scantime[first_scan_loc2]+last_scan_loc2),	\
-		&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-    printf("* start time:  %lf  %d %d %d %d %d %d %d\n",		\
-	   *(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);    
-    printf("* stop time:   %lf  %d %d %d %d %d %d %d\n",		\
-	   *(gsx->scantime[first_scan_loc2]+last_scan_loc2),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
+	     gsx->orbit, gsx->scans[0], gsx->scans[1] );
+    for ( loc=0; loc<GSX_MAX_DIMS; loc++ ) {
       
-    printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]),iyear,iday,imon,jday,ihour,imin,isec);
-    printf("last scan: %lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc2]+last_scan_loc2), \
-	   iyeare,idaye,imone,jdaye,ihoure,imine,isece);
-    printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+      /* extract values of interest */
+      nscans = gsx->scans[loc];
+      if ( 0 != gsx->scans[loc] ) {
 
-    iday=jday;    /* use day of year (jday) for day search */
-    idaye=jdaye;    
-
-    /* check data range to see if file contains useful time period
-       if not, skip reading file */
-    shortf=1;
-    if (dstart <= dend) {
-      if (iyear != year && iyeare != year) goto label_3501;
-      if (iday <= dstart) {
-	if (idaye < dstart) goto label_3501;
-	if (idaye == dstart && ihoure*60+imine < mstart) goto label_3501;
-      } else {
-	if (iday > dend) {
-	  if (!ltdflag) goto label_3501;
-	  dend2=dend+1;
-	  if (ltdflag && idaye > dend2) goto label_3501;
-	} else {
-	  if (iday == dend && ihour*60+imin > mend) goto label_3501;
-	}
-      }
-    } else {
-      ilenyear=365;
-      if (isleapyear(year)) ilenyear=366;      
-      iday=iday+(iyear-year)*ilenyear;
-      idaye=idaye+(iyeare-year)*ilenyear;
-      if (ltdflag)
-	dend2=dend+ilenyear+1;    
-      else
-	dend2=dend+ilenyear;
-      if (iday <= dstart) {
-	if (idaye < dstart) goto label_3501;
-	if (idaye == dstart && ihoure*60+imine < mstart) goto label_3501;
-      } else {
-	if (iday > dend2) goto label_3501;
-	if (iday == dend2 && ihour*60+imin > mend) goto label_3501;
-      }
-      /* shortf=0; */
-    }
-  
-    /* for each scan in file */
-    nrec=0;
-    for (iscan=0; iscan<nscans; iscan++) { /*350*/
-
-      krec=krec+1;	/* count total scans read */
-      nrec=nrec+1;      /* count scans read in file */
+	first_scan_loc = loc;
+	last_scan_loc = gsx->scans[loc]-1;
+	timedecode( *(gsx->scantime[first_scan_loc]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+	timedecode( *(gsx->scantime[first_scan_loc]+last_scan_loc),	\
+		    &iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
+	printf("* start time:  %lf  %d %d %d %d %d %d %d\n",		\
+	       *(gsx->scantime[first_scan_loc]),iyear,iday,imon,jday,ihour,imin,isec);    
+	printf("* stop time:   %lf  %d %d %d %d %d %d %d\n",		\
+	       *(gsx->scantime[first_scan_loc]+last_scan_loc),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
       
-      if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
+	printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc]),iyear,iday,imon,jday,ihour,imin,isec);
+	printf("last scan: %lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc]+last_scan_loc), \
+	       iyeare,idaye,imone,jdaye,ihoure,imine,isece);
+	printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
 
-      if ( *(gsx->scantime[1]+iscan) == gsx->fill_scantime[1] ) goto label_350; // do not process this scan - until gsx is fixed
-      /* scan time.  All measurements in this scan assigned this time */
-      timedecode(*(gsx->scantime[1]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
-      iday = jday;
-    
-      /* check to see if day is in desired range */
-      if (iasc >= 3 && iasc <= 5) { /* if local time of day discrimination is used */
-	if (dstart < dend) { /* if dosen't cross year boundary */
-	  if (iyear != year) goto label_350; /* skip further processing of this scan */
-	  if ( iday < dstart - 1 ) goto label_350; /* skip further processing of this scan */
-	}
-      } else {
-	if (iyear != year) goto label_350; /* skip further processing of this scan */
-	if (iday < dstart) goto label_350; /* skip further processing of this scan */
-	if (iday > dend)   goto label_350; /* done processing, skip rest of scan */
-      }
+	iday=jday;    /* use day of year (jday) for day search */
+	idaye=jdaye;    
 
-      /* compute days since start of image data if cross year boundary */
-      ktime=(iyear-year)*365;   /* days */
-      if (ktime > 0) { /* more than a year */
-	if (isleapyear(year)) {
-	  ktime=ktime+1;
-	}
-      }  else {
-	if (ktime<0) {
-	  printf("*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
-	}
-      }
-      
-      /* compute time in mins since start of image data (assumes mstart=0) */
-      ktime=((ktime+iday-dstart)*24+ihour)*60+imin;
-
-      /* compute the orientation of the nadir track with respect to north */
-      if (eqlon<0.0) eqlon=eqlon+360.0;      
-      /*
-        find the longitude of the equator crossing of the middle measurement to use in computing the
-        longitudes that separate ascending and descending for this rev */
-      xhigh_lon=eqlon+90.0;
-      xlow_lon =eqlon-90.0;
-	   
-      if (xhigh_lon >  180.0) xhigh_lon=xhigh_lon-360.0;
-      if (xhigh_lon < -180.0) xhigh_lon=xhigh_lon+360.0;
-      if (xlow_lon  >  180.0) xlow_lon =xlow_lon -360.0;
-      if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
-
-      /* set asc/dsc flag for measurements */
-      if (*(gsx->sc_latitude[1]+iscan)-sc_last_lat < 0.0 ) 
-	ascend=0;  
-      else  
-	ascend=1;  
-      sc_last_lat = *(gsx->sc_latitude[1]+iscan); 
-      sc_last_lon = *(gsx->sc_longitude[1]+iscan); 
-
-      /* extract TB measurements for each scan.  the logic here works through
-	 both hi and lo (A and B) scans with a single loop */
-
-      iscan1=(iscan % 2);
-      for (i=0; i < hi_scan; i++) { /* measurements loop to label_3401 */
-	irec=irec+1;	/* count of pulses examined */
-
-	/* for each output region and section */
-	for (iregion=0; iregion<save_area.nregions; iregion++) { /* regions loop label_3400 */
-	  /* ipolar=save_area.sav_ipolar[iregion]; */  /* 0=h, 1=v */
-	  ibeam=save_area.sav_ibeam[iregion];  /* beam number */
-
-	  /* determine indexing for hi and low scans */
-	  if (ibeam < 6) { /* ssmi 19..37 GHz */
-	    if (i > lo_scan-1) goto label_3400; /* skip non-existing low res measurements */
-	    if (iscan1 -= 0) goto label_3400; /* skip every other along-track index */
-	    ilow=iscan/2;
-	    ihigh=i*2;
-	    nmeas=lo_scan;
-	  } else { 	/* ssmi 85 GHz */
-	    ilow=iscan;
-	    ihigh=i;
-	    nmeas=hi_scan;	    
-	  }
-
-	  /* for this beam, get measurement, geometry, and location */
-	  gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-	  switch (ibeam) {  // when solely gsx switch on ssmi_channel_mapping[ibeam]
-	  case 1:
-	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
-	    break;
-	  case 2:
-	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
-	    break;	    
-	  case 3:
-	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
-	    break;
-	  case 4:
-	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
-	    break;
-	  case 5:
-	    tb = *(gsx->brightness_temps[gsx_count]+i+ilow*lo_scan);
-	    break;
-	  case 6:
-	    tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
-	    break;
-	  case 7:
-	    tb = *(gsx->brightness_temps[gsx_count]+i+iscan*hi_scan);
-	    break;
-	  default:
-	    printf("**** beam specification error \n");
-	  }
-
-	  if (nmeas==lo_scan) {
-	    thetai = *(gsx->eia[0]+i+ilow*lo_scan);  /* nominal incidence angle */
-	    azang = *(gsx->eaz[0]+i+ilow*lo_scan);  /* nominal azimuth angle */
-	    cen_lat = *(gsx->latitude[0]+i+ilow*lo_scan);  /* nominal longitude */
-	    cen_lon = *(gsx->longitude[0]+i+ilow*lo_scan);  /* nominal latitude */
-	  } else {	      
-	    thetai = *(gsx->eia[1]+i+iscan*hi_scan);  /* nominal incidence angle */
-	    azang = *(gsx->eaz[1]+i+iscan*hi_scan);  /* nominal azimuth angle */
-	    cen_lon = *(gsx->longitude[1]+i+iscan*hi_scan);  /* nominal longitude */
-	    cen_lat = *(gsx->latitude[1]+i+iscan*hi_scan);  /* nominal latitude */
-	  }
-	    
-	  if (tb <= 0.0) goto label_3400; /* skip bad measurements */
-	  if (thetai == 0.0) goto label_3400; /* skip bad measurements */
-	  
-	  /* first, determine if measurement is in the longitude range for ascending or descending */
-	  inlonrange=0;
-	  if (xhigh_lon > 0.0 && xlow_lon < 0.0) {
-	    if (cen_lon <= xhigh_lon && cen_lon >= xlow_lon) inlonrange=1;
+	/* check data range to see if file contains useful time period
+	   if not, skip reading file */
+	shortf=1;
+	if (dstart <= dend) {
+	  if (iyear != year && iyeare != year) goto label_3501;
+	  if (iday <= dstart) {
+	    if (idaye < dstart) goto label_3501;
+	    if (idaye == dstart && ihoure*60+imine < mstart) goto label_3501;
 	  } else {
-	    if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
+	    if (iday > dend) {
+	      if (!ltdflag) goto label_3501;
+	      dend2=dend+1;
+	      if (ltdflag && idaye > dend2) goto label_3501;
+	    } else {
+	      if (iday == dend && ihour*60+imin > mend) goto label_3501;
+	    }
 	  }
+	} else {
+	  ilenyear=365;
+	  if (isleapyear(year)) ilenyear=366;      
+	  iday=iday+(iyear-year)*ilenyear;
+	  idaye=idaye+(iyeare-year)*ilenyear;
+	  if (ltdflag)
+	    dend2=dend+ilenyear+1;    
+	  else
+	    dend2=dend+ilenyear;
+	  if (iday <= dstart) {
+	    if (idaye < dstart) goto label_3501;
+	    if (idaye == dstart && ihoure*60+imine < mstart) goto label_3501;
+	  } else {
+	    if (iday > dend2) goto label_3501;
+	    if (iday == dend2 && ihour*60+imin > mend) goto label_3501;
+	  }
+	  /* shortf=0; */
+	}
+  
+	/* for each scan in file */
+	nrec=0;
+	for (iscan=0; iscan<nscans; iscan++) { /*350*/
+
+	  krec=krec+1;	/* count total scans read */
+	  nrec=nrec+1;      /* count scans read in file */
+      
+	  if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
+
+	  if ( *(gsx->scantime[loc]+iscan) == gsx->fill_scantime[loc] ) goto label_350; // do not process this scan - until gsx is fixed
+	  /* scan time.  All measurements in this scan assigned this time */
+	  timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+	  iday = jday;
+    
+	  /* check to see if day is in desired range */
+	  if (iasc >= 3 && iasc <= 5) { /* if local time of day discrimination is used */
+	    if (dstart < dend) { /* if doesn't cross year boundary */
+	      if (iyear != year) goto label_350; /* skip further processing of this scan */
+	      if ( iday < dstart - 1 ) goto label_350; /* skip further processing of this scan */
+	    }
+	  } else {
+	    if (iyear != year) goto label_350; /* skip further processing of this scan */
+	    if (iday < dstart) goto label_350; /* skip further processing of this scan */
+	    if (iday > dend)   goto label_350; /* done processing, skip rest of scan */
+	  }
+
+	  /* compute days since start of image data if cross year boundary */
+	  ktime=(iyear-year)*365;   /* days */
+	  if (ktime > 0) { /* more than a year */
+	    if (isleapyear(year)) {
+	      ktime=ktime+1;
+	    }
+	  }  else {
+	    if (ktime<0) {
+	      printf("*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
+	    }
+	  }
+      
+	  /* compute time in mins since start of image data (assumes mstart=0) */
+	  ktime=((ktime+iday-dstart)*24+ihour)*60+imin;
+
+	  /* compute the orientation of the nadir track with respect to north */
+	  if (eqlon<0.0) eqlon=eqlon+360.0;      
+	  /*
+	    find the longitude of the equator crossing of the middle measurement to use in computing the
+	    longitudes that separate ascending and descending for this rev */
+	  xhigh_lon=eqlon+90.0;
+	  xlow_lon =eqlon-90.0;
+	   
+	  if (xhigh_lon >  180.0) xhigh_lon=xhigh_lon-360.0;
+	  if (xhigh_lon < -180.0) xhigh_lon=xhigh_lon+360.0;
+	  if (xlow_lon  >  180.0) xlow_lon =xlow_lon -360.0;
+	  if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
+
+	  /* here test for AMSRE that doesn't have sc_lat and sc_lon and get asc desc flag from file name */
+	  /* set asc/dsc flag for measurements */
+	  if ( CETB_AMSRE != gsx->short_sensor ) {
+	    if (*(gsx->sc_latitude[loc]+iscan)-sc_last_lat < 0.0 ) 
+	      ascend=0;  
+	    else  
+	      ascend=1;
+
+	    sc_last_lat = *(gsx->sc_latitude[loc]+iscan); 
+	    sc_last_lon = *(gsx->sc_longitude[loc]+iscan);
+	  } else {
+	    if ( CETB_ASC_PASSES == gsx->pass_direction )
+	      ascend=1;
+	    else
+	      ascend=0;
+	  }
+
+	  /* extract TB measurements for each scan.  the logic here works through
+	     both hi and lo (A and B) scans with a single loop */
+
+	  for (imeas=0; imeas < gsx->measurements[loc]; imeas++) { /* measurements loop to label_3401 */
+	    irec=irec+1;	/* count of pulses examined */
+
+	    /* for each output region and section */
+	    for (iregion=0; iregion<save_area.nregions; iregion++) { /* regions loop label_3400 */
+
+	      ibeam=save_area.sav_ibeam[iregion];  /* beam number */
+	      gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+	      
+	      /* only get Tb's for channels that use the current set of position coordinates */
+
+	      if ( gsx->channel_dims[gsx_count] == (cetb_loc_id)loc ) {
+	      
+		/* for this beam, get measurement, geometry, and location */
+		/* Note that the gsx_count variable gives you the offset into the tb array for whichever channel
+		 * you are currently looking at - which comes from the region array
+		 * the imeas variable counts measurements across a scanline and the
+		 * iscan variable keeps track of which scan line you are on and
+		 * gsx->measurements[loc] is the number of measurements in each scan line
+		 */
+
+		tb = *(gsx->brightness_temps[gsx_count]+imeas+iscan*gsx->measurements[loc]);
+
+		thetai = *(gsx->eia[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal incidence angle */
+		azang = *(gsx->eaz[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal azimuth angle */
+		cen_lat = *(gsx->latitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal longitude */
+		cen_lon = *(gsx->longitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal latitude */
+
+		if (tb <= 0.0) goto label_3400; /* skip bad measurements */
+		if (thetai == 0.0) goto label_3400; /* skip bad measurements */
 	  
-	  /* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc) */
-	  iasc=save_area.sav_ascdes[iregion];
-	  if (iasc != 0)
-	    if (iasc == 1) {
-	      if (!ascend) goto label_3400;
-	    } else if (iasc == 2)
-	      if (ascend) goto label_3400;
-
-	  /* extract local-time-of-day split values */
-	  tsplit1=save_area.sav_tsplit1[iregion]*60;
-	  tsplit2=save_area.sav_tsplit2[iregion]*60;
-
-	  cy=cen_lat;
-	  cx=cen_lon;
-	  if (cx >  180.0) cx=cx-360.0;
-	  if (cx < -180.0) cx=cx+360.0;
-
-	  /* region lat/lon extent */
-	  lath=save_area.sav_lath[iregion];
-	  latl=save_area.sav_latl[iregion];
-	  lonh=save_area.sav_lonh[iregion];
-	  lonl=save_area.sav_lonl[iregion];
-	  dateline=save_area.sav_dateline[iregion];
-
-	  /* if a local-time-of-day image, compute the local time and see if it fits within LTOD window.
-	     Note: data may be next UTC day */
-
-	  if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
-	    ctime = cx *4.0 + ktime; /* calculate the local time of day in minutes */
-	    if (iasc == 3) { /* morning */
-	      if (ctime < tsplit1+(24*60) || ctime > tsplit2+(24*60)) goto label_3400;
-	      } else if (iasc == 5) { /* midday -- not used */
-	      // if (ctime < (34*60) || ctime >= (42*60)) goto label_3400;
-	      } else /* iasc==4 evening */
-	      if (ctime <= tsplit2 || ctime >= tsplit1+(24*60)) goto label_3400;
-	  } 
-
-	  if (dateline) { /* convert lon to ascending order */
-	    if (lonl < 0.0) lonl=lonl+360.0;
-	    if (cx < -180.0) cx=cx+360.0;
-	  } else {	/* convert lon to -180 to 180 range */
-	    if (cx > 180.0) cx=cx-360.0;
-	    if (cx < -180.0) cx=cx+360.0;
-	    if (cx > 180.0) cx=cx-360.0;
-	  }
-
-	  /* check to see if center is within region */
-	  if (!((cx > lonl) && (cx < lonh) &&
-		(cy < lath) && (cy > latl))) goto label_3400;
+		/* first, determine if measurement is in the longitude range for ascending or descending */
+		inlonrange=0;
+		if (xhigh_lon > 0.0 && xlow_lon < 0.0) {
+		  if (cen_lon <= xhigh_lon && cen_lon >= xlow_lon) inlonrange=1;
+		} else {
+		  if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
+		}
 	  
-	  //printf("keep center %6.2f %6.2f %6.2f  %6.2f %6.2f %6.2f\n",cx,lonl,lonh,cy,latl,lath);
+		/* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc) */
+		iasc=save_area.sav_ascdes[iregion];
+		if (iasc != 0)
+		  if (iasc == 1) {
+		    if (!ascend) goto label_3400;
+		  } else if (iasc == 2)
+		    if (ascend) goto label_3400;
 
-	  /* put region projection information into easy to access variables */
-	  nsx=save_area.sav_nsx[iregion];
-	  nsy=save_area.sav_nsy[iregion];
-	  projt=save_area.sav_projt[iregion];
-	  ascale=save_area.sav_ascale[iregion];
-	  bscale=save_area.sav_bscale[iregion];
-	  a0=save_area.sav_a0[iregion];
-	  b0=save_area.sav_b0[iregion];
-	  ydeg=save_area.sav_ydeg[iregion];
-	  xdeg=save_area.sav_xdeg[iregion];
-	  dscale=save_area.sav_km[iregion];
+		/* extract local-time-of-day split values */
+		tsplit1=save_area.sav_tsplit1[iregion]*60;
+		tsplit2=save_area.sav_tsplit2[iregion]*60;
 
-	  /* transform center lat/lon location of measurement to image pixel location */
-	  latlon2pix(cx, cy, &x, &y, projt, xdeg, ydeg, ascale, bscale, a0, b0);
-	  /* quantize pixel location to 1-based integer pixel indices */
-	  f2ipix(x, y, &ix2, &iy2, nsx, nsy);  /* note: ix2,iy2 are 1-based pixel address of center */
+		cy=cen_lat;
+		cx=cen_lon;
+		if (cx >  180.0) cx=cx-360.0;
+		if (cx < -180.0) cx=cx+360.0;
 
-	  /* skip measurements whose center falls outside of region */
-	  if (ix2==0 || iy2==0) goto label_3400; 
-	  iadd=nsx*(iy2-1)+ix2-1;  /* pixel array address (zero based) */
-	  if (iadd < 0) goto label_3400;
-	  if (iadd >= nsx*nsy) goto label_3400;
+		/* region lat/lon extent */
+		lath=save_area.sav_lath[iregion];
+		latl=save_area.sav_latl[iregion];
+		lonh=save_area.sav_lonh[iregion];
+		lonl=save_area.sav_lonl[iregion];
+		dateline=save_area.sav_dateline[iregion];
 
-	  mcnt++;  /* count measurements with centers in area */
-	  //printf("retain center %6.2f %6.2f %6.2f  %6.2f %6.2f %6.2f\n",cx,lonl,lonh,cy,latl,lath);
+		/* if a local-time-of-day image, compute the local time and see if it fits within LTOD window.
+		   Note: data may be next UTC day */
 
-	  /* assign the center of the pixel containing the measurement location to
-	     be the "new" measurement center lat/lon.  this "quantizes" the measurement
-	     centers to the center of the output pixel */
-	  x=ix2+0.5;
-	  y=iy2+0.5;
-	  pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+		if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
+		  ctime = cx *4.0 + ktime; /* calculate the local time of day in minutes */
+		  if (iasc == 3) { /* morning */
+		    if (ctime < tsplit1+(24*60) || ctime > tsplit2+(24*60)) goto label_3400;
+		  } else if (iasc == 5) { /* midday -- not used */
+		    // if (ctime < (34*60) || ctime >= (42*60)) goto label_3400;
+		  } else /* iasc==4 evening */
+		    if (ctime <= tsplit2 || ctime >= tsplit1+(24*60)) goto label_3400;
+		} 
 
-	  /* define size of box centered at(ix2,iy2) in which the gain response 
-	     is computed for each pixel in the box and tested to see if
-	     the response exceeds a threshold.  if so, it is used */
+		if (dateline) { /* convert lon to ascending order */
+		  if (lonl < 0.0) lonl=lonl+360.0;
+		  if (cx < -180.0) cx=cx+360.0;
+		} else {	/* convert lon to -180 to 180 range */
+		  if (cx > 180.0) cx=cx-360.0;
+		  if (cx < -180.0) cx=cx+360.0;
+		  if (cx > 180.0) cx=cx-360.0;
+		}
 
-	  box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
-	  if ( box_size < 0 ) {
-	    exit -1;
-	  }
+		/* check to see if center is within region */
+		if (!((cx > lonl) && (cx < lonh) &&
+		      (cy < lath) && (cy > latl))) goto label_3400;
+	  
+		/* put region projection information into easy to access variables */
+		nsx=save_area.sav_nsx[iregion];
+		nsy=save_area.sav_nsy[iregion];
+		projt=save_area.sav_projt[iregion];
+		ascale=save_area.sav_ascale[iregion];
+		bscale=save_area.sav_bscale[iregion];
+		a0=save_area.sav_a0[iregion];
+		b0=save_area.sav_b0[iregion];
+		ydeg=save_area.sav_ydeg[iregion];
+		xdeg=save_area.sav_xdeg[iregion];
+		dscale=save_area.sav_km[iregion];
 
-	  ixsize=dscale*box_size; 
-	  iysize=dscale*box_size;
-	  if (ixsize<1) ixsize=1;
-	  if (iysize<1) iysize=1;
+		/* transform center lat/lon location of measurement to image pixel location */
+		latlon2pix(cx, cy, &x, &y, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+		/* quantize pixel location to 1-based integer pixel indices */
+		f2ipix(x, y, &ix2, &iy2, nsx, nsy);  /* note: ix2,iy2 are 1-based pixel address of center */
 
-	  /* define search box limits */
-	  ixsize1=-ixsize;
-	  ixsize2= ixsize;
-	  if (ix2+ixsize1<1) ixsize1=1-ix2;
-	  if (ix2+ixsize2>nsx) ixsize2=nsx-ix2;
-	  iysize1=-iysize;
-	  iysize2= iysize;
-	  if (iy2+iysize1<0) iysize1=1-iy2; 
-	  if (iy2+iysize2>=nsy) iysize2=nsy-iy2;
+		/* skip measurements whose center falls outside of region */
+		if (ix2==0 || iy2==0) goto label_3400; 
+		iadd=nsx*(iy2-1)+ix2-1;  /* pixel array address (zero based) */
+		if (iadd < 0) goto label_3400;
+		if (iadd >= nsx*nsy) goto label_3400;
 
-	  theta = azang;
-	  /* for each pixel in the search box compute the normalized 
-	     footprint gain response function
-	     keep only those which exceed specified threshold */
-	  count=0;
-	  for (iy1=iysize1; iy1<=iysize2; iy1++) {
-	    iy=iy1+iy2;  /* 1-based address */
-	    for (ix1=ixsize1; ix1<=ixsize2; ix1++) {
-	      ix=ix1+ix2; /* 1-based address */
-	      iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
-	      if (iadd1 >= 0 & iadd1 < nsx*nsy) {		  
-		/* get pre-computed lat/lon of pixel */
-		alat1=latlon_store[iadd1*2+  noffset[iregion]]/200.0;
-		alon1=latlon_store[iadd1*2+1+noffset[iregion]]/175.0;
+		mcnt++;  /* count measurements with centers in area */
 
-		/* compute antenna pattern response at each pixel based on beam number, 
-		   location, and projection rotation and scaling */
-		rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
-		gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-		sum = gsx_ssmi_response( x_rel, y_rel, theta, thetai,	\
-					 *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
-		if (sum > response_threshold) {
-		  if (flatten) sum=1.0;    /* optionally flatten response */
-		  fill_array[count]=iadd1; /* address of pixel */
-		  response_array[count]=(short int) nint(sum*RESPONSEMULT); /* quantized response */
-		  count++;
-		  if (count >= MAXFILL) {
-		    fprintf(stderr,"*** count overflow has occurred\n");		  
+		/* assign the center of the pixel containing the measurement location to
+		   be the "new" measurement center lat/lon.  this "quantizes" the measurement
+		   centers to the center of the output pixel */
+		x=ix2+0.5;
+		y=iy2+0.5;
+		pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+
+		/* define size of box centered at(ix2,iy2) in which the gain response 
+		   is computed for each pixel in the box and tested to see if
+		   the response exceeds a threshold.  if so, it is used */
+
+		box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
+		if ( box_size < 0 ) {
+		  exit -1;
+		}
+
+		ixsize=dscale*box_size; 
+		iysize=dscale*box_size;
+		if (ixsize<1) ixsize=1;
+		if (iysize<1) iysize=1;
+
+		/* define search box limits */
+		ixsize1=-ixsize;
+		ixsize2= ixsize;
+		if (ix2+ixsize1<1) ixsize1=1-ix2;
+		if (ix2+ixsize2>nsx) ixsize2=nsx-ix2;
+		iysize1=-iysize;
+		iysize2= iysize;
+		if (iy2+iysize1<0) iysize1=1-iy2; 
+		if (iy2+iysize2>=nsy) iysize2=nsy-iy2;
+
+		theta = azang;
+		/* for each pixel in the search box compute the normalized 
+		   footprint gain response function
+		   keep only those which exceed specified threshold */
+		count=0;
+		for (iy1=iysize1; iy1<=iysize2; iy1++) {
+		  iy=iy1+iy2;  /* 1-based address */
+		  for (ix1=ixsize1; ix1<=ixsize2; ix1++) {
+		    ix=ix1+ix2; /* 1-based address */
+		    iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
+		    if (iadd1 >= 0 & iadd1 < nsx*nsy) {		  
+		      /* get pre-computed lat/lon of pixel */
+		      alat1=latlon_store[iadd1*2+  noffset[iregion]]/200.0;
+		      alon1=latlon_store[iadd1*2+1+noffset[iregion]]/175.0;
+
+		      /* compute antenna pattern response at each pixel based on beam number, 
+			 location, and projection rotation and scaling */
+		      rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
+		      gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+		      sum = gsx_ssmi_response( x_rel, y_rel, theta, thetai,	\
+					       *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
+		      if (sum > response_threshold) {
+			if (flatten) sum=1.0;    /* optionally flatten response */
+			fill_array[count]=iadd1; /* address of pixel */
+			response_array[count]=(short int) nint(sum*RESPONSEMULT); /* quantized response */
+			count++;
+			if (count >= MAXFILL) {
+			  fprintf(stderr,"*** count overflow has occurred\n");		  
+			  count=MAXFILL;
+			}
+		
+		      }
+		    }
+		  }
+		}
+	  
+		/* write measurement and addresses to setup output file */
+		if (count > 1) {
+		  jrec++; /* a count of total records written */
+		  jrec2[iregion]++; /* records/region */
+		  if (count >= MAXFILL) { /* error handling -- this should not occur! */
+		    printf("*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
+		    printf("center %f %f  %d %d %d  count %d\n",cen_lat,cen_lon,iscan,ii,ibeam,count);
 		    count=MAXFILL;
 		  }
-		
-		}
+
+		  /* apply incidence angle correction to tb measurements if selected */
+		  if (inc_correct)
+		    tb=tb-b_correct*(thetai-angle_ref);
+
+		  /* compute statistics of count */
+		  icmax=max(icmax,count);
+		  icmin=min(icmin,count);
+		  cave=cave+count;
+		  icc=icc+1;
+		  if (tb>0.0) {
+		    tbmax=max(tbmax,tb);
+		    tbmin=min(tbmin,tb);
+		  }	    
+
+		  /* write measurement information record to output .setup file */
+		  cnt=4*5;
+		  if (HASAZIMUTHANGLE) cnt += 4;
+		  fwrite(&cnt,   4,1,save_area.reg_lu[iregion]);
+		  fwrite(&tb,    4,1,save_area.reg_lu[iregion]); /* TB (K) */
+		  fwrite(&thetai,4,1,save_area.reg_lu[iregion]); /* incidence angle (deg) */
+		  fwrite(&count, 4,1,save_area.reg_lu[iregion]); /* number of pixels in list */
+		  fwrite(&ktime, 4,1,save_area.reg_lu[iregion]); /* time of measurement */
+		  fwrite(&iadd,  4,1,save_area.reg_lu[iregion]); /* address of center pixel location */
+		  if (HASAZIMUTHANGLE)
+		    fwrite(&azang, 4,1,save_area.reg_lu[iregion]); /* azimuth angle relative to north (deg) */
+		  fwrite(&cnt,   4,1,save_area.reg_lu[iregion]);
+
+		  /* first write list of pixels covered by response pattern */
+		  cnt=4*count;
+		  fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);
+		  fwrite(fill_array,4,count,save_area.reg_lu[iregion]);
+		  fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);
+		  /* then write response value for each pixel */
+		  cnt=2*count;
+		  fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);
+		  fwrite(response_array,2,count,save_area.reg_lu[iregion]);
+		  fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);		  
 	      }
+	      }
+	      label_3400:; /* end of regions loop */
 	    }
+	  label_3401:; /* end of measurements loop */
 	  }
-	  
-	  /* write measurement and addresses to setup output file */
-	  if (count > 1) {
-	    jrec++; /* a count of total records written */
-	    jrec2[iregion]++; /* records/region */
-	    if (count >= MAXFILL) { /* error handling -- this should not occur! */
-	      printf("*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
-	      printf("center %f %f  %d %d %d  count %d\n",cen_lat,cen_lon,iscan,ii,ibeam,count);
-	      count=MAXFILL;
-	    }
-
-	    /* apply incidence angle correction to tb measurements if selected */
-	    if (inc_correct)
-	      tb=tb-b_correct*(thetai-angle_ref);
-
-	    /* compute statistics of count */
-	    icmax=max(icmax,count);
-	    icmin=min(icmin,count);
-	    cave=cave+count;
-	    icc=icc+1;
-	    if (tb>0.0) {
-	      tbmax=max(tbmax,tb);
-	      tbmin=min(tbmin,tb);
-	    }	    
-
-	    /* write measurement information record to output .setup file */
-	    cnt=4*5;
-	    if (HASAZIMUTHANGLE) cnt += 4;
-	    fwrite(&cnt,   4,1,save_area.reg_lu[iregion]);
-	    fwrite(&tb,    4,1,save_area.reg_lu[iregion]); /* TB (K) */
-	    fwrite(&thetai,4,1,save_area.reg_lu[iregion]); /* incidence angle (deg) */
-	    fwrite(&count, 4,1,save_area.reg_lu[iregion]); /* number of pixels in list */
-	    fwrite(&ktime, 4,1,save_area.reg_lu[iregion]); /* time of measurement */
-	    fwrite(&iadd,  4,1,save_area.reg_lu[iregion]); /* address of center pixel location */
-	    if (HASAZIMUTHANGLE)
-	      fwrite(&azang, 4,1,save_area.reg_lu[iregion]); /* azimuth angle relative to north (deg) */
-	    fwrite(&cnt,   4,1,save_area.reg_lu[iregion]);
-
-	    /* first write list of pixels covered by response pattern */
-	    cnt=4*count;
-	    fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);
-	    fwrite(fill_array,4,count,save_area.reg_lu[iregion]);
-	    fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);
-	    /* then write response value for each pixel */
-	    cnt=2*count;
-	    fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);
-	    fwrite(response_array,2,count,save_area.reg_lu[iregion]);
-	    fwrite(&cnt,      4,    1,save_area.reg_lu[iregion]);		  
-	  }
-          label_3400:; /* end of regions loop */
+	label_350:; /* end of scan loop */
 	}
-        label_3401:; /* end of measurements loop */
-      }
-      label_350:; /* end of scan loop */
+      } /* end of locs loop */
     }
     label_3501:;  /* end of input file */
     /* printf("end of input file\n"); */
@@ -1942,29 +1916,58 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
 int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
   int box_size;
 
-  if ( CETB_SSMI != id ) {
-    fprintf( stderr, "%s: bad sensor type %s\n", __FUNCTION__, cetb_sensor_id_name[id] );
-    return -1;
+  if ( CETB_SSMI == id || CETB_SSMIS == id ) {
+    
+    switch ( cetb_ibeam_to_cetb_ssmi_channel[ibeam] ) {
+    case SSMI_19H:
+    case SSMI_19V:
+    case SSMI_22V:
+      box_size = 100;
+      break;
+    case SSMI_37H:
+    case SSMI_37V:
+      box_size = 60;
+      break;
+    case SSMI_85H:
+    case SSMI_85V:
+      box_size = 20;
+      break;
+    default:
+      box_size = -1;
+      fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
+    }
   }
 
-  switch ( ibeam ) {
-  case 1:
-  case 2:
-  case 3:
-    box_size = 100;
-    break;
-  case 4:
-  case 5:
-    box_size = 60;
-    break;
-  case 6:
-  case 7:
-    box_size = 20;
-    break;
-  default:
-    box_size = -1;
-    fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
+  if ( CETB_AMSRE == id ) {
+    switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
+    case AMSRE_06H:
+    case AMSRE_06V:
+    case AMSRE_10H:
+    case AMSRE_10V:
+      box_size = 120;
+      break;
+    case AMSRE_18H:
+    case AMSRE_18V:
+    case AMSRE_23H:
+    case AMSRE_23V:
+      box_size = 100;
+      break;
+    case AMSRE_36H:
+    case AMSRE_36V:
+      box_size = 60;
+      break;
+    case AMSRE_89H_A:
+    case AMSRE_89V_A:
+    case AMSRE_89H_B:
+    case AMSRE_89V_B:
+      box_size = 20;
+      break;
+    default:
+      box_size = -1;
+      fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
+    }
   }
+    
   return box_size;
 }
 
@@ -2035,14 +2038,8 @@ int write_filenames_toheader( gsx_class *gsx, region_save *save_area ) {
   for ( iregion=1; iregion<=save_area->nregions; iregion++ ) { 
      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); 
      for(z=0;z<100;z++)lin[z]=' '; 
-     sprintf(lin," Input_file=%s ", gsx->source_file);
+     sprintf(lin," Input_file=%s (GSX_version:%s)", gsx->source_file, gsx->gsx_version);
      fwrite(lin,100,1,save_area->reg_lu[iregion-1]); 
-     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-     
-     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-     for(z=0;z<100;z++)lin[z]=' '; 
-     sprintf(lin," GSX_version=%s ", gsx->gsx_version); 
-     fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
    } 
   fprintf( stderr, "****%s, source file %s, gsx_version %s\n", __FUNCTION__, gsx->source_file, gsx->gsx_version );
