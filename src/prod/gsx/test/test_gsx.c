@@ -392,23 +392,34 @@ void test_gsx_loc1_variables ( void ) {
   gsx = gsx_init( file_name );
   if ( NULL != gsx ) {
     fprintf( stderr, "\n%s: netcdf file '%s' has these loc1 variables\n", __FUNCTION__, gsx->source_file ); 
-    fprintf( stderr, "\t on latitude_loc1, longitude_loc1 eia_loc1, eaz_loc1, sc_lat_loc1, sc_lon_loc1, scantime\n" );
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t %f \t %f\n",	\
+    fprintf( stderr, "\t on latitude_loc1, longitude_loc1 eia_loc1, eaz_loc1, scantime" );
+    if ( CETB_AQUA != gsx->short_sensor )
+      fprintf( stderr, ", sc_lat_loc1, sc_lon_loc1" );
+    fprintf( stderr, "\n");
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t ",	\
 	     *(gsx->latitude[i]+1000), \
 	     *(gsx->longitude[i]+1000), \
 	     *(gsx->eia[i]+1000),	\
-	     *(gsx->eaz[i]+1000),
-	     *(gsx->sc_latitude[i]+(1000/gsx->measurements[i])),
-	     *(gsx->sc_longitude[i]+(1000/gsx->measurements[i])),
+	     *(gsx->eaz[i]+1000), \
 	     *(gsx->scantime[i]+(1000/gsx->measurements[i])) );
+    if ( CETB_AQUA != gsx->short_sensor )
+      fprintf( stderr, "%f \t %f",  \
+	       *(gsx->sc_latitude[i]+(1000/gsx->measurements[i])), \
+	       *(gsx->sc_longitude[i]+(1000/gsx->measurements[i])) );
+    fprintf( stderr, "\n" );
+
     fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t %f \t %f\n", \
 	     *(gsx->latitude[i]+1001), \
 	     *(gsx->longitude[i]+1001), \
 	     *(gsx->eia[i]+1001),	\
-	     *(gsx->eaz[i]+1001),
-	     *(gsx->sc_latitude[i]+(1001/gsx->measurements[i])),
-	     *(gsx->sc_longitude[i]+(1001/gsx->measurements[i])),
+	     *(gsx->eaz[i]+1001),  \
 	     *(gsx->scantime[i]+(1001/gsx->measurements[i])) );
+    if ( CETB_AQUA != gsx->short_sensor )
+      fprintf( stderr, "%f \t %f",  \
+	       *(gsx->sc_latitude[i]+(1001/gsx->measurements[i])), \
+	       *(gsx->sc_longitude[i]+(1001/gsx->measurements[i])) );
+    fprintf( stderr, "\n" );
+
 
     TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
     TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
@@ -480,5 +491,37 @@ void test_gsx_loc3_variables ( void ) {
     }
   }
 
+  gsx_close( gsx );
+}
+
+void test_gsx_orbit_direction ( void ) {
+  gsx_class *gsx;
+  int status;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    if ( CETB_AQUA == gsx->short_sensor ) {
+      TEST_ASSERT_TRUE( CETB_DES_PASSES == gsx->pass_direction );
+    } else {
+      TEST_ASSERT_TRUE( CETB_ALL_PASSES == gsx->pass_direction );
+    }
+  }
+  gsx_close( gsx );
+}
+
+void test_gsx_channel_coordinates ( void ) {
+  gsx_class *gsx;
+  int status;
+  int counter;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ) {
+    for ( counter=0; counter<GSX_MAX_CHANNELS; counter++ ) {
+      fprintf( stderr, "%s: channel %s has locations %s and %d\n", __FUNCTION__, \
+	       gsx->channel_names[counter], cetb_loc_id_name[gsx->channel_dims[counter]], \
+	       gsx->channel_dims[counter] );
+      //TEST_ASSERT_TRUE( 0 == gsx->channel_dims[counter] );
+    }
+  }
   gsx_close( gsx );
 }
