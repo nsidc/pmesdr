@@ -184,4 +184,19 @@ csu_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta 13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
 
+amsre_ease :
+	$(RM) $(TESTDIR)/amsre_e2s
+	$(MKDIR) $(TESTDIR)/amsre_e2s
+	$(RM) $(TESTDIR)/amsre_e2n
+	$(MKDIR) $(TESTDIR)/amsre_e2n
+	$(RM) $(TESTDIR)/amsre_e2t
+	$(MKDIR) $(TESTDIR)/amsre_e2t
+	$(CD) $(TOPDIR)/sample_data
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2s/e2stest_AMSRE.meta 13 \
+	         35 35 2003 $(TOPDIR)/ref/E2S_amsre_test.def $(TOPDIR)/testing/AMSRE_regress_list_VM
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta 13 \
+	         35 35 2003 $(TOPDIR)/ref/E2N_amsre_test.def $(TOPDIR)/testing/AMSRE_regress_list_VM
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2t/e2ttest_AMSRE.meta 13 \
+	         35 35 2003 $(TOPDIR)/ref/E2T_amsre_test.def $(TOPDIR)/testing/AMSRE_regress_list_VM
+
 

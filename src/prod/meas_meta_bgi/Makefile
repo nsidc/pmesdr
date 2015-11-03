@@ -121,6 +121,7 @@ RSSFILES = $(wildcard $(TESTDIR)/setupRSS/e2*/F*E2*.setup)
 RSSE2NFILES = $(wildcard $(TESTDIR)/setupRSS/e2n/F*E2N*.setup)
 CSUFILES = $(wildcard $(TESTDIR)/setupCSU/e2*/F*E2*.setup)
 CSUE2NFILES = $(wildcard $(TESTDIR)/setupCSU/e2n/F*E2N*.setup)
+AMSREFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2*/F*E2*.setup)
 
 all : $(BIN)
 
@@ -205,6 +206,17 @@ csu_quick_validate :
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/bgiCSU $(TESTDIR)/bgiCSU
 
+amsre_ease :
+	$(RM) $(TESTDIR)/bgiAMSRE
+	$(MKDIR) $(TESTDIR)/bgiAMSRE
+ifeq ($(AMSREFILES),)
+	$(error	No setup files found)
+else
+	for file in $(AMSREFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiAMSRE; \
+	done
+endif
 
 
 
