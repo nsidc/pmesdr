@@ -134,7 +134,7 @@ typedef struct { /* BYU region information storage */
 
 /* BYU SSM/I approximate spatial response computation */
 
-static float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
+static float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
 static int write_filenames_toheader( gsx_class *gsx, region_save *save_area );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
@@ -579,7 +579,9 @@ int main(int argc,char *argv[])
 	    for (iregion=0; iregion<save_area.nregions; iregion++) { /* regions loop label_3400 */
 
 	      ibeam=save_area.sav_ibeam[iregion];  /* beam number */
-	      gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+	      
+	      if ( CETB_SSMI == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+	      if ( CETB_AMSRE == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
 	      
 	      /* only get Tb's for channels that use the current set of position coordinates */
 
@@ -735,8 +737,8 @@ int main(int argc,char *argv[])
 		      /* compute antenna pattern response at each pixel based on beam number, 
 			 location, and projection rotation and scaling */
 		      rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
-		      gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-		      sum = gsx_ssmi_response( x_rel, y_rel, theta, thetai,	\
+		      //		      gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+		      sum = gsx_antenna_response( x_rel, y_rel, theta, thetai,	\
 					       *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
 		      if (sum > response_threshold) {
 			if (flatten) sum=1.0;    /* optionally flatten response */
@@ -1669,7 +1671,7 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
  *
  ************************************************************************/
 
-float gsx_ssmi_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
+float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
 {
   static float lnonehalf=-0.6931471;  /* ln(0.5) */
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
