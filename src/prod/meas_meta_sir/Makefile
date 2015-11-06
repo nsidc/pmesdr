@@ -116,7 +116,8 @@ RSSFILES = $(wildcard $(TESTDIR)/setupRSS/e2*/F*E2*.setup)
 RSSE2NFILES = $(wildcard $(TESTDIR)/setupRSS/e2n/F*E2N*.setup)
 CSUFILES = $(wildcard $(TESTDIR)/setupCSU/e2*/F*E2*.setup)
 CSUE2NFILES = $(wildcard $(TESTDIR)/setupCSU/e2n/F*E2N*.setup)
-AMSREFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2*/F*E2*.setup)
+AMSREFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2*/A*E2*.setup)
+AMSRE2NFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2n/A*E2N*.setup)
 
 all : $(BIN)
 
@@ -208,6 +209,18 @@ ifeq ($(AMSREFILES),)
 	$(error	No setup files found)
 else
 	for file in $(AMSREFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirAMSRE; \
+	done
+endif
+
+amsre_quick :
+	$(RM) $(TESTDIR)/sirAMSRE
+	$(MKDIR) $(TESTDIR)/sirAMSRE
+ifeq ($(AMSRE2NFILES),)
+	$(error	No setup files found)
+else
+	for file in $(AMSRE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirAMSRE; \
 	done

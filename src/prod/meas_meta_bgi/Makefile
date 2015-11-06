@@ -218,6 +218,17 @@ else
 	done
 endif
 
+amsre_quick :
+	$(RM) $(TESTDIR)/bgiAMSRE
+	$(MKDIR) $(TESTDIR)/bgiAMSRE
+ifeq ($(AMSRE2NFILES),)
+	$(error	No setup files found)
+else
+	for file in $(AMSRE2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/bgiAMSRE; \
+	done
+endif
 
 
 

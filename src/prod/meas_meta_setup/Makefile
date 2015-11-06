@@ -189,4 +189,11 @@ amsre_ease :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2t/e2ttest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2t 	\
 	)
 
+amsre_quick :
+	$(RM) $(TESTDIR)/setupAMSRE/e2n
+	$(MKDIR) $(TESTDIR)/setupAMSRE/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2n 	\
+	)
+
 
