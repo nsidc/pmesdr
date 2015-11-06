@@ -1435,7 +1435,6 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
-
 		    }
 
 		    /* Now read output file names and write to file */
