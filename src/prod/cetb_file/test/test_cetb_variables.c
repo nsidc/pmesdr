@@ -202,9 +202,14 @@ void test_cetb_tbs( void ) {
     CETB_FILE_TB_NUM_SAMPLES_MIN,
     CETB_FILE_TB_NUM_SAMPLES_MAX
   };
-  int *int_data;
-  int int_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
+  short *time_data;
+  int int_fill_value=CETB_FILE_TB_FILL_VALUE;
   int int_valid_range[ 2 ] = {
+    CETB_FILE_TB_MIN,
+    CETB_FILE_TB_MAX
+  };
+  short short_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
+  short short_valid_range[ 2 ] = {
     CETB_FILE_TB_TIME_MIN,
     CETB_FILE_TB_TIME_MAX
   };
@@ -214,6 +219,8 @@ void test_cetb_tbs( void ) {
   };
   float sample_tb0 = 50.002;
   float sample_tb1 = 100.008;
+  float sample_tb_time0 = -1440.0;
+  float sample_tb_time1 = 1440.0;
   float sample_num_samples0 = 254;
   float sample_num_samples1 = 100;
   float float_fill_value=-1.;
@@ -283,7 +290,7 @@ void test_cetb_tbs( void ) {
   status = allocate_clean_aligned_memory( ( void * )&ubyte_data, sizeof( unsigned char ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ubyte_data" );
   ubyte_data[ 0 ] = sample_num_samples0;
-  ubyte_data[ 1000 ] = sample_num_samples1;
+  ubyte_data[ cols ] = sample_num_samples1;
   status = cetb_file_add_var( cetb, "TB_num_samples",
 			      NC_UBYTE,
 			      ubyte_data,
@@ -300,21 +307,23 @@ void test_cetb_tbs( void ) {
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_num_samples" );
 
-  status = allocate_clean_aligned_memory( ( void * )&int_data, sizeof( int ) * rows * cols );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for int_data" );
+  status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for TB time float_data" );
+  float_data[ 0 ] = sample_tb_time0;
+  float_data[ cols ] = sample_tb_time1;
   status = cetb_file_add_var( cetb, "TB_time",
-			      NC_INT,
-			      int_data,
+			      NC_SHORT,
+			      float_data,
 			      cols, rows,
 			      NULL,
 			      "SIR TB Time of Day",
-			      "seconds since 1987-01-01 00:00:00",
-			      &int_fill_value,
+			      "minutes since 1987-01-01 00:00:00",
+			      &short_fill_value,
 			      NULL,
-			      &int_valid_range,
-			      CETB_NO_PACK,
-			      0.0,
-			      0.0,
+			      &short_valid_range,
+			      CETB_PACK,
+			      (float) CETB_FILE_TB_TIME_SCALE_FACTOR,
+			      (float) CETB_FILE_TB_TIME_ADD_OFFSET,
 			      "gregorian" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
 
@@ -436,9 +445,11 @@ void test_cetb_tbs( void ) {
   }
   status = nc_get_var_ubyte( nc_fileid, tb_num_samples_var_id, ubyte_data );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb_num_samples data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples0, ubyte_data[ 0 ], 
+  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples0,
+				 ubyte_data[ cols * ( rows - 1 ) ], // First elements of last row
 				 "sample0 tb_num_samples element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples1, ubyte_data[ 1000 ], 
+  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples1,
+				 ubyte_data[ cols * (rows - 2 ) ], // First element of second-to-last row
 				 "sample1 tb_num_samples element" );
 
   /* Confirm the expected TB_time variable is in the output file */
@@ -455,6 +466,22 @@ void test_cetb_tbs( void ) {
 				 "tb_time valid_range min" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( int_expected_tb_time_valid_range[ 1 ], int_valid_range[ 1 ],
 				 "tb_time valid_range max" );
+
+  status = allocate_clean_aligned_memory( ( void * )&time_data, sizeof( short ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for short_data" );
+
+  status = nc_get_var_short( nc_fileid, tb_time_var_id, time_data );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading time data" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
+						      CETB_FILE_TB_TIME_ADD_OFFSET,
+						      sample_tb_time0 ),
+				 time_data[ cols * ( rows - 1 ) ],     // First element of last row
+				 "sample0 tb_time element" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
+						      CETB_FILE_TB_TIME_ADD_OFFSET,
+						      sample_tb_time1 ),
+				 time_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
+				 "sample1 tb_time element" );
 
   nc_close( nc_fileid );
 

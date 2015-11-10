@@ -47,9 +47,11 @@
 #define CETB_FILE_TB_NUM_SAMPLES_MAX NC_MAX_CHAR
 
 /* TB time values for output files */
-#define CETB_FILE_TB_TIME_FILL_VALUE NC_MIN_INT
-#define CETB_FILE_TB_TIME_MIN ( (NC_MIN_INT) + 1 )
-#define CETB_FILE_TB_TIME_MAX NC_MAX_INT
+#define CETB_FILE_TB_TIME_FILL_VALUE NC_MIN_SHORT
+#define CETB_FILE_TB_TIME_SCALE_FACTOR 1.0
+#define CETB_FILE_TB_TIME_ADD_OFFSET 0.0
+#define CETB_FILE_TB_TIME_MIN ( (NC_MIN_SHORT) + 1 )
+#define CETB_FILE_TB_TIME_MAX NC_MAX_SHORT
 
 /*
  * ESIP-recommended attribute to assist with mapping to ISO code
