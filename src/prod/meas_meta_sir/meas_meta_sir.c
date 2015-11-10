@@ -11,6 +11,7 @@
 
 ******************************************************************/
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef JANUSicc
@@ -93,7 +94,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
 		     int *ktime, int *iadd, int *nrec);
 
 void get_updates(float tbval, float ang, int count, int *fill_array,
-		 short int *response_array, int rec);
+		 short int *response_array, int its );
 
 void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
 
@@ -115,6 +116,7 @@ char *addpath(char *outpath, char *name, char *temp);
 /* global array variables used for storing images*/
 
 float *a_val, *b_val, *a_temp, *sxy, *sx, *sx2, *sy, *tot;
+unsigned char *num_samples;
 
 /* other global variables */
 
@@ -179,6 +181,12 @@ int main(int argc, char **argv)
   unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
   unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
+  unsigned short tb_stddev_fill_value=CETB_FILE_TB_STDDEV_FILL_VALUE;
+  unsigned short tb_stddev_missing_value=CETB_FILE_TB_STDDEV_MISSING_VALUE;
+  unsigned short tb_stddev_valid_range[ 2 ] = { CETB_FILE_TB_STDDEV_MIN, CETB_FILE_TB_STDDEV_MAX };
+  unsigned char tb_num_samples_fill_value=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
+  unsigned char tb_num_samples_valid_range[ 2 ] = { CETB_FILE_TB_NUM_SAMPLES_MIN,
+						    CETB_FILE_TB_NUM_SAMPLES_MAX };
   int ncerr;
 
   int storage = 0;
@@ -601,6 +609,7 @@ int main(int argc, char **argv)
   sx2    = (float *) malloc(sizeof(float)*nsize);
   sy     = (float *) malloc(sizeof(float)*nsize);
   tot    = (float *) malloc(sizeof(float)*nsize);
+  num_samples = (unsigned char *) calloc( 1, sizeof(unsigned char)*nsize);
 
   if (a_val == NULL || b_val == NULL || a_temp == NULL || sxy == NULL
       || sx == NULL ||   sx2 == NULL ||     sy == NULL || tot == NULL) {
@@ -797,7 +806,7 @@ int main(int argc, char **argv)
       printf("\n");
       */
 
-      get_updates(tbval, ang, count, (int *) store, (short int *) store2, irec);
+      get_updates(tbval, ang, count, (int *) store, (short int *) store2, its);
 
       /* compute AVE image during first iteration */
       if (its == 0) 
@@ -870,8 +879,9 @@ done:
     if (median_flag == 1)   /* apply modified median filtering */
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
-    if ( output_debug ) {
-      if (its == 0) {  /* output AVE image */
+    if (its == 0) {  /* output num_samples and AVE image */
+      
+      if ( output_debug ) {
 	if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
 						    "ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
 	  errors++;
@@ -903,6 +913,27 @@ done:
     fprintf( stderr, "> %s: Wrote Tb (A) to %s.\n", __FILE__, cetb_sir->filename );
   }
     
+  /* Save the number of measurement samples that hit each pixel */
+  if ( 0 != cetb_file_add_var( cetb_sir, "TB_num_samples",
+			       NC_UBYTE,
+			       num_samples,
+			       nsx, nsy,
+			       NULL,
+			       "SIR TB Number of Measurements",
+			       "count",
+			       &tb_num_samples_fill_value,
+			       NULL,
+			       &tb_num_samples_valid_range,
+			       CETB_NO_PACK,
+			       0.0,
+			       0.0,
+			       NULL ) ) {
+    errors++;
+    fprintf( stderr, "%s: Error writing Tb num_samples.\n", __FILE__ );
+  } else {
+    fprintf( stderr, "> %s: Wrote Tb num_samples to %s.\n", __FILE__, cetb_sir->filename );
+  }
+
   if ( output_debug ) {
     /* output other auxilary product images */
     if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
@@ -1005,24 +1036,25 @@ done1:
   printf(" Tb STD min   max --> %f %f\n",amin,amax);
   printf(" Tb ERR min   max --> %f %f\n",bmin,bmax);
 
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
-					      "v_image",sxy,nsx,nsy,anodata_V ) ) ) {
+  if ( 0 != cetb_file_add_var( cetb_sir, "TB_std_dev",
+			       NC_USHORT, sxy,
+			       ( size_t )nsx, ( size_t ) nsy,
+			       NULL,
+			       "SIR TB Std Deviation",
+			       CETB_FILE_TB_UNIT,
+			       &tb_stddev_fill_value,
+			       &tb_stddev_missing_value,
+			       &tb_stddev_valid_range,
+			       CETB_PACK,
+			       (float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
+			       (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
+			       NULL ) ) {
     errors++;
-    eprintfc("Error Dumping Tb STD (V) SIR output '%s'\n", v_name );
+    fprintf( stderr, "%s: Error writing Tb stddev (V).\n", __FILE__ );
   } else {
-    printf("Dumped Tb STD (V) SIR output '%s'\n", v_name );
+    fprintf( stderr, "> %s: Wrote Tb stddev (V) to %s.\n", __FILE__, cetb_sir->filename );
   }
-
-  /* tot is actually NOT the correct value, it's the sum of the weights for each pixel */
-  /* Saving it here as a temporary placeholder */
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
-					      "c_image",tot,nsx,nsy,anodata_C ) ) ) {
-    errors++;
-    eprintfc("Error Dumping Tb Count (C) SIR output '%s'\n", c_name );
-  } else {
-    printf("Dumped Tb Count (C) SIR output '%s'\n", c_name );
-  }
-
+    
   if ( output_debug ) {
     if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
 						"e_image",sx,nsx,nsy,anodata_E ) ) ) {
@@ -1161,6 +1193,8 @@ done2:
     *(sxy+i) = 0.0;
   for (i=0; i < nsize2; i++)
     *(sx2+i) = 0.0;
+  for (i=0; i < nsize2; i++)
+    *(num_samples+i) = 0;
 
 
   if (storage == 1) {  /* file storage: rewind file and skip head */
@@ -1211,6 +1245,8 @@ done2:
       } else {
 	fn = *(tot + iadd);
 	*(tot +  iadd) = *(tot +   iadd) + 1.0;                    /* count */
+	assert( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX );
+	*(num_samples + iadd) = *(num_samples + iadd) + 1;         /* num_samples for each pixel */
 	ninv = 1./ *(tot + iadd);
 	*(sx +   iadd) = (*(sx +   iadd) * fn + ang)*ninv;         /* mean inc angle */
 	*(sx2 +  iadd) = (*(sx2 +  iadd) * fn + ang*ang)*ninv;     /* var inc angle */
@@ -1297,6 +1333,27 @@ done3:
     fprintf( stderr, "> %s: Wrote GRD Tb (A) to %s.\n", __FILE__, cetb_grd->filename );
   }
     
+  /* Save the number of measurement samples that hit each GRD pixel */
+  if ( 0 != cetb_file_add_var( cetb_grd, "TB_num_samples",
+			       NC_UBYTE,
+			       num_samples,
+			       nsx2, nsy2,
+			       NULL,
+			       "GRD TB Number of Measurements",
+			       "count",
+			       &tb_num_samples_fill_value,
+			       NULL,
+			       &tb_num_samples_valid_range,
+			       CETB_NO_PACK,
+			       0.0,
+			       0.0,
+			       NULL ) ) {
+    errors++;
+    fprintf( stderr, "%s: Error writing GRD Tb num_samples.\n", __FILE__ );
+  } else {
+    fprintf( stderr, "> %s: Wrote GRD Tb num_samples to %s.\n", __FILE__, cetb_grd->filename );
+  }
+
   if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
 					      "grd_v_image",sy,nsx2,nsy2,anodata_V ) ) ) {
     errors++;
@@ -1440,6 +1497,7 @@ done3:
   free(sx2);
   free(sy);
   free(tot);
+  free(num_samples);
 
   return(errors);
 }
@@ -1448,7 +1506,7 @@ done3:
 /* SIR algorithm update step */
 
 void get_updates(float tbval, float ang, int count, int fill_array[],
-		 short int response_array[], int rec __attribute__ ((unused)))
+		 short int response_array[], int its)
 {
   float total = 0.0, num=0.0;
   float ave, scale, update;
@@ -1484,6 +1542,16 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
 
     (*(tot+n-1)) = (*(tot+n-1)) + m;
     *(a_temp+n-1) = (*(a_temp+n-1) * ( *(tot+n-1) - m) + update * m) / *(tot+n-1);
+    
+    /*
+     * Count the number of measurements that hit a given pixel
+     * It is a serious error if we accumulate more than NUM_SAMPLES_MAX hits.
+     */
+    if (its == 0) {
+      assert( *(num_samples+n-1) < CETB_FILE_TB_NUM_SAMPLES_MAX );
+      (*(num_samples+n-1))++;
+    }
+    
   }
   return;
 }
