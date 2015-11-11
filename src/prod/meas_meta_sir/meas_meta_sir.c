@@ -147,12 +147,12 @@ int main(int argc, char **argv)
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
   /* define no-data values */
-  float anodata_A=0.0;
-  float anodata_C=-1.0;  
-  float anodata_I=-1.0;
-  float anodata_Ia=0.0;
-  float anodata_P=-1.0;
-  float anodata_V=-1.0;
+  float anodata_A=CETB_FILE_TB_FILL_VALUE;
+  float anodata_C=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
+  float anodata_I=CETB_FILE_THETA_FILL_VALUE;
+  float anodata_Ia=CETB_FILE_THETA_FILL_VALUE;
+  float anodata_P=CETB_FILE_TB_TIME_FILL_VALUE;
+  float anodata_V=CETB_FILE_TB_STDDEV_FILL_VALUE;
   float anodata_E=-15.0;
 
   int Nfiles_out;  
@@ -181,12 +181,17 @@ int main(int argc, char **argv)
   unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
   unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
+  short tb_time_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
+  short tb_time_valid_range[ 2 ] = { CETB_FILE_TB_TIME_MIN, CETB_FILE_TB_TIME_MAX };
   unsigned short tb_stddev_fill_value=CETB_FILE_TB_STDDEV_FILL_VALUE;
   unsigned short tb_stddev_missing_value=CETB_FILE_TB_STDDEV_MISSING_VALUE;
   unsigned short tb_stddev_valid_range[ 2 ] = { CETB_FILE_TB_STDDEV_MIN, CETB_FILE_TB_STDDEV_MAX };
   unsigned char tb_num_samples_fill_value=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
   unsigned char tb_num_samples_valid_range[ 2 ] = { CETB_FILE_TB_NUM_SAMPLES_MIN,
 						    CETB_FILE_TB_NUM_SAMPLES_MAX };
+  short theta_fill_value=CETB_FILE_THETA_FILL_VALUE;
+  short theta_valid_range[ 2 ] = { CETB_FILE_THETA_MIN, CETB_FILE_THETA_MAX };
+  float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
   int ncerr;
 
   int storage = 0;
@@ -882,14 +887,28 @@ done:
     if (its == 0) {  /* output num_samples and AVE image */
       
       if ( output_debug ) {
-	if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
-						    "ave_image",b_val,nsx,nsy,anodata_A ) ) ) {
+	
+	if ( 0 != cetb_file_add_var( cetb_sir, "ave_image",
+				     NC_FLOAT, b_val,
+				     ( size_t )nsx, ( size_t ) nsy,
+				     CETB_FILE_TB_STANDARD_NAME,
+				     "SIR TB ave_image",
+				     CETB_FILE_TB_UNIT,
+				     &tb_fill_value,
+				     &tb_missing_value,
+				     &tb_valid_range,
+				     CETB_NO_PACK,
+				     0.0,
+				     0.0,
+				     NULL ) ) {
 	  errors++;
-	  eprintfc("\nError dumping Tb (A) AVE '%s'\n", a_name_ave );
+	  fprintf( stderr, "%s: Error writing Tb (ave_image).\n", __FILE__ );
 	} else {
-	  printf( "\nDumped Tb (A) AVE '%s'\n", a_name_ave );
+	  fprintf( stderr, "> %s: Wrote Tb (ave_image) to %s.\n", __FILE__, cetb_sir->filename );
 	}
+    
       }
+      
     }
 
   }    /* end of loop for each SIR iteration */
@@ -936,21 +955,44 @@ done:
 
   if ( output_debug ) {
     /* output other auxilary product images */
-    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
-						"i_image",sx2,nsx,nsy,anodata_I ) ) ) {
+    if ( 0 != cetb_file_add_var( cetb_sir, "i_image",
+				 NC_FLOAT, sx2,
+				 ( size_t )nsx, ( size_t ) nsy,
+				 NULL,
+				 "SIR incidence_angle stddev",
+				 CETB_FILE_ANGULAR_UNIT,
+				 &theta_fill_value,
+				 NULL,
+				 &theta_valid_range,
+				 CETB_NO_PACK,
+				 0.0,
+				 0.0,
+				 NULL ) ) {
       errors++;
-      eprintfc("Error dumping Istd (I) SIR '%s'\n", i_name );
+      fprintf( stderr, "%s: Error writing Tb (i_image).\n", __FILE__ );
     } else {
-      printf( "Dumped Istd (I) SIR '%s'\n", i_name );
+      fprintf( stderr, "> %s: Wrote Tb (i_image) to %s.\n", __FILE__, cetb_sir->filename );
     }
+    
+  }
 
-    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
-						"j_image",sx,nsx,nsy,anodata_Ia ) ) ) {
-      errors++;
-      eprintfc("Error dumping Iave (J) SIR '%s'\n", j_name );
-    } else {
-      printf( "Dumped Iave (J) SIR '%s'\n", j_name );
-    }
+  if ( 0 != cetb_file_add_var( cetb_sir, "Incidence_angle",
+			       NC_SHORT, sx,
+			       ( size_t )nsx, ( size_t ) nsy,
+			       NULL,
+			       "SIR incidence_angle",
+			       CETB_FILE_ANGULAR_UNIT,
+			       &theta_fill_value,
+			       NULL,
+			       &theta_valid_range,
+			       CETB_PACK,
+			       (float) CETB_FILE_THETA_SCALE_FACTOR,
+			       (float) CETB_FILE_THETA_ADD_OFFSET,
+			       NULL ) ) {
+    errors++;
+    fprintf( stderr, "%s: Error writing Tb incidence angle (j_image).\n", __FILE__ );
+  } else {
+    fprintf( stderr, "> %s: Wrote Tb incidence angle (j_image) to %s.\n", __FILE__, cetb_sir->filename );
   }
 
 /* create STD and Err images */
@@ -1056,12 +1098,23 @@ done1:
   }
     
   if ( output_debug ) {
-    if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
-						"e_image",sx,nsx,nsy,anodata_E ) ) ) {
+    if ( 0 != cetb_file_add_var( cetb_sir, "e_image",
+				 NC_FLOAT, sx,
+				 ( size_t )nsx, ( size_t ) nsy,
+				 NULL,
+				 "SIR TB e_image",
+				 "decibel",
+				 &anodata_E,
+				 NULL,
+				 &error_valid_range,
+				 CETB_NO_PACK,
+				 0.0,
+				 0.0,
+				 NULL ) ) {
       errors++;
-      eprintfc("Error Dumping Tb err (E) SIR output '%s' \n", e_name );
+      fprintf( stderr, "%s: Error writing Tb err (e_image).\n", __FILE__ );
     } else {
-      printf( "Dumped Tb err (E) SIR output '%s' \n", e_name );
+      fprintf( stderr, "> %s: Wrote Tb err (e_image) to %s.\n", __FILE__, cetb_sir->filename );
     }
   }
 
@@ -1140,31 +1193,25 @@ done2:
 
   printf(" Time min   max --> %f %f\n",amin,amax);
 
-  /* median filter time image */
-  /* time filtering removed -- DGL 5/16/2014
-  filter(sxy, 3, 0, nsx, nsy, a_temp, anodata_P);
-
-  amin =  32000.0;
-  amax = -32000.0;
-
-  for (i=0; i<nsize; i++){
-    if (*(tot+i) > 0) {
-      amin = min(amin, *(sxy+i));
-      amax = max(amax, *(sxy+i));
-    };
-  }
-
-  printf(" Time (postfilter) min   max --> %f %f\n",amin,amax);
-  */
-
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_sir->fid,
-					      "p_image",sxy,nsx,nsy,anodata_P ) ) ) {
+  if ( 0 != cetb_file_add_var( cetb_sir, "TB_time",
+  			       NC_SHORT, sxy,
+  			       ( size_t )nsx, ( size_t ) nsy,
+  			       NULL,
+  			       "SIR TB Time of Day",
+  			       cetb_sir->epoch_string,
+  			       &tb_time_fill_value,
+  			       NULL,
+  			       &tb_time_valid_range,
+  			       CETB_PACK,
+  			       (float) CETB_FILE_TB_TIME_SCALE_FACTOR,
+  			       (float) CETB_FILE_TB_TIME_ADD_OFFSET,
+  			       "gregorian" ) ) {
     errors++;
-    eprintfc("Error Dumped time output (P) SIR '%s'\n", p_name );
+    fprintf( stderr, "%s: Error writing Tb time (P).\n", __FILE__ );
   } else {
-    printf( "Dumped time output (P) SIR '%s'\n", p_name );
+    fprintf( stderr, "> %s: Wrote Tb time (P) to %s.\n", __FILE__, cetb_sir->filename );
   }
-
+    
 /* create non-enhanced images
    these are grd images pixel replicated to be at the same 
    resolution of the ave and sir images */
@@ -1378,14 +1425,6 @@ done3:
     } else { 
       printf( "Dumped Grid Iave (J) output '%s'\n", grd_jname );
     }
-  }
-
-  if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
-					      "grd_c_image",tot,nsx2,nsy2,anodata_C ) ) ) {
-    errors++;
-    fprintf(stderr, "Error Dumping Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
-  } else {
-    printf( "Dumped Grid Cnt (C) output '%s' %f\n", grd_cname, tmax );
   }
 
   if ( NC_NOERR != ( ncerr=add_float_array_nc(cetb_grd->fid,
