@@ -44,6 +44,7 @@ static int set_dimension( cetb_file_class *this, const char *name, size_t size, 
 			  const char *axis,
 			  double *valid_range,
 			  int *dim_id );
+static int set_epoch_string( cetb_file_class *this );
 static int valid_date( int year, int doy );
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
@@ -197,6 +198,10 @@ cetb_file_class *cetb_file_init( char *dirname,
   
   this->year = year;
   this->doy = doy;
+  if ( STATUS_OK != set_epoch_string( this ) ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "epoch_string" );
+    return NULL;
+  }
   this->platform_id = platform_id;
   this->region_id = region_id;
   this->factor = factor;
@@ -1492,6 +1497,47 @@ int set_dimension( cetb_file_class *this,
   }
 
   return 0;
+  
+}
+
+/*
+ * set_epoch_string - create the string version of the input date as an epoch string
+ *
+ *  input :
+ *    this : cetb_file object, with year and doy already set
+ *
+ *  output : n/a
+ *
+ *  result :
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
+ *           the epoch string in the object is set to match year, doy
+ *
+ */
+int set_epoch_string( cetb_file_class *this ) {
+
+  int status;
+  char *calendar = "Standard";
+  calcalcs_cal *cal = NULL;
+  int month;
+  int day;
+
+  if ( NULL == ( cal = ccs_init_calendar( calendar ) ) ) {
+    fprintf( stderr, "%s: Error initializing calendar.\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+
+  if ( 0 != ( status = ccs_doy2date( cal, this->year, this->doy, &month, &day ) ) ) {
+    fprintf( stderr, "%s: Error in ccs_doy2date for year=%d, doy=%d: %d\n",
+  	     __FUNCTION__, this->year, this->doy, status );
+    return STATUS_FAILURE;
+  }
+
+  sprintf( this->epoch_string, "minutes since %4.4d-%2.2d-%2.2d 00:00:00",
+	   this->year, month, day );
+
+  ccs_free_calendar( cal );
+
+  return STATUS_OK;
   
 }
 
