@@ -12,6 +12,7 @@
 #include "unity.h"
 #include "calcalcs.h"
 #include "cetb_file.h"
+#include "utils.h"
 
 /*
  * global variables used in multiple tests
@@ -20,6 +21,7 @@ cetb_file_class *cetb;
 int status;
 char test_filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
+cetb_region_id region_id;
 int region_number;
 int factor;
 cetb_platform_id platform_id;
@@ -42,7 +44,8 @@ void setUp( void ) {
   strcat( dirname, "/src/prod/cetb_file/test" );
   strcpy( test_filename, dirname );
   strcat( test_filename, "/EASE2_N25km.F13_SSMI.1991001.19H.M.BGI.CSU.v0.1.nc" );
-  region_number = cetb_region_number[ CETB_EASE2_N ];
+  region_id = CETB_EASE2_N;
+  region_number = cetb_region_number[ region_id ];
   factor = 0;
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
@@ -68,6 +71,7 @@ void tearDown( void ) {
 void test_cetb_populate_bgi_parameters( void ) {
 
   int nc_fileid=0;
+  int varid;
   double gamma=0.0D;
   float dimensional_tuning_parameter=1.0;
   float noise_variance=1.5;
@@ -80,9 +84,39 @@ void test_cetb_populate_bgi_parameters( void ) {
   float expected_db_threshold=2.0;
   float expected_diff_threshold=3.0;
   int expected_median_filter=1;
+  float *float_data;
+  size_t rows=cetb_grid_rows[ region_id ][ factor ];
+  size_t cols=cetb_grid_cols[ region_id ][ factor ];
+  unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short valid_range[ 2 ] = {
+    CETB_FILE_TB_MIN,
+    CETB_FILE_TB_MAX
+  };
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&float_data,
+					  sizeof( float ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT( 0, status );
+
+  status = cetb_file_add_var( cetb, "TB",
+			      NC_USHORT,
+			      float_data,
+			      cols, rows,
+			      CETB_FILE_TB_STANDARD_NAME,
+			      "SIR TB",
+			      CETB_FILE_TB_UNIT,
+			      &fill_value,
+			      &missing_value,
+			      &valid_range,
+			      CETB_PACK,
+			      (float) CETB_FILE_TB_SCALE_FACTOR,
+			      (float) CETB_FILE_TB_ADD_OFFSET,
+			      NULL );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
+
   status = cetb_file_add_bgi_parameters( cetb, gamma, dimensional_tuning_parameter,
 					 noise_variance,
 					 db_threshold, diff_threshold, median_filter );
@@ -93,29 +127,32 @@ void test_cetb_populate_bgi_parameters( void ) {
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
-  status = nc_get_att_double( nc_fileid, NC_GLOBAL, "bgi_gamma", &gamma );
+  status = nc_inq_varid( nc_fileid, "TB", &varid );
+  TEST_ASSERT_TRUE( NC_NOERR == status );
+
+  status = nc_get_att_double( nc_fileid, varid, "bgi_gamma", &gamma );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_DOUBLE( expected_gamma, gamma );
 
-  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
+  status = nc_get_att_float( nc_fileid, varid, "bgi_dimensional_tuning_parameter",
 			     &dimensional_tuning_parameter );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_FLOAT( expected_dimensional_tuning_parameter, dimensional_tuning_parameter );
 
-  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_noise_variance",
+  status = nc_get_att_float( nc_fileid, varid, "bgi_noise_variance",
 			     &noise_variance );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_FLOAT( expected_noise_variance, noise_variance );
 
-  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_db_threshold", &db_threshold );
+  status = nc_get_att_float( nc_fileid, varid, "bgi_db_threshold", &db_threshold );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_FLOAT( expected_db_threshold, db_threshold );
 
-  status = nc_get_att_float( nc_fileid, NC_GLOBAL, "bgi_diff_threshold", &diff_threshold );
+  status = nc_get_att_float( nc_fileid, varid, "bgi_diff_threshold", &diff_threshold );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_FLOAT( expected_diff_threshold, diff_threshold );
 
-  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "bgi_median_filter", &median_filter );
+  status = nc_get_att_int( nc_fileid, varid, "median_filter", &median_filter );
   TEST_ASSERT_TRUE( NC_NOERR == status );
   TEST_ASSERT_EQUAL_INT( expected_median_filter, median_filter );
 

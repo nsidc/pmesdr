@@ -44,6 +44,7 @@ static int set_dimension( cetb_file_class *this, const char *name, size_t size, 
 			  const char *axis,
 			  double *valid_range,
 			  int *dim_id );
+static int set_epoch_string( cetb_file_class *this );
 static int valid_date( int year, int doy );
 static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
@@ -197,6 +198,10 @@ cetb_file_class *cetb_file_init( char *dirname,
   
   this->year = year;
   this->doy = doy;
+  if ( STATUS_OK != set_epoch_string( this ) ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "epoch_string" );
+    return NULL;
+  }
   this->platform_id = platform_id;
   this->region_id = region_id;
   this->factor = factor;
@@ -310,6 +315,9 @@ int cetb_file_open( cetb_file_class *this ) {
  *                     Float data will be packed as ushorts,
  *                     integer data will not be packed
  *                     CETB standard variable attributes will be included.
+ *                     meas_meta_ processing convention puts beginning of
+ *                     data in lower-left corner.  So input data will
+ *                     flipped top-to-bottom as it is stored
  *
  * input :
  *    this : pointer to initialized/opened cetb_file_class object
@@ -363,9 +371,15 @@ int cetb_file_add_var( cetb_file_class *this,
 		       char *calendar ) {
 
   int status;
-  int dim_ids[ ] = { this->time_dim_id, this->cols_dim_id, this->rows_dim_id };
+  int dim_ids[ ] = { this->time_dim_id, this->rows_dim_id, this->cols_dim_id };
+  long int row, col;
+  size_t start[ ] = { 0, 0, 0 };
+  size_t count[ ] = { 0, 0, 0 };
+  float *float_data;
+  unsigned char *uchar_data;
   int var_id;
   int i;
+  short *short_data;
   unsigned short *ushort_data;
   char *packing_convention;
   char *packing_convention_description;
@@ -386,13 +400,10 @@ int cetb_file_add_var( cetb_file_class *this,
   }
 
   /*
-   * Define a new variable in the cetb file This requires
-   * the dimensions ids already defined.  Try to follow DIWG
-   * convention, with "most rapidly-changing dimension last in C
-   * arrays" N.B. This might need to be changed, depending on how
-   * measures program actually stores things.  The test will be
-   * whether we have to reshape arrays when we read them in
-   * python.
+   * Define a new variable in the cetb file This requires the
+   * dimensions ids already defined.  The order of dim_ids
+   * follows DIWG convention, with "most rapidly-changing
+   * dimension last in C arrays"
    */
   if ( status = nc_def_var( this->fid, var_name, xtype, 3, dim_ids, &var_id ) ) {
     fprintf( stderr, "%s: Error defining %s variable : %s.\n",
@@ -484,12 +495,13 @@ int cetb_file_add_var( cetb_file_class *this,
       return 1;
     }
 
-      /*
-       * Now pack the data
-       * Assumes variable dimensions of 1 time by rows by cols. If
-       * this assumption changes, will need to inquire for the
-       * size of each dimension
-       */
+    /*
+     * Now pack the data.
+     * Assumes input data is float *
+     * Assumes variable dimensions of 1 time by rows by cols. If
+     * this assumption changes, will need to inquire for the
+     * size of each dimension
+     */
     if ( NC_USHORT == xtype ) {
 
       status = allocate_clean_aligned_memory( ( void * )&ushort_data,
@@ -504,14 +516,67 @@ int cetb_file_add_var( cetb_file_class *this,
 	*( ushort_data + i ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
      						    *( (float *)data + i ) ); 
       }
-      
-      if ( status = nc_put_var( this->fid, var_id, (void *)ushort_data ) ) { 
-    	fprintf( stderr, "%s: Error putting scaled variable: %s.\n",
+
+      /*
+       * Meas_meta_ processing stores gridded array data from bottom to top.
+       * NetCDF conventions expect it to be stored from top to bottom
+       * So write the data one row at a time, in reverse-row order
+       */
+      for ( row=0; row<rows; row++ ) {
+	start[ 0 ] = 0;   // time start will always be zero
+	start[ 1 ] = rows - row - 1; //destination row is reverse of source row
+	start[ 2 ] = 0;   // column start will always be zero
+	count[ 0 ] = 1;   // time number of elements will always be 1
+	count[ 1 ] = 1;   // one whole row
+	count[ 2 ] = cols;  // all columns in this row
+	if ( status = nc_put_vara_ushort( this->fid, var_id,
+					  start, count,
+					  ushort_data + ( row * cols ) ) ) { 
+	  fprintf( stderr, "%s: Error putting scaled variable for row=%ld: %s.\n",
+		   __FUNCTION__, row, nc_strerror( status ) );
+	  return 1;
+	}
+      }
+
+      free( ushort_data );
+
+    } else if ( NC_SHORT == xtype ) {
+
+      status = allocate_clean_aligned_memory( ( void * )&short_data,
+    					      sizeof( short ) * 1 * rows * cols );
+      if ( STATUS_OK != status ) {
+    	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
     		 __FUNCTION__, nc_strerror( status ) );
     	return 1;
       }
 
-      free( ushort_data );
+      for ( i = 0; i < ( 1 * rows * cols ); i++ ) {
+	*( short_data + i ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+						   *( (float *)data + i ) ); 
+      }
+
+      /*
+       * Meas_meta_ processing stores gridded array data from bottom to top.
+       * NetCDF conventions expect it to be stored from top to bottom
+       * So write the data one row at a time, in reverse-row order
+       */
+      for ( row=0; row<rows; row++ ) {
+	start[ 0 ] = 0;   // time start will always be zero
+	start[ 1 ] = rows - row - 1; //destination row is reverse of source row
+	start[ 2 ] = 0;   // column start will always be zero
+	count[ 0 ] = 1;   // time number of elements will always be 1
+	count[ 1 ] = 1;   // one whole row
+	count[ 2 ] = cols;  // all columns in this row
+	if ( status = nc_put_vara_short( this->fid, var_id,
+					 start, count,
+					 short_data + ( row * cols ) ) ) { 
+	  fprintf( stderr, "%s: Error putting scaled variable for row=%ld: %s.\n",
+		   __FUNCTION__, row, nc_strerror( status ) );
+	  return 1;
+	}
+      }
+
+      free( short_data );
 
     } else {
       
@@ -523,13 +588,61 @@ int cetb_file_add_var( cetb_file_class *this,
 
   } else {
 
-    /* Otherwise, just write the data without packing */
-    if ( status = nc_put_var( this->fid, var_id, data ) ) { 
-      fprintf( stderr, "%s: Error putting variable: %s.\n",
-	       __FUNCTION__, nc_strerror( status ) );
-      return 1;
-    }
+    /*
+     * Otherwise, just write the (flipped) data without packing
+     * This requires local copies so that pointer arithmetic works
+     * (it's a runtime error to try to deference a (void *))
+     */
+    if ( NC_FLOAT == xtype ) {
 
+      status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * 1 * cols * rows );
+      if ( STATUS_OK != status ) {
+    	fprintf( stderr, "%s: Error allocating space for flipped float_data.\n", __FUNCTION__ );
+    	return 1;
+      }
+      for ( row=0; row<rows; row++ ) {
+	memcpy( ( void * )( float_data + ( ( rows - row - 1 ) * cols ) ),
+		( void * )( (float *)data + ( row * cols ) ),
+		sizeof( float ) * cols );
+      }
+	
+      if ( status = nc_put_var( this->fid, var_id, ( void * )float_data ) ) {
+	fprintf( stderr, "%s: Error putting float variable: %s.\n",
+		 __FUNCTION__, nc_strerror( status ) );
+	return 1;
+      }
+
+      free( float_data );
+      
+    } else if ( NC_UBYTE == xtype ) {
+
+      status = allocate_clean_aligned_memory( ( void * )&uchar_data,
+					      sizeof( unsigned char ) * 1 * cols * rows );
+      if ( STATUS_OK != status ) {
+    	fprintf( stderr, "%s: Error allocating space for flipped uchar_data.\n", __FUNCTION__ );
+    	return 1;
+      }
+      for ( row=0; row<rows; row++ ) {
+	memcpy( ( void * )( uchar_data + ( ( rows - row - 1 ) * cols ) ),
+		( void * )( (unsigned char *)data + ( row * cols ) ),
+		sizeof( unsigned char ) * cols );
+      }
+	
+      if ( status = nc_put_var( this->fid, var_id, ( void * )uchar_data ) ) {
+	fprintf( stderr, "%s: Error putting uchar variable: %s.\n",
+		 __FUNCTION__, nc_strerror( status ) );
+	return 1;
+      }
+
+      free( uchar_data );
+      
+    } else {
+      
+      fprintf( stderr, "%s: Unrecognized xtype=%d.\n", __FUNCTION__, xtype );
+      return 1;
+      
+    }
+    
   }
 
   if ( status = nc_put_att_text( this->fid, var_id, "grid_mapping",
@@ -563,7 +676,7 @@ int cetb_file_add_var( cetb_file_class *this,
 }
 
 /*
- * cetb_file_add_bgi_parameters - Add BGI-specific global file attributes
+ * cetb_file_add_bgi_parameters - Add BGI-specific TB variable attributes
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
@@ -583,7 +696,7 @@ int cetb_file_add_var( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with BGI-specific global attributes
+ *          The CETB file is populated with BGI-specific TB variaable attributes
  *
  * Reference : See definitions for tuning parameters at
  *
@@ -603,6 +716,7 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  int median_filter ) {
 
   int status;
+  int var_id;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -614,44 +728,50 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_gamma",
+  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+    fprintf( stderr, "%s: No 'TB' variable to attach BGI attributes: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  if ( status = nc_put_att_double( this->fid, var_id, "bgi_gamma",
 				   NC_DOUBLE, 1, &gamma ) ) {
     fprintf( stderr, "%s: Error setting bgi_gamma: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_dimensional_tuning_parameter",
 				NC_FLOAT, 1, &dimensional_tuning_parameter ) ) {
     fprintf( stderr, "%s: Error setting bgi_dimensional_tuning_parameter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_noise_variance",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_noise_variance",
 				NC_FLOAT, 1, &noise_variance ) ) {
     fprintf( stderr, "%s: Error setting bgi_noise_variance: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_db_threshold",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_db_threshold",
 				NC_FLOAT, 1, &db_threshold ) ) {
     fprintf( stderr, "%s: Error setting bgi_db_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_diff_threshold",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_diff_threshold",
 				NC_FLOAT, 1, &diff_threshold ) ) {
     fprintf( stderr, "%s: Error setting bgi_diff_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "bgi_median_filter",
+  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				NC_INT, 1, &median_filter ) ) {
-    fprintf( stderr, "%s: Error setting bgi_median_filter: %s.\n",
+    fprintf( stderr, "%s: Error setting median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
@@ -672,7 +792,7 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with SIR-specific global attributes
+ *          The CETB file is populated with SIR-specific TB variable attributes
  *
  */
 int cetb_file_add_sir_parameters( cetb_file_class *this,
@@ -680,6 +800,7 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int median_filter ) {
 
   int status;
+  int var_id;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -690,15 +811,21 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
     fprintf( stderr, "%s: Cannot set SIR parameters on non-SIR file.\n", __FUNCTION__ );
     return 1;
   }
-  
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_number_of_iterations",
+
+  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+    fprintf( stderr, "%s: No 'TB' variable to attach SIR attributes: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  if ( status = nc_put_att_int( this->fid, var_id, "sir_number_of_iterations",
 				NC_INT, 1, &number_of_iterations ) ) {
     fprintf( stderr, "%s: Error setting sir_number_of_iterations: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_median_filter",
+  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				NC_INT, 1, &median_filter ) ) {
     fprintf( stderr, "%s: Error setting sir_median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
@@ -720,13 +847,14 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with SIR-specific global attributes
+ *          The CETB file is populated with SIR-specific TB variable attributes
  *
  */
 int cetb_file_add_grd_parameters( cetb_file_class *this,
 				  int median_filter ) {
 
   int status;
+  int var_id;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -738,9 +866,15 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "grd_median_filter",
+  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+    fprintf( stderr, "%s: No 'TB' variable to attach GRD attributes: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				NC_INT, 1, &median_filter ) ) {
-    fprintf( stderr, "%s: Error setting grd_median_filter: %s.\n",
+    fprintf( stderr, "%s: Error setting median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
@@ -1384,6 +1518,47 @@ int set_dimension( cetb_file_class *this,
   }
 
   return 0;
+  
+}
+
+/*
+ * set_epoch_string - create the string version of the input date as an epoch string
+ *
+ *  input :
+ *    this : cetb_file object, with year and doy already set
+ *
+ *  output : n/a
+ *
+ *  result :
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
+ *           the epoch string in the object is set to match year, doy
+ *
+ */
+int set_epoch_string( cetb_file_class *this ) {
+
+  int status;
+  char *calendar = "Standard";
+  calcalcs_cal *cal = NULL;
+  int month;
+  int day;
+
+  if ( NULL == ( cal = ccs_init_calendar( calendar ) ) ) {
+    fprintf( stderr, "%s: Error initializing calendar.\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+
+  if ( 0 != ( status = ccs_doy2date( cal, this->year, this->doy, &month, &day ) ) ) {
+    fprintf( stderr, "%s: Error in ccs_doy2date for year=%d, doy=%d: %d\n",
+  	     __FUNCTION__, this->year, this->doy, status );
+    return STATUS_FAILURE;
+  }
+
+  sprintf( this->epoch_string, "minutes since %4.4d-%2.2d-%2.2d 00:00:00",
+	   this->year, month, day );
+
+  ccs_free_calendar( cal );
+
+  return STATUS_OK;
   
 }
 
