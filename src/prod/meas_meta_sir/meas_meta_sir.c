@@ -178,6 +178,7 @@ int main(int argc, char **argv)
 
   cetb_file_class *cetb_sir;
   cetb_file_class *cetb_grd;
+  cetb_swath_producer_id swath_producer_id;
   unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
   unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
@@ -363,6 +364,12 @@ int main(int argc, char **argv)
        printf("Max fill %d\n",MAXFILL);
      }
 
+     if ( strstr( line, " Producer_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       swath_producer_id = ( cetb_swath_producer_id )atoi(++x);
+       printf( "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
+     }
+
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
      }
@@ -537,7 +544,7 @@ int main(int argc, char **argv)
 			      iyear, isday, ibeam,
 			      cetb_get_direction_id_from_info_name( info_name ),
 			      CETB_SIR,
-			      cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+			      swath_producer_id );
    if ( !cetb_sir ) {
      fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
 	      __FILE__, cetb_reconstruction_id_name[ CETB_SIR ] );
@@ -554,7 +561,7 @@ int main(int argc, char **argv)
 			      iyear, isday, ibeam,
 			      cetb_get_direction_id_from_info_name( info_name ),
 			      CETB_GRD,
-			      cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+			      swath_producer_id );
    if ( !cetb_grd ) {
      fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
 	      __FILE__, cetb_reconstruction_id_name[ CETB_GRD ] );
