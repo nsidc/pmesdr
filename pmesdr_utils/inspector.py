@@ -1,6 +1,8 @@
 import gc
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+# mpl_toolkits is bitching about version of libgeos
+# commenting it out for now
+#from mpl_toolkits.basemap import Basemap
 from netCDF4 import Dataset
 import numpy as np
 import os
@@ -25,6 +27,9 @@ def make_png(res, filename):
     keys = f.variables.keys()
     var_name = 'none'
     for key in keys:
+        if ( 'TB' == key ):
+            var_name = 'TB'
+            break
         if ( 'a_image' == key and res != '25' ):
             var_name = 'a_image'
             break
@@ -36,7 +41,7 @@ def make_png(res, filename):
             break
 
     if ( 'none' == var_name ):
-        sys.stderr.write( filename + ": " + "contains none of a_image, grd_a_image nor bgi_image.\n" )
+        sys.stderr.write( filename + ": " + "contains none of TB, a_image, grd_a_image nor bgi_image.\n" )
         exit(-1)
 
     # Eventually this will need to get the bgi array if it's a bgi dump file
@@ -48,6 +53,8 @@ def make_png(res, filename):
     print np.amin(tb), np.amax(tb)
     tb[ tb > 590. ] = 0.
 
+    if ( var_name == 'TB' ):
+        label = f.long_name
     if ( var_name == 'a_image' ):
         label = 'SIR_TB'
     elif ( var_name == 'bgi_image' ):
@@ -183,18 +190,18 @@ def make_geotiff(grid, filename):
     sys.stderr.write("Wrote geotiff to " + outfilename + "\n")
 
 
-def init_basemap():
+# def init_basemap():
 
-    """Initialize basemap for the map we're using"""
-    rows = 720
-    cols = 720
-    map_scale_m = 25000
-
-    m = Basemap( width=map_scale_m*cols, height=map_scale_m*rows, resolution='l', projection='laea',
-                 lon_0=0, lat_0=90 )
-    m.drawcoastlines()
-    m.drawcountries()
-    m.drawmeridians(np.arange(-180.,180.,20.),labels=[False,False,False,True])
-    m.drawparallels(np.arange(10.,80.,20.), labels=[True,False,False,False])
-    return m
+#     """Initialize basemap for the map we're using"""
+    
+#     rows = 720
+#     cols = 720
+#     map_scale_m = 25000
+#     m = Basemap( width=map_scale_m*cols, height=map_scale_m*rows, resolution='l', projection='laea',
+#                  lon_0=0, lat_0=90 )
+#     m.drawcoastlines()
+#     m.drawcountries()
+#     m.drawmeridians(np.arange(-180.,180.,20.),labels=[False,False,False,True])
+#     m.drawparallels(np.arange(10.,80.,20.), labels=[True,False,False,False])
+#     return m
 
