@@ -92,7 +92,8 @@ def compare_cetb_directories( dir1, dir2,
     return all_files_OK
     
 def compare_cetb_files( file1, file2, exclude_out_of_range=False,
-                        statistics=False, tolerance=0, max_diff_pixels=0, verbose=False ):
+                        statistics=False, tolerance=0, max_diff_pixels=0,
+                        verbose=False ):
     """
     status = compare_cetb_files( file1, file2,
                                  exclude_out_of_range=False,
@@ -132,6 +133,8 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     # New cetb cd files will only have a single "TB" variable, which is scaled
     # Figure out which variable name is in the first file, and
     # then always look for "TB" in the second one
+    # Finally, the TB file will be stored differently from the way the original
+    # files were stored, so do that flip/transpose before doing the comparison
     f1 = Dataset( file1, 'r', 'NETCDF4' )
     keys = f1.variables.keys()
     var_name = 'none'
@@ -147,13 +150,29 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         sys.stderr.write( "\n" + this_program + ": " + file1 + ": " + "contains neither a_image nor bgi_image.\n" )
         return False
     
-    # Open and read the variable data from both files
+    # Open and read the variable TB data from both files
     # Note this cool netCDF4 trick: just printing the Dataset f
     # with "print( f )" will print out a bunch of stuff from the file
     image1 = f1.variables[ var_name ][ : ]
 
+    # Original data needs to be reshaped and flipped to match new data
+    rows, cols = np.shape(image1)
+    print ("WARNING: Assuming that regression data contains dump variable names (e.g. 'a_image' etc)")
+    print ("WARNING: Assuming that regression data must be flipped/reshaped to compare to test data.")
+    print ( "Original image1 rows=" + str(rows) )
+    print ( "Original image1 cols=" + str(cols) )
+    image1 = np.flipud(image1.reshape(cols, rows))
+    rows, cols = np.shape(image1)
+    print ( "New      image1 rows=" + str(rows) )
+    print ( "New      image1 cols=" + str(cols) )
+
     f2 = Dataset( file2, 'r', 'NETCDF4' )
     image2 = ( f2.variables[ "TB" ][ : ] )
+    time, rows, cols = np.shape(image2)
+    print ( "Original image2 time=" + str(time) )
+    print ( "Original image2 rows=" + str(rows) )
+    print ( "Original image2 cols=" + str(cols) )
+
     diff = image2 - image1
 
     if statistics:
