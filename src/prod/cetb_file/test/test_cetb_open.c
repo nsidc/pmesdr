@@ -79,5 +79,10 @@ void test_cetb_open( void ) {
 
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE( 0 == status );
+
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "minutes since 1991-01-01 00:00:00",
+				    cetb->epoch_string,
+				    "unexpected epoch_string" );
+  
   
 }

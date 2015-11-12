@@ -11,6 +11,7 @@
 #include "unity.h"
 #include "calcalcs.h"
 #include "cetb_file.h"
+#include "utils.h"
 
 /*
  * global variables used in multiple tests
@@ -19,6 +20,7 @@ cetb_file_class *cetb;
 int status;
 char test_filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
+cetb_region_id region_id;
 int region_number;
 int factor;
 cetb_platform_id platform_id;
@@ -40,7 +42,8 @@ void setUp( void ) {
   status = 0;
   strcpy( test_filename, "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.GRD.CSU.v0.1.nc" );
   strcpy( dirname, "./test" );
-  region_number = cetb_region_number[ CETB_EASE2_N ];
+  region_id = CETB_EASE2_N;
+  region_number = cetb_region_number[ region_id ];
   factor = 0;
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
@@ -66,11 +69,42 @@ void tearDown( void ) {
 void test_cetb_populate_grd_parameters( void ) {
 
   int nc_fileid=0;
+  int varid;
   int median_filter=1;
   int expected_median_filter=1;
+  float *float_data;
+  size_t rows=cetb_grid_rows[ region_id ][ factor ];
+  size_t cols=cetb_grid_cols[ region_id ][ factor ];
+  unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short valid_range[ 2 ] = {
+    CETB_FILE_TB_MIN,
+    CETB_FILE_TB_MAX
+  };
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&float_data,
+					  sizeof( float ) * rows * cols );
+  TEST_ASSERT_EQUAL_INT( 0, status );
+
+  status = cetb_file_add_var( cetb, "TB",
+			      NC_USHORT,
+			      float_data,
+			      cols, rows,
+			      CETB_FILE_TB_STANDARD_NAME,
+			      "SIR TB",
+			      CETB_FILE_TB_UNIT,
+			      &fill_value,
+			      &missing_value,
+			      &valid_range,
+			      CETB_PACK,
+			      (float) CETB_FILE_TB_SCALE_FACTOR,
+			      (float) CETB_FILE_TB_ADD_OFFSET,
+			      NULL );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
+
   status = cetb_file_add_grd_parameters( cetb, median_filter );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_grd_parameters" );
   cetb_file_close( cetb );
@@ -79,9 +113,13 @@ void test_cetb_populate_grd_parameters( void ) {
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
-  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "grd_median_filter", &median_filter );
-  TEST_ASSERT_TRUE( NC_NOERR == status );
-  TEST_ASSERT_EQUAL_INT( expected_median_filter, median_filter );
+  status = nc_inq_varid( nc_fileid, "TB", &varid );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "Error getting TB varid." );
+
+  status = nc_get_att_int( nc_fileid, varid, "median_filter", &median_filter );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "Error getting TB median_filter attribute." );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( expected_median_filter, median_filter,
+				 "Wrong value for TB median_filter." );
   nc_close( nc_fileid );
   
 }
