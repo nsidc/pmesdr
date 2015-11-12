@@ -676,7 +676,7 @@ int cetb_file_add_var( cetb_file_class *this,
 }
 
 /*
- * cetb_file_add_bgi_parameters - Add BGI-specific global file attributes
+ * cetb_file_add_bgi_parameters - Add BGI-specific TB variable attributes
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
@@ -696,7 +696,7 @@ int cetb_file_add_var( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with BGI-specific global attributes
+ *          The CETB file is populated with BGI-specific TB variaable attributes
  *
  * Reference : See definitions for tuning parameters at
  *
@@ -716,6 +716,7 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
 				  int median_filter ) {
 
   int status;
+  int var_id;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -727,44 +728,50 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_put_att_double( this->fid, NC_GLOBAL, "bgi_gamma",
+  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+    fprintf( stderr, "%s: No 'TB' variable to attach BGI attributes: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  if ( status = nc_put_att_double( this->fid, var_id, "bgi_gamma",
 				   NC_DOUBLE, 1, &gamma ) ) {
     fprintf( stderr, "%s: Error setting bgi_gamma: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_dimensional_tuning_parameter",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_dimensional_tuning_parameter",
 				NC_FLOAT, 1, &dimensional_tuning_parameter ) ) {
     fprintf( stderr, "%s: Error setting bgi_dimensional_tuning_parameter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_noise_variance",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_noise_variance",
 				NC_FLOAT, 1, &noise_variance ) ) {
     fprintf( stderr, "%s: Error setting bgi_noise_variance: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_db_threshold",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_db_threshold",
 				NC_FLOAT, 1, &db_threshold ) ) {
     fprintf( stderr, "%s: Error setting bgi_db_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, NC_GLOBAL, "bgi_diff_threshold",
+  if ( status = nc_put_att_float( this->fid, var_id, "bgi_diff_threshold",
 				NC_FLOAT, 1, &diff_threshold ) ) {
     fprintf( stderr, "%s: Error setting bgi_diff_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "bgi_median_filter",
+  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				NC_INT, 1, &median_filter ) ) {
-    fprintf( stderr, "%s: Error setting bgi_median_filter: %s.\n",
+    fprintf( stderr, "%s: Error setting median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
@@ -785,7 +792,7 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with SIR-specific global attributes
+ *          The CETB file is populated with SIR-specific TB variable attributes
  *
  */
 int cetb_file_add_sir_parameters( cetb_file_class *this,
@@ -793,6 +800,7 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int median_filter ) {
 
   int status;
+  int var_id;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -803,15 +811,21 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
     fprintf( stderr, "%s: Cannot set SIR parameters on non-SIR file.\n", __FUNCTION__ );
     return 1;
   }
-  
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_number_of_iterations",
+
+  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+    fprintf( stderr, "%s: No 'TB' variable to attach SIR attributes: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  if ( status = nc_put_att_int( this->fid, var_id, "sir_number_of_iterations",
 				NC_INT, 1, &number_of_iterations ) ) {
     fprintf( stderr, "%s: Error setting sir_number_of_iterations: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "sir_median_filter",
+  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				NC_INT, 1, &median_filter ) ) {
     fprintf( stderr, "%s: Error setting sir_median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
@@ -833,13 +847,14 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with SIR-specific global attributes
+ *          The CETB file is populated with SIR-specific TB variable attributes
  *
  */
 int cetb_file_add_grd_parameters( cetb_file_class *this,
 				  int median_filter ) {
 
   int status;
+  int var_id;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -851,9 +866,15 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_put_att_int( this->fid, NC_GLOBAL, "grd_median_filter",
+  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+    fprintf( stderr, "%s: No 'TB' variable to attach GRD attributes: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				NC_INT, 1, &median_filter ) ) {
-    fprintf( stderr, "%s: Error setting grd_median_filter: %s.\n",
+    fprintf( stderr, "%s: Error setting median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }

@@ -75,6 +75,8 @@
     :executable: gcc
     :arguments:
       - ${1}
+      - -L#{ENV['PMESDR_TOP_DIR']}/lib
+      - -lutils
       - -lnetcdf
       - -lhdf5_hl
       - -lhdf5
