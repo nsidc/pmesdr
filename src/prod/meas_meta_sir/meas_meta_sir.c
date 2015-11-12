@@ -179,6 +179,8 @@ int main(int argc, char **argv)
   cetb_file_class *cetb_sir;
   cetb_file_class *cetb_grd;
   cetb_swath_producer_id swath_producer_id;
+  cetb_platform_id platform_id;
+  cetb_sensor_id sensor_id;
   unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
   unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
@@ -370,6 +372,18 @@ int main(int argc, char **argv)
        printf( "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
      }
 
+     if ( strstr( line, " Platform_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       platform_id = ( cetb_platform_id )atoi(++x);
+       printf( "Platform_id %s\n", cetb_platform_id_name[ platform_id ] );
+     }
+
+     if ( strstr( line, " Sensor_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       sensor_id = ( cetb_sensor_id )atoi(++x);
+       printf( "Sensor_id %s\n", cetb_sensor_id_name[ sensor_id ] );
+     }
+
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
      }
@@ -540,7 +554,7 @@ int main(int argc, char **argv)
     * Initialize 2 cetb_files one for SIR output, the other for GRD output.
     */
    cetb_sir = cetb_file_init( outpath,
-			      iregion, ascale, CETB_F13, CETB_SSMI,
+			      iregion, ascale, platform_id, sensor_id,
 			      iyear, isday, ibeam,
 			      cetb_get_direction_id_from_info_name( info_name ),
 			      CETB_SIR,
