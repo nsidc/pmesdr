@@ -503,7 +503,7 @@ void test_gsx_orbit_direction ( void ) {
     if ( CETB_AQUA == gsx->short_sensor ) {
       TEST_ASSERT_TRUE( CETB_DES_PASSES == gsx->pass_direction );
     } else {
-      TEST_ASSERT_TRUE( CETB_ALL_PASSES == gsx->pass_direction );
+      TEST_ASSERT_TRUE( CETB_NO_DIRECTION == gsx->pass_direction );
     }
   }
   gsx_close( gsx );
