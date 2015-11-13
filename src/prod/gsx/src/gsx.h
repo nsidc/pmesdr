@@ -12,47 +12,6 @@
 #define SENSOR_MAX 10 // max number of characters in the short sensor name
 #define PLATFORM_MAX 10 // max number of characters in the short platform name
 
-typedef struct {
-  int fileid;
-  char* gsx_version;
-  int dims;
-  int vars;
-  int atts;
-  int unlimdims;
-  int scans_loc1;
-  int scans_loc2;
-  int scans_loc3;
-  int measurements_loc1;
-  int measurements_loc2;
-  int measurements_loc3;
-  char *source_file;
-  cetb_sensor_id short_sensor;
-  cetb_platform_id short_platform;
-  cetb_swath_producer_id input_provider;
-  char *channel_names[GSX_MAX_CHANNELS];
-  int channel_number;
-  float fillvalue[GSX_MAX_CHANNELS];
-  float *efov[GSX_MAX_CHANNELS];
-  float *latitude[GSX_MAX_DIMS];
-  float fill_latitude[GSX_MAX_DIMS];
-  float *longitude[GSX_MAX_DIMS];
-  float fill_longitude[GSX_MAX_DIMS];
-  float *sc_latitude[GSX_MAX_DIMS];
-  float fill_sc_latitude[GSX_MAX_DIMS];
-  float *sc_longitude[GSX_MAX_DIMS];
-  float fill_sc_longitude[GSX_MAX_DIMS];
-  double *scantime[GSX_MAX_DIMS];
-  double fill_scantime[GSX_MAX_DIMS];
-  float *eia[GSX_MAX_DIMS];
-  float fill_eia[GSX_MAX_DIMS];
-  float *eaz[GSX_MAX_DIMS];
-  float fill_eaz[GSX_MAX_DIMS];
-  float *brightness_temps[GSX_MAX_CHANNELS];
-  int orbit;
-  int fill_orbit;
-  cetb_direction_id pass_direction;
-} gsx_class;
-
 static const char *gsx_variable_attributes[] = {
   "standard_name",
   "long_name",
@@ -143,17 +102,55 @@ typedef enum {
   CETB_LOC1,
   CETB_LOC2,
   CETB_LOC3,
-  CETB_NUM_LOCSS
+  CETB_NUM_LOCS
 } cetb_loc_id;
 
 /*
  * Sensor names
  */
 static const char *cetb_loc_id_name[] = {
-  "_LOC1",
-  "_LOC2",
-  "_LOC3"
+  "_loc1",
+  "_loc2",
+  "_loc3"
 };
+
+typedef struct {
+  int fileid;
+  char* gsx_version;
+  int dims;
+  int vars;
+  int atts;
+  int unlimdims;
+  int scans[GSX_MAX_DIMS];
+  int measurements[GSX_MAX_DIMS];
+  char *source_file;
+  cetb_sensor_id short_sensor;
+  cetb_platform_id short_platform;
+  cetb_swath_producer_id input_provider;
+  char *channel_names[GSX_MAX_CHANNELS];
+  cetb_loc_id channel_dims[GSX_MAX_CHANNELS];
+  int channel_number;
+  float fillvalue[GSX_MAX_CHANNELS];
+  float *efov[GSX_MAX_CHANNELS];
+  float *latitude[GSX_MAX_DIMS];
+  float fill_latitude[GSX_MAX_DIMS];
+  float *longitude[GSX_MAX_DIMS];
+  float fill_longitude[GSX_MAX_DIMS];
+  float *sc_latitude[GSX_MAX_DIMS];
+  float fill_sc_latitude[GSX_MAX_DIMS];
+  float *sc_longitude[GSX_MAX_DIMS];
+  float fill_sc_longitude[GSX_MAX_DIMS];
+  double *scantime[GSX_MAX_DIMS];
+  double fill_scantime[GSX_MAX_DIMS];
+  float *eia[GSX_MAX_DIMS];
+  float fill_eia[GSX_MAX_DIMS];
+  float *eaz[GSX_MAX_DIMS];
+  float fill_eaz[GSX_MAX_DIMS];
+  float *brightness_temps[GSX_MAX_CHANNELS];
+  int orbit;
+  int fill_orbit;
+  cetb_direction_id pass_direction;
+} gsx_class;
 
 /*
  * public functions

@@ -254,9 +254,14 @@ def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, toler
         my_image1 = my_image1[ absdiff > tolerance ]
         my_image2 = my_image2[ absdiff > tolerance ]
         for i in np.arange( num_diffs ):
-            sys.stderr.write( '{0:d}\tdiff={1:8.4f} img1={2:8.4f} img2={3:8.4f}\n'
+            try:
+                sys.stderr.write( '{0:d}\tdiff={1:8.4f} img1={2:8.4f} img2={3:8.4f}\n'
                               .format( i, my_diff[ i ], my_image1[ i ], my_image2[ i ] ) )
-    
+            except ValueError, e:
+                sys.stderr.write( '{0:d}\tdiff={1:8} img1={2:8} img2={3:8}\n'
+                              .format( i, my_diff[ i ], my_image1[ i ], my_image2[ i ] ) )
+                
+                
     return
 
 
