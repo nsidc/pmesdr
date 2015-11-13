@@ -119,11 +119,15 @@ int main(int argc,char *argv[])
   sscanf(argv[argn],"%s",platform);
   argn++;
   /* decode platform number */
-  //  sscanf(platform,"SSMI F%2d",&(int)F_num);
-  sscanf(platform,"%d",&Fn);
-  F_num = (cetb_platform_id)Fn;
+  while( Fn < (int)CETB_NUM_PLATFORMS ) {
+    if ( 0 == strcmp( cetb_platform_id_name[Fn], platform ) ) {
+	F_num = (cetb_platform_id)Fn;
+	Fn = CETB_NUM_PLATFORMS;
+    }
+    Fn++;
+  }
   if (F_num<=CETB_NO_PLATFORM || F_num>=CETB_NUM_PLATFORMS) {
-    fprintf(stderr,"*** error decoding platform number: %s %d\n",platform,(int)F_num);
+    fprintf( stderr,"*** error decoding platform number: %s \n",platform );
     exit(-1);
   }
   printf("\nPlatform number: %s %s \n",platform,cetb_platform_id_name[F_num]);
