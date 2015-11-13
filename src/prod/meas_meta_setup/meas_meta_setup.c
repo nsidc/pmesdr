@@ -48,7 +48,7 @@
 			       set to 0 to not include az ang (smaller file) */
 #define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
 				  use 0 to not use pre compute files*/ 
-#define DTR ((2.0*M_PI)/360.0)       /* degrees to radians */
+#define DTR ((2.0*(M_PI))/360.0)       /* degrees to radians */
 
 #define AEARTH 6378.1363              /* SEMI-MAJOR AXIS OF EARTH, a, KM */
 #define FLAT 3.3528131778969144e-3    /* = 1/298.257 FLATNESS, f, f=1-sqrt(1-e**2) */
@@ -135,7 +135,7 @@ typedef struct { /* BYU region information storage */
 /* BYU SSM/I approximate spatial response computation */
 
 static float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
-static int write_filenames_toheader( gsx_class *gsx, region_save *save_area );
+static int write_filenames_to_header( gsx_class *gsx, region_save *save_area );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
@@ -381,7 +381,7 @@ int main(int argc,char *argv[])
 	strcpy(fname, ftempname);
 	no_trailing_blanks(fname);    
         gsx = gsx_init( fname );
-	status = write_filenames_toheader( gsx, &save_area );
+	status = write_filenames_to_header( gsx, &save_area );
 	status = posix_memalign( (void**)&gsx_fname[nfile], CETB_MEM_ALIGNMENT, strlen(fname)+1 );
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
@@ -1905,7 +1905,7 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
  *   box size in pixels for that channel/sensor combination
  *   returns -1 in case of error - e.g. out of range channel or unknown sensor
  *
- * the function only expects SSMI channel data for now and fails otherwise
+ * the function only expects SSMI or AMSRE channel data for now and fails otherwise
  *
  * a discussion of the process by which the optimum box_size was chosen can be
  * found in the project on bitbucket.org in the directory docs/internal
@@ -1917,7 +1917,7 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
 int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
   int box_size;
 
-  if ( CETB_SSMI == id || CETB_SSMIS == id ) {
+  if ( CETB_SSMI == id ) {
     
     switch ( cetb_ibeam_to_cetb_ssmi_channel[ibeam] ) {
     case SSMI_19H:
@@ -1937,21 +1937,19 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
       box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
-  }
-
-  if ( CETB_AMSRE == id ) {
+  } else if ( CETB_AMSRE == id ) {
     switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
     case AMSRE_06H:
     case AMSRE_06V:
     case AMSRE_10H:
     case AMSRE_10V:
-      box_size = 120;
+      box_size = 100;
       break;
     case AMSRE_18H:
     case AMSRE_18V:
     case AMSRE_23H:
     case AMSRE_23V:
-      box_size = 100;
+      box_size = 80;
       break;
     case AMSRE_36H:
     case AMSRE_36V:
@@ -1967,6 +1965,8 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
       box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
+  } else {
+    box_size = -1;
   }
     
   return box_size;
@@ -2020,7 +2020,7 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
   }
 }
 
-/* write_filenames_toheader - writes out the input data files that were used to
+/* write_filenames_to_header - writes out the input data files that were used to
  * create the setup files as well as the GSX version used in the processing
  *
  * Input:
@@ -2030,7 +2030,7 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
  * Return:
  *   0 on success, 1 on failure
  */
-int write_filenames_toheader( gsx_class *gsx, region_save *save_area ) {
+int write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
   int cnt=100;
   char lin[100];
   int z;
