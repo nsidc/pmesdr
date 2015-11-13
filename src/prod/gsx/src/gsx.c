@@ -239,6 +239,8 @@ int get_gsx_global_attributes( gsx_class *this ) {
       this->pass_direction = CETB_ASC_PASSES;
     else
       this->pass_direction = CETB_DES_PASSES;
+  } else {
+    this->pass_direction = CETB_NO_DIRECTION;
   }
     
   temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
