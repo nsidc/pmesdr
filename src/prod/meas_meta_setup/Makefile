@@ -172,5 +172,28 @@ rss_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 	\
 	)
 
+amsre_ease :
+	$(RM) $(TESTDIR)/setupAMSRE/e2n
+	$(MKDIR) $(TESTDIR)/setupAMSRE/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2n 	\
+	)
+	$(RM) $(TESTDIR)/setupAMSRE/e2s
+	$(MKDIR) $(TESTDIR)/setupAMSRE/e2s
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2s/e2stest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2s 	\
+	)
+	$(RM) $(TESTDIR)/setupAMSRE/e2t
+	$(MKDIR) $(TESTDIR)/setupAMSRE/e2t
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2t/e2ttest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2t 	\
+	)
+
+amsre_quick :
+	$(RM) $(TESTDIR)/setupAMSRE/e2n
+	$(MKDIR) $(TESTDIR)/setupAMSRE/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2n 	\
+	)
 
 

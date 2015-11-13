@@ -110,6 +110,9 @@ void gsx_close ( gsx_class *this ) {
   if ( status = nc_close( this->fileid ) ) {
     fprintf( stderr, "%s: nc_close error=%s \n",
   	     __FUNCTION__, nc_strerror(status) );
+    free( this );
+    this = NULL;
+    return;
   }
   /* free the malloc'd arrays before you free the gsx_struct */
   free( this->gsx_version );
@@ -189,12 +192,12 @@ int get_gsx_dims( gsx_class *this ) {
       fprintf ( stderr, "%s: couldn't get dim length, error: %s\n", __FUNCTION__, nc_strerror( status ) );
       return -1;
     }
-    if ( strncmp( dim_name, "scans_loc1", strlen( dim_name ) ) == 0 ) this->scans_loc1 = dim_length;
-    if ( strncmp( dim_name, "scans_loc2", strlen( dim_name ) ) == 0 ) this->scans_loc2 = dim_length;
-    if ( strncmp( dim_name, "scans_loc3", strlen( dim_name ) ) == 0 ) this->scans_loc3 = dim_length;
-    if ( strncmp( dim_name, "measurements_loc1", strlen( dim_name ) ) == 0 ) this->measurements_loc1 = dim_length;
-    if ( strncmp( dim_name, "measurements_loc2", strlen( dim_name ) ) == 0 ) this->measurements_loc2 = dim_length;
-    if ( strncmp( dim_name, "measurements_loc3", strlen( dim_name ) ) == 0 ) this->measurements_loc3 = dim_length;
+    if ( strncmp( dim_name, "scans_loc1", strlen( dim_name ) ) == 0 ) this->scans[0] = dim_length;
+    if ( strncmp( dim_name, "scans_loc2", strlen( dim_name ) ) == 0 ) this->scans[1] = dim_length;
+    if ( strncmp( dim_name, "scans_loc3", strlen( dim_name ) ) == 0 ) this->scans[2] = dim_length;
+    if ( strncmp( dim_name, "measurements_loc1", strlen( dim_name ) ) == 0 ) this->measurements[0] = dim_length;
+    if ( strncmp( dim_name, "measurements_loc2", strlen( dim_name ) ) == 0 ) this->measurements[1] = dim_length;
+    if ( strncmp( dim_name, "measurements_loc3", strlen( dim_name ) ) == 0 ) this->measurements[2] = dim_length;
   }
   
   free( dim_name );
@@ -228,6 +231,18 @@ int get_gsx_global_attributes( gsx_class *this ) {
     return -1;
   }
 
+  /* check to see if there is an orbit direction attribute in the file - they don't all have one */
+
+  temp = get_att_text( this->fileid, NC_GLOBAL, "orbit_direction" );
+  if ( NULL != temp ) { // retrieve the orbit direction
+    if ( 0 == strncmp( "Ascending", temp, strlen(temp) ) )
+      this->pass_direction = CETB_ASC_PASSES;
+    else
+      this->pass_direction = CETB_DES_PASSES;
+  } else {
+    this->pass_direction = CETB_NO_DIRECTION;
+  }
+    
   temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
   if ( NULL == temp ) {
     fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
@@ -354,6 +369,8 @@ int get_gsx_variable_attributes( gsx_class *this ) {
   int dim1;
   int dim2;
   char *efov;
+  char *locations;
+  int i;
 
   if ( NULL == this ) {
     return -1;
@@ -386,12 +403,21 @@ int get_gsx_variable_attributes( gsx_class *this ) {
     
     status = get_gsx_temperatures( this, varid, count, dim1, dim2 );
 
+    /* Now get the fill value for this channel */
     if ( status = nc_get_att_float( this->fileid, varid, "_FillValue", &fillvalue ) ) {
       fprintf( stderr, "%s: couldn't get fillvalue from %s\n", __FUNCTION__, this->channel_names[count] );
       return -1;
     }
     this->fillvalue[count] = fillvalue;
 
+    /* Get the coordinate variables for this channel */
+    locations = get_att_text( this->fileid, varid, "coordinates" );
+    for ( i=0; i<GSX_MAX_DIMS; i++ ) {
+      if ( NULL != strstr( locations, cetb_loc_id_name[i] ) )
+	this->channel_dims[count] = (cetb_loc_id) i;
+    }
+	   
+    /* Get the efov values for this channel */
     efov = get_att_text( this->fileid, varid, "gsx_field_of_view" );
     if ( status = nc_inq_varid( this->fileid, efov, &varid ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
@@ -445,15 +471,9 @@ int get_gsx_positions( gsx_class *this ) {
    */
 
   for ( i=0; i<GSX_MAX_DIMS; i++) {
-    if ( 0 == i && this->scans_loc1 != 0 ) {
-      scans = this->scans_loc1;
-      measurements = this->measurements_loc1;
-    } else if ( 1 == i && this->scans_loc2 != 0 ) {
-      scans = this->scans_loc2;
-      measurements = this->measurements_loc2;
-    } else if ( 2 == i && this->scans_loc3 != 0 ) {
-      scans = this->scans_loc3;
-      measurements = this->measurements_loc3;
+    if ( this->scans[i] != 0 ) {
+      scans = this->scans[i];
+      measurements = this->measurements[i];
     } else {
       return 0;
     }
@@ -698,6 +718,7 @@ int init_gsx_pointers( gsx_class *this ) {
     this->channel_names[counter] = NULL;
     this->efov[counter] = NULL;
     this->brightness_temps[counter] = NULL;
+    this->channel_dims[counter] = CETB_NOLOC;
   }
   for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
     this->latitude[counter] = NULL;
@@ -871,13 +892,14 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
   int dimid[2];
   char *dimname;
   char *dim_ptr;
+  int i;
   
   if ( status = nc_inq_vardimid( this->fileid, varid, dimid ) ) {
     fprintf( stderr, "%s: couldn't get varid %d dimension ids\n", __FUNCTION__, varid );
     return -1;
   }
 
-  status = posix_memalign( (void**)&dimname, CETB_MEM_ALIGNMENT, NC_MAX_NAME+1 );
+  status = posix_memalign( (void**)&dimname, CETB_MEM_ALIGNMENT, sizeof( char )*NC_MAX_NAME+1 );
   if ( 0 != status ) {
     return -1;
   }
@@ -888,23 +910,14 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
     return -1;
   }
   
-  dim_ptr = strstr( dimname, "_loc1" );
-  if ( NULL != dim_ptr ) {
-    *dim1 = this->scans_loc1;
-    *dim2 = this->measurements_loc1;
-    status = 0;
-  }
-  dim_ptr = strstr( dimname, "_loc2" );
-  if ( NULL != dim_ptr ) {
-    *dim1 = this->scans_loc2;
-    *dim2 = this->measurements_loc2;
-    status = 0;
-  }
-  dim_ptr = strstr( dimname, "_loc3" );
-  if ( NULL != dim_ptr ) {
-    *dim1 = this->scans_loc3;
-    *dim2 = this->measurements_loc3;
-    status = 0;
+  for (i=0; i<GSX_MAX_DIMS; i++ ) {
+    dim_ptr = strstr( dimname, cetb_loc_id_name[i] );
+    if ( NULL != dim_ptr ) {
+      *dim1 = this->scans[i];
+      *dim2 = this->measurements[i];
+      status = 0;
+      dim_ptr = NULL;
+    }
   }
   return status;
 }
