@@ -26,12 +26,10 @@
 #include <time.h>
 
 #include <sir3.h>
+#include <cetb.h>
 
 #define prog_version 1.2 /* program version */
 #define prog_name "meas_meta_make"
-
-/* #define MAKEJOB 0 /* create job script if 1, do not create job script if 0 */
-#define ENABLE_SYSTEM_CALL 0 /* enable system call to make job script executable */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
@@ -50,25 +48,18 @@ int nint(float r)
 #define FALSE 0
 
 /****************************************************************************/
-
 /* default location of the SIR standard region definition */
-/* char rname[] = "/auto/share/ref/regiondef1.dat";*/  /* file defining region codes */
-char rname[] = "regiondef1.dat";  /* file defining region codes */
 
-/* these file names used only when creating .job files */
-char setup_name[] = "meas_meta_setup";            /* setup program path/name */
-char sirf_name[] = "meas_meta_sir";               /* SIR program path/name */
+char rname[] = "regiondef1.dat";  /* file defining region codes */
 
 /********************************************************************/
 
 /* function prototypes */
 
-
 int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[], 
 		     char *mname, int F_num );
 
 int get_file_names(FILE *mout, int argc, int *argn, char *argv[]);
-
 
 /* declare specific map projection prototypes needed */
 
@@ -95,7 +86,8 @@ int main(int argc,char *argv[])
   char ltime[29];
   int argn=1;
   char platform[28];
-  int F_num=0;
+  int Fn=0;
+  cetb_platform_id F_num=CETB_NO_PLATFORM;
   FILE *mout, *jout;
 
   
@@ -105,7 +97,7 @@ int main(int argc,char *argv[])
     printf("\nusage: %s meta_name platform start_day stop_day year def in_list\n\n",argv[0]);
     printf(" input parameters:\n");
     printf("   meta_name   = meta file output name\n");
-    printf("   platform    = name of the platform (e.g. F13)\n");
+    printf("   platform    = name of the platform as cetb_platform_id (from cetb.h)\n");
     printf("   start_day   = start day\n");
     printf("   end_day     = end day\n");
     printf("   year        = year input\n");
@@ -123,17 +115,22 @@ int main(int argc,char *argv[])
   printf("\nMetafile name: %s \n",mname);
   argn++;  
 
-  /* get satellite number */
+  /* get satellite number as a cetb_platform_id enum */
   sscanf(argv[argn],"%s",platform);
   argn++;
   /* decode platform number */
-  sscanf(platform,"SSMI F%2d",&F_num);
-  sscanf(platform,"%d",&F_num);
-  printf("\nPlatform number: %s %d \n",platform,F_num);
-  if (F_num<1 || F_num>20) {
-    fprintf(stderr,"*** error decoding platform number: %s %d\n",platform,F_num);
+  while( Fn < (int)CETB_NUM_PLATFORMS ) {
+    if ( 0 == strcmp( cetb_platform_id_name[Fn], platform ) ) {
+	F_num = (cetb_platform_id)Fn;
+	Fn = CETB_NUM_PLATFORMS;
+    }
+    Fn++;
+  }
+  if (F_num<=CETB_NO_PLATFORM || F_num>=CETB_NUM_PLATFORMS) {
+    fprintf( stderr,"*** error decoding platform number: %s \n",platform );
     exit(-1);
   }
+  printf("\nPlatform number: %s %s \n",platform,cetb_platform_id_name[F_num]);
 
   /* open output meta file and write header */
   printf("Opening meta output file %s\n",mname);
@@ -541,17 +538,13 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       exit(-1);      
     }
   
-    /* land/sea flag */
-    toil=3;    /* flags not used */
-    fprintf(mout,"  Toil_flag=%2d\n",toil);
-  
     /* select ascending/descending data */
     iasc=0;
     fscanf(pid,"%d",&iasc);
     printf("Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) %d\n",iasc);
     fprintf(mout,"  AscDesc_flag=%2d\n",iasc);
 
-    /* SSM/I SPECIAL: select beam [channel] (selects frequency and polarization for SSMI) */
+    /* Selection is based on whichever platform is specified on the input */
     fscanf(pid,"%d",&ibeam);
     printf("Beam index (1=19H,2=19V,3=22V,4=37H,5=37V,6=85H,7=85V): %d\n",ibeam);
     ipolar=0;   /* h pol */
@@ -695,12 +688,20 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
   
       /* create the full set of BYU naming standard file names -- whether used or not */
       iy=(year % 100);
-      sen='F';      /* F=ssmi, A=AMSRE, R=SMMR, I=SSMIS */
-      if (F_num < 10.0) /* code the sensor number for SSMI and SSMIS */
+      /* code for the correct names from cetb.h */
+      if ( CETB_NIMBUS7 == F_num ) sen='R';
+      if ( CETB_AQUA == F_num ) sen='A';
+      if ( CETB_F08 <= F_num && F_num <= CETB_F13 ) sen='F';
+      if ( CETB_F15 <= F_num && F_num < CETB_NUM_PLATFORMS ) sen='I';
+      /* F=ssmi, A=AMSRE, R=SMMR, I=SSMIS */
+      if (F_num < 10.0) /* code the sensor number based on cetb_platform_id*/
 	cegg=(char) (F_num+48);  /* 0...9 */
       else
 	cegg=(char) (F_num-10+65); /* A...Z */
-      chan=(char) (ibeam+48);
+      if ( ibeam < 10 )
+	chan=(char) (ibeam+48);
+      else
+	chan=(char) (ibeam-10+97); // a...z
       cpol='b';  /* both asc and desc (all data) used */
 
       /* modify file name if LTOD ascending/descending or morn/even */
