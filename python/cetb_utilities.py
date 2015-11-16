@@ -156,18 +156,31 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     image1 = f1.variables[ var_name ][ : ]
 
     # Original data needs to be reshaped and flipped to match new data
-    rows, cols = np.shape(image1)
+    if ( 3 == np.ndim(image1)):
+        time, rows, cols = np.shape(image1)
+    elif ( 2 == np.ndim(image1)):
+        rows, cols = np.shape(image1)
+        time = 1
     print ("WARNING: Assuming that regression data contains dump variable names (e.g. 'a_image' etc)")
     print ("WARNING: Assuming that regression data must be flipped/reshaped to compare to test data.")
     print ( "Original image1 rows=" + str(rows) )
     print ( "Original image1 cols=" + str(cols) )
     image1 = np.flipud(image1.reshape(cols, rows))
-    rows, cols = np.shape(image1)
+    if ( 3 == np.ndim(image1)):
+        time, rows, cols = np.shape(image1)
+    elif ( 2 == np.ndim(image1)):
+        rows, cols = np.shape(image1)
+        time = 1
     print ( "New      image1 rows=" + str(rows) )
     print ( "New      image1 cols=" + str(cols) )
 
     f2 = Dataset( file2, 'r', 'NETCDF4' )
     image2 = ( f2.variables[ "TB" ][ : ] )
+    if ( 3 == np.ndim(image2)):
+        time, rows, cols = np.shape(image2)
+    elif ( 2 == np.ndim(image2)):
+        rows, cols = np.shape(image2)
+        time = 1
     time, rows, cols = np.shape(image2)
     print ( "Original image2 time=" + str(time) )
     print ( "Original image2 rows=" + str(rows) )
