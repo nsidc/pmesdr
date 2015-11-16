@@ -178,6 +178,10 @@ int main(int argc, char **argv)
 
   cetb_file_class *cetb_sir;
   cetb_file_class *cetb_grd;
+  cetb_swath_producer_id swath_producer_id;
+  cetb_platform_id platform_id;
+  cetb_sensor_id sensor_id;
+  cetb_direction_id direction_id=CETB_NO_DIRECTION;
   unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
   unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
@@ -363,6 +367,30 @@ int main(int argc, char **argv)
        printf("Max fill %d\n",MAXFILL);
      }
 
+     if ( strstr( line, " Producer_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       swath_producer_id = ( cetb_swath_producer_id )atoi(++x);
+       printf( "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
+     }
+
+     if ( strstr( line, " Platform_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       platform_id = ( cetb_platform_id )atoi(++x);
+       printf( "Platform_id %s\n", cetb_platform_id_name[ platform_id ] );
+     }
+
+     if ( strstr( line, " Sensor_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       sensor_id = ( cetb_sensor_id )atoi(++x);
+       printf( "Sensor_id %s\n", cetb_sensor_id_name[ sensor_id ] );
+     }
+
+     if ( strstr( line, " Pass_direction" ) != NULL ) {
+       x = strchr( line,'=' );
+       direction_id = ( cetb_direction_id )atoi(++x);
+       printf( "Direction_id %s\n", cetb_direction_id_name[ direction_id ] );
+     }
+
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
      }
@@ -514,30 +542,30 @@ int main(int argc, char **argv)
    printf("\n");
 
    /*
-    * GSX FIX ME WHEN WE START USING gsx:
+    * USING gsx:
     *
-    * HARDCODED 
-    * and grabbing the 4th characater of the metafile output filename
-    * Not sure if ascale is the factor we really want (FACTOR 1=12.k km...)
+    * ascale is the factor we really want (FACTOR 1=12.k km...)
+    * resolution factor - is read from ascale
     *
-    * setup needs to save:
-    * platform_id
-    * sensor_id
-    * resolution factor
-    * pass direction
-    * swath_producer_id (CSU or RSS)
-    * list of actual gsx source files used as input
-    * list of GSX version used to create each gsx file used as input
+    * setup saves:
+    *  - platform_id
+    *  - sensor_id
+    *  - pass direction
+    *  - swath_producer_id (CSU or RSS)
+    *  - list of actual gsx source files used as input
+    *  - list of GSX version used to create each gsx file used as input
     * and we need to stop specifying any output filenames in the .meta file
     *
     * Initialize 2 cetb_files one for SIR output, the other for GRD output.
     */
+   if ( CETB_NO_DIRECTION == direction_id )
+     direction_id = (cetb_direction_id)cetb_get_direction_id_from_info_name( info_name );
    cetb_sir = cetb_file_init( outpath,
-			      iregion, ascale, CETB_F13, CETB_SSMI,
+			      iregion, ascale, platform_id, sensor_id,
 			      iyear, isday, ibeam,
-			      cetb_get_direction_id_from_info_name( info_name ),
+			      direction_id,
 			      CETB_SIR,
-			      cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+			      swath_producer_id );
    if ( !cetb_sir ) {
      fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
 	      __FILE__, cetb_reconstruction_id_name[ CETB_SIR ] );
@@ -550,11 +578,11 @@ int main(int argc, char **argv)
    }
      
    cetb_grd = cetb_file_init( outpath,
-			      iregion, CETB_MIN_RESOLUTION_FACTOR, CETB_F13, CETB_SSMI,
+			      iregion, CETB_MIN_RESOLUTION_FACTOR, platform_id, sensor_id,
 			      iyear, isday, ibeam,
-			      cetb_get_direction_id_from_info_name( info_name ),
+			      direction_id,
 			      CETB_GRD,
-			      cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
+			      swath_producer_id );
    if ( !cetb_grd ) {
      fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
 	      __FILE__, cetb_reconstruction_id_name[ CETB_GRD ] );
