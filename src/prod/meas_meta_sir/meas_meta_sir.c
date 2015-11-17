@@ -23,6 +23,7 @@
 #include <time.h>
 #include <netcdf.h>
 
+#include "utils.h"
 #include "cetb_file.h"
 #include "ezdump.h"
 #include "sir3.h"
@@ -603,52 +604,60 @@ int main(int argc, char **argv)
   if (storage != 1) { /* allocate memory storage space for measurements */
     nspace = nls * file_savings;/* space to allocate for measurement storage */
     printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
-    space = (char *) malloc(sizeof(char)*nspace);
-    if (space == NULL) {
+    if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space, ( size_t )nspace*sizeof(char)) ) {
       eprintf("*** Inadequate memory for data file storage\n");
-      if (storage == 2) {
-	eprintf("*** Will use file instead (multiple file reads required)\n\n");
-      } else
-	exit(-1);
-      storage = 1;  /* force use of file */
-    }
-  }
-
-/* if program is to be run with file storage (storage=1), allocate working 
-   buffer array for file reading */
-
-  if (storage == 1) {
-    nspace = 14000;  /* should be adequate for all fill_array sizes */
-    space = (char *) malloc(sizeof(char)*nspace);
-    if (space == NULL) {
-      eprintf("*** Inadequate memory for temp storage 1\n");
-      exit(-1);
-    }
-    store2 = (char *) malloc(sizeof(char)*nspace);
-    if (store2 == NULL) {
-      eprintf("*** Inadequate memory for temp storage 2\n");
       exit(-1);
     }
   }
-  
+
 /* allocate storage space for image and working arrays
    note: these arrays are re-used multiple times to save memory */
 
   nsize = nsx * nsy;  
-  a_val  = (float *) malloc(sizeof(float)*nsize);
-  b_val  = (float *) malloc(sizeof(float)*nsize);
-  a_temp = (float *) malloc(sizeof(float)*nsize);
-  sxy    = (float *) malloc(sizeof(float)*nsize);
-  sx     = (float *) malloc(sizeof(float)*nsize);
-  sx2    = (float *) malloc(sizeof(float)*nsize);
-  sy     = (float *) malloc(sizeof(float)*nsize);
-  tot    = (float *) malloc(sizeof(float)*nsize);
-  num_samples = (unsigned char *) calloc( 1, sizeof(unsigned char)*nsize);
-
-  if (a_val == NULL || b_val == NULL || a_temp == NULL || sxy == NULL
-      || sx == NULL ||   sx2 == NULL ||     sy == NULL || tot == NULL) {
-     eprintf("*** ERROR: inadequate memory for image working storage\n");
-     exit(-1);
+  //  a_val  = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for a_val\n", __FILE__ );
+    exit(-1);
+  }
+  //  b_val  = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&b_val, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for b_val\n", __FILE__ );
+    exit(-1);
+  }
+  //  a_temp = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for a_temp\n", __FILE__ );
+    exit(-1);
+  }
+  //  sxy    = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sxy, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sxy\n", __FILE__ );
+    exit(-1);
+  }
+  //  sx     = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sx\n", __FILE__ );
+    exit(-1);
+  }
+  //  sx2    = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx2, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sx2\n", __FILE__ );
+    exit(-1);
+  }
+  //  sy     = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sy, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sy\n", __FILE__ );
+    exit(-1);
+  }
+  //tot    = (float *) malloc(sizeof(float)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&tot, (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for tot\n", __FILE__ );
+    exit(-1);
+  }
+  //  num_samples = (unsigned char *) calloc( 1, sizeof(unsigned char)*nsize);
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&num_samples, (size_t)(sizeof(unsigned char)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for num_samples\n", __FILE__ );
+    exit(-1);
   }
 
   /* with storage allocated, copy file into memory if selected */
