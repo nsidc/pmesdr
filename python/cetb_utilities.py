@@ -55,12 +55,7 @@ def compare_cetb_directories( dir1, dir2,
     list1 = sorted( glob.glob( dir1 + "/*.nc" ) )
     full_list2 = sorted( glob.glob( dir2 + "/*.nc" ) )
 
-    # For now, we will ignore all but SIR or BGI files in dir2
-    list2 = []
-    p = re.compile("(SIR|BGI)")
-    for file in full_list2:
-        if p.search(file):
-            list2.append(file)
+    list2 = full_list2
     
     if len( list1 ) != len( list2 ):
         sys.stderr.write( "\n" + this_program + ": Number of files in the directories differs.\n" )
@@ -145,6 +140,9 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         if ( 'bgi_image' == key ):
             var_name = 'bgi_image'
             break
+        if ( 'TB' == key ):
+            var_name = 'TB'
+            break
 
     if ( 'none' == var_name ):
         sys.stderr.write( "\n" + this_program + ": " + file1 + ": " + "contains neither a_image nor bgi_image.\n" )
@@ -155,36 +153,8 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     # with "print( f )" will print out a bunch of stuff from the file
     image1 = f1.variables[ var_name ][ : ]
 
-    # Original data needs to be reshaped and flipped to match new data
-    if ( 3 == np.ndim(image1)):
-        time, rows, cols = np.shape(image1)
-    elif ( 2 == np.ndim(image1)):
-        rows, cols = np.shape(image1)
-        time = 1
-    print ("WARNING: Assuming that regression data contains dump variable names (e.g. 'a_image' etc)")
-    print ("WARNING: Assuming that regression data must be flipped/reshaped to compare to test data.")
-    print ( "Original image1 rows=" + str(rows) )
-    print ( "Original image1 cols=" + str(cols) )
-    image1 = np.flipud(image1.reshape(cols, rows))
-    if ( 3 == np.ndim(image1)):
-        time, rows, cols = np.shape(image1)
-    elif ( 2 == np.ndim(image1)):
-        rows, cols = np.shape(image1)
-        time = 1
-    print ( "New      image1 rows=" + str(rows) )
-    print ( "New      image1 cols=" + str(cols) )
-
     f2 = Dataset( file2, 'r', 'NETCDF4' )
     image2 = ( f2.variables[ "TB" ][ : ] )
-    if ( 3 == np.ndim(image2)):
-        time, rows, cols = np.shape(image2)
-    elif ( 2 == np.ndim(image2)):
-        rows, cols = np.shape(image2)
-        time = 1
-    time, rows, cols = np.shape(image2)
-    print ( "Original image2 time=" + str(time) )
-    print ( "Original image2 rows=" + str(rows) )
-    print ( "Original image2 cols=" + str(cols) )
 
     diff = image2 - image1
 
