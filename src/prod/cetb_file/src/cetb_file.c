@@ -512,32 +512,26 @@ int cetb_file_add_var( cetb_file_class *this,
     	return 1;
       }
 
-      for ( i = 0; i < ( 1 * rows * cols ); i++ ) {
-	*( ushort_data + i ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
-     						    *( (float *)data + i ) ); 
-      }
-
       /*
        * Meas_meta_ processing stores gridded array data from bottom to top.
        * NetCDF conventions expect it to be stored from top to bottom
-       * So write the data one row at a time, in reverse-row order
+       * Using nc_put_vara_xtype was too slow, especially for non-square (i.e. T) grids
+       * Changed this to copy the data across in the correct order and use nc_put_var_xtype
+       * to write all the data at once
        */
+      
       for ( row=0; row<rows; row++ ) {
-	start[ 0 ] = 0;   // time start will always be zero
-	start[ 1 ] = rows - row - 1; //destination row is reverse of source row
-	start[ 2 ] = 0;   // column start will always be zero
-	count[ 0 ] = 1;   // time number of elements will always be 1
-	count[ 1 ] = 1;   // one whole row
-	count[ 2 ] = cols;  // all columns in this row
-	if ( status = nc_put_vara_ushort( this->fid, var_id,
-					  start, count,
-					  ushort_data + ( row * cols ) ) ) { 
-	  fprintf( stderr, "%s: Error putting scaled variable for row=%ld: %s.\n",
-		   __FUNCTION__, row, nc_strerror( status ) );
-	  return 1;
+	for ( i=0;i <cols; i++ ) {
+	  *( ushort_data + ((row*cols)+i) ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+								   *( (float *)data + (((rows-row-1)*cols)+i) ) );
 	}
       }
 
+	if ( status = nc_put_var_ushort( this->fid, var_id, ushort_data ) ) {
+	  fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
+	  return 1;
+	}
+	
       free( ushort_data );
 
     } else if ( NC_SHORT == xtype ) {
@@ -550,32 +544,26 @@ int cetb_file_add_var( cetb_file_class *this,
     	return 1;
       }
 
-      for ( i = 0; i < ( 1 * rows * cols ); i++ ) {
-	*( short_data + i ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
-						   *( (float *)data + i ) ); 
-      }
-
       /*
        * Meas_meta_ processing stores gridded array data from bottom to top.
        * NetCDF conventions expect it to be stored from top to bottom
-       * So write the data one row at a time, in reverse-row order
+       * Using nc_put_vara_xtype was too slow, especially for non-square (i.e. T) grids
+       * Changed this to copy the data across in the correct order and use nc_put_var_xtype
+       * to write all the data at once
        */
+      
       for ( row=0; row<rows; row++ ) {
-	start[ 0 ] = 0;   // time start will always be zero
-	start[ 1 ] = rows - row - 1; //destination row is reverse of source row
-	start[ 2 ] = 0;   // column start will always be zero
-	count[ 0 ] = 1;   // time number of elements will always be 1
-	count[ 1 ] = 1;   // one whole row
-	count[ 2 ] = cols;  // all columns in this row
-	if ( status = nc_put_vara_short( this->fid, var_id,
-					 start, count,
-					 short_data + ( row * cols ) ) ) { 
-	  fprintf( stderr, "%s: Error putting scaled variable for row=%ld: %s.\n",
-		   __FUNCTION__, row, nc_strerror( status ) );
-	  return 1;
+	for ( i=0; i<cols; i++ ) {
+	  *( short_data + ((row*cols)+i) ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+								  *( (float *)data + (((rows-row-1)*cols)+i) ) );
 	}
       }
 
+      if ( status = nc_put_var_short( this->fid, var_id, short_data ) ) {
+	fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
+	return 1;
+      }
+      
       free( short_data );
 
     } else {
