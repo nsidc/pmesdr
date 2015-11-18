@@ -181,6 +181,10 @@ int main(int argc, char **argv)
   char a_name[100], info_name[100], line[100];
 
   cetb_file_class *cetb;
+  cetb_swath_producer_id swath_producer_id;
+  cetb_platform_id platform_id;
+  cetb_sensor_id sensor_id;
+  cetb_direction_id direction_id=CETB_NO_DIRECTION;
   unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
   unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
@@ -348,6 +352,31 @@ int main(int argc, char **argv)
        MAXFILL=atoi(++x);
      }
 
+     if ( strstr( line, " Producer_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       swath_producer_id = ( cetb_swath_producer_id )atoi(++x);
+       printf( "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
+     }
+
+     if ( strstr( line, " Platform_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       platform_id = ( cetb_platform_id )atoi(++x);
+       printf( "Platform_id %s\n", cetb_platform_id_name[ platform_id ] );
+     }
+
+     if ( strstr( line, " Sensor_id" ) != NULL ) {
+       x = strchr( line,'=' );
+       sensor_id = ( cetb_sensor_id )atoi(++x);
+       printf( "Sensor_id %s\n", cetb_sensor_id_name[ sensor_id ] );
+     }
+
+     if ( strstr( line, " Pass_direction" ) != NULL ) {
+       x = strchr( line,'=' );
+       direction_id = ( cetb_direction_id )atoi(++x);
+       printf( "Direction_id %s\n", cetb_direction_id_name[ direction_id ] );
+     }
+
+
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
        printf("Wscale %f\n",wscale);
@@ -412,18 +441,14 @@ int main(int argc, char **argv)
    printf("\n");
 
    /*
-    * GSX FIX ME WHEN WE START USING gsx:
-    * HARDCODED 
-    * See related note in meas_meta_sir about what has to be fixed, here.
-    *
     * Initialize cetb_file.
     */
    cetb = cetb_file_init( outpath,
-			  iregion, ascale, CETB_F13, CETB_SSMI,
+			  iregion, ascale, platform_id, sensor_id,
 			  iyear, isday, ibeam,
-			  cetb_get_direction_id_from_info_name( info_name ),
+			  direction_id,
 			  CETB_BGI,
-			  cetb_get_swath_producer_id_from_outpath( outpath, CETB_BGI ) );
+			  swath_producer_id );
    if ( !cetb ) {
      fprintf( stderr, "%s: Error initializing cetb_file.\n", __FUNCTION__ );
      exit( -1 );
@@ -462,25 +487,18 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
-  //  a_temp = (float *) malloc(sizeof(float)*nsize);
   dumb = posix_memalign( (void**)&a_temp, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
   if (dumb != 0) {
     eprintf("*** Inadequate memory for data file storage\n");
     exit(-1);
   }
   
-  //cnts   = (int *) a_temp;  /* share storage space */
   dumb = posix_memalign( (void**)&cnts, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
   if (dumb != 0) {
     eprintf("*** Inadequate memory for data file storage\n");
     exit(-1);
   }
   
-  //if (a_val == NULL || a_temp == NULL) {
-  // eprintf("*** ERROR: inadequate memory for image working storage\n");
-  // exit(-1);
-  //}
-
    fflush(stdout);  
 
    /* initialize count array */
@@ -514,10 +532,7 @@ int main(int argc, char **argv)
         tbval = *((float *) (store+0));
         /* ang   = *((float *) (store+4));  */
         count = *((int *)   (store+8));
-	/*        ktime = *((int *)   (store+12)); */
         iadd  = *((int *)   (store+16));
-	/* if (HASAZANG)
-	   azang = *((float *) (store+20)); */
 
 	if (count > MAXFILL) {
 	  printf("*** Count error %d  record %d\n",count,nrec);
@@ -604,7 +619,6 @@ int main(int argc, char **argv)
 
   /* allocate index array and BGI working arrays*/
 
-  //  indx = (char **) malloc(sizeof(char *)*nsize*nmax);
   dumb = posix_memalign( (void**)&indx, CETB_MEM_ALIGNMENT, nsize*nmax*sizeof(char *) );
   if (dumb != 0) {
     eprintf("*** Inadequate memory for data file storage\n");
@@ -622,19 +636,19 @@ int main(int argc, char **argv)
   work = dvector(1,nmax);
   c = dvector(1,nmax);
   tb2 = dvector(1,nmax);
-  //patarr = (float *) malloc(sizeof(float)*mdim*mdim*nmax);
+
   dumb = posix_memalign( (void **)&patarr, CETB_MEM_ALIGNMENT, mdim*mdim*nmax*sizeof(float) );
   if (dumb != 0) {
     eprintf("*** Inadequate memory for data file storage, patarr\n");
     exit(-1);
   }
-  //ix0 = (int *) malloc(sizeof(int)*(nmax+1));
+
   dumb = posix_memalign( (void **)&ix0, CETB_MEM_ALIGNMENT, (nmax+1)*sizeof(int) );
   if (dumb != 0) {
     eprintf("*** Inadequate memory for data file storage, ix0\n");
     exit(-1);
   }
-  //  iy0 = (int *) malloc(sizeof(int)*(nmax+1));
+
   dumb = posix_memalign( (void **)&iy0, CETB_MEM_ALIGNMENT, (nmax+1)*sizeof(int) );
   if (dumb != 0) {
     eprintf("*** Inadequate memory for data file storage, iy0\n");
@@ -697,8 +711,6 @@ int main(int argc, char **argv)
 	  count = *((int *)   (store+8));
 	  iadd  = *((int *)  (store+16));
 	  iadd = (iadd > 0 ? iadd : -iadd) -1;
-	  /* if (HASAZANG)
-	     azang = *((float *) (store+20)); */
 
 	  store = store+HS;
 	  fill_array = (int *) store;
