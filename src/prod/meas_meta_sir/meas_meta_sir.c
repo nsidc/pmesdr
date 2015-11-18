@@ -559,8 +559,6 @@ int main(int argc, char **argv)
     *
     * Initialize 2 cetb_files one for SIR output, the other for GRD output.
     */
-   if ( CETB_NO_DIRECTION == direction_id )
-     direction_id = (cetb_direction_id)cetb_get_direction_id_from_info_name( info_name );
    cetb_sir = cetb_file_init( outpath,
 			      iregion, ascale, platform_id, sensor_id,
 			      iyear, isday, ibeam,
