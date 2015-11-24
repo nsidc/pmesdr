@@ -250,6 +250,7 @@ int main(int argc,char *argv[])
   int infile;
   int loc;
   int imeas;
+  int first_measurement;
 
   hi_scan = HI_SCAN;
   lo_scan = LO_SCAN;
@@ -569,10 +570,11 @@ int main(int argc,char *argv[])
 	      ascend=0;
 	  }
 
-	  /* extract TB measurements for each scan.  the logic here works through
-	     both hi and lo (A and B) scans with a single loop */
+	  /* extract TB measurements for each scan */
 
-	  for (imeas=0; imeas < gsx->measurements[loc]; imeas++) { /* measurements loop to label_3401 */
+	  first_measurement = 0;
+	  if ( CETB_AMSRE == gsx->short_sensor ) first_measurement = CETB_AMSRE_FIRST_MEASUREMENT;
+	  for (imeas=first_measurement; imeas < gsx->measurements[loc]; imeas++) { /* measurements loop to label_3401 */
 	    irec=irec+1;	/* count of pulses examined */
 
 	    /* for each output region and section */
