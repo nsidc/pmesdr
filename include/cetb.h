@@ -10,6 +10,9 @@
 /* alignment is needed for memory allocations across applications in this system */
 #define CETB_MEM_ALIGNMENT 64
 
+/* Problem with AMSRE input data files requires this first measurement parameter to be used in setup */
+#define CETB_AMSRE_FIRST_MEASUREMENT 14
+
 typedef enum {
   CETB_NO_REGION=-1,
   CETB_EASE2_N,
