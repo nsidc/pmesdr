@@ -163,9 +163,6 @@ int main(int argc, char **argv)
   int non_size_x, non_size_y, nsx2, nsy2, ix, iy;
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
- /* define no-data values */
-  float anodata_A=0.0;
-
   int Nfiles_out=1;  
 
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
@@ -190,6 +187,9 @@ int main(int argc, char **argv)
   unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
   int ncerr;
 
+  float tb_fill_value_float;
+  float tb_missing_value_float;
+
   int storage = 0;
   long head_len;
   int errors = 0;
@@ -206,7 +206,11 @@ int main(int argc, char **argv)
   int *fill_array;
   short int *weight_array;
   double dsum, *aveweights, tbave;
-  
+
+  tb_fill_value_float = CETB_FILE_UNPACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
+					       CETB_FILE_TB_ADD_OFFSET, tb_fill_value );
+  tb_missing_value_float = CETB_FILE_UNPACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
+						  CETB_FILE_TB_ADD_OFFSET, tb_missing_value );
 /* begin program */  
 
   printf("BYU SSM/I meta BG program: C version %f\n",VERSION);
@@ -694,7 +698,7 @@ int main(int argc, char **argv)
   mdim2=mdim/2+1;
 
   for (its=0; its < nsize; its++) {   /* for each pixel */
-    *(a_val+its) = anodata_A;
+    *(a_val+its) = tb_fill_value_float;
 
     /* print progress */
     if ((its % nsx) == nsx/2  && (its/nsx) % 50 == 0) {
@@ -876,13 +880,13 @@ int main(int argc, char **argv)
         if (abs(a_val[its] - tbave) > difthres)
 	  a_val[its]=(float) tbave;	
 
-      /* set data to 600.0 if it is OOR */
+      /* set data to CETB_TB_MISSING_VALUE if it is OOR */
        	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
-	  a_val[its] = 600.0;
+	  a_val[its] = tb_missing_value_float;
 	}
 	
       } else /* pixel not hit, set its value to the default nodata value */
-	a_val[its] = anodata_A;
+	a_val[its] = tb_fill_value_float;
     } 
   }
 
@@ -890,7 +894,7 @@ int main(int argc, char **argv)
 
   if (median_flag) { /* median filter image */
     printf("Applying Median Filter to BG image result\n");    
-    filter(a_val, 5, 0, nsx, nsy, a_temp, anodata_A);  /* 5x5 modified median filter */
+    filter(a_val, 5, 0, nsx, nsy, a_temp, tb_fill_value_float);  /* 5x5 modified median filter */
   }
 
   /* output image file */
