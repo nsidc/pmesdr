@@ -113,7 +113,7 @@ void make_indx(int nmax, int count, int fill_array[], short int response_array[]
 void Ferror(int i);
 
 void filter(float *val, int size, int opt, int nsx, int nsy, float
-	    *temp, float thres);
+	    *temp, float thres, float missing);
 
 void no_trailing_blanks(char *s);
 
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
     printf("   delta2   = BGI delta2 (noise variance)\n");
     printf("   ithres   = gain threshold (in normal space)\n");
     printf("   difthres = BGI-AVE Q/A threshold\n");
-    printf("   mflag    = median filter if 1, do not run if 0, else use metafile value\n");
+    printf("   mflag    = median filter if 1, do not run if 0, default is 1 for BGI\n");
     return(-1);
   }
   file_in=argv[1];
@@ -395,15 +395,6 @@ int main(int argc, char **argv)
 
      if ((x = strchr(line+4,' ')) != NULL) *x='\0'; /* truncate off any trailing spaces */
 
-     if (strstr(line,"Median_flag") != NULL) {
-       x = strchr(line,'=')+1;
-       if (strstr(x,"T") != NULL || strstr(x,"t") != NULL)
-	  median_flag=1;
-       if (strstr(x,"F") != NULL || strstr(x,"f") != NULL)
-	  median_flag=0;
-       printf("Median flag: %d\n",median_flag);       
-      }
-
      if (strstr(line,"Has_Azimuth_Angle") != NULL) {
        x = strchr(line,'=')+1;
        if (strstr(x,"T") != NULL || strstr(x,"t") != NULL) {
@@ -433,6 +424,7 @@ int main(int argc, char **argv)
    } while (end_flag == 0);
 
    /* optionally override median filter flag */
+   median_flag = 1;
    i=-1;   
    if (argc > 7) sscanf(argv[7],"%d",&i);
    if (i==1) median_flag=1;   
@@ -894,7 +886,7 @@ int main(int argc, char **argv)
 
   if (median_flag) { /* median filter image */
     printf("Applying Median Filter to BG image result\n");    
-    filter(a_val, 5, 0, nsx, nsy, a_temp, tb_fill_value_float);  /* 5x5 modified median filter */
+    filter(a_val, 3, 0, nsx, nsy, a_temp, tb_fill_value_float, tb_missing_value_float);  /* 3x3 modified median filter */
   }
 
   /* output image file */
@@ -1013,7 +1005,7 @@ void make_indx(int nmax, int count, int fill_array[], short int response_array[]
 float median(float *array, int count);
 
 void filter(float *val, int size, int mode, int nsx, int nsy, 
-	    float *temp, float thres)
+	    float *temp, float thres, float missing)
 {
   float array[100], total;
   int i,j,x,y,size2,count,x1,x2,y1,y2;
@@ -1030,7 +1022,7 @@ void filter(float *val, int size, int mode, int nsx, int nsy,
       x2=min(x+size2,nsx);
       for (i=x1; i <= x2; i++)
 	for (j=y1; j <= y2; j++)
-	  if (*(val+i+(j-1)*nsx-1) > thres) {
+	  if ( (*(val+i+(j-1)*nsx-1) > thres) && (*(val+i+(j-1)*nsx-1) < missing) ) {
 	    array[count]=*(val+i+(j-1)*nsx-1);
 	    count++;
 	  };
@@ -1051,6 +1043,7 @@ void filter(float *val, int size, int mode, int nsx, int nsy,
   for (i=0; i < nsx*nsy; i++) {
     *(val+i) = *(temp+i);
     *(temp+i)=0.0;
+    if ( (*(val+i) > thres) && ( (*(val+i) < 50.) || (*(val+i) > 350.) ) ) *(val+i) = missing;
   }
   return;
 }
