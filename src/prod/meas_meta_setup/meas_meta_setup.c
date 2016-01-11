@@ -218,6 +218,8 @@ int main(int argc,char *argv[])
   float eqlon, xhigh_lon, xlow_lon, sc_last_lat, sc_last_lon;
   float minlat[HI_SCAN], maxlat[HI_SCAN]; 
   float dscale, tsplit1, tsplit2, alat1, alon1,x_rel, y_rel;
+  float tsplit1_mins, tsplit2_mins;
+  float fractional_orbit;
 
   float response_threshold=-10.0; /* default response threshold in dB */
   int flatten=0;                  /* default: use rounded response function */  
@@ -469,7 +471,7 @@ int main(int argc,char *argv[])
 	if (dstart <= dend) {
 	  if (iyear != year && iyeare != year) goto label_3501;
 	  if (iday <= dstart) {
-	    if (idaye < dstart) goto label_3501;
+	    if (idaye < dstart-1) goto label_3501;
 	    if (idaye == dstart && ihoure*60+imine < mstart) goto label_3501;
 	  } else {
 	    if (iday > dend) {
@@ -521,8 +523,8 @@ int main(int argc,char *argv[])
 	    }
 	  } else {
 	    if (iyear != year) goto label_350; /* skip further processing of this scan */
-	    if (iday < dstart) goto label_350; /* skip further processing of this scan */
-	    if (iday > dend)   goto label_350; /* done processing, skip rest of scan */
+	    if (iday < dstart-1) goto label_350; /* skip further processing of this scan */
+	    if (iday > dend+1)   goto label_350; /* done processing, skip rest of scan */
 	  }
 
 	  /* compute days since start of image data if cross year boundary */
@@ -541,6 +543,8 @@ int main(int argc,char *argv[])
 	  ktime=((ktime+iday-dstart)*24+ihour)*60+imin;
 
 	  /* compute the orientation of the nadir track with respect to north */
+	  fractional_orbit = ( float ) iscan/nscans;
+	  eqlon = fractional_orbit * 360.0;
 	  if (eqlon<0.0) eqlon=eqlon+360.0;      
 	  /*
 	    find the longitude of the equator crossing of the middle measurement to use in computing the
@@ -624,8 +628,8 @@ int main(int argc,char *argv[])
 		    if (ascend) goto label_3400;
 
 		/* extract local-time-of-day split values */
-		tsplit1=save_area.sav_tsplit1[iregion]*60;
-		tsplit2=save_area.sav_tsplit2[iregion]*60;
+		tsplit1_mins=save_area.sav_tsplit1[iregion]*60;
+		tsplit2_mins=save_area.sav_tsplit2[iregion]*60;
 
 		cy=cen_lat;
 		cx=cen_lon;
@@ -644,12 +648,15 @@ int main(int argc,char *argv[])
 
 		if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
 		  ctime = cx *4.0 + ktime; /* calculate the local time of day in minutes */
+		  /* seeing as ctime is already LTOD, the comparisons must be to local tsplit1, tsplit2 and tsplit1+24hours */
 		  if (iasc == 3) { /* morning */
-		    if (ctime < tsplit1+(24*60) || ctime > tsplit2+(24*60)) goto label_3400;
-		  } else if (iasc == 5) { /* midday -- not used */
-		    // if (ctime < (34*60) || ctime >= (42*60)) goto label_3400;
-		  } else /* iasc==4 evening */
-		    if (ctime <= tsplit2 || ctime >= tsplit1+(24*60)) goto label_3400;
+		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
+		    //		    if (ctime < tsplit1+(24*60) || ctime > tsplit2+(24*60)) goto label_3400;		    
+		  } 
+		  if ( iasc == 4 ) {  /* iasc==4 evening */
+		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+(24*60)) goto label_3400;
+		    //		    if (ctime <= tsplit2 || ctime >= tsplit1+(24*60)) goto label_3400;		    
+		  }
 		} 
 
 		if (dateline) { /* convert lon to ascending order */
