@@ -53,6 +53,10 @@
 #define AEARTH 6378.1363              /* SEMI-MAJOR AXIS OF EARTH, a, KM */
 #define FLAT 3.3528131778969144e-3    /* = 1/298.257 FLATNESS, f, f=1-sqrt(1-e**2) */
 
+#define MINUTES_PER_DEG_LONGITUDE 4
+#define MINUTES_PER_DAY (24*60)
+#define MINUTES_PER_HOUR 60
+
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 #define mod(a,b) ((a) % (b))
@@ -118,15 +122,6 @@ typedef struct { /* BYU region information storage */
   float sav_tsplit1[NSAVE], sav_tsplit2[NSAVE];
   float sav_km[NSAVE];  
 } region_save;  
-
-/****************************************************************************/
-/* These #defines will go away as this code relies more and more on gsx     */
-
-#define HI_SCAN 128
-#define LO_SCAN  64
-#define HSCANS 3600
-#define LSCANS 1800
-#define NUMCHAR  23
 
 /********************************************************************/
 
@@ -216,8 +211,9 @@ int main(int argc,char *argv[])
   int ix1,ix2,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,iy1,iy2,ix,iy,cnt;
   float clat,clon,dlat,dlon,sum;
   float eqlon, xhigh_lon, xlow_lon, sc_last_lat, sc_last_lon;
-  float minlat[HI_SCAN], maxlat[HI_SCAN]; 
   float dscale, tsplit1, tsplit2, alat1, alon1,x_rel, y_rel;
+  float tsplit1_mins, tsplit2_mins;
+  float fractional_orbit;
 
   float response_threshold=-10.0; /* default response threshold in dB */
   int flatten=0;                  /* default: use rounded response function */  
@@ -241,8 +237,6 @@ int main(int argc,char *argv[])
   int first_scan_loc;
   int last_scan_loc;
   int status;
-  int hi_scan;
-  int lo_scan;
   int hscans;
   int lscans;
   char *gsx_fname[MAX_INPUT_FILES];
@@ -251,11 +245,6 @@ int main(int argc,char *argv[])
   int loc;
   int imeas;
   int first_measurement;
-
-  hi_scan = HI_SCAN;
-  lo_scan = LO_SCAN;
-  hscans = HSCANS;
-  lscans = LSCANS;
 
   gsx = NULL;
   for (n=0; n<NSAVE; n++)
@@ -395,10 +384,6 @@ int main(int argc,char *argv[])
     }
   }
 
-  for ( i=0; i<nfile; i++ ) {
-    fprintf( stderr, "%s ***** file in the list '%s' \n", __FUNCTION__, gsx_fname[i] );
-  }
-
   for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
     
   label_330:; /* read next file name from list gsx_fname */
@@ -412,9 +397,6 @@ int main(int argc,char *argv[])
     /* initialize last spacecraft position */
     sc_last_lat=-1.e25;
     sc_last_lon=-1.e25;
-
-    /* open and read new input TB file */
-    printf("Opening input TB file %d '%s'\n",nfile,fname);
 
     /*
      * read data from file into gsx_class variable
@@ -469,15 +451,15 @@ int main(int argc,char *argv[])
 	if (dstart <= dend) {
 	  if (iyear != year && iyeare != year) goto label_3501;
 	  if (iday <= dstart) {
-	    if (idaye < dstart) goto label_3501;
-	    if (idaye == dstart && ihoure*60+imine < mstart) goto label_3501;
+	    if (idaye < dstart-1) goto label_3501;
+	    if (idaye == dstart && ihoure*MINUTES_PER_HOUR+imine < mstart) goto label_3501;
 	  } else {
 	    if (iday > dend) {
 	      if (!ltdflag) goto label_3501;
 	      dend2=dend+1;
 	      if (ltdflag && idaye > dend2) goto label_3501;
 	    } else {
-	      if (iday == dend && ihour*60+imin > mend) goto label_3501;
+	      if (iday == dend && ihour*MINUTES_PER_HOUR+imin > mend) goto label_3501;
 	    }
 	  }
 	} else {
@@ -491,10 +473,10 @@ int main(int argc,char *argv[])
 	    dend2=dend+ilenyear;
 	  if (iday <= dstart) {
 	    if (idaye < dstart) goto label_3501;
-	    if (idaye == dstart && ihoure*60+imine < mstart) goto label_3501;
+	    if (idaye == dstart && ihoure*MINUTES_PER_HOUR+imine < mstart) goto label_3501;
 	  } else {
 	    if (iday > dend2) goto label_3501;
-	    if (iday == dend2 && ihour*60+imin > mend) goto label_3501;
+	    if (iday == dend2 && ihour*MINUTES_PER_HOUR+imin > mend) goto label_3501;
 	  }
 	  /* shortf=0; */
 	}
@@ -513,17 +495,13 @@ int main(int argc,char *argv[])
 	  timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	  iday = jday;
     
-	  /* check to see if day is in desired range */
-	  if (iasc >= 3 && iasc <= 5) { /* if local time of day discrimination is used */
-	    if (dstart < dend) { /* if doesn't cross year boundary */
-	      if (iyear != year) goto label_350; /* skip further processing of this scan */
-	      if ( iday < dstart - 1 ) goto label_350; /* skip further processing of this scan */
-	    }
-	  } else {
-	    if (iyear != year) goto label_350; /* skip further processing of this scan */
-	    if (iday < dstart) goto label_350; /* skip further processing of this scan */
-	    if (iday > dend)   goto label_350; /* done processing, skip rest of scan */
-	  }
+	  /* check to see if scan is in desired range */
+	  /* this means that the scan must be either from the day before,
+	     the day of or the day after the UTC day being processed */
+	  if (iyear != year) goto label_350; /* skip further processing of this scan */
+	  if (iday < dstart-1) goto label_350; /* skip further processing of this scan */
+	  if (iday > dend+1)   goto label_350; /* done processing, skip rest of scan */
+
 
 	  /* compute days since start of image data if cross year boundary */
 	  ktime=(iyear-year)*365;   /* days */
@@ -538,9 +516,19 @@ int main(int argc,char *argv[])
 	  }
       
 	  /* compute time in mins since start of image data (assumes mstart=0) */
-	  ktime=((ktime+iday-dstart)*24+ihour)*60+imin;
+	  /* compute the time in minutes of the current scan line, wrt to the UTC day being processed
+	     for example, if the observation time is 30 minutes before midnight UTC, then ktime will
+	     be -30 - this time will later be combined with the longitude of the observation to get the relative
+	     local time for the measurement at that point
+	     to see the how different UTC values and longitudes are combined, look at the spreadsheet in the docs/internal
+	     directory in the repo - spreadsheet allows you to enter day and time of observation and longitude and then
+	     calculates ktime and ctime as in the code - the result can be compared with the split times to see if the time
+	     of the measurement is in the correct range */
+	  ktime=((ktime+iday-dstart)*24+ihour)*MINUTES_PER_HOUR+imin;
 
 	  /* compute the orientation of the nadir track with respect to north */
+	  fractional_orbit = ( float ) iscan/nscans;
+	  eqlon = fractional_orbit * 360.0;
 	  if (eqlon<0.0) eqlon=eqlon+360.0;      
 	  /*
 	    find the longitude of the equator crossing of the middle measurement to use in computing the
@@ -615,17 +603,18 @@ int main(int argc,char *argv[])
 		  if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
 		}
 	  
-		/* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc) */
+		/* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc, 3=morning, 4=evening) */
 		iasc=save_area.sav_ascdes[iregion];
 		if (iasc != 0)
 		  if (iasc == 1) {
 		    if (!ascend) goto label_3400;
-		  } else if (iasc == 2)
+		  } else if (iasc == 2) {
 		    if (ascend) goto label_3400;
+		  }
 
 		/* extract local-time-of-day split values */
-		tsplit1=save_area.sav_tsplit1[iregion]*60;
-		tsplit2=save_area.sav_tsplit2[iregion]*60;
+		tsplit1_mins=save_area.sav_tsplit1[iregion]*MINUTES_PER_HOUR;
+		tsplit2_mins=save_area.sav_tsplit2[iregion]*MINUTES_PER_HOUR;
 
 		cy=cen_lat;
 		cx=cen_lon;
@@ -639,17 +628,23 @@ int main(int argc,char *argv[])
 		lonl=save_area.sav_lonl[iregion];
 		dateline=save_area.sav_dateline[iregion];
 
-		/* if a local-time-of-day image, compute the local time and see if it fits within LTOD window.
-		   Note: data may be next UTC day */
+		/* if a local-time-of-day image, compute the local time relative to the current longitude, add in the
+		   UTC time of the observation (ktime) which was calculated above and compare the result to
+		   the split times windows.
+		   ctime is the relative local time
+		   Note: data may be next or previous UTC day
+		   Note also: that the length of the window is current set to # minutes per 24 hour period
+		   this may not be true for all sensors */
 
 		if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
-		  ctime = cx *4.0 + ktime; /* calculate the local time of day in minutes */
+		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime; /* calculate the relative local time of day in minutes */
+
 		  if (iasc == 3) { /* morning */
-		    if (ctime < tsplit1+(24*60) || ctime > tsplit2+(24*60)) goto label_3400;
-		  } else if (iasc == 5) { /* midday -- not used */
-		    // if (ctime < (34*60) || ctime >= (42*60)) goto label_3400;
-		  } else /* iasc==4 evening */
-		    if (ctime <= tsplit2 || ctime >= tsplit1+(24*60)) goto label_3400;
+		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
+		  } 
+		  if ( iasc == 4 ) {  /* iasc==4 evening */
+		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) goto label_3400;
+		  }
 		} 
 
 		if (dateline) { /* convert lon to ascending order */
