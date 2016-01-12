@@ -520,7 +520,10 @@ int main(int argc,char *argv[])
 	     for example, if the observation time is 30 minutes before midnight UTC, then ktime will
 	     be -30 - this time will later be combined with the longitude of the observation to get the relative
 	     local time for the measurement at that point
-	     for more information on this see the LTOD_calculations spreadsheet in the repo */
+	     to see the how different UTC values and longitudes are combined, look at the spreadsheet in the docs/internal
+	     directory in the repo - spreadsheet allows you to enter day and time of observation and longitude and then
+	     calculates ktime and ctime as in the code - the result can be compared with the split times to see if the time
+	     of the measurement is in the correct range */
 	  ktime=((ktime+iday-dstart)*24+ihour)*MINUTES_PER_HOUR+imin;
 
 	  /* compute the orientation of the nadir track with respect to north */
