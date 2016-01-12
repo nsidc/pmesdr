@@ -495,8 +495,9 @@ int main(int argc,char *argv[])
 	  timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	  iday = jday;
     
-	  /* check to see if day is in desired range */
-	  /* at this point you can only check for the day before, the day of and the day after as LTOD etc has not yet been read */
+	  /* check to see if scan is in desired range */
+	  /* this means that the scan must be either from the day before,
+	     the day of or the day after the UTC day being processed */
 	  if (iyear != year) goto label_350; /* skip further processing of this scan */
 	  if (iday < dstart-1) goto label_350; /* skip further processing of this scan */
 	  if (iday > dend+1)   goto label_350; /* done processing, skip rest of scan */
@@ -515,6 +516,11 @@ int main(int argc,char *argv[])
 	  }
       
 	  /* compute time in mins since start of image data (assumes mstart=0) */
+	  /* compute the time in minutes of the current scan line, wrt to the UTC day being processed
+	     for example, if the observation time is 30 minutes before midnight UTC, then ktime will
+	     be -30 - this time will later be combined with the longitude of the observation to get the relative
+	     local time for the measurement at that point
+	     for more information on this see the LTOD_calculations spreadsheet in the repo */
 	  ktime=((ktime+iday-dstart)*24+ihour)*MINUTES_PER_HOUR+imin;
 
 	  /* compute the orientation of the nadir track with respect to north */
@@ -599,8 +605,9 @@ int main(int argc,char *argv[])
 		if (iasc != 0)
 		  if (iasc == 1) {
 		    if (!ascend) goto label_3400;
-		  } else if (iasc == 2)
+		  } else if (iasc == 2) {
 		    if (ascend) goto label_3400;
+		  }
 
 		/* extract local-time-of-day split values */
 		tsplit1_mins=save_area.sav_tsplit1[iregion]*MINUTES_PER_HOUR;
@@ -618,17 +625,22 @@ int main(int argc,char *argv[])
 		lonl=save_area.sav_lonl[iregion];
 		dateline=save_area.sav_dateline[iregion];
 
-		/* if a local-time-of-day image, compute the local time and see if it fits within LTOD window.
-		   Note: data may be next UTC day */
+		/* if a local-time-of-day image, compute the local time relative to the current longitude, add in the
+		   UTC time of the observation (ktime) which was calculated above and compare the result to
+		   the split times windows.
+		   ctime is the relative local time
+		   Note: data may be next or previous UTC day
+		   Note also: that the length of the window is current set to # minutes per 24 hour period
+		   this may not be true for all sensors */
 
 		if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
-		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime; /* calculate the local time of day in minutes */
-		  /* seeing as ctime is already LTOD, the comparisons must be to local tsplit1, tsplit2 and tsplit1+24hours */
+		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime; /* calculate the relative local time of day in minutes */
+
 		  if (iasc == 3) { /* morning */
 		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
 		  } 
 		  if ( iasc == 4 ) {  /* iasc==4 evening */
-		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+(MINUTES_PER_DAY)) goto label_3400;
+		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) goto label_3400;
 		  }
 		} 
 
