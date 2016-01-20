@@ -118,6 +118,19 @@ void test_cetb_N_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
   
+  strcpy( att_name, "proj4text" );
+  status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, crs_id, att_name,  att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "+proj=laea +lat_0=90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m",
+				    att_str, att_name );
+
+  strcpy( att_name, "srid" );
+  status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, crs_id, att_name,  att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "urn:ogc:def:crs:EPSG::6931", att_str, att_name );
+
   nc_close( nc_fileid );
   
 }
@@ -186,6 +199,19 @@ void test_cetb_S_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
   
+  strcpy( att_name, "proj4text" );
+  status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, crs_id, att_name,  att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m",
+				    att_str, att_name );
+
+  strcpy( att_name, "srid" );
+  status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, crs_id, att_name,  att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "urn:ogc:def:crs:EPSG::6932", att_str, att_name );
+
   nc_close( nc_fileid );
   
 }
@@ -235,7 +261,7 @@ void test_cetb_T_parameters( void ) {
   att_str[ att_len ] = '\0';
   TEST_ASSERT_EQUAL_STRING_MESSAGE( "lambert_cylindrical_equal_area", att_str, att_name );
 
-  strcpy( att_name, "longitude_of_projection_origin" );
+  strcpy( att_name, "longitude_of_central_meridian" );
   expected_double = 0.0;
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
@@ -250,6 +276,19 @@ void test_cetb_T_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
   
+  strcpy( att_name, "proj4text" );
+  status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, crs_id, att_name,  att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "+proj=cea +lat_0=0 +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m",
+				    att_str, att_name );
+
+  strcpy( att_name, "srid" );
+  status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, crs_id, att_name,  att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "urn:ogc:def:crs:EPSG::6933", att_str, att_name );
+
   nc_close( nc_fileid );
   
 }
