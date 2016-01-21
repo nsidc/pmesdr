@@ -1304,7 +1304,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   size_t rows;
   size_t cols;
 
-  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.D;
+  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.0;
   rows = cetb_grid_rows[ this->region_id ][ this->factor ];
   cols = cetb_grid_cols[ this->region_id ][ this->factor ];
 
@@ -1320,7 +1320,7 @@ int set_all_dimensions( cetb_file_class *this ) {
 
   for ( i = 0; i < rows; i++ ) {
     vals[ rows - i - 1 ]
-      = ( (double) i - ( (double) rows / 2.D ) )
+      = ( (double) i - ( (double) rows / 2.0 ) )
       * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
   }
   
@@ -1352,7 +1352,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   }
 
   for ( i = 0; i < cols; i++ ) {
-    vals[ i ] = ( (double) i - ( (double) cols / 2.D ) )
+    vals[ i ] = ( (double) i - ( (double) cols / 2.0 ) )
       * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
   }
   
@@ -1385,7 +1385,7 @@ int set_all_dimensions( cetb_file_class *this ) {
     return STATUS_FAILURE;
   }
 
-  valid_range[ 0 ] = 0.D;
+  valid_range[ 0 ] = 0.0;
   valid_range[ 1 ] = DBL_MAX;
   status = set_dimension( this, "time", 1, &days_since_epoch,
 			  "time", "ANSI date",
