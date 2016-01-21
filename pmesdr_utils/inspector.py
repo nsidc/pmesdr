@@ -1,8 +1,4 @@
-import gc
 import matplotlib.pyplot as plt
-# mpl_toolkits is bitching about version of libgeos
-# commenting it out for now
-#from mpl_toolkits.basemap import Basemap
 from netCDF4 import Dataset
 import numpy as np
 import os
@@ -11,137 +7,103 @@ import re
 import sys
 
 
-def make_png(res, filename):
+def make_png(filename, var_name='TB'):
 
-    print "Making png image for: " + res + ", " + filename
-
-    # Read and reshape the array
-    # If the array were stored correctly, we shouldn't have to
-    # reshape it here.
+    # Read the requested variable and eliminate the time dimension
     try:
         f = Dataset(filename, 'r', 'NETCDF4')
     except RuntimeError:
         sys.stderr.write("Error opening file " + filename + "\n")
         exit(-1)
 
-    keys = f.variables.keys()
-    var_name = 'none'
-    for key in keys:
-        if ( 'TB' == key ):
-            var_name = 'TB'
-            break
-        if ( 'a_image' == key and res != '25' ):
-            var_name = 'a_image'
-            break
-        if ( 'grd_a_image' == key and res == '25' ):
-            var_name = 'grd_a_image'
-            break
-        if ( 'bgi_image' == key ):
-            var_name = 'bgi_image'
-            break
+    data = f.variables[ var_name ][ : ]
+    times, rows, cols = np.shape(data)
+    data = data.reshape(cols, rows)
 
-    if ( 'none' == var_name ):
-        sys.stderr.write( filename + ": " + "contains none of TB, a_image, grd_a_image nor bgi_image.\n" )
-        exit(-1)
+    # Make the legend label and output filename
+    # from the variable's long_name
+    label = f.variables[var_name].long_name
+    label_with_underscores = re.sub(r' ', r'_', label)
 
-    # Eventually this will need to get the bgi array if it's a bgi dump file
-    # Better yet, standardize the array names with what they really should be
-    tb = f.variables[ var_name ][ : ]
-    rows, cols = np.shape(tb)
-    tb = np.flipud(tb.reshape(cols, rows))
+    # Figure out ranges and fill_values for scaling
+    valid_range = f.variables[var_name].valid_range
+    fill_value = f.variables[var_name]._FillValue
+    if "packing_convention" in dir(f.variables[var_name]):
+        print "data are packed..."
+        add_offset = f.variables[var_name].add_offset
+        scale_factor = f.variables[var_name].scale_factor
+        valid_range = valid_range * scale_factor + add_offset
+        fill_value = fill_value * scale_factor + add_offset
 
-    print np.amin(tb), np.amax(tb)
-    tb[ tb > 590. ] = 0.
+    # Some of the valid ranges are a little generous
+    # so adjust them to make the images more meaningful
+    # We might consider adding command-line parameters to
+    # fine-tune these at will, and to control what range is
+    # actually displayed
+    if "TB" == var_name:
+        valid_range[0] = 100.0
+    elif "TB_num_samples" == var_name:
+        valid_range[1] = np.amax(data)
+    elif "Incidence_angle" == var_name:
+        valid_range = [52., 54.]
+    elif "TB_time" == var_name:
+        mins_per_day = 60 * 24
+        valid_range = [ -0.5 * mins_per_day, 1.5 * mins_per_day ]
 
-    if ( var_name == 'TB' ):
-        label = f.long_name
-    if ( var_name == 'a_image' ):
-        label = 'SIR_TB'
-    elif ( var_name == 'bgi_image' ):
-        label = 'BGI_TB'
-    else:
-        label = 'GRD_TB'
+    print " data range: " + str(np.amin(data[data != fill_value])) + \
+        " - " + str(np.amax(data[data != fill_value]))
+    print "valid range: " + str(valid_range[0]) + " - " + str(valid_range[1])
 
     # Make the figure
     fig, ax = plt.subplots( 1, 1 )
     ax.set_title( os.path.basename( filename ) )
-    plt.imshow( tb, cmap=plt.cm.gray, vmin=100, vmax=320 )
+    plt.imshow( data, cmap=plt.cm.gray,
+                vmin=valid_range[0], vmax=valid_range[1] )
     plt.axis('off')
     plt.colorbar(shrink=0.35, label=label)
-    outfile = filename + '.' + label + '.png'
+    outfile = filename + '.' + label_with_underscores + '.png'
     fig.savefig(outfile, dpi=300, bbox_inches='tight')
 
     f.close()
     print "png image saved to: " + outfile
 
-    collected = gc.collect()
-    print "Garbage collector: collected %d objects." % (collected)
 
+def make_geotiff(filename, var_name="TB"):
 
-def make_geotiff(grid, filename):
+    if "TB" != var_name:
+        sys.stderr.write("geotiff only implemented for TB at this time.\n")
+        sys.stderr.write("(Needs work on types of other variables.)\n")
+        exit(-1)
 
+    # Read the requested variable and eliminate the time dimension
     try:
         f = Dataset(filename, 'r', 'NETCDF4')
     except RuntimeError:
         sys.stderr.write("Error opening file " + filename + "\n")
         exit(-1)
 
-    # Parse the grid for pieces we need
-    try:
-        m = re.match(r'e2([nst])_(\d+)', grid)
-        projection, resolution = m.groups()
-    except AttributeError:
-        sys.stderr.write("Error parsing grid for projection/resolution.\n")
-        exit(-1)
+    data = f.variables[ var_name ][ : ]
+    times, rows, cols = np.shape(data)
+    data = data.reshape(cols, rows)
 
-    keys = f.variables.keys()
-    var_name = 'none'
-    for key in keys:
-        if ( 'a_image' == key and resolution != '25' ):
-            var_name = 'a_image'
-            break
-        if ( 'grd_a_image' == key and resolution == '25' ):
-            var_name = 'grd_a_image'
-            break
-        if ( 'bgi_image' == key ):
-            var_name = 'bgi_image'
-            break
+    # Make the legend label and output filename
+    # from the variable's long_name
+    label = f.variables[var_name].long_name
+    label_with_underscores = re.sub(r' ', r'_', label)
 
-    if ( 'none' == var_name ):
-        sys.stderr.write( filename + ": " + "contains none of a_image, grd_a_image nor bgi_image.\n" )
-        exit(-1)
-
-    # This reshape command should not be necessary if we are writing the .nc files
-    # correctly
-    tb = f.variables[var_name][:]
-    sys.stderr.write( "Reading image from: " + var_name + "\n")
-    cols, rows = np.shape(tb)
-    print cols, rows
-    tb = np.flipud(tb.reshape(rows, cols))
-    print np.amin(tb), np.amax(tb)
-
-    if ( var_name == 'a_image' ):
-        label = 'SIR_TB'
-    elif ( var_name == 'bgi_image' ):
-        label = 'BGI_TB'
-    else:
-        label = 'GRD_TB'
-
-    outfilename = filename + '.' + label + '.tif'
+    outfilename = filename + '.' + label_with_underscores + '.tif'
     driver = gdal.GetDriverByName("GTiff")
+
+    # This type specifier will need to be variable-specific
+    # to allow this routine to work with other variables
     dest_ds = driver.Create(outfilename, cols, rows, 1, gdal.GDT_UInt16)
 
     # Initialize the projection information
-    # When we can connect to epsg v8.6 or later, we should replace proj.4 strings
-    # with epsg codes.  For now, we'll just do proj.4 strings
+    # When we can connect to epsg v8.6 or later,
+    # we should replace proj.4 strings
+    # with epsg codes.  For now, we'll just use proj.4 strings
     proj = osr.SpatialReference()
-    if projection == 'n':
-        dest_srs = "+proj=laea +lat_0=90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m"
-    elif projection == 's':
-        dest_srs = "+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m"
-    else:
-        dest_srs = "+proj=cea +lat_0=0 +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m"
-
+    dest_srs = str(f.variables["crs"].proj4text)
     proj.SetFromUserInput(dest_srs)
     dest_ds.SetProjection(proj.ExportToWkt())
 
@@ -156,52 +118,25 @@ def make_geotiff(grid, filename):
     # The second and sixth parameters define the pixels size.
     # The third and fifth parameters define the rotation of the raster.
     # Values are meters
-    if re.match(r'[ns]', projection):
+    # This UL information should be in the file crs variable information
+    grid_name = str(f.variables["crs"].long_name)
+    if re.match(r'EASE2_[NS]', grid_name):
         map_UL_x = -9000000.
         map_UL_y = 9000000.
-        if resolution == '25':
-            scale_x = 25000.00000
-            scale_y = -25000.00000
-        elif resolution == '3':
-            scale_x = 3125.00000
-            scale_y = -3125.00000
-        else:
-            sys.stderr.write("Unrecognized resolution " + resolution + "\n")
     else:
         map_UL_x = -17367530.44
         map_UL_y = 6756820.20000
-        if resolution == '25':
-            scale_x = 25025.26000
-            scale_y = -25025.26000
-        elif resolution == '3':
-            scale_x = 3128.15750
-            scale_y = -3128.15750
-        else:
-            sys.stderr.write("Unrecognized resolution " + resolution + "\n")
+
+    scale = f.variables["crs"].scale_factor_at_projection_origin
+    scale_x = scale
+    scale_y = -1 * scale
 
     geotransform = (map_UL_x, scale_x, 0., map_UL_y, 0., scale_y)
     dest_ds.SetGeoTransform(geotransform)
 
-    dest_ds.GetRasterBand(1).WriteArray((tb + 0.5).astype(np.uint16))
+    dest_ds.GetRasterBand(1).WriteArray((data + 0.5).astype(np.uint16))
     dest_ds = None
 
     f.close()
 
     sys.stderr.write("Wrote geotiff to " + outfilename + "\n")
-
-
-# def init_basemap():
-
-#     """Initialize basemap for the map we're using"""
-    
-#     rows = 720
-#     cols = 720
-#     map_scale_m = 25000
-#     m = Basemap( width=map_scale_m*cols, height=map_scale_m*rows, resolution='l', projection='laea',
-#                  lon_0=0, lat_0=90 )
-#     m.drawcoastlines()
-#     m.drawcountries()
-#     m.drawmeridians(np.arange(-180.,180.,20.),labels=[False,False,False,True])
-#     m.drawparallels(np.arange(10.,80.,20.), labels=[True,False,False,False])
-#     return m
-
