@@ -127,8 +127,6 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     # New cetb cd files will only have a single "TB" variable, which is scaled
     # Figure out which variable name is in the first file, and
     # then always look for "TB" in the second one
-    # Finally, the TB file will be stored differently from the way the original
-    # files were stored, so do that flip/transpose before doing the comparison
     f1 = Dataset( file1, 'r', 'NETCDF4' )
     keys = f1.variables.keys()
     var_name = 'none'
@@ -166,6 +164,14 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
 
     if statistics:
         dump_diff_statistics( image1, image2, diff, tolerance, exclude_out_of_range=exclude_out_of_range )
+
+    # If there is a cols dimension variable, compare first elements of it
+    if ('cols' in keys):
+        sys.stderr.write( "> " + this_program + ": Comparing cols dimension variables..." )
+        if (f1.variables["cols"][0] != f2.variables["cols"][0]):
+            sys.stderr.write( "\n" + this_program + ": cols values differ\n" )
+            return False
+        sys.stderr.write( "OK\n" )
 
     # If the arrays are equal, we are done
     # If they are not, then check for differences less than |tolerance|
