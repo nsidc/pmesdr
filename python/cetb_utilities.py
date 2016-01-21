@@ -15,8 +15,8 @@ import inspect
 import numpy as np
 import glob
 import os
-import re
 import sys
+
 
 def compare_cetb_directories( dir1, dir2,
                               exclude_out_of_range=False, statistics=False, tolerance=0,
@@ -25,7 +25,7 @@ def compare_cetb_directories( dir1, dir2,
     Compares 2 CETB output directories, by matching up filenames in each one,
     and calling compare_cetb_files on the pairs.
     Returns 0 when dirs compare as the "same", and 1 otherwise.
-    
+
     exclude_out_of_range : default is False
          when this keyword is set, any pixel locations outside the interval
          [ 50.0, 350.0 ] Kelvins are ignored.
@@ -33,7 +33,6 @@ def compare_cetb_directories( dir1, dir2,
     max_diff_pixels : default is 0
          when this keyword is set the data will match as long as there are fewer
          than max_diff_pixels different pixels in each file in the directory
-    
     """
     this_program = inspect.stack()[ 0 ][ 3 ]
     if ( verbose ):
@@ -56,7 +55,7 @@ def compare_cetb_directories( dir1, dir2,
     full_list2 = sorted( glob.glob( dir2 + "/*.nc" ) )
 
     list2 = full_list2
-    
+
     if len( list1 ) != len( list2 ):
         sys.stderr.write( "\n" + this_program + ": Number of files in the directories differs.\n" )
         return False
@@ -71,7 +70,7 @@ def compare_cetb_directories( dir1, dir2,
         if not ( os.path.basename( list1[ i ] ) == os.path.basename( list2[ i ] ) ):
             sys.stderr.write( "\n" + this_program + ": Filenames differ: " + list1[ i ] + " " + list2[ i ] + "\n" )
             return False
-            
+
         if not compare_cetb_files( list1[ i ], list2[ i ],
                                    exclude_out_of_range=exclude_out_of_range,
                                    statistics=statistics, tolerance=tolerance,
@@ -85,7 +84,7 @@ def compare_cetb_directories( dir1, dir2,
         sys.stderr.write( "\n" + this_program + ": All files match.\n" )
 
     return all_files_OK
-    
+
 def compare_cetb_files( file1, file2, exclude_out_of_range=False,
                         statistics=False, tolerance=0, max_diff_pixels=0,
                         verbose=False ):
@@ -96,9 +95,9 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
                                  tolerance=0,
                                  max_diff_pixels=0,
                                  verbose=False )
-    
+
     Compares 2 CETB files.
-    
+
     CETB files are netCDF files, with global attributes and a number of variable arrays.
     Eventually we will compare all the pieces of the two files, displaying any differences.
     For now, we will just compare the data array contained in:
@@ -108,11 +107,11 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     exclude_out_of_range : default is False
          when this keyword is set, any pixel locations outside the interval
          [ 50.0, 350.0 ] Kelvins are ignored.
-    
+
     max_diff_pixels : default is 0
          when this keyword is set the data will match as long as there are fewer
          than max_diff_pixels different pixels in each file in the directory
-    
+
     """
     this_program = inspect.stack()[ 0 ][ 3 ]
     if ( verbose ):
@@ -167,7 +166,7 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
 
     if statistics:
         dump_diff_statistics( image1, image2, diff, tolerance, exclude_out_of_range=exclude_out_of_range )
-        
+
     # If the arrays are equal, we are done
     # If they are not, then check for differences less than |tolerance|
     # Finally check for fewer than max_diff_pixels different
@@ -190,6 +189,7 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
             sys.stderr.write( "\n" + this_program + ": " + var_name + " data differ.\n" )
             return False
 
+
 def dump_image_statistics( filename, image ):
     """
     Dumps statistics on this image to stderr:
@@ -204,8 +204,9 @@ def dump_image_statistics( filename, image ):
         # break...
         sys.stderr.write('{0}:\n\tmin={1:8} max={2:8} mean={3:8} std={4:8}\n'
                          .format(filename, np.amin(image), np.amax(image), np.mean(image), np.std(image)))
-        
+
     return
+
 
 def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, tolerance, exclude_out_of_range=False ):
     """
@@ -219,7 +220,7 @@ def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, toler
         label = "(inside(50,350))"
     else:
         label = ""
-        
+
     absdiff = abs( my_diff )
     num_diffs = len( absdiff[ absdiff > tolerance ] )
 
@@ -243,8 +244,7 @@ def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, toler
             except ValueError, e:
                 sys.stderr.write( '{0:d}\tdiff={1:8} img1={2:8} img2={3:8}\n'
                               .format( i, my_diff[ i ], my_image1[ i ], my_image2[ i ] ) )
-                
-                
+
     return
 
 
@@ -261,7 +261,6 @@ def filter_images( image1, image2, diff, exclude_out_of_range=False, verbose=Fal
         image2 = image2[ idx ]
 
     return image1, image2, diff
-    
 
 
 
