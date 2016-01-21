@@ -4,8 +4,6 @@
  * 11-Nov-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
  * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
  */
-#include <stdlib.h>
-
 #include "cetb.h"
 #include "utils.h"
 
