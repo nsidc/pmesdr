@@ -7,6 +7,11 @@
 #ifndef cetb_H
 #define cetb_H
 
+/* Include standard headers for things like printf and __FUNCTION__ */
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 /* alignment is needed for memory allocations across applications in this system */
 #define CETB_MEM_ALIGNMENT 64
 
