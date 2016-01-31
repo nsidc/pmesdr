@@ -1,9 +1,8 @@
 #!/bin/sh
-# driver_ssmi.sh
-# Created Thu Dec 10 2015 by Molly Hardman <mhardman@nsidc-driftice.local>
+# driver_ssmi_bgi_t.sh
+# Created Fri Jan 29 2016 by mhardman <mhardman@nsidc-mhardman.local>
 # $Id$
 # $Log$
-#
 #
 # This script will set the environment variables for year day and channel and then call the slurm shell
 # script to start the job
@@ -33,23 +32,20 @@ do
     export DAY=$list
     case $CHANNEL in
 	[1-2])
-	    SBATCH_TIMELIMIT=01:45:00
+	    SBATCH_TIMELIMIT=09:45:00
 	    ;;
 	3)
-	    SBATCH_TIMELIMIT=00:55:00
+	    SBATCH_TIMELIMIT=06:55:00
 	    ;;
 	[4-5])
-	    SBATCH_TIMELIMIT=01:15:00
+	    SBATCH_TIMELIMIT=09:45:00
 	    ;;
 	[6-7])
-	    SBATCH_TIMELIMIT=00:15:00
+	    SBATCH_TIMELIMIT=00:40:00
 	    ;;
     esac
-    echo " job time limit ${SBATCH_TIMELIMIT}"
-    sbatch /projects/moha2290/measures-byu/janus_batchfiles/ssmi_bgi_n.sh
-    sbatch /projects/moha2290/measures-byu/janus_batchfiles/ssmi_bgi_s.sh
-    echo "/projects/moha2290/measures-byu/janus_batchfiles/ssmi_${CHANNEL_STRING}_day_$SRC.sh"
-    echo "result $? for day $DAY and year $YEAR channel $CHANNEL chan_str $CHANNEL_STRING and input file $SRC$YEAR$DAY"
+    sbatch /projects/moha2290/measures-byu/janus_batchfiles/ssmi_bgi_ta.sh
+    sbatch /projects/moha2290/measures-byu/janus_batchfiles/ssmi_bgi_td.sh
 done
 #
 echo "result $?"
