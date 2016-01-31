@@ -130,7 +130,7 @@ typedef struct { /* BYU region information storage */
 /* BYU SSM/I approximate spatial response computation */
 
 static float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
-static int write_filenames_to_header( gsx_class *gsx, region_save *save_area );
+static void write_filenames_to_header( gsx_class *gsx, region_save *save_area );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
 FILE * get_meta(char *mname, char *outpath, int *dstart, 
@@ -245,6 +245,7 @@ int main(int argc,char *argv[])
   int loc;
   int imeas;
   int first_measurement;
+  cetb_region_id cetb_region;
 
   gsx = NULL;
   for (n=0; n<NSAVE; n++)
@@ -371,7 +372,7 @@ int main(int argc,char *argv[])
 	strcpy(fname, ftempname);
 	no_trailing_blanks(fname);    
         gsx = gsx_init( fname );
-	status = write_filenames_to_header( gsx, &save_area );
+	write_filenames_to_header( gsx, &save_area );
 	status = posix_memalign( (void**)&gsx_fname[nfile], CETB_MEM_ALIGNMENT, strlen(fname)+1 );
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
@@ -569,6 +570,7 @@ int main(int argc,char *argv[])
 	    for (iregion=0; iregion<save_area.nregions; iregion++) { /* regions loop label_3400 */
 
 	      ibeam=save_area.sav_ibeam[iregion];  /* beam number */
+	      cetb_region = (cetb_region_id)(save_area.sav_regnum[iregion]-cetb_region_number[0]);
 	      
 	      if ( CETB_SSMI == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
 	      if ( CETB_AMSRE == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
@@ -612,9 +614,10 @@ int main(int argc,char *argv[])
 		    if (ascend) goto label_3400;
 		  }
 
-		/* extract local-time-of-day split values */
-		tsplit1_mins=save_area.sav_tsplit1[iregion]*MINUTES_PER_HOUR;
-		tsplit2_mins=save_area.sav_tsplit2[iregion]*MINUTES_PER_HOUR;
+		/* extract local-time-of-day split values  - these are sensor and projection dependent */
+
+		tsplit1_mins=(cetb_ltod_split_times[gsx->short_platform][cetb_region][0])*MINUTES_PER_HOUR;
+		tsplit2_mins=(cetb_ltod_split_times[gsx->short_platform][cetb_region][1])*MINUTES_PER_HOUR;
 
 		cy=cen_lat;
 		cx=cen_lon;
@@ -2027,7 +2030,7 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
  * Return:
  *   0 on success, 1 on failure
  */
-int write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
+void write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
   int cnt=100;
   char lin[100];
   int z;

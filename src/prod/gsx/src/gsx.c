@@ -803,7 +803,7 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
   char *att_text;
 
   if ( status = nc_inq_attlen( fileid, varid, varname, (size_t*)&att_len ) ) {
-    fprintf( stderr, "%s: no attribute %s, error : %s\n", __FUNCTION__, varname, nc_strerror( status ) );
+    /* NO need to print an error message here as the calling routine must check for NULL return */
     return NULL;
   }
   
