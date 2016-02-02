@@ -516,32 +516,6 @@ int main(int argc, char **argv)
      }
 
    } while (end_flag == 0);
-
-   printf("\n");
-   printf("A output file: '%s'\n",a_name);
-   printf("I output file: '%s'\n",i_name);
-   printf("J output file: '%s'\n",j_name);
-   printf("C output file: '%s'\n",c_name);
-   printf("P output file: '%s'\n",p_name);
-   printf("E output file: '%s'\n",e_name);
-   printf("SIR V output file: '%s'\n",v_name);
-   printf("AVE A output file: '%s'\n",a_name_ave);
-   if (CREATE_NON) {
-     printf("NON A output file: '%s'\n",non_aname);
-     printf("NON V output file: '%s'\n",non_vname);
-     Nfiles_out=16;
-   } else {
-     Nfiles_out=14;
-   }
-   printf("GRD A output file: '%s'\n",grd_aname);
-   printf("GRD V output file: '%s'\n",grd_vname);
-   printf("GRD I output file: '%s'\n",grd_iname);
-   printf("GRD J output file: '%s'\n",grd_jname);
-   printf("GRD P output file: '%s'\n",grd_pname);
-   printf("GRD C output file: '%s'\n",grd_cname);
-   printf("Info file: '%s'\n",info_name);
-   printf("\n");
-
    /*
     * USING gsx:
     *
