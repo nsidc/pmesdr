@@ -251,8 +251,6 @@ void getregdata(int regnum, int *iproj, int *dateline, float *latl, float *lonl,
     s=strstr(line,regname);
     strncpy(regname,s,10);
     regname[10]='\0';
-    /* printf("%s : %4d  %2d %2d %6.1f      %8.1f   %8.1f    %8.1f    '%s'\n",
-       line,regnum1, *iproj, *dateline, *latl, *lonl, *lath,  *lonh, regname); */
     if (regnum1 == 9999 || regnum1 == 0) {
       fprintf(stderr,"*** region %d not found in %s\n",regnum,p);
       exit(-1);
@@ -556,16 +554,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     fscanf( pid, "%d", &nits );
     fprintf(mout," Max_iterations=%d\n", nits);
 
-    /* summarize region results */
-    if (projt != 0) {
-      printf("Projection %d   size %d %d\n",projt,nsx,nsy);
-      printf("Scales:           %f %f\n",ascale, bscale);
-      printf("Origin (lat,lon)  %f %f\n",aorglat,aorglon);
-      printf("Offset x,y in km: %f %f\n",a0,b0);
-      printf("Dimensions in km: %f %f\n",xdim, ydim);
-    }
-    printf("size in pixels (x,y)(lon,lat): %f %f\n\n",nsx,nsy);
-
     /* set grid image size parameters */
     /* number of enhanced resolution pixels/non-enhanced pixels */
     /* for this project non-enhanced size is always 25 km grid */
@@ -578,7 +566,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 
     /* optionally section region in to smaller images for processing.  They will be recombined later */
     nsection=0;
-    printf("Sectioning code: %d\n",nsection);
     fprintf(mout,"  Sectioning_code=%d\n",nsection);
     if (nsection > 0) sections=TRUE;
 
@@ -743,33 +730,9 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
       //name_store2(iregion)=aa_name;
     
       /* write out product names to meta file */
-    printf("Output setup file:%s\n",setname);
-    printf("Output A file:    %s\n",a_name);
-    //printf("Output B file:    %s\n",b_name(1:length(b_name)));
-    printf("Output C file:    %s\n",c_name);
-    printf("Output I file:    %s\n",i_name);
-    printf("Output J file:    %s\n",j_name);
-    printf("Output P file:    %s\n",p_name);
-    printf("Output E file:    %s\n",e_name);
-    printf("Output V file:    %s\n",v_name);
-    printf("Output A ave file:%s\n",aa_name);
-      //printf("Output B ave file:%s\n",bb_name);
-    printf("Output A non file:%s\n",non_aname);
-      //printf("Output B non file:%s\n",non_bname);
-    printf("Output V non file:%s\n",non_vname);
-    printf("Output A grd file:%s\n",grd_aname);
-      //printf("Output B grd file:%s\n",grd_bname);
-    printf("Output V grd file:%s\n",grd_vname);
-    printf("Output I grd file:%s\n",grd_iname);
-    printf("Output J grd file:%s\n",grd_jname);
-    printf("Output C grd file:%s\n",grd_cname);
-    printf("Output P grd file:%s\n",grd_pname);
-    printf("Output lis file:  %s\n",lisname);
-
     fprintf(mout,"  Setup_file=%s\n",setname);
     fprintf(mout,"  Begin_product_file_names\n");
     fprintf(mout,"   SIRF_A_file=%s\n",a_name);
-      //fprintf(mout,"   SIRF_B_file=%s\n",b_name);
     fprintf(mout,"   SIRF_C_file=%s\n",c_name);
     fprintf(mout,"   SIRF_I_file=%s\n",i_name);
     fprintf(mout,"   SIRF_J_file=%s\n",j_name);
@@ -777,16 +740,13 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     fprintf(mout,"   SIRF_V_file=%s\n",v_name);
     fprintf(mout,"   SIRF_P_file=%s\n",p_name);
     fprintf(mout,"   AVE_A_file=%s\n",aa_name);
-      //fprintf(mout,"   AVE_B_file=%s\n",bb_name);
     fprintf(mout,"   GRD_A_file=%s\n",grd_aname);
-      //fprintf(mout,"   GRD_B_file=%s\n",grd_bname);
     fprintf(mout,"   GRD_V_file=%s\n",grd_vname);
     fprintf(mout,"   GRD_I_file=%s\n",grd_iname);
     fprintf(mout,"   GRD_J_file=%s\n",grd_jname);
     fprintf(mout,"   GRD_C_file=%s\n",grd_cname);
     fprintf(mout,"   GRD_P_file=%s\n",grd_pname);
     fprintf(mout,"   NON_A_file=%s\n",non_aname);
-      //fprintf(mout,"   NON_B_file=%s\n",non_bname);
     fprintf(mout,"   NON_V_file=%s\n",non_vname);
     fprintf(mout,"   Info_file=%s\n",lisname);
     fprintf(mout,"  End_product_file_names\n");
