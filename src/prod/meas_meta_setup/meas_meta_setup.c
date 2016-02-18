@@ -503,7 +503,6 @@ int main(int argc,char *argv[])
 	  if (iday < dstart-1) goto label_350; /* skip further processing of this scan */
 	  if (iday > dend+1)   goto label_350; /* done processing, skip rest of scan */
 
-
 	  /* compute days since start of image data if cross year boundary */
 	  ktime=(iyear-year)*365;   /* days */
 	  if (ktime > 0) { /* more than a year */
@@ -571,7 +570,12 @@ int main(int argc,char *argv[])
 
 	      ibeam=save_area.sav_ibeam[iregion];  /* beam number */
 	      cetb_region = (cetb_region_id)(save_area.sav_regnum[iregion]-cetb_region_number[0]);
-	      
+
+	      /* If we are processing a T grid, check to make sure the scan line is for the day of processing */
+	      if ( cetb_region == CETB_EASE2_T ) {
+		if ( iday != dstart ) goto label_3400;
+	      }
+		      
 	      if ( CETB_SSMI == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
 	      if ( CETB_AMSRE == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
 	      
@@ -636,7 +640,7 @@ int main(int argc,char *argv[])
 		   the split times windows.
 		   ctime is the relative local time
 		   Note: data may be next or previous UTC day
-		   Note also: that the length of the window is current set to # minutes per 24 hour period
+		   Note also: that the length of the window is currently set to # minutes per 24 hour period
 		   this may not be true for all sensors */
 
 		if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
@@ -648,7 +652,10 @@ int main(int argc,char *argv[])
 		  if ( iasc == 4 ) {  /* iasc==4 evening */
 		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) goto label_3400;
 		  }
-		} 
+		}
+
+		/* if this is an asc/desc image then we should only pull data from scans
+		   that belong to the UTC day being processed */
 
 		if (dateline) { /* convert lon to ascending order */
 		  if (lonl < 0.0) lonl=lonl+360.0;
@@ -1922,8 +1929,10 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     switch ( cetb_ibeam_to_cetb_ssmi_channel[ibeam] ) {
     case SSMI_19H:
     case SSMI_19V:
+      box_size = 60;
+      break;
     case SSMI_22V:
-      box_size = 100;
+      box_size = 50;
       break;
     case SSMI_37H:
     case SSMI_37V:
@@ -1931,7 +1940,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
       break;
     case SSMI_85H:
     case SSMI_85V:
-      box_size = 20;
+      box_size = 26;
       break;
     default:
       box_size = -1;
@@ -1941,25 +1950,27 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
     case AMSRE_06H:
     case AMSRE_06V:
+      box_size = 30;
+      break;
     case AMSRE_10H:
     case AMSRE_10V:
-      box_size = 100;
+      box_size = 24;
       break;
     case AMSRE_18H:
     case AMSRE_18V:
     case AMSRE_23H:
     case AMSRE_23V:
-      box_size = 80;
+      box_size = 24;
       break;
     case AMSRE_36H:
     case AMSRE_36V:
-      box_size = 60;
+      box_size = 30;
       break;
     case AMSRE_89H_A:
     case AMSRE_89V_A:
     case AMSRE_89H_B:
     case AMSRE_89V_B:
-      box_size = 20;
+      box_size = 14;
       break;
     default:
       box_size = -1;
