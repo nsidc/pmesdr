@@ -571,7 +571,7 @@ int main(int argc,char *argv[])
 	      ibeam=save_area.sav_ibeam[iregion];  /* beam number */
 	      cetb_region = (cetb_region_id)(save_area.sav_regnum[iregion]-cetb_region_number[0]);
 
-	      /* If we are processing a T grid, check to make sure the scan line is for the day of processing */
+	      /* If we are processing a T grid (asc/des), check to make sure the scan line is for the day of processing */
 	      if ( cetb_region == CETB_EASE2_T ) {
 		if ( iday != dstart ) goto label_3400;
 	      }
@@ -653,9 +653,6 @@ int main(int argc,char *argv[])
 		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) goto label_3400;
 		  }
 		}
-
-		/* if this is an asc/desc image then we should only pull data from scans
-		   that belong to the UTC day being processed */
 
 		if (dateline) { /* convert lon to ascending order */
 		  if (lonl < 0.0) lonl=lonl+360.0;
@@ -1929,10 +1926,8 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     switch ( cetb_ibeam_to_cetb_ssmi_channel[ibeam] ) {
     case SSMI_19H:
     case SSMI_19V:
-      box_size = 60;
-      break;
     case SSMI_22V:
-      box_size = 50;
+      box_size = 100;
       break;
     case SSMI_37H:
     case SSMI_37V:
@@ -1940,7 +1935,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
       break;
     case SSMI_85H:
     case SSMI_85V:
-      box_size = 26;
+      box_size = 20;
       break;
     default:
       box_size = -1;
