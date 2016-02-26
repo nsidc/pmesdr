@@ -261,13 +261,13 @@ def ease2_make_geolocation_file(projection="N", factor=0):
     print "Geolocation file written to: %s" % out_filename
 
 
-# In[ ]:
+# In[11]:
 
 # Just run one for testing
 # ease2_make_geolocation_file("N",1)
 
 
-# In[ ]:
+# In[12]:
 
 for projection in ["N", "S", "T"]:
     for factor in np.arange(4):
