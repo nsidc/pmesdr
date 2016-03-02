@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
+#include <unistd.h>
 #include <err.h>
 #if defined(__INTEL__)
 #include <mathimf.h>
@@ -611,10 +612,10 @@ int main(int argc,char *argv[])
 	  
 		/* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc, 3=morning, 4=evening) */
 		iasc=save_area.sav_ascdes[iregion];
-		if (iasc != 0)
-		  if (iasc == 1) {
+		if (iasc != (int)CETB_ALL_PASSES)
+		  if (iasc == (int)CETB_ASC_PASSES) {
 		    if (!ascend) goto label_3400;
-		  } else if (iasc == 2) {
+		  } else if (iasc == (int)CETB_DES_PASSES) {
 		    if (ascend) goto label_3400;
 		  }
 
@@ -643,13 +644,13 @@ int main(int argc,char *argv[])
 		   Note also: that the length of the window is currently set to # minutes per 24 hour period
 		   this may not be true for all sensors */
 
-		if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
+		if (iasc == (int)CETB_MORNING_PASSES || iasc == (int)CETB_EVENING_PASSES) { /* apply LTOD considerations */
 		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime; /* calculate the relative local time of day in minutes */
 
-		  if (iasc == 3) { /* morning */
+		  if ( iasc == (int)CETB_MORNING_PASSES ) { /* morning */
 		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
 		  } 
-		  if ( iasc == 4 ) {  /* iasc==4 evening */
+		  if ( iasc == (int)CETB_EVENING_PASSES ) {  /* evening */
 		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) goto label_3400;
 		  }
 		}
@@ -848,7 +849,9 @@ int main(int argc,char *argv[])
 	   save_area.sav_regname[j],save_area.sav_ibeam[j],jrec2[j]);
     no_trailing_blanks(save_area.sav_fname2[j]);
     printf("Output data written to %s\n",save_area.sav_fname2[j]);
-    fclose(save_area.reg_lu[j]);
+    if ( fclose(save_area.reg_lu[j]) != 0 ) {
+      perror( "file already closed \n" );
+    }
   }
   printf("\n");
 
@@ -899,9 +902,13 @@ FILE * get_meta(char *mname, char *outpath,
   int z, nsection, isection, cnt;
   float tsplit1=1.0, tsplit2=13.0;
 
+  int count, sub_count;
+  cetb_platform_id cetb_platform;
+
   iregion=0;
   ireg=0;
   ninst=0;
+  count=0; /* used to keep track of the number (if any) of AMSRE channels */
 
   printf("open meta file %s\n",mname);
   file_id=fopen(mname,"r");
@@ -928,6 +935,13 @@ FILE * get_meta(char *mname, char *outpath,
 	x = strchr(line,'=');
 	strncpy(sensor,++x,40);
 	printf("Sensor string='%s'\n",sensor);
+	/* Here is where you can get the sensor ENUM */
+	for ( count=0; count < CETB_NUM_PLATFORMS; count++ ) {
+	  if ( strcmp( sensor, cetb_platform_id_name[count] ) == 0 ) {
+	    cetb_platform = (cetb_platform_id) count;
+	  }
+	}
+	printf( " **** cetb_platform_id *** is %d\n", cetb_platform );
 	if (strncmp(sensor,"SSMI",4)==0) {	    
 	  sscanf(&sensor[7],"%2d",KSAT);
 	  printf(" SSMI platform %d\n",*KSAT);
@@ -1494,6 +1508,37 @@ FILE * get_meta(char *mname, char *outpath,
 		}
 	      }
 	    }
+	  }
+	}
+      }
+    }
+  }
+
+  /* Here is where you check to see if both AMSRE 89 a and b scans are requested, if so
+     they need to be written into only 1 output setup file, i.e. 89Ha and 89Hb go into the same file
+     and 89Va and 89Vb go into the same file.  The check needs to be done here so that you don't
+     have to rely on the regions in the file going in a specific order - also note that this only works
+     in the first place if you put all of the 89 channels into the same def file
+     Use the save_area (a in this routine) structure to check for a and b scans if AMSRE */
+  
+  if ( CETB_AQUA == cetb_platform ) {
+    for ( count=0; count < a->nregions; count++ ) {
+      /* now check to see if you have b channels for 89H or 89V and if you also have A channels then combine */
+      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
+	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	    /* save file id for the setup file for AMSRE_89H_A to the file id for AMSRE_89H_B */
+	    a->reg_lu[count] = dup( (int)a->reg_lu[sub_count] );
+	  }
+	}
+      }
+      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
+	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	    /* save file id for the setup file for AMSRE_89V_A to the file id for AMSRE_89V_B */
+	    a->reg_lu[count] = dup( (int)a->reg_lu[sub_count] );
 	  }
 	}
       }
