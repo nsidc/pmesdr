@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
-#include <unistd.h>
 #include <err.h>
 #if defined(__INTEL__)
 #include <mathimf.h>
