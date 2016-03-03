@@ -139,7 +139,7 @@ FILE * get_meta(char *mname, char *outpath, int *dstart,
 		int *year, char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *save_area);
+		int *KSAT, region_save *save_area, cetb_platform_id *cetb_platform);
 
 void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store);
 
@@ -226,6 +226,7 @@ int main(int argc,char *argv[])
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
   int mcnt=0;
+  int sub_count;
 
   /*
    * begin to add in GSX variables
@@ -247,6 +248,7 @@ int main(int argc,char *argv[])
   int imeas;
   int first_measurement;
   cetb_region_id cetb_region;
+  cetb_platform_id cetb_platform;  
 
   gsx = NULL;
   for (n=0; n<NSAVE; n++)
@@ -298,7 +300,7 @@ int main(int argc,char *argv[])
   file_id = get_meta(mname, outpath, &dstart, &dend, &mstart, &mend, &year,
 		     prog_name, prog_version ,&response_threshold, &flatten, &median_flag,
 		     &inc_correct, &b_correct, &angle_ref, 
-		     &KSAT, &save_area);
+		     &KSAT, &save_area, &cetb_platform);
   if (file_id == NULL) {
     fprintf(stderr,"*** could not open meta file %s/%s\n",outpath,mname);    
     exit(-1);  
@@ -849,8 +851,38 @@ int main(int argc,char *argv[])
 	   save_area.sav_regname[j],save_area.sav_ibeam[j],jrec2[j]);
     no_trailing_blanks(save_area.sav_fname2[j]);
     printf("Output data written to %s\n",save_area.sav_fname2[j]);
-    if ( fclose(save_area.reg_lu[j]) != 0 ) {
-      perror( "file already closed \n" );
+    if ( j == 0 ) {
+      fclose(save_area.reg_lu[j]);
+      save_area.reg_lu[j] = NULL;
+    } else {
+        if ( CETB_AQUA == cetb_platform ) {
+	  /* now check to see if you have b channels for 89H or 89V and if you also have A channels then combine */
+	  if ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[j]] == AMSRE_89H_B ) {
+	    for ( sub_count=0; sub_count < save_area.nregions; sub_count++ ) {
+	      if ( ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[sub_count]] == AMSRE_89H_A )
+		   && ( NULL == save_area.reg_lu[sub_count] ) ) {
+		/* set the file pointer to NULL because it's already closed */
+		save_area.reg_lu[j] = NULL;
+	      }
+	    }
+	  }
+	  if ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[j]] == AMSRE_89V_B ) {
+	    for ( sub_count=0; sub_count < save_area.nregions; sub_count++ ) {
+	      if ( ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[sub_count]] == AMSRE_89V_A )
+		   && ( NULL == save_area.reg_lu[sub_count] ) ) {
+		/* set the file pointer to NULL because it's already closed */
+		save_area.reg_lu[j] = NULL;
+	      }
+	    }
+	  }
+	  if ( NULL != save_area.reg_lu[j] ) {
+	    fclose( save_area.reg_lu[j] );
+	    save_area.reg_lu[j] = NULL;
+	  }
+	} else {
+	  fclose(save_area.reg_lu[j]);
+	  save_area.reg_lu[j] = NULL;
+	}
     }
   }
   printf("\n");
@@ -869,7 +901,7 @@ FILE * get_meta(char *mname, char *outpath,
 		char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *a)
+		int *KSAT, region_save *a, cetb_platform_id *cetb_platform)
 {
   /* read meta file, open output .setup files, write .setup file headers, and 
      store key parameters in memory */
@@ -903,7 +935,6 @@ FILE * get_meta(char *mname, char *outpath,
   float tsplit1=1.0, tsplit2=13.0;
 
   int count, sub_count;
-  cetb_platform_id cetb_platform;
 
   iregion=0;
   ireg=0;
@@ -938,10 +969,10 @@ FILE * get_meta(char *mname, char *outpath,
 	/* Here is where you can get the sensor ENUM */
 	for ( count=0; count < CETB_NUM_PLATFORMS; count++ ) {
 	  if ( strcmp( sensor, cetb_platform_id_name[count] ) == 0 ) {
-	    cetb_platform = (cetb_platform_id) count;
+	    *cetb_platform = (cetb_platform_id) count;
 	  }
 	}
-	printf( " **** cetb_platform_id *** is %d\n", cetb_platform );
+	printf( " **** cetb_platform_id *** is %d\n", *cetb_platform );
 	if (strncmp(sensor,"SSMI",4)==0) {	    
 	  sscanf(&sensor[7],"%2d",KSAT);
 	  printf(" SSMI platform %d\n",*KSAT);
@@ -1521,7 +1552,7 @@ FILE * get_meta(char *mname, char *outpath,
      in the first place if you put all of the 89 channels into the same def file
      Use the save_area (a in this routine) structure to check for a and b scans if AMSRE */
   
-  if ( CETB_AQUA == cetb_platform ) {
+  if ( CETB_AQUA == *cetb_platform ) {
     for ( count=0; count < a->nregions; count++ ) {
       /* now check to see if you have b channels for 89H or 89V and if you also have A channels then combine */
       if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
@@ -1529,7 +1560,7 @@ FILE * get_meta(char *mname, char *outpath,
 	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
 	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
 	    /* save file id for the setup file for AMSRE_89H_A to the file id for AMSRE_89H_B */
-	    a->reg_lu[count] = dup( (int)a->reg_lu[sub_count] );
+	    a->reg_lu[count] = a->reg_lu[sub_count];
 	  }
 	}
       }
@@ -1538,7 +1569,7 @@ FILE * get_meta(char *mname, char *outpath,
 	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
 	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
 	    /* save file id for the setup file for AMSRE_89V_A to the file id for AMSRE_89V_B */
-	    a->reg_lu[count] = dup( (int)a->reg_lu[sub_count] );
+	    a->reg_lu[count] = a->reg_lu[sub_count];
 	  }
 	}
       }
