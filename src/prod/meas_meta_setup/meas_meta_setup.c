@@ -153,6 +153,7 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 		      float ascale, float bscale, float a0, float b0);
 
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
+static void combine_setup_files( region_save *a, int execution_flag );
 
 /****************************************************************************/
 
@@ -418,6 +419,7 @@ int main(int argc,char *argv[])
       first_file++;
       write_header_info( gsx, &save_area );
       write_end_header( &save_area );
+      /* If this is AMSRE, combine the output setup files for a and b scans */
     }
 
     /* Here is where you loop through all of the different measurement sets in the file */
@@ -856,25 +858,9 @@ int main(int argc,char *argv[])
     } else {
         if ( CETB_AQUA == cetb_platform ) {
 	  /* now check to see if you have b channels for 89H or 89V and if you also have A channels then combine */
-	  if ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[j]] == AMSRE_89H_B ) {
-	    for ( sub_count=0; sub_count < save_area.nregions; sub_count++ ) {
-	      if ( ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[sub_count]] == AMSRE_89H_A )
-		   && ( NULL == save_area.reg_lu[sub_count] ) ) {
-		/* set the file pointer to NULL because it's already closed */
-		save_area.reg_lu[j] = NULL;
-	      }
-	    }
-	  }
-	  if ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[j]] == AMSRE_89V_B ) {
-	    for ( sub_count=0; sub_count < save_area.nregions; sub_count++ ) {
-	      if ( ( cetb_ibeam_to_cetb_amsre_channel[save_area.sav_ibeam[sub_count]] == AMSRE_89V_A )
-		   && ( NULL == save_area.reg_lu[sub_count] ) ) {
-		/* set the file pointer to NULL because it's already closed */
-		save_area.reg_lu[j] = NULL;
-	      }
-	    }
-	  }
+	  combine_setup_files( &save_area, 2 );
 	  if ( NULL != save_area.reg_lu[j] ) {
+	    fprintf( stderr, "%s: back from combin with fileid != NULL", __FUNCTION__ );
 	    fclose( save_area.reg_lu[j] );
 	    save_area.reg_lu[j] = NULL;
 	  }
@@ -938,7 +924,6 @@ FILE * get_meta(char *mname, char *outpath,
   iregion=0;
   ireg=0;
   ninst=0;
-  count=0; /* used to keep track of the number (if any) of AMSRE channels */
 
   printf("open meta file %s\n",mname);
   file_id=fopen(mname,"r");
@@ -1551,30 +1536,35 @@ FILE * get_meta(char *mname, char *outpath,
      in the first place if you put all of the 89 channels into the same def file
      Use the save_area (a in this routine) structure to check for a and b scans if AMSRE */
   
-  if ( CETB_AQUA == *cetb_platform ) {
-    for ( count=0; count < a->nregions; count++ ) {
-      /* now check to see if you have b channels for 89H or 89V and if you also have A channels then combine */
-      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
-	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
-	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
-	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
-	    /* save file id for the setup file for AMSRE_89H_A to the file id for AMSRE_89H_B */
-	    a->reg_lu[count] = a->reg_lu[sub_count];
-	  }
-	}
-      }
-      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
-	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
-	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
-	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
-	    /* save file id for the setup file for AMSRE_89V_A to the file id for AMSRE_89V_B */
-	    a->reg_lu[count] = a->reg_lu[sub_count];
-	  }
-	}
-      }
-    }
-  }
-
+  //    if ( CETB_AQUA == *cetb_platform ) {
+  //for ( count=0; count < a->nregions; count++ ) {
+      /* now check to see if you have b channels for 89H or 89V and if you also have A channels
+	 then combine if they use the same projection */
+  //  if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
+  //	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+  //	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
+  //	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	    /* close the file that won't be used and
+	       save file id for the setup file for AMSRE_89H_A to the file id for AMSRE_89H_B */
+  //	    fclose( a->reg_lu[count] );
+  //	    a->reg_lu[count] = a->reg_lu[sub_count];
+  //	  }
+  //	}
+  //  }
+  //  if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
+  //	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+  //	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
+  //	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	    /* close the file that won't be used and
+	       save file id for the setup file for AMSRE_89V_A to the file id for AMSRE_89V_B */
+  //	    fclose( a->reg_lu[count] );
+  //	    a->reg_lu[count] = a->reg_lu[sub_count];
+  //	  }
+  //	}
+  //  }
+  //}
+  //}
+    
   /* override number of regions to the number of sections */
   a->nregions=iregion;  
 
@@ -2024,20 +2014,22 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
       break;
     case AMSRE_10H:
     case AMSRE_10V:
-      box_size = 24;
-      break;
     case AMSRE_18H:
     case AMSRE_18V:
+      box_size = 24;
+      break;
     case AMSRE_23H:
     case AMSRE_23V:
-      box_size = 24;
+      box_size = 30;
       break;
     case AMSRE_36H:
     case AMSRE_36V:
-      box_size = 30;
+      box_size = 28;
       break;
     case AMSRE_89H_A:
     case AMSRE_89V_A:
+      box_size = 12;
+      break;
     case AMSRE_89H_B:
     case AMSRE_89V_B:
       box_size = 14;
@@ -2125,6 +2117,7 @@ void write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
    } 
   fprintf( stderr, "****%s, source file %s, gsx_version %s\n", __FUNCTION__, gsx->source_file, gsx->gsx_version );
+  fprintf( stderr, "****%s, last line written%s\n", __FUNCTION__, lin );
 }
 /*
  * write_end_header - writes out the End_file line that is used in sir and bgi
@@ -2149,6 +2142,68 @@ void write_end_header( region_save *save_area ){
     fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
   }
+}
+
+/*
+ * manipulate_setup_files - called if we have to combine channels into a single output setup file
+ *
+ * Input:
+ *   region_save pointer holds the file-ids to be manipulated
+ *   execution flag tells what operation should be performed
+ *
+ */
+void combine_setup_files( region_save *a, int execution_flag ) {
+
+  int count;
+  int sub_count;
+  
+  /* Here is where you check to see if both AMSRE 89 a and b scans are requested, if so
+     they need to be written into only 1 output setup file, i.e. 89Ha and 89Hb go into the same file
+     and 89Va and 89Vb go into the same file.  The check needs to be done here so that you don't
+     have to rely on the regions in the file going in a specific order - also note that this only works
+     in the first place if you put all of the 89 channels into the same def file
+     Use the save_area (a in this routine) structure to check for a and b scans if AMSRE */
+  fprintf( stderr, "%s: into manipulating fileids with %d execution flag\n", __FUNCTION__, execution_flag );
+    for ( count=0; count < a->nregions; count++ ) {
+      /* now check to see if you have b channels for 89H or 89V and if you also have A channels
+	 then combine if they use the same projection */
+      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
+	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	    /* depending on the execution_flag either
+	       - close the file that won't be used and save file id for the setup file for
+	         AMSRE_89H_A to the file id for AMSRE_89H_B or
+	       - set the file id to NULL */
+	    if ( execution_flag == 1 ) {
+	      fclose( a->reg_lu[count] );
+	      a->reg_lu[count] = a->reg_lu[sub_count];
+	    }
+	    if ( execution_flag == 2 ) {
+	      a->reg_lu[count] = NULL;
+	    }
+	  }
+	}
+      }
+      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
+	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	    /* depending on the execution_flag either
+	       - close the file that won't be used and save file id for the setup file for
+	         AMSRE_89H_A to the file id for AMSRE_89H_B or
+	       - set the file id to NULL */
+	    if ( execution_flag == 1 ) {
+	      fclose( a->reg_lu[count] );
+	      a->reg_lu[count] = a->reg_lu[sub_count];
+	    }
+	    if ( execution_flag == 2 ) {
+	      a->reg_lu[count] = NULL;
+	    }
+	  }
+	}
+      }
+    }
 }
 
 /* *********************************************************************** */
