@@ -30,6 +30,7 @@
 #endif
 
 #include "cetb.h"
+#include "utils.h"
 #include "gsx.h"
 #include <sir3.h>
 
@@ -376,7 +377,7 @@ int main(int argc,char *argv[])
 	no_trailing_blanks(fname);    
         gsx = gsx_init( fname );
 	write_filenames_to_header( gsx, &save_area );
-	status = posix_memalign( (void**)&gsx_fname[nfile], CETB_MEM_ALIGNMENT, strlen(fname)+1 );
+	status = utils_allocate_clean_aligned_memory( (void**)&gsx_fname[nfile], strlen(fname)+1 );
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
 	if ( nfile > MAX_INPUT_FILES ) {
@@ -419,7 +420,10 @@ int main(int argc,char *argv[])
       first_file++;
       write_header_info( gsx, &save_area );
       write_end_header( &save_area );
-      /* If this is AMSRE, combine the output setup files for a and b scans */
+      /* If this is AMSRE, combine the output setup files for a and b scans and close the unneeded output file */
+      if ( CETB_AQUA == cetb_platform ) {
+	combine_setup_files( &save_area, 1 );
+      }
     }
 
     /* Here is where you loop through all of the different measurement sets in the file */
@@ -1596,13 +1600,13 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
   /* allocate memory for storage of location arrays */
   //  *noffset=malloc(sizeof(int)*(a->nregions+1));
-  dumb = posix_memalign( (void**)&(*noffset), CETB_MEM_ALIGNMENT, sizeof(int)*(a->nregions+1) );
+  dumb = utils_allocate_clean_aligned_memory( (void**)&(*noffset), sizeof(int)*(a->nregions+1) );
   if ( 0 != dumb ) {
     fprintf( stderr, "*** Inadequate memory for data file storage 'noffset' \n" );
     exit ( -1 );
   }
   //*latlon_store=malloc(sizeof(short int)*nspace);
-  dumb = posix_memalign( (void**)&(*latlon_store), CETB_MEM_ALIGNMENT, sizeof(short int)*nspace );
+  dumb = utils_allocate_clean_aligned_memory( (void**)&(*latlon_store), sizeof(short int)*nspace );
   if ( 0 != dumb ) {
     fprintf(stderr, "*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
     exit(-1);
@@ -2010,29 +2014,31 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
     case AMSRE_06H:
     case AMSRE_06V:
-      box_size = 30;
+      box_size = 24;
       break;
     case AMSRE_10H:
     case AMSRE_10V:
+      box_size = 20;
+      break;
     case AMSRE_18H:
     case AMSRE_18V:
-      box_size = 24;
+      box_size = 22;
       break;
     case AMSRE_23H:
     case AMSRE_23V:
-      box_size = 30;
+      box_size = 26;
       break;
     case AMSRE_36H:
     case AMSRE_36V:
-      box_size = 28;
+      box_size = 22;
       break;
     case AMSRE_89H_A:
     case AMSRE_89V_A:
-      box_size = 12;
+      box_size = 10;
       break;
     case AMSRE_89H_B:
     case AMSRE_89V_B:
-      box_size = 14;
+      box_size = 12;
       break;
     default:
       box_size = -1;
@@ -2170,7 +2176,8 @@ void combine_setup_files( region_save *a, int execution_flag ) {
       if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
 	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
 	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
-	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
+	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) ) {
 	    /* depending on the execution_flag either
 	       - close the file that won't be used and save file id for the setup file for
 	         AMSRE_89H_A to the file id for AMSRE_89H_B or
@@ -2178,6 +2185,8 @@ void combine_setup_files( region_save *a, int execution_flag ) {
 	    if ( execution_flag == 1 ) {
 	      fclose( a->reg_lu[count] );
 	      a->reg_lu[count] = a->reg_lu[sub_count];
+	      fprintf( stderr, "%s: closed region file count %d in favor of sub_count %d\n", __FUNCTION__,
+		       count, sub_count );
 	    }
 	    if ( execution_flag == 2 ) {
 	      a->reg_lu[count] = NULL;
@@ -2188,7 +2197,8 @@ void combine_setup_files( region_save *a, int execution_flag ) {
       if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
 	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
 	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
-	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
+	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) )  {
 	    /* depending on the execution_flag either
 	       - close the file that won't be used and save file id for the setup file for
 	         AMSRE_89H_A to the file id for AMSRE_89H_B or
@@ -2196,6 +2206,8 @@ void combine_setup_files( region_save *a, int execution_flag ) {
 	    if ( execution_flag == 1 ) {
 	      fclose( a->reg_lu[count] );
 	      a->reg_lu[count] = a->reg_lu[sub_count];
+	      fprintf( stderr, "%s: closed region file count %d in favor of sub_count %d\n", __FUNCTION__,
+		       count, sub_count );
 	    }
 	    if ( execution_flag == 2 ) {
 	      a->reg_lu[count] = NULL;
