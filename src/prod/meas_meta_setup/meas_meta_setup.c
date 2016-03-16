@@ -31,6 +31,7 @@
 
 #include "cetb.h"
 #include "gsx.h"
+#include "utils.h"
 #include <sir3.h>
 
 #define prog_version 0.3 /* program version */
@@ -314,7 +315,7 @@ int main(int argc,char *argv[])
   /* Set flag for local time of day filtered images */
   ltdflag=0;
   for (i=0; i<save_area.nregions; i++)
-    if (save_area.sav_ascdes[i] >= 3 && save_area.sav_ascdes[i] <= 7)
+    if (save_area.sav_ascdes[i] >= CETB_MORNING_PASSES && save_area.sav_ascdes[i] <= CETB_EVENING_PASSES)
       ltdflag=1;
   
   /* compute approximate projection grid scale factors for later use */
@@ -613,7 +614,7 @@ int main(int argc,char *argv[])
 		  if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
 		}
 	  
-		/* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc, 3=morning, 4=evening) */
+		/* check ascending/descending orbit pass flag (see cetb.h for definitions) */
 		iasc=save_area.sav_ascdes[iregion];
 		if (iasc != (int)CETB_ALL_PASSES)
 		  if (iasc == (int)CETB_ASC_PASSES) {
@@ -919,7 +920,7 @@ FILE * get_meta(char *mname, char *outpath,
   int z, nsection, isection, cnt;
   float tsplit1=1.0, tsplit2=13.0;
 
-  int count, sub_count;
+  int count;
 
   iregion=0;
   ireg=0;
@@ -1050,7 +1051,7 @@ FILE * get_meta(char *mname, char *outpath,
 
       if (strstr(line,"Begin_region_description") != NULL) {
 	/* new region started set some default values */
-	asc_des=0;	/* use both asc/desc orbits */
+	asc_des=CETB_ALL_PASSES;	/* use both asc/desc orbits */
 	ireg=ireg+1;
 	printf("Region %d of %d  Total regions: %d\n",ireg,a->nregions,iregion);
 
@@ -1529,42 +1530,6 @@ FILE * get_meta(char *mname, char *outpath,
     }
   }
 
-  /* Here is where you check to see if both AMSRE 89 a and b scans are requested, if so
-     they need to be written into only 1 output setup file, i.e. 89Ha and 89Hb go into the same file
-     and 89Va and 89Vb go into the same file.  The check needs to be done here so that you don't
-     have to rely on the regions in the file going in a specific order - also note that this only works
-     in the first place if you put all of the 89 channels into the same def file
-     Use the save_area (a in this routine) structure to check for a and b scans if AMSRE */
-  
-  //    if ( CETB_AQUA == *cetb_platform ) {
-  //for ( count=0; count < a->nregions; count++ ) {
-      /* now check to see if you have b channels for 89H or 89V and if you also have A channels
-	 then combine if they use the same projection */
-  //  if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
-  //	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
-  //	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
-  //	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
-	    /* close the file that won't be used and
-	       save file id for the setup file for AMSRE_89H_A to the file id for AMSRE_89H_B */
-  //	    fclose( a->reg_lu[count] );
-  //	    a->reg_lu[count] = a->reg_lu[sub_count];
-  //	  }
-  //	}
-  //  }
-  //  if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
-  //	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
-  //	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
-  //	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] ) ) {
-	    /* close the file that won't be used and
-	       save file id for the setup file for AMSRE_89V_A to the file id for AMSRE_89V_B */
-  //	    fclose( a->reg_lu[count] );
-  //	    a->reg_lu[count] = a->reg_lu[sub_count];
-  //	  }
-  //	}
-  //  }
-  //}
-  //}
-    
   /* override number of regions to the number of sections */
   a->nregions=iregion;  
 
