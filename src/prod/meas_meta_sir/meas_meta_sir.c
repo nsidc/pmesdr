@@ -1302,6 +1302,9 @@ done2:
       } else {
 	fn = *(tot + iadd);
 	*(tot +  iadd) = *(tot +   iadd) + 1.0;                    /* count */
+	if ( *(num_samples + iadd) >= CETB_FILE_TB_NUM_SAMPLES_MAX ) {
+	  fprintf( stderr, "%s: %d samples\n", __FILE__, *(num_samples+iadd) );
+	}
 	assert( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX );
 	*(num_samples + iadd) = *(num_samples + iadd) + 1;         /* num_samples for each pixel */
 	ninv = 1./ *(tot + iadd);
@@ -1667,6 +1670,9 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
      * It is a serious error if we accumulate more than NUM_SAMPLES_MAX hits.
      */
     if (its == 0) {
+      if ( *(num_samples+n-1) >= CETB_FILE_TB_NUM_SAMPLES_MAX ) {
+	fprintf( stderr, "%s: number of samples is %d\n", __FUNCTION__, *(num_samples+n-1) );
+      }
       assert( *(num_samples+n-1) < CETB_FILE_TB_NUM_SAMPLES_MAX );
       (*(num_samples+n-1))++;
     }
