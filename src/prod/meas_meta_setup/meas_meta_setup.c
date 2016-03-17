@@ -390,6 +390,10 @@ int main(int argc,char *argv[])
     }
   }
 
+  if ( 0 == nfile ) { /* there are no input files in the meta file */
+      write_end_header( &save_area );
+  }
+  
   for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
     
   label_330:; /* read next file name from list gsx_fname */
