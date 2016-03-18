@@ -53,6 +53,8 @@ int   MAXFILL=1000;           /* maximum number of pixels in response */
 int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
 int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
+float tb_max = (CETB_FILE_TB_MAX*CETB_FILE_TB_SCALE_FACTOR);
+float tb_min = (CETB_FILE_TB_MIN*CETB_FILE_TB_SCALE_FACTOR);
 
 /****************************************************************************/
 
@@ -586,47 +588,38 @@ int main(int argc, char **argv)
    note: these arrays are re-used multiple times to save memory */
 
   nsize = nsx * nsy;  
-  //  a_val  = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for a_val\n", __FILE__ );
     exit(-1);
   }
-  //  b_val  = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&b_val, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for b_val\n", __FILE__ );
     exit(-1);
   }
-  //  a_temp = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for a_temp\n", __FILE__ );
     exit(-1);
   }
-  //  sxy    = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sxy, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for sxy\n", __FILE__ );
     exit(-1);
   }
-  //  sx     = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for sx\n", __FILE__ );
     exit(-1);
   }
-  //  sx2    = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx2, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for sx2\n", __FILE__ );
     exit(-1);
   }
-  //  sy     = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sy, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for sy\n", __FILE__ );
     exit(-1);
   }
-  //tot    = (float *) malloc(sizeof(float)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&tot, (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for tot\n", __FILE__ );
     exit(-1);
   }
-  //  num_samples = (unsigned char *) calloc( 1, sizeof(unsigned char)*nsize);
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&num_samples, (size_t)(sizeof(unsigned char)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for num_samples\n", __FILE__ );
     exit(-1);
@@ -645,11 +638,6 @@ int main(int argc, char **argv)
     printf("Begin setup file copy into memory\n");
     while (fread(&dumb, sizeof(int), 1, imf) != 0) {
 
-    /*	   read (50,err=500,end=500) tbval,ang,count,ktime,iadd,azi
-	   read (50,err=500,end=500) (fill_array(i),i=1,count)
-	   read (50,err=500,end=500) (response_array(i),i=1,count)
-    */
-
      /*5 items at 4 bytes each: 20 bytes if no azimuth angle */
      /*6 items at 4 bytes each: 24 bytes if azimuth angle */
      if (nbyte+HS < nspace) {
@@ -667,22 +655,17 @@ int main(int argc, char **argv)
 	if (HASAZANG)
 	  azang = *((float *) (store+20));
 
-	//printf(" Record %d : %f %f %d %d %d %f\n",nrec,tbval,ang,count,ktime,iadd,azang);
-
 	if (count > MAXFILL) {
 	  printf("*** Count error %d  record %d\n",count,nrec);
 	  printf("    %f %f %d %d \n",tbval,ang,ktime,iadd);
 	  count=MAXFILL;
 	}
-	/*
-	printf("ncnt %d  %f %f  count %d %d %d\n",ncnt,tbval,ang,count,ktime,iadd); 
-	if (ncnt > 99) goto label; */
 
 	/* if measurement is "valid" keep it by indexing counters 
            if not, new values will be stored over old values */
 
 	keep=0;
-	if (tbval < 350.0 && tbval > 50.0) { 
+	if (tbval < tb_max && tbval > tb_min) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -1302,11 +1285,9 @@ done2:
       } else {
 	fn = *(tot + iadd);
 	*(tot +  iadd) = *(tot +   iadd) + 1.0;                    /* count */
-	if ( *(num_samples + iadd) >= CETB_FILE_TB_NUM_SAMPLES_MAX ) {
-	  fprintf( stderr, "%s: %d samples\n", __FILE__, *(num_samples+iadd) );
+	if ( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX ) {
+	  *(num_samples + iadd) = *(num_samples + iadd) + 1;         /* num_samples for each pixel */
 	}
-	assert( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX );
-	*(num_samples + iadd) = *(num_samples + iadd) + 1;         /* num_samples for each pixel */
 	ninv = 1./ *(tot + iadd);
 	*(sx +   iadd) = (*(sx +   iadd) * fn + ang)*ninv;         /* mean inc angle */
 	*(sx2 +  iadd) = (*(sx2 +  iadd) * fn + ang*ang)*ninv;     /* var inc angle */
@@ -1667,14 +1648,12 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
     
     /*
      * Count the number of measurements that hit a given pixel
-     * It is a serious error if we accumulate more than NUM_SAMPLES_MAX hits.
+     * Because this variable is stored as a byte, we only increment up to NC_MAX_CHAR
      */
     if (its == 0) {
-      if ( *(num_samples+n-1) >= CETB_FILE_TB_NUM_SAMPLES_MAX ) {
-	fprintf( stderr, "%s: number of samples is %d\n", __FUNCTION__, *(num_samples+n-1) );
+      if ( *(num_samples+n-1) < CETB_FILE_TB_NUM_SAMPLES_MAX ) {
+	(*(num_samples+n-1))++;
       }
-      assert( *(num_samples+n-1) < CETB_FILE_TB_NUM_SAMPLES_MAX );
-      (*(num_samples+n-1))++;
     }
     
   }
@@ -1914,7 +1893,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
       }
       (*nrec)++;
 	
-      if (*tbval < 350.0 && *tbval > 50.0) return(0);
+      if (*tbval < tb_max && *tbval > tb_min) return(0);
     } else      /* end of file (or file err) encountered */
       return(1);
   }
