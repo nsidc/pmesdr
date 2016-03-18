@@ -109,7 +109,7 @@ DEPEND_LIBS = $(LIBDIR)/libcetb.a $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_sir.c ../meas_undump/netcdf_dump.c
 OBJS = meas_meta_sir.o netcdf_dump.o
-HDRS = $(INCDIR)/cetb_file.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
+HDRS = $(INCDIR)/cetb.h $(INCDIR)/cetb_file.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
 BIN = meas_meta_sir
 
 RSSFILES = $(wildcard $(TESTDIR)/setupRSS/e2*/F*E2*.setup)

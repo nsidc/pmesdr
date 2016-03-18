@@ -103,7 +103,7 @@ DEPEND_LIBS =
 
 SRCS = gsx.c
 OBJS = gsx.o
-HDRS = gsx.h
+HDRS = $(INCDIR)/cetb.h gsx.h
 
 all : libgsx.a $(LIBDIR)/libgsx.a
 
