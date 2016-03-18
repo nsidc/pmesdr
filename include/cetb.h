@@ -340,6 +340,8 @@ typedef enum {
   
 /*
  * AMSR-E channel ID names
+ * these are only used for file naming - note that the A and B channels
+ * for 89 GHz map into the same output grid
  */
 static const char *cetb_amsre_channel_name[] = {
   "06H",
@@ -352,10 +354,10 @@ static const char *cetb_amsre_channel_name[] = {
   "23V",
   "36H",
   "36V",
-  "89H_A",
-  "89V_A",
-  "89H_B",
-  "89V_B"
+  "89H",
+  "89V",
+  "89H",
+  "89V"
 };
 
 /*
