@@ -30,7 +30,9 @@
 #endif
 
 #include "cetb.h"
+#include "utils.h"
 #include "gsx.h"
+#include "utils.h"
 #include <sir3.h>
 
 #define prog_version 0.3 /* program version */
@@ -138,7 +140,7 @@ FILE * get_meta(char *mname, char *outpath, int *dstart,
 		int *year, char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *save_area);
+		int *KSAT, region_save *save_area, cetb_platform_id *cetb_platform);
 
 void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store);
 
@@ -153,6 +155,7 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 		      float ascale, float bscale, float a0, float b0);
 
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
+static void combine_setup_files( region_save *a, int execution_flag );
 
 /****************************************************************************/
 
@@ -225,6 +228,7 @@ int main(int argc,char *argv[])
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
   int mcnt=0;
+  int sub_count;
 
   /*
    * begin to add in GSX variables
@@ -246,6 +250,7 @@ int main(int argc,char *argv[])
   int imeas;
   int first_measurement;
   cetb_region_id cetb_region;
+  cetb_platform_id cetb_platform;  
 
   gsx = NULL;
   for (n=0; n<NSAVE; n++)
@@ -297,7 +302,7 @@ int main(int argc,char *argv[])
   file_id = get_meta(mname, outpath, &dstart, &dend, &mstart, &mend, &year,
 		     prog_name, prog_version ,&response_threshold, &flatten, &median_flag,
 		     &inc_correct, &b_correct, &angle_ref, 
-		     &KSAT, &save_area);
+		     &KSAT, &save_area, &cetb_platform);
   if (file_id == NULL) {
     fprintf(stderr,"*** could not open meta file %s/%s\n",outpath,mname);    
     exit(-1);  
@@ -311,7 +316,7 @@ int main(int argc,char *argv[])
   /* Set flag for local time of day filtered images */
   ltdflag=0;
   for (i=0; i<save_area.nregions; i++)
-    if (save_area.sav_ascdes[i] >= 3 && save_area.sav_ascdes[i] <= 7)
+    if (save_area.sav_ascdes[i] >= CETB_MORNING_PASSES && save_area.sav_ascdes[i] <= CETB_EVENING_PASSES)
       ltdflag=1;
   
   /* compute approximate projection grid scale factors for later use */
@@ -373,7 +378,7 @@ int main(int argc,char *argv[])
 	no_trailing_blanks(fname);    
         gsx = gsx_init( fname );
 	write_filenames_to_header( gsx, &save_area );
-	status = posix_memalign( (void**)&gsx_fname[nfile], CETB_MEM_ALIGNMENT, strlen(fname)+1 );
+	status = utils_allocate_clean_aligned_memory( (void**)&gsx_fname[nfile], strlen(fname)+1 );
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
 	if ( nfile > MAX_INPUT_FILES ) {
@@ -385,6 +390,10 @@ int main(int argc,char *argv[])
     }
   }
 
+  if ( 0 == nfile ) { /* there are no input files in the meta file */
+      write_end_header( &save_area );
+  }
+  
   for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
     
   label_330:; /* read next file name from list gsx_fname */
@@ -416,6 +425,10 @@ int main(int argc,char *argv[])
       first_file++;
       write_header_info( gsx, &save_area );
       write_end_header( &save_area );
+      /* If this is AMSRE, combine the output setup files for a and b scans and close the unneeded output file */
+      if ( CETB_AQUA == cetb_platform ) {
+	combine_setup_files( &save_area, 1 );
+      }
     }
 
     /* Here is where you loop through all of the different measurement sets in the file */
@@ -609,12 +622,12 @@ int main(int argc,char *argv[])
 		  if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
 		}
 	  
-		/* check ascending/descending orbit pass flag (0=both, 1=asc, 2=desc, 3=morning, 4=evening) */
+		/* check ascending/descending orbit pass flag (see cetb.h for definitions) */
 		iasc=save_area.sav_ascdes[iregion];
-		if (iasc != 0)
-		  if (iasc == 1) {
+		if (iasc != (int)CETB_ALL_PASSES)
+		  if (iasc == (int)CETB_ASC_PASSES) {
 		    if (!ascend) goto label_3400;
-		  } else if (iasc == 2) {
+		  } else if (iasc == (int)CETB_DES_PASSES) {
 		    if (ascend) goto label_3400;
 		  }
 
@@ -643,13 +656,13 @@ int main(int argc,char *argv[])
 		   Note also: that the length of the window is currently set to # minutes per 24 hour period
 		   this may not be true for all sensors */
 
-		if (iasc > 2 && iasc < 6) { /* apply LTOD considerations */
+		if (iasc == (int)CETB_MORNING_PASSES || iasc == (int)CETB_EVENING_PASSES) { /* apply LTOD considerations */
 		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime; /* calculate the relative local time of day in minutes */
 
-		  if (iasc == 3) { /* morning */
+		  if ( iasc == (int)CETB_MORNING_PASSES ) { /* morning */
 		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
 		  } 
-		  if ( iasc == 4 ) {  /* iasc==4 evening */
+		  if ( iasc == (int)CETB_EVENING_PASSES ) {  /* evening */
 		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) goto label_3400;
 		  }
 		}
@@ -848,7 +861,23 @@ int main(int argc,char *argv[])
 	   save_area.sav_regname[j],save_area.sav_ibeam[j],jrec2[j]);
     no_trailing_blanks(save_area.sav_fname2[j]);
     printf("Output data written to %s\n",save_area.sav_fname2[j]);
-    fclose(save_area.reg_lu[j]);
+    if ( j == 0 ) {
+      fclose(save_area.reg_lu[j]);
+      save_area.reg_lu[j] = NULL;
+    } else {
+        if ( CETB_AQUA == cetb_platform ) {
+	  /* now check to see if you have b channels for 89H or 89V and if you also have A channels then combine */
+	  combine_setup_files( &save_area, 2 );
+	  if ( NULL != save_area.reg_lu[j] ) {
+	    fprintf( stderr, "%s: back from combin with fileid != NULL", __FUNCTION__ );
+	    fclose( save_area.reg_lu[j] );
+	    save_area.reg_lu[j] = NULL;
+	  }
+	} else {
+	  fclose(save_area.reg_lu[j]);
+	  save_area.reg_lu[j] = NULL;
+	}
+    }
   }
   printf("\n");
 
@@ -866,7 +895,7 @@ FILE * get_meta(char *mname, char *outpath,
 		char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *a)
+		int *KSAT, region_save *a, cetb_platform_id *cetb_platform)
 {
   /* read meta file, open output .setup files, write .setup file headers, and 
      store key parameters in memory */
@@ -899,6 +928,8 @@ FILE * get_meta(char *mname, char *outpath,
   int z, nsection, isection, cnt;
   float tsplit1=1.0, tsplit2=13.0;
 
+  int count;
+
   iregion=0;
   ireg=0;
   ninst=0;
@@ -928,6 +959,13 @@ FILE * get_meta(char *mname, char *outpath,
 	x = strchr(line,'=');
 	strncpy(sensor,++x,40);
 	printf("Sensor string='%s'\n",sensor);
+	/* Here is where you can get the sensor ENUM */
+	for ( count=0; count < CETB_NUM_PLATFORMS; count++ ) {
+	  if ( strcmp( sensor, cetb_platform_id_name[count] ) == 0 ) {
+	    *cetb_platform = (cetb_platform_id) count;
+	  }
+	}
+	printf( " **** cetb_platform_id *** is %d\n", *cetb_platform );
 	if (strncmp(sensor,"SSMI",4)==0) {	    
 	  sscanf(&sensor[7],"%2d",KSAT);
 	  printf(" SSMI platform %d\n",*KSAT);
@@ -1021,7 +1059,7 @@ FILE * get_meta(char *mname, char *outpath,
 
       if (strstr(line,"Begin_region_description") != NULL) {
 	/* new region started set some default values */
-	asc_des=0;	/* use both asc/desc orbits */
+	asc_des=CETB_ALL_PASSES;	/* use both asc/desc orbits */
 	ireg=ireg+1;
 	printf("Region %d of %d  Total regions: %d\n",ireg,a->nregions,iregion);
 
@@ -1531,13 +1569,13 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
   /* allocate memory for storage of location arrays */
   //  *noffset=malloc(sizeof(int)*(a->nregions+1));
-  dumb = posix_memalign( (void**)&(*noffset), CETB_MEM_ALIGNMENT, sizeof(int)*(a->nregions+1) );
+  dumb = utils_allocate_clean_aligned_memory( (void**)&(*noffset), sizeof(int)*(a->nregions+1) );
   if ( 0 != dumb ) {
     fprintf( stderr, "*** Inadequate memory for data file storage 'noffset' \n" );
     exit ( -1 );
   }
   //*latlon_store=malloc(sizeof(short int)*nspace);
-  dumb = posix_memalign( (void**)&(*latlon_store), CETB_MEM_ALIGNMENT, sizeof(short int)*nspace );
+  dumb = utils_allocate_clean_aligned_memory( (void**)&(*latlon_store), sizeof(short int)*nspace );
   if ( 0 != dumb ) {
     fprintf(stderr, "*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
     exit(-1);
@@ -1945,27 +1983,31 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
     case AMSRE_06H:
     case AMSRE_06V:
-      box_size = 30;
+      box_size = 24;
       break;
     case AMSRE_10H:
     case AMSRE_10V:
-      box_size = 24;
+      box_size = 20;
       break;
     case AMSRE_18H:
     case AMSRE_18V:
+      box_size = 22;
+      break;
     case AMSRE_23H:
     case AMSRE_23V:
-      box_size = 24;
+      box_size = 26;
       break;
     case AMSRE_36H:
     case AMSRE_36V:
-      box_size = 30;
+      box_size = 22;
       break;
     case AMSRE_89H_A:
     case AMSRE_89V_A:
+      box_size = 10;
+      break;
     case AMSRE_89H_B:
     case AMSRE_89V_B:
-      box_size = 14;
+      box_size = 12;
       break;
     default:
       box_size = -1;
@@ -2050,6 +2092,7 @@ void write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
    } 
   fprintf( stderr, "****%s, source file %s, gsx_version %s\n", __FUNCTION__, gsx->source_file, gsx->gsx_version );
+  fprintf( stderr, "****%s, last line written%s\n", __FUNCTION__, lin );
 }
 /*
  * write_end_header - writes out the End_file line that is used in sir and bgi
@@ -2074,6 +2117,74 @@ void write_end_header( region_save *save_area ){
     fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
   }
+}
+
+/*
+ * manipulate_setup_files - called if we have to combine channels into a single output setup file
+ *
+ * Input:
+ *   region_save pointer holds the file-ids to be manipulated
+ *   execution flag tells what operation should be performed
+ *
+ */
+void combine_setup_files( region_save *a, int execution_flag ) {
+
+  int count;
+  int sub_count;
+  
+  /* Here is where you check to see if both AMSRE 89 a and b scans are requested, if so
+     they need to be written into only 1 output setup file, i.e. 89Ha and 89Hb go into the same file
+     and 89Va and 89Vb go into the same file.  The check needs to be done here so that you don't
+     have to rely on the regions in the file going in a specific order - also note that this only works
+     in the first place if you put all of the 89 channels into the same def file
+     Use the save_area (a in this routine) structure to check for a and b scans if AMSRE */
+  fprintf( stderr, "%s: into manipulating fileids with %d execution flag\n", __FUNCTION__, execution_flag );
+    for ( count=0; count < a->nregions; count++ ) {
+      /* now check to see if you have b channels for 89H or 89V and if you also have A channels
+	 then combine if they use the same projection */
+      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
+	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
+	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) ) {
+	    /* depending on the execution_flag either
+	       - close the file that won't be used and save file id for the setup file for
+	         AMSRE_89H_A to the file id for AMSRE_89H_B or
+	       - set the file id to NULL */
+	    if ( execution_flag == 1 ) {
+	      fclose( a->reg_lu[count] );
+	      a->reg_lu[count] = a->reg_lu[sub_count];
+	      fprintf( stderr, "%s: closed region file count %d in favor of sub_count %d\n", __FUNCTION__,
+		       count, sub_count );
+	    }
+	    if ( execution_flag == 2 ) {
+	      a->reg_lu[count] = NULL;
+	    }
+	  }
+	}
+      }
+      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
+	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
+	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
+	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
+	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) )  {
+	    /* depending on the execution_flag either
+	       - close the file that won't be used and save file id for the setup file for
+	         AMSRE_89H_A to the file id for AMSRE_89H_B or
+	       - set the file id to NULL */
+	    if ( execution_flag == 1 ) {
+	      fclose( a->reg_lu[count] );
+	      a->reg_lu[count] = a->reg_lu[sub_count];
+	      fprintf( stderr, "%s: closed region file count %d in favor of sub_count %d\n", __FUNCTION__,
+		       count, sub_count );
+	    }
+	    if ( execution_flag == 2 ) {
+	      a->reg_lu[count] = NULL;
+	    }
+	  }
+	}
+      }
+    }
 }
 
 /* *********************************************************************** */

@@ -108,7 +108,7 @@ all : libcetb.a $(LIBDIR)/libcetb.a
 
 $(LIBDIR)/libcetb.a : libcetb.a
 
-libcetb.a : $(OBJS) $(DEPEND_LIBS) $(HDRS)
+libcetb.a : $(OBJS) $(DEPEND_LIBS) $(HDRS) $(INCDIR)/cetb.h 
 	$(AR) $(ARFLAGS) libcetb.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
 	$(INSTALL) libcetb.a $(LIBDIR)

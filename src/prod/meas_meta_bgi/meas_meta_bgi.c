@@ -131,6 +131,9 @@ int *cnts;
 FILE *imf, *omf;
 long int nspace;
 
+float tb_max = (CETB_FILE_TB_MAX*CETB_FILE_TB_SCALE_FACTOR);
+float tb_min = (CETB_FILE_TB_MIN*CETB_FILE_TB_SCALE_FACTOR);
+
 /****************************************************************************/
 
 /* these definitions simplify indexing of patarr 
@@ -536,7 +539,7 @@ int main(int argc, char **argv)
 	}
 
 	keep=0;
-	if (tbval < 350.0 && tbval > 50.0) { 
+	if (tbval < tb_max && tbval > tb_min) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -873,7 +876,7 @@ int main(int argc, char **argv)
 	  a_val[its]=(float) tbave;	
 
       /* set data to CETB_TB_MISSING_VALUE if it is OOR */
-       	if ( a_val[its] < 50.0 || a_val[its] > 350.0 ) {
+       	if ( a_val[its] < tb_min || a_val[its] > tb_max ) {
 	  a_val[its] = tb_missing_value_float;
 	}
 	
@@ -1043,7 +1046,7 @@ void filter(float *val, int size, int mode, int nsx, int nsy,
   for (i=0; i < nsx*nsy; i++) {
     *(val+i) = *(temp+i);
     *(temp+i)=0.0;
-    if ( (*(val+i) > thres) && ( (*(val+i) < 50.) || (*(val+i) > 350.) ) ) *(val+i) = missing;
+    if ( (*(val+i) > thres) && ( (*(val+i) < tb_min) || (*(val+i) > tb_max) ) ) *(val+i) = missing;
   }
   return;
 }
