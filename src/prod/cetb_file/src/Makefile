@@ -102,13 +102,13 @@ DEPEND_LIBS =
 
 SRCS = cetb_file.c $(CALCALCS_DIR)/calcalcs.c
 OBJS = cetb_file.o $(CALCALCS_DIR)/calcalcs.o
-HDRS = $(INCDIR)/cetb.h cetb_file.h $(CALCALCS_DIR)/calcalcs.h
+HDRS = cetb_file.h $(CALCALCS_DIR)/calcalcs.h
 
 all : libcetb.a $(LIBDIR)/libcetb.a
 
 $(LIBDIR)/libcetb.a : libcetb.a
 
-libcetb.a : $(OBJS) $(DEPEND_LIBS) $(HDRS)
+libcetb.a : $(OBJS) $(DEPEND_LIBS) $(HDRS) $(INCDIR)/cetb.h 
 	$(AR) $(ARFLAGS) libcetb.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
 	$(INSTALL) libcetb.a $(LIBDIR)
