@@ -35,7 +35,6 @@
   :include:
     - ../../../include
 
-
 :defines:
   # in order to add common defines:
   #  1) remove the trailing [] from the :common: section
@@ -69,6 +68,8 @@
     :executable: gcc
     :arguments:
       - ${1}
+      - -L../../../lib
+      - -lutils
       - -lnetcdf
       - -lhdf5_hl
       - -lhdf5
