@@ -109,7 +109,7 @@ all : libgsx.a $(LIBDIR)/libgsx.a
 
 $(LIBDIR)/libgsx.a : libgsx.a
 
-libgsx.a : $(OBJS) $(DEPEND_LIBS) $(HDRS)
+libgsx.a : $(OBJS) $(DEPEND_LIBS) $(HDRS) $(INCDIR)/cetb.h 
 	$(AR) $(ARFLAGS) libgsx.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
 	$(INSTALL) libgsx.a $(LIBDIR)

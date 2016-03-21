@@ -15,6 +15,7 @@
 #include <strings.h>
 
 #include "cetb.h"
+#include "utils.h"
 #include "gsx.h"
 
 /*
@@ -176,7 +177,7 @@ int get_gsx_dims( gsx_class *this ) {
   this->atts = nc_atts;
   this->unlimdims = nc_unlimdims;
 
-  status = posix_memalign( (void**)&dim_name, CETB_MEM_ALIGNMENT, sizeof( char )*(NC_MAX_NAME+1) );
+  status = utils_allocate_clean_aligned_memory( (void**)&dim_name, sizeof( char )*(NC_MAX_NAME+1) );
   if ( 0 != status ) {
     fprintf( stderr, "%s: unable to allocate memory for dimension names\n", __FUNCTION__ );
     return -1;
@@ -426,7 +427,7 @@ int get_gsx_variable_attributes( gsx_class *this ) {
       return -1;
     }
 
-    status = posix_memalign( (void**)&this->efov[count], CETB_MEM_ALIGNMENT, sizeof( float )*2 );
+    status = utils_allocate_clean_aligned_memory( (void**)&this->efov[count], sizeof( float )*2 );
     if ( 0 != status ) {
       return -1;
     }
@@ -536,7 +537,8 @@ int get_gsx_positions( gsx_class *this ) {
 int get_gsx_temperatures( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
-  status = posix_memalign( (void**)&this->brightness_temps[count], CETB_MEM_ALIGNMENT, sizeof(float)*scans*measurements );
+  status = utils_allocate_clean_aligned_memory( (void**)&this->brightness_temps[count],
+						sizeof(float)*scans*measurements );
   if ( 0 == status ) {
     if ( status = nc_get_var_float( this->fileid, varid, this->brightness_temps[count] ) ) {
       fprintf( stderr, "%s: tb from %s\n", __FUNCTION__, this->channel_names[count] );
@@ -567,7 +569,7 @@ int get_gsx_temperatures( gsx_class *this, int varid, int count, int scans, int 
 int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
-  status = posix_memalign( (void**)&this->latitude[count], CETB_MEM_ALIGNMENT, sizeof(float)*scans*measurements );
+  status = utils_allocate_clean_aligned_memory( (void**)&this->latitude[count], sizeof(float)*scans*measurements );
   if ( 0 == status ) {
     if ( status = nc_get_var_float( this->fileid, varid, this->latitude[count] ) ) {
       fprintf( stderr, "%s: error %s retrieving latitudes\n", __FUNCTION__, nc_strerror( status ) );
@@ -604,7 +606,7 @@ int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int mea
 int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
-  status = posix_memalign( (void**)&this->longitude[count], CETB_MEM_ALIGNMENT, sizeof(float)*scans*measurements );
+  status = utils_allocate_clean_aligned_memory( (void**)&this->longitude[count], sizeof(float)*scans*measurements );
   if ( 0 == status ) {
     if ( status = nc_get_var_float( this->fileid, varid, this->longitude[count] ) ) {
       fprintf( stderr, "%s: error %s retrieving longitudes\n", __FUNCTION__, nc_strerror( status ) );
@@ -639,7 +641,7 @@ int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int me
 int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
-  status = posix_memalign( (void**)&this->eia[count], CETB_MEM_ALIGNMENT, sizeof(float)*scans*measurements );
+  status = utils_allocate_clean_aligned_memory( (void**)&this->eia[count], sizeof(float)*scans*measurements );
   if ( 0 == status ) {
     if ( status = nc_get_var_float( this->fileid, varid, this->eia[count] ) ) {
       fprintf( stderr, "%s: error %s retrieving ei angles\n", __FUNCTION__, nc_strerror( status ) );
@@ -675,7 +677,7 @@ int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurem
 int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements ) {
   int status=0;
 
-  status = posix_memalign( (void**)&this->eaz[count], CETB_MEM_ALIGNMENT, sizeof(float)*scans*measurements );
+  status = utils_allocate_clean_aligned_memory( (void**)&this->eaz[count], sizeof(float)*scans*measurements );
   if ( 0 == status ) {
     if ( status = nc_get_var_float( this->fileid, varid, this->eaz[count] ) ) {
       fprintf( stderr, "%s: error %s retrieving eaz angle\n", __FUNCTION__, nc_strerror( status ) );
@@ -756,7 +758,7 @@ gsx_class *get_gsx_file( char *filename ){
     return NULL;
   }
 
-  status = posix_memalign( (void**)&this, CETB_MEM_ALIGNMENT, sizeof( gsx_class ) );
+  status = utils_allocate_clean_aligned_memory( (void**)&this, sizeof( gsx_class ) );
   if ( 0 != status ) { perror( __FUNCTION__ ); return NULL; }
   memset( this, 0, sizeof( gsx_class ) ); 
   this->fileid = nc_fileid;
@@ -769,7 +771,7 @@ gsx_class *get_gsx_file( char *filename ){
     return NULL;
   }
 
-  status = posix_memalign( (void**)&this->gsx_version, CETB_MEM_ALIGNMENT, (att_len+1) );
+  status = utils_allocate_clean_aligned_memory( (void**)&this->gsx_version, (att_len+1) );
   if ( 0 != status ) {
     fprintf( stderr, "%s: couldn't allocate gsx_version\n", __FUNCTION__ );
     free( this );
@@ -807,7 +809,7 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
     return NULL;
   }
   
-  status = posix_memalign( (void**)&att_text, CETB_MEM_ALIGNMENT, (att_len+1) );
+  status = utils_allocate_clean_aligned_memory( (void**)&att_text, (att_len+1) );
   if ( 0 == status ) {
     if ( status = nc_get_att_text( fileid, varid, varname, att_text ) ) { 
       fprintf( stderr, "%s: couldn't get attribute %s string, error : %s\n", \
@@ -862,7 +864,7 @@ int assign_channels( gsx_class *this, char *channel ) {
     status = -1;
   }
   if ( 0 == status ) {
-    status = posix_memalign( (void**)&this->channel_names[count], CETB_MEM_ALIGNMENT, strlen(channel)+1 );
+    status = utils_allocate_clean_aligned_memory( (void**)&this->channel_names[count], strlen(channel)+1 );
     if ( 0 != status ) {
       return -1;
     }
@@ -899,7 +901,7 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
     return -1;
   }
 
-  status = posix_memalign( (void**)&dimname, CETB_MEM_ALIGNMENT, sizeof( char )*NC_MAX_NAME+1 );
+  status = utils_allocate_clean_aligned_memory( (void**)&dimname, sizeof( char )*NC_MAX_NAME+1 );
   if ( 0 != status ) {
     return -1;
   }
@@ -944,7 +946,7 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
 	       __FUNCTION__, this->fileid, gsx_sc_latitudes[count], nc_strerror( status ) );
       return -1;
     }
-    status = posix_memalign( (void**)&this->sc_latitude[count], CETB_MEM_ALIGNMENT, sizeof(float)*scans );
+    status = utils_allocate_clean_aligned_memory( (void**)&this->sc_latitude[count], sizeof(float)*scans );
     if ( 0 == status ) {
       if ( status = nc_get_var_float( this->fileid, varid, this->sc_latitude[count] ) ) {
 	fprintf( stderr, "%s: error %s retrieving sc_latitudes\n", __FUNCTION__, nc_strerror( status ) );
@@ -965,7 +967,7 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
 	       __FUNCTION__, this->fileid, gsx_sc_longitudes[count], nc_strerror( status ) );
       return -1;
     }
-    status = posix_memalign( (void**)&this->sc_longitude[count], CETB_MEM_ALIGNMENT, sizeof(float)*scans );
+    status = utils_allocate_clean_aligned_memory( (void**)&this->sc_longitude[count], sizeof(float)*scans );
     if ( 0 == status ) {
       if ( status = nc_get_var_float( this->fileid, varid, this->sc_longitude[count] ) ) {
 	fprintf( stderr, "%s: error %s retrieving sc_longitudes\n", __FUNCTION__, nc_strerror( status ) );
@@ -982,7 +984,7 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
 	       __FUNCTION__, this->fileid, gsx_scantime[count], nc_strerror( status ) );
       return -1;
   }
-  status = posix_memalign( (void**)&this->scantime[count], CETB_MEM_ALIGNMENT, sizeof(double)*scans );
+  status = utils_allocate_clean_aligned_memory( (void**)&this->scantime[count], sizeof(double)*scans );
   if ( 0 == status ) {
     if ( status = nc_get_var_double( this->fileid, varid, this->scantime[count] ) ) {
       fprintf( stderr, "%s: error %s retrieving scantimes\n", __FUNCTION__, nc_strerror( status ) );
