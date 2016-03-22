@@ -135,7 +135,7 @@ void test_cetb_tbs_wrong_dims( void ) {
   size_t rows=2;
   size_t cols=3;
   float *data;
-  unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
+  unsigned short fill_value=CETB_TB_FILL_VALUE;
   unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
   status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
@@ -180,8 +180,8 @@ void test_cetb_tbs( void ) {
   size_t att_len;
   float *float_data;
   unsigned short *tb_data;
-  unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short fill_value=CETB_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
     CETB_FILE_TB_MIN,
     CETB_FILE_TB_MAX
@@ -203,7 +203,7 @@ void test_cetb_tbs( void ) {
     CETB_FILE_TB_NUM_SAMPLES_MAX
   };
   short *time_data;
-  int int_fill_value=CETB_FILE_TB_FILL_VALUE;
+  int int_fill_value=CETB_TB_FILL_VALUE;
   int int_valid_range[ 2 ] = {
     CETB_FILE_TB_MIN,
     CETB_FILE_TB_MAX
@@ -371,9 +371,9 @@ void test_cetb_tbs( void ) {
 
   /* _FillValue, missing_value and valid_range */
   status = nc_inq_var_fill( nc_fileid, tb_var_id, NULL, &fill_value );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_TB_FILL_VALUE, fill_value, "TB _FillValue" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_FILL_VALUE, fill_value, "TB _FillValue" );
   status = nc_get_att_ushort( nc_fileid, tb_var_id, "missing_value", &missing_value );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_TB_MISSING_VALUE, missing_value,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_MISSING_VALUE, missing_value,
 				 "TB missing_value" );
   
 

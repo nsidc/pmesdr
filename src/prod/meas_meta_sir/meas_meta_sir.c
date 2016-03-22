@@ -53,8 +53,6 @@ int   MAXFILL=1000;           /* maximum number of pixels in response */
 int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
 int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
-float tb_max = (CETB_FILE_TB_MAX*CETB_FILE_TB_SCALE_FACTOR);
-float tb_min = (CETB_FILE_TB_MIN*CETB_FILE_TB_SCALE_FACTOR);
 
 /****************************************************************************/
 
@@ -665,7 +663,7 @@ int main(int argc, char **argv)
            if not, new values will be stored over old values */
 
 	keep=0;
-	if (tbval < tb_max && tbval > tb_min) { 
+	if (tbval < CETB_TB_SCALED_MAX && tbval > CETB_TB_SCALED_MIN) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -1893,7 +1891,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
       }
       (*nrec)++;
 	
-      if (*tbval < tb_max && *tbval > tb_min) return(0);
+      if (*tbval < CETB_TB_SCALED_MAX && *tbval > CETB_TB_SCALED_MIN) return(0);
     } else      /* end of file (or file err) encountered */
       return(1);
   }
