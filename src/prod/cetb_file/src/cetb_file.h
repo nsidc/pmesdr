@@ -26,14 +26,6 @@
 #define CETB_FILE_TB_UNIT "kelvin"
 #define CETB_FILE_ANGULAR_UNIT "degree"
 
-/* TB values for output files */
-#define CETB_FILE_TB_FILL_VALUE 0
-#define CETB_FILE_TB_MISSING_VALUE 60000
-#define CETB_FILE_TB_SCALE_FACTOR 0.01
-#define CETB_FILE_TB_ADD_OFFSET 0.0
-#define CETB_FILE_TB_MIN 5000
-#define CETB_FILE_TB_MAX 35000
-
 /* TB std dev values for output files */
 #define CETB_FILE_TB_STDDEV_FILL_VALUE ( NC_MAX_USHORT )
 #define CETB_FILE_TB_STDDEV_MISSING_VALUE ( (NC_MAX_USHORT) - 1 )

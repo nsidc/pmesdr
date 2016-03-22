@@ -75,11 +75,11 @@ void test_cetb_populate_grd_parameters( void ) {
   float *float_data;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
-  unsigned short fill_value=CETB_FILE_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
+  unsigned short fill_value=CETB_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
-    CETB_FILE_TB_MIN,
-    CETB_FILE_TB_MAX
+    CETB_TB_MIN,
+    CETB_TB_MAX
   };
   
   status = cetb_file_open( cetb );
@@ -100,8 +100,8 @@ void test_cetb_populate_grd_parameters( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_FILE_TB_SCALE_FACTOR,
-			      (float) CETB_FILE_TB_ADD_OFFSET,
+			      (float) CETB_TB_SCALE_FACTOR,
+			      (float) CETB_TB_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
 
