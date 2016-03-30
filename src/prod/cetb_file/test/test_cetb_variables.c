@@ -136,8 +136,8 @@ void test_cetb_tbs_wrong_dims( void ) {
   size_t cols=3;
   float *data;
   unsigned short fill_value=CETB_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_FILE_TB_MISSING_VALUE;
-  unsigned short valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
+  unsigned short missing_value=CETB_TB_MISSING_VALUE;
+  unsigned short valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
   status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
   
@@ -152,8 +152,8 @@ void test_cetb_tbs_wrong_dims( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_FILE_TB_SCALE_FACTOR,
-			      (float) CETB_FILE_TB_ADD_OFFSET,
+			      (float) CETB_TB_SCALE_FACTOR,
+			      (float) CETB_TB_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 1, status, "bad dimensions" );
   cetb_file_close( cetb );
@@ -183,12 +183,12 @@ void test_cetb_tbs( void ) {
   unsigned short fill_value=CETB_TB_FILL_VALUE;
   unsigned short missing_value=CETB_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
-    CETB_FILE_TB_MIN,
-    CETB_FILE_TB_MAX
+    CETB_TB_MIN,
+    CETB_TB_MAX
   };
   unsigned short expected_tb_valid_range[ 2 ] = {
-    CETB_FILE_TB_MIN,
-    CETB_FILE_TB_MAX
+    CETB_TB_MIN,
+    CETB_TB_MAX
   };
   float scale_factor;
   float add_offset;
@@ -205,8 +205,8 @@ void test_cetb_tbs( void ) {
   short *time_data;
   int int_fill_value=CETB_TB_FILL_VALUE;
   int int_valid_range[ 2 ] = {
-    CETB_FILE_TB_MIN,
-    CETB_FILE_TB_MAX
+    CETB_TB_MIN,
+    CETB_TB_MAX
   };
   short short_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
   short short_valid_range[ 2 ] = {
@@ -246,8 +246,8 @@ void test_cetb_tbs( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_FILE_TB_SCALE_FACTOR,
-			      (float) CETB_FILE_TB_ADD_OFFSET,
+			      (float) CETB_TB_SCALE_FACTOR,
+			      (float) CETB_TB_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
   
@@ -346,13 +346,13 @@ void test_cetb_tbs( void ) {
 
   status = nc_get_var_ushort( nc_fileid, tb_var_id, tb_data );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
-						      CETB_FILE_TB_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
+						      CETB_TB_ADD_OFFSET,
 						      sample_tb0 ),
 				 tb_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_data element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
-						      CETB_FILE_TB_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
+						      CETB_TB_ADD_OFFSET,
 						      sample_tb1 ),
 				 tb_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_data element" );
@@ -395,11 +395,11 @@ void test_cetb_tbs( void ) {
   free( att_p );
   status = nc_get_att_float( nc_fileid, tb_var_id, "scale_factor", &scale_factor );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_FILE_TB_SCALE_FACTOR, scale_factor,
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_TB_SCALE_FACTOR, scale_factor,
 				   "tb scale_factor" );
   status = nc_get_att_float( nc_fileid, tb_var_id, "add_offset", &add_offset );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_FILE_TB_ADD_OFFSET, add_offset,
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_TB_ADD_OFFSET, add_offset,
 				   "tb add_offset" );
 
   att_p = get_text_att( nc_fileid, tb_var_id, "grid_mapping" );
@@ -422,6 +422,14 @@ void test_cetb_tbs( void ) {
   /* Confirm the expected TB_num_samples variable is in the output file */
   status = nc_inq_varid( nc_fileid, "TB_num_samples", &tb_num_samples_var_id );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
+
+  /* There should be a flag_values attribute for TB_num_samples */
+  status = nc_inq_attlen( nc_fileid, tb_num_samples_var_id, "flag_values", &att_len );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "expected TB_num_samples flag_values" );
+
+  /* There should be a flag_meanings attribute for TB_num_samples */
+  status = nc_inq_attlen( nc_fileid, tb_num_samples_var_id, "flag_meanings", &att_len );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "expected TB_num_samples flag_meanings" );
 
   /* There should not be a standard name for num samples */
   status = nc_inq_attlen( nc_fileid, tb_num_samples_var_id, "standard_name", &att_len );
