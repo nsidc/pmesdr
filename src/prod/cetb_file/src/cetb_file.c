@@ -385,6 +385,8 @@ int cetb_file_add_var( cetb_file_class *this,
   char *packing_convention_description;
   char *grid_mapping;
   char *coverage_content_type;
+  unsigned char num_samples_max = CETB_FILE_TB_NUM_SAMPLES_MAX;
+  char *flag_meanings = "num_samples GE 255";
   
   packing_convention = strdup( CETB_FILE_PACKING_CONVENTION );
   packing_convention_description = strdup( CETB_FILE_PACKING_CONVENTION_DESC );
@@ -621,7 +623,20 @@ int cetb_file_add_var( cetb_file_class *this,
 		 __FUNCTION__, nc_strerror( status ) );
 	return 1;
       }
-
+      if ( status = nc_put_att( this->fid, var_id, "flag_values", NC_UBYTE,
+				(size_t)1, &(num_samples_max) ) ) {
+	fprintf( stderr, "%s: Error setting %s %s %d: %s.\n",
+		 __FUNCTION__, var_name, "flag_values", CETB_FILE_TB_NUM_SAMPLES_MAX, nc_strerror( status ) );
+	return 1;
+      }
+  
+      if ( status = nc_put_att_text( this->fid, var_id, "flag_meanings", 
+				     strlen(flag_meanings), flag_meanings ) ) {
+	fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+		 __FUNCTION__, var_name, "flag_meanings", flag_meanings, nc_strerror( status ) );
+	return 1;
+      }
+  
       free( uchar_data );
       
     } else {
