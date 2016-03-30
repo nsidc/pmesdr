@@ -119,18 +119,19 @@ void gsx_close ( gsx_class *this ) {
   free( this->gsx_version );
   free( this->source_file );
   for ( counter=0; counter<this->channel_number; counter++ ) {
-    free ( this->channel_names[counter] );
-    free( this->efov[counter] );
-    free( this->brightness_temps[counter] );
+    if ( NULL != this->channel_names[counter] ) free ( this->channel_names[counter] );
+    if ( NULL != this->efov[counter] ) free( this->efov[counter] );
+    if ( NULL != this->brightness_temps[counter] ) free( this->brightness_temps[counter] );
+    if ( NULL != this->validRange[counter] ) free( this->validRange[counter] ); 
   }
   for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
-    free( this->latitude[counter] );
-    free( this->longitude[counter] );
-    free( this->eia[counter] );
-    free( this->eaz[counter] );
-    free( this->sc_latitude[counter] );
-    free( this->sc_longitude[counter] );
-    free( this->scantime[counter] );
+    if ( NULL != this->latitude[counter] ) free( this->latitude[counter] );
+    if ( NULL != this->longitude[counter] ) free( this->longitude[counter] );
+    if ( NULL != this->eia[counter] ) free( this->eia[counter] );
+    if ( NULL != this->eaz[counter] ) free( this->eaz[counter] );
+    if ( NULL != this->sc_latitude[counter] ) free( this->sc_latitude[counter] );
+    if ( NULL != this->sc_longitude[counter] ) free( this->sc_longitude[counter] );
+    if ( NULL != this->scantime[counter] ) free( this->scantime[counter] );
   }
   free( this );
   this = NULL;
@@ -417,7 +418,17 @@ int get_gsx_variable_attributes( gsx_class *this ) {
       if ( NULL != strstr( locations, cetb_loc_id_name[i] ) )
 	this->channel_dims[count] = (cetb_loc_id) i;
     }
-	   
+
+    /* Get the valid range of data for this channel */
+    status = utils_allocate_clean_aligned_memory( (void**)&this->validRange[count], sizeof( float )*2 );
+    if ( 0 != status ) {
+      return -1;
+    }
+    if ( status = nc_get_att_float( this->fileid, varid, "valid_range", this->validRange[count] ) ) {
+      fprintf( stderr, "%s: couldn't get valid range for channel %s\n", __FUNCTION__, this->channel_names[count] );
+      return -1;
+    }
+    
     /* Get the efov values for this channel */
     efov = get_att_text( this->fileid, varid, "gsx_field_of_view" );
     if ( status = nc_inq_varid( this->fileid, efov, &varid ) ) {
@@ -721,6 +732,7 @@ int init_gsx_pointers( gsx_class *this ) {
     this->efov[counter] = NULL;
     this->brightness_temps[counter] = NULL;
     this->channel_dims[counter] = CETB_NOLOC;
+    this->validRange[counter] = NULL;
   }
   for ( counter=0; counter<GSX_MAX_DIMS; counter++ ) {
     this->latitude[counter] = NULL;

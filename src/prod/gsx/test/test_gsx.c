@@ -340,6 +340,24 @@ void test_gsx_efov ( void ) {
   gsx_close( gsx );
 }
 
+void test_gsx_validRange ( void ) {
+  gsx_class *gsx;
+  int status;
+  int counter;
+
+  gsx = gsx_init( file_name );
+  if ( NULL != gsx ){
+    for ( counter=0; counter<gsx->channel_number; counter++ ) {
+      if ( NULL != gsx->validRange[counter] ) fprintf( stderr, "\n%s: valid range for %s is %f by %f\n",	\
+						       __FUNCTION__, gsx->channel_names[counter],
+						       *gsx->validRange[counter], *(gsx->validRange[counter]+1) );
+      TEST_ASSERT_TRUE( NULL != gsx->validRange[counter] );
+      TEST_ASSERT_TRUE( NULL != (gsx->validRange[counter]+1) );
+    }
+  }
+  gsx_close( gsx );
+}
+
 void test_gsx_fill_values_loc1 ( void ) {
   gsx_class *gsx;
   int i=0;
@@ -408,7 +426,7 @@ void test_gsx_loc1_variables ( void ) {
 	       *(gsx->sc_longitude[i]+(1000/gsx->measurements[i])) );
     fprintf( stderr, "\n" );
 
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t %f \t %f\n", \
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t ", \
 	     *(gsx->latitude[i]+1001), \
 	     *(gsx->longitude[i]+1001), \
 	     *(gsx->eia[i]+1001),	\
