@@ -131,6 +131,7 @@ typedef struct {
   cetb_loc_id channel_dims[GSX_MAX_CHANNELS];
   int channel_number;
   float fillvalue[GSX_MAX_CHANNELS];
+  float *validRange[GSX_MAX_CHANNELS];
   float *efov[GSX_MAX_CHANNELS];
   float *latitude[GSX_MAX_DIMS];
   float fill_latitude[GSX_MAX_DIMS];

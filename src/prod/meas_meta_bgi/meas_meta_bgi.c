@@ -27,6 +27,7 @@
 #include <time.h>
 #include <netcdf.h>
 
+#include "utils.h"
 #include "cetb.h"
 #include "cetb_file.h"
 #include "ezdump.h"
@@ -131,9 +132,6 @@ int *cnts;
 FILE *imf, *omf;
 long int nspace;
 
-float tb_max = (CETB_FILE_TB_MAX*CETB_FILE_TB_SCALE_FACTOR);
-float tb_min = (CETB_FILE_TB_MIN*CETB_FILE_TB_SCALE_FACTOR);
-
 /****************************************************************************/
 
 /* these definitions simplify indexing of patarr 
@@ -185,9 +183,9 @@ int main(int argc, char **argv)
   cetb_platform_id platform_id;
   cetb_sensor_id sensor_id;
   cetb_direction_id direction_id=CETB_NO_DIRECTION;
-  unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
-  unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
-  unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
+  unsigned short tb_fill_value=CETB_TB_FILL_VALUE;
+  unsigned short tb_missing_value=CETB_TB_MISSING_VALUE;
+  unsigned short tb_valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
   int ncerr;
 
   float tb_fill_value_float;
@@ -210,10 +208,10 @@ int main(int argc, char **argv)
   short int *weight_array;
   double dsum, *aveweights, tbave;
 
-  tb_fill_value_float = CETB_FILE_UNPACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
-					       CETB_FILE_TB_ADD_OFFSET, tb_fill_value );
-  tb_missing_value_float = CETB_FILE_UNPACK_DATA( CETB_FILE_TB_SCALE_FACTOR,
-						  CETB_FILE_TB_ADD_OFFSET, tb_missing_value );
+  tb_fill_value_float = CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
+					       CETB_TB_ADD_OFFSET, tb_fill_value );
+  tb_missing_value_float = CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
+						  CETB_TB_ADD_OFFSET, tb_missing_value );
 /* begin program */  
 
   printf("BYU SSM/I meta BG program: C version %f\n",VERSION);
@@ -468,9 +466,7 @@ int main(int argc, char **argv)
 
   nspace = nls * file_savings;/* space to allocate for measurement storage */
   printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
-  /*  space = (char *) malloc(sizeof(char)*nspace); */
-  dumb = posix_memalign( (void**)&space, CETB_MEM_ALIGNMENT, nspace * sizeof(char) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void ** )&space, ( size_t )nspace*sizeof(char) ) ) {
       eprintf("*** Inadequate memory for data file storage\n");
       exit(-1);
   }
@@ -479,21 +475,17 @@ int main(int argc, char **argv)
 
   nsize = nsx * nsy;
   
-  //  a_val  = (float *) malloc(sizeof(float)*nsize);
-  dumb = posix_memalign( (void**)&a_val, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val, ( size_t )nsize*sizeof(float) ) ) {
     eprintf("*** Inadequate memory for data file storage\n");
     exit(-1);
   }
 
-  dumb = posix_memalign( (void**)&a_temp, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp, ( size_t )nsize*sizeof(float) ) ) {
     eprintf("*** Inadequate memory for data file storage\n");
     exit(-1);
   }
   
-  dumb = posix_memalign( (void**)&cnts, CETB_MEM_ALIGNMENT, nsize*sizeof(float) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&cnts, ( size_t )nsize*sizeof(float) ) ) {
     eprintf("*** Inadequate memory for data file storage\n");
     exit(-1);
   }
@@ -539,7 +531,7 @@ int main(int argc, char **argv)
 	}
 
 	keep=0;
-	if (tbval < tb_max && tbval > tb_min) { 
+	if (tbval < CETB_TB_SCALED_MAX && tbval > CETB_TB_SCALED_MIN) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -618,8 +610,7 @@ int main(int argc, char **argv)
 
   /* allocate index array and BGI working arrays*/
 
-  dumb = posix_memalign( (void**)&indx, CETB_MEM_ALIGNMENT, nsize*nmax*sizeof(char *) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&indx, ( size_t )nsize*nmax*sizeof(char *) ) ) {
     eprintf("*** Inadequate memory for data file storage\n");
     exit(-1);
   }
@@ -636,20 +627,17 @@ int main(int argc, char **argv)
   c = dvector(1,nmax);
   tb2 = dvector(1,nmax);
 
-  dumb = posix_memalign( (void **)&patarr, CETB_MEM_ALIGNMENT, mdim*mdim*nmax*sizeof(float) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void **)&patarr, ( size_t )mdim*mdim*nmax*sizeof(float) ) ) {
     eprintf("*** Inadequate memory for data file storage, patarr\n");
     exit(-1);
   }
 
-  dumb = posix_memalign( (void **)&ix0, CETB_MEM_ALIGNMENT, (nmax+1)*sizeof(int) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void **)&ix0, ( size_t )(nmax+1)*sizeof(int) ) ) {
     eprintf("*** Inadequate memory for data file storage, ix0\n");
     exit(-1);
   }
 
-  dumb = posix_memalign( (void **)&iy0, CETB_MEM_ALIGNMENT, (nmax+1)*sizeof(int) );
-  if (dumb != 0) {
+  if ( 0 != utils_allocate_clean_aligned_memory( (void **)&iy0, ( size_t )(nmax+1)*sizeof(int) ) ) {
     eprintf("*** Inadequate memory for data file storage, iy0\n");
     exit(-1);
   }
@@ -876,7 +864,7 @@ int main(int argc, char **argv)
 	  a_val[its]=(float) tbave;	
 
       /* set data to CETB_TB_MISSING_VALUE if it is OOR */
-       	if ( a_val[its] < tb_min || a_val[its] > tb_max ) {
+       	if ( a_val[its] < CETB_TB_SCALED_MIN || a_val[its] > CETB_TB_SCALED_MAX ) {
 	  a_val[its] = tb_missing_value_float;
 	}
 	
@@ -903,8 +891,8 @@ int main(int argc, char **argv)
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_FILE_TB_SCALE_FACTOR,
-			       (float) CETB_FILE_TB_ADD_OFFSET,
+			       (float) CETB_TB_SCALE_FACTOR,
+			       (float) CETB_TB_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
@@ -1046,7 +1034,7 @@ void filter(float *val, int size, int mode, int nsx, int nsy,
   for (i=0; i < nsx*nsy; i++) {
     *(val+i) = *(temp+i);
     *(temp+i)=0.0;
-    if ( (*(val+i) > thres) && ( (*(val+i) < tb_min) || (*(val+i) > tb_max) ) ) *(val+i) = missing;
+    if ( (*(val+i) > thres) && ( (*(val+i) < CETB_TB_SCALED_MIN) || (*(val+i) > CETB_TB_SCALED_MAX) ) ) *(val+i) = missing;
   }
   return;
 }

@@ -611,7 +611,7 @@ int main(int argc,char *argv[])
 		cen_lat = *(gsx->latitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal longitude */
 		cen_lon = *(gsx->longitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal latitude */
 
-		if (tb <= 0.0) goto label_3400; /* skip bad measurements */
+		if (tb < *(gsx->validRange[gsx_count])) goto label_3400; /* skip bad measurements */
 		if (thetai == 0.0) goto label_3400; /* skip bad measurements */
 	  
 		/* first, determine if measurement is in the longitude range for ascending or descending */
