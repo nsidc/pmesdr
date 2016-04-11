@@ -53,8 +53,6 @@ int   MAXFILL=1000;           /* maximum number of pixels in response */
 int   HASAZANG=0;             /* azimuth angle data not included */
 int   HS=20;                  /* measurement headersize in bytes */
 int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
-float tb_max = (CETB_FILE_TB_MAX*CETB_FILE_TB_SCALE_FACTOR);
-float tb_min = (CETB_FILE_TB_MIN*CETB_FILE_TB_SCALE_FACTOR);
 
 /****************************************************************************/
 
@@ -150,7 +148,7 @@ int main(int argc, char **argv)
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
   /* define no-data values */
-  float anodata_A=CETB_FILE_TB_FILL_VALUE;
+  float anodata_A=CETB_TB_FILL_VALUE;
   float anodata_C=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
   float anodata_I=CETB_FILE_THETA_FILL_VALUE;
   float anodata_Ia=CETB_FILE_THETA_FILL_VALUE;
@@ -185,9 +183,9 @@ int main(int argc, char **argv)
   cetb_platform_id platform_id;
   cetb_sensor_id sensor_id;
   cetb_direction_id direction_id=CETB_NO_DIRECTION;
-  unsigned short tb_fill_value=CETB_FILE_TB_FILL_VALUE;
-  unsigned short tb_missing_value=CETB_FILE_TB_MISSING_VALUE;
-  unsigned short tb_valid_range[ 2 ] = { CETB_FILE_TB_MIN, CETB_FILE_TB_MAX };
+  unsigned short tb_fill_value=CETB_TB_FILL_VALUE;
+  unsigned short tb_missing_value=CETB_TB_MISSING_VALUE;
+  unsigned short tb_valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
   short tb_time_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
   short tb_time_valid_range[ 2 ] = { CETB_FILE_TB_TIME_MIN, CETB_FILE_TB_TIME_MAX };
   unsigned short tb_stddev_fill_value=CETB_FILE_TB_STDDEV_FILL_VALUE;
@@ -665,7 +663,7 @@ int main(int argc, char **argv)
            if not, new values will be stored over old values */
 
 	keep=0;
-	if (tbval < tb_max && tbval > tb_min) { 
+	if (tbval < CETB_TB_SCALED_MAX && tbval > CETB_TB_SCALED_MIN) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -891,8 +889,8 @@ done:
 				     &tb_missing_value,
 				     &tb_valid_range,
 				     CETB_PACK,
-				     (float) CETB_FILE_TB_SCALE_FACTOR,
-				     (float) CETB_FILE_TB_ADD_OFFSET,
+				     (float) CETB_TB_SCALE_FACTOR,
+				     (float) CETB_TB_ADD_OFFSET,
 				     NULL ) ) {
 	  errors++;
 	  fprintf( stderr, "%s: Error writing Tb (ave_image).\n", __FILE__ );
@@ -917,8 +915,8 @@ done:
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_FILE_TB_SCALE_FACTOR,
-			       (float) CETB_FILE_TB_ADD_OFFSET,
+			       (float) CETB_TB_SCALE_FACTOR,
+			       (float) CETB_TB_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
@@ -1366,8 +1364,8 @@ done3:
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_FILE_TB_SCALE_FACTOR,
-			       (float) CETB_FILE_TB_ADD_OFFSET,
+			       (float) CETB_TB_SCALE_FACTOR,
+			       (float) CETB_TB_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD Tb (A).\n", __FILE__ );
@@ -1509,8 +1507,8 @@ done3:
 				   &tb_missing_value,
 				   &tb_valid_range,
 				   CETB_PACK,
-				   (float) CETB_FILE_TB_SCALE_FACTOR,
-				   (float) CETB_FILE_TB_ADD_OFFSET,
+				   (float) CETB_TB_SCALE_FACTOR,
+				   (float) CETB_TB_ADD_OFFSET,
 				   NULL ) ) {
 	errors++;
 	fprintf( stderr, "%s: Error writing Non-enhanced Tb (A).\n", __FILE__ );
@@ -1893,7 +1891,7 @@ int get_measurements(char *store, char *store2, float *tbval, float *ang, int *c
       }
       (*nrec)++;
 	
-      if (*tbval < tb_max && *tbval > tb_min) return(0);
+      if (*tbval < CETB_TB_SCALED_MAX && *tbval > CETB_TB_SCALED_MIN) return(0);
     } else      /* end of file (or file err) encountered */
       return(1);
   }
