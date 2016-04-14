@@ -567,7 +567,7 @@ int main(int argc,char *argv[])
 
 	  first_measurement = 0;
 	  if ( CETB_AMSRE == gsx->short_sensor ) first_measurement = CETB_AMSRE_FIRST_MEASUREMENT;
-	  for (imeas=first_measurement; imeas < gsx->measurements[loc]; imeas++) { /* measurements loop to label_3401 */
+	  for (imeas=first_measurement; imeas < gsx->measurements[loc]; imeas++) { /* measurements loop */
 	    irec=irec+1;	/* count of pulses examined */
 
 	    /* for each output region and section */
@@ -815,8 +815,7 @@ int main(int argc,char *argv[])
 	      }
 	      label_3400:; /* end of regions loop */
 	    }
-	  label_3401:; /* end of measurements loop */
-	  }
+	  }  /* end of measurements loop */
 	label_350:; /* end of scan loop */
 	}
       } /* end of locs loop */
