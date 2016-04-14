@@ -6,14 +6,6 @@
   MEaSURES processing
 
   written by DGL at BYU  02/22/2014 + based on oscat_meta_setup_slice.c and ssmi_meta_setup_v7RSS.f
-  revised by DGL at BYU  03/07/2014 + added EASE2 capability
-  revised by DGL at BYU  04/11/2014 + added response debug output
-  revised by DGL at BYU  06/28/2014 + added RSS swath overlap reject
-  revised by MAH at NSIDC 10/10/2014 + directives for Intel math library
-  revised by DGL at BYU  01/19/2015 + changed LTOD logic
-  revised by MAH at NSIDC 01/20/2015 + added DGL's changes in by hand
-  revised by DGL at BYU  01/27/2015 + updated convert_time and morn LTOD
-  revised by MAH at NSIDC 01/30/2015 + added DGL's changes in by hand
   further revision are tracked in bitbucket and not via this comment list MAH 05/15/15
 
 ******************************************************************/

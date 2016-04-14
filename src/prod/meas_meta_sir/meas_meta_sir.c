@@ -5,9 +5,6 @@
   program to generate standard SIR products from .setup file
 
   Written by DGL at BYU 02/22/2014 + modified from ssmi_meta_sir3.c
-  Revised by DGL at BYU 05/15/2014 + use intermediate dump file output
-  Revised by DGL at BYU 06/21/2014 + AVE start of SIR
-  Revised by DGL at BYU 08/16/2014 + revised error handling, optional INFOfile out
 
 ******************************************************************/
 
