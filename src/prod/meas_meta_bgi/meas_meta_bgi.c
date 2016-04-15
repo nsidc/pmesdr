@@ -24,8 +24,6 @@
 #include "utils.h"
 #include "cetb.h"
 #include "cetb_file.h"
-#include "ezdump.h"
-#include "sir3.h"
 
 #define NRANSI
 #include "nr.h"

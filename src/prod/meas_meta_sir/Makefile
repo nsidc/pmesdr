@@ -122,9 +122,6 @@ all : $(BIN)
 $(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS) 
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
-netcdf_dump.o : ../meas_undump/netcdf_dump.c 
-	$(CC) $(CFLAGS) -c -o $@ ../meas_undump/netcdf_dump.c
-
 install :
 	$(MKDIR) $(BINDIR)
 	$(INSTALL) $(BIN) $(BINDIR)
