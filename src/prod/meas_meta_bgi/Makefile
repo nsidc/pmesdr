@@ -65,17 +65,14 @@ ifeq ($(LOCALE),NSIDCsnow)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),NSIDCdev)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),int.nsidc.org)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib
   HDF5_LIBDIR = /usr/lib
-  ZLIB_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
@@ -92,13 +89,12 @@ else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
 endif
 
 #
 # end configuration section
 #------------------------------------------------------------------------
-LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) \
+LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
 	-lcetb -lutils -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
