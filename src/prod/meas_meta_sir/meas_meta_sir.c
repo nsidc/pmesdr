@@ -5,9 +5,6 @@
   program to generate standard SIR products from .setup file
 
   Written by DGL at BYU 02/22/2014 + modified from ssmi_meta_sir3.c
-  Revised by DGL at BYU 05/15/2014 + use intermediate dump file output
-  Revised by DGL at BYU 06/21/2014 + AVE start of SIR
-  Revised by DGL at BYU 08/16/2014 + revised error handling, optional INFOfile out
 
 ******************************************************************/
 
@@ -199,7 +196,6 @@ int main(int argc, char **argv)
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
   int ncerr;
 
-  int storage = 0;
   long head_len;
   int errors = 0, gerr;
   char polch;
@@ -222,11 +218,10 @@ int main(int argc, char **argv)
   printf("BYU SSM/I meta SIR/SIRF program: C version %f\n",VERSION);
 
   if (argc < 2) {
-    printf("\nusage: %s setup_in outpath storage_option\n\n",argv[0]);
+    printf("\nusage: %s setup_in outpath \n\n",argv[0]);
     printf(" input parameters:\n");
     printf("   setup_in        = input setup file\n");
     printf("   outpath         = output path\n");
-    printf("   storage_option  = (0=mem only [def], 1=file only, 2=mem then file\n");
     return(0);
   }
   file_in=argv[1];
@@ -242,16 +237,6 @@ int main(int argc, char **argv)
     sscanf(argv[2],"%s",outpath);
   printf("Output path %s: ",outpath);
 
-  if (argc > 3) 
-    sscanf(argv[3],"%d",&storage);
-  printf("Storage option %d: ",storage);
-  if (storage == 1)
-    printf(" File only\n");
-  else if (storage == 2)
-    printf(" Memory then File\n");
-  else
-    printf(" Memory only\n");
-  
   /* get input file size */
   fseek(imf, 0L, REL_EOF);
   nls=ftell(imf);
@@ -573,14 +558,12 @@ int main(int argc, char **argv)
 
 /* header read completed, now determine how much program memory to allocate */
 
-  if (storage != 1) { /* allocate memory storage space for measurements */
-    nspace = nls * file_savings;/* space to allocate for measurement storage */
-    printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
-    if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space, ( size_t )nspace*sizeof(char)) ) {
-      eprintf("*** Inadequate memory for data file storage\n");
-      exit(-1);
-    }
-  }
+   nspace = nls * file_savings;/* space to allocate for measurement storage */
+   printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
+   if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space, ( size_t )nspace*sizeof(char)) ) {
+     eprintf("*** Inadequate memory for data file storage\n");
+     exit(-1);
+   }
 
 /* allocate storage space for image and working arrays
    note: these arrays are re-used multiple times to save memory */
@@ -623,111 +606,105 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
-  /* with storage allocated, copy file into memory if selected */
+  /* with storage allocated, copy file into memory */
+  /* read measurement file into memory, storing only essential information  */
 
-  if (storage != 1) {   /* read measurement file into memory, 
-			   storing only essential information  */
-
-    nrec = 0;         /* number of meaurements in file */
-    ncnt = 0;         /* number of useable measurements */
-    nbyte = 0;        /* file size in bytes */
-    store=space;      /* storage pointer */
+  nrec = 0;         /* number of meaurements in file */
+  ncnt = 0;         /* number of useable measurements */
+  nbyte = 0;        /* file size in bytes */
+  store=space;      /* storage pointer */
   
-    printf("Begin setup file copy into memory\n");
-    while (fread(&dumb, sizeof(int), 1, imf) != 0) {
+  printf("Begin setup file copy into memory\n");
+  while (fread(&dumb, sizeof(int), 1, imf) != 0) {
 
-     /*5 items at 4 bytes each: 20 bytes if no azimuth angle */
-     /*6 items at 4 bytes each: 24 bytes if azimuth angle */
-     if (nbyte+HS < nspace) {
-       	if ((dumb=fread(store, sizeof(char), HS, imf)) != HS) {
-          eprintfi(" *** Error reading input file data at 180 %d\n", dumb);
-	  exit(-1);
-        }
-        if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
+    /*5 items at 4 bytes each: 20 bytes if no azimuth angle */
+    /*6 items at 4 bytes each: 24 bytes if azimuth angle */
+    if (nbyte+HS < nspace) {
+      if ((dumb=fread(store, sizeof(char), HS, imf)) != HS) {
+	eprintfi(" *** Error reading input file data at 180 %d\n", dumb);
+	exit(-1);
+      }
+      if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
 
-        tbval = *((float *) (store+0));
-        ang   = *((float *) (store+4));
-        count = *((int *)   (store+8));
-        ktime = *((int *)   (store+12));
-        iadd  = *((int *)   (store+16));
-	if (HASAZANG)
-	  azang = *((float *) (store+20));
+      tbval = *((float *) (store+0));
+      ang   = *((float *) (store+4));
+      count = *((int *)   (store+8));
+      ktime = *((int *)   (store+12));
+      iadd  = *((int *)   (store+16));
+      if (HASAZANG)
+	azang = *((float *) (store+20));
 
-	if (count > MAXFILL) {
-	  printf("*** Count error %d  record %d\n",count,nrec);
-	  printf("    %f %f %d %d \n",tbval,ang,ktime,iadd);
-	  count=MAXFILL;
+      if (count > MAXFILL) {
+	printf("*** Count error %d  record %d\n",count,nrec);
+	printf("    %f %f %d %d \n",tbval,ang,ktime,iadd);
+	count=MAXFILL;
+      }
+
+      /* if measurement is "valid" keep it by indexing counters 
+	 if not, new values will be stored over old values */
+
+      keep=0;
+      if (tbval < CETB_TB_SCALED_MAX && tbval > CETB_TB_SCALED_MIN) { 
+	nbyte=nbyte+HS;
+	store=store+HS;
+	ncnt++;
+	keep=1;
+      }
+
+      /* read fill_array pixel indices */
+      if (nbyte+count*4 < nspace) {
+	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(110);
+	if (fread(store, sizeof(int), count, imf) != count) {
+	  eprintf(" *** Error reading input file data at 111\n");
+	  /* exit(-1); */
+	  goto label;
 	}
-
-	/* if measurement is "valid" keep it by indexing counters 
-           if not, new values will be stored over old values */
-
-	keep=0;
-	if (tbval < CETB_TB_SCALED_MAX && tbval > CETB_TB_SCALED_MIN) { 
-	  nbyte=nbyte+HS;
-	  store=store+HS;
-	  ncnt++;
-	  keep=1;
+	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(112);
+	if (keep == 1) {
+	  nbyte=nbyte+count*4;
+	  store=store+count*4;
 	}
+      } else {
+	eprintfi(" *** out of storage space 1 *** %d\n", ncnt);
+	printf(" *** out of storage space 1 *** %d %ld %ld\n",ncnt,nbyte,nspace);
+	exit(-1);
+      }
 
-	/* read fill_array pixel indices */
-	if (nbyte+count*4 < nspace) {
-	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(110);
-	   if (fread(store, sizeof(int), count, imf) != count) {
-	      eprintf(" *** Error reading input file data at 111\n");
-	      /* exit(-1); */
-	      goto label;
-	   }
-	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(112);
-	   if (keep == 1) {
-	     nbyte=nbyte+count*4;
-	     store=store+count*4;
-	   }
-	} else {
-	   eprintfi(" *** out of storage space 1 *** %d\n", ncnt);
-	   printf(" *** out of storage space 1 *** %d %ld %ld\n",ncnt,nbyte,nspace);
-	   exit(-1);
+      /* read response_array weights */
+      if (nbyte+count*2 < nspace) {
+	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1111);
+	if (fread(store, sizeof(short int), count, imf) != count) {
+	  eprintf(" *** Error reading input file data at 1111\n");
+	  goto label;
 	}
-
-	/* read response_array weights */
-	if (nbyte+count*2 < nspace) {
-	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1111);
-	   if (fread(store, sizeof(short int), count, imf) != count) {
-	      eprintf(" *** Error reading input file data at 1111\n");
-	      goto label;
-	   }
-	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1121);
-	   if (keep == 1) {
-	     nbyte=nbyte+count*2;
-	     if (count % 2 == 1) count=count+1;  /* ensure storage of next record on a 4byte word boundary */
-	     store=store+count*2;
-	   }
-	} else {
-	   eprintfi(" *** out of storage space 2 *** %d\n", ncnt);
-	   printf(" *** out of storage space 2 *** %d %ld %ld\n",ncnt,nbyte,nspace);
-	   exit(-1);
+	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1121);
+	if (keep == 1) {
+	  nbyte=nbyte+count*2;
+	  if (count % 2 == 1) count=count+1;  /* ensure storage of next record on a 4byte word boundary */
+	  store=store+count*2;
 	}
+      } else {
+	eprintfi(" *** out of storage space 2 *** %d\n", ncnt);
+	printf(" *** out of storage space 2 *** %d %ld %ld\n",ncnt,nbyte,nspace);
+	exit(-1);
+      }
 
-	nrec++;
+      nrec++;
 
-     } else {
-       eprintfi(" *** out of storage space 3 *** %d %ld\n", ncnt);
-       printf(" *** out of storage space 3 *** %d %ld\n",ncnt,nspace);
-       exit(-1);
-     }
+    } else {
+      eprintfi(" *** out of storage space 3 *** %d %ld\n", ncnt);
+      printf(" *** out of storage space 3 *** %d %ld\n",ncnt,nspace);
+      exit(-1);
     }
-  label:
-    fclose(imf);
-
-
-/* print measurement file storage requirements */
-
-    ratio=100.0 * (float) nbyte / (float) nls;
-    printf("  Input file read into ram\n");
-    printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
-	   nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
   }
+ label:
+  fclose(imf);
 
+  /* print measurement file storage requirements */
+  ratio=100.0 * (float) nbyte / (float) nls;
+  printf("  Input file read into ram\n");
+  printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
+	 nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
 
 /* Begin SIR/SIRF processing.  First initialize working arrays. */
 
@@ -751,14 +728,6 @@ int main(int argc, char **argv)
   old_amin=a_init;
   old_amax=a_init;
   
-
-  if (storage == 1) {  /* for file storage */
-    ncnt = 2 * nls * file_savings / HS;  /* high estimate of # of measurements*/
-    if (ncnt < 0) ncnt=900000000;
-    nrec = 0;         /* will hold actual number of meaurements in file */
-  }
-
-
   printf("\nSIR parameters: A_init=%f  N=%d\n",a_init,nits);
 
   /* for each iteration of SIR */
@@ -767,40 +736,20 @@ int main(int argc, char **argv)
 
     printf("\nSIR iteration %d %d\n",its+1,ncnt);
 
-    if (storage == 1) {  /* file storage: rewind file and skip head */
-      fseek(imf, head_len, REL_BEGIN);
-    }
-
     /* for each measurement, accumulate results */
 
     store=space;
     for (irec = 0; irec < ncnt; irec++) {
     
-      if (storage == 1) { /* get measurement info from file */
-	store=space;
-	gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);
-	if (gerr < 0) exit(-1);  /* fatal error */
-	if (gerr == 1) {         /* finished with all measurements */
-	  if (irec == 0) ncnt = nrec;  /* set count value */
-	  goto done;
-	}
+      tbval = *((float *) (store+0));
+      ang   = *((float *) (store+4));
+      count = *((int *)   (store+8));
+      if (its == 0) iadd = *((int *) (store+16));
+      if (HASAZANG)
+	azang = *((float *) (store+20));	
 
-      } else {  /* get measurement info from memory */
-	tbval = *((float *) (store+0));
-	ang   = *((float *) (store+4));
-	count = *((int *)   (store+8));
-	if (its == 0) iadd = *((int *) (store+16));
-	if (HASAZANG)
-	  azang = *((float *) (store+20));	
-
-	store = store+HS;
-	store2 = store + 4*count;
-      }
-
-      /* printf("%d %f %f %d\n",irec,tbval,ang,count);
-            for (j=0;j<count;j++) printf("%d ",*((int *)(store+4*j)));
-      printf("\n");
-      */
+      store = store+HS;
+      store2 = store + 4*count;
 
       get_updates(tbval, ang, count, (int *) store, (short int *) store2, its);
 
@@ -1001,31 +950,17 @@ done:
     *(tot+i) = 0.0;
   }
 
-  if (storage == 1) {  /* file storage: rewind file and skip head */
-    fseek(imf, head_len, REL_BEGIN);
-  }
-
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
-    if (storage == 1) { /* get measurement info from file */
-
-      store=space;
-      gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);      
-      if (gerr < 0) exit(-1);  /* fatal error */
-      if (gerr==1) goto done1; /* finished with all measurements */
+    tbval = *((float *) (store+0));
+    ang   = *((float *) (store+4));
+    count = *((int *)   (store+8));
+    if (HASAZANG)
+      azang = *((float *) (store+20));
       
-    } else {  /* get measurement info from memory */
-
-      tbval = *((float *) (store+0));
-      ang   = *((float *) (store+4));
-      count = *((int *)   (store+8));
-      if (HASAZANG)
-	azang = *((float *) (store+20));
-      
-      store = store+HS;
-      store2 = store+4*count;
-    }
+    store = store+HS;
+    store2 = store+4*count;
 
     stat_updates(tbval, ang, count, (int *) store, (short int *) store2);
     store = store+4*count;
@@ -1123,33 +1058,19 @@ done1:
     *(tot+i) = 0.0;
   }
 
-  if (storage == 1) {  /* file storage: rewind file and skip head */
-    fseek(imf, head_len, REL_BEGIN);
-  }
-
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
-    if (storage == 1) { /* get measurement info from file */
-
-      store=space;
-      gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);
-      if (gerr < 0) exit(-1);  /* fatal error */
-      if (gerr==1) goto done2; /* finished with all measurements */
+    tbval = *((float *) (store+0));
+    ang   = *((float *) (store+4));
+    count = *((int *)   (store+8));
+    ktime = *((int *)   (store+12));
+    if (ktime < 0) ktime = -ktime;
+    if (HASAZANG)
+      azang = *((float *) (store+20));
       
-    } else {  /* get measurement info from memory */
-
-      tbval = *((float *) (store+0));
-      ang   = *((float *) (store+4));
-      count = *((int *)   (store+8));
-      ktime = *((int *)   (store+12));
-      if (ktime < 0) ktime = -ktime;
-      if (HASAZANG)
-	azang = *((float *) (store+20));
-      
-      store = store+HS;
-      store2 = store+4*count;     
-    }
+    store = store+HS;
+    store2 = store+4*count;     
 
     time_updates(tbval, (float) ktime, ang, count, (int *) store, (short int *) store2);
     store = store+4*count;
@@ -1234,31 +1155,17 @@ done2:
   for (i=0; i < nsize2; i++)
     *(num_samples+i) = 0;
 
-
-  if (storage == 1) {  /* file storage: rewind file and skip head */
-    fseek(imf, head_len, REL_BEGIN);
-  }
-
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
-    if (storage == 1) { /* get measurement info from file */
-      store=space;
+    tbval = *((float *) (store+0));
+    ang   = *((float *) (store+4));
+    count = *((int *)   (store+8));
+    iadd  = *((int *)   (store+16));
+    if (HASAZANG)
+      azang = *((float *) (store+20));
 
-      gerr=get_measurements(store, store2, &tbval, &ang, &count, &ktime, &iadd, &nrec);
-      if (gerr < 0) exit(-1);  /* fatal error */
-      if (gerr==1) goto done3; /* finished with all measurements */
-      
-    } else {  /* get measurement info from memory */
-      tbval = *((float *) (store+0));
-      ang   = *((float *) (store+4));
-      count = *((int *)   (store+8));
-      iadd  = *((int *)   (store+16));
-      if (HASAZANG)
-	azang = *((float *) (store+20));
-
-      store = store+HS;
-    }
+    store = store+HS;
     store = store+4*count;
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
@@ -1832,10 +1739,6 @@ void time_updates(float tbval, float ktime, float ang __attribute__ ((unused)), 
     n=fill_array[i];
     *(tot+n-1) = *(tot+n-1) + 1;
     ave = tbval;
-    /* weight time average 
-    *(sx+n-1) = *(sx+n-1) + ktime / ave;
-    *(sy+n-1) = *(sy+n-1) + 1.0 / ave;    */
-    /* unweighted time average */
     *(sx+n-1) = *(sx+n-1) + ktime;
     *(sy+n-1) = *(sy+n-1) + 1.0;
   }
