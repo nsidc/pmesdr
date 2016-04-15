@@ -5,13 +5,6 @@
   generates SIR meta file for the MEaSUREs project
 
   translated to C by DGL at BYU 03/01/2014 from ssmi_meta_make3.f 
-   note: while fortran was well-tested, not all C program options
-   have been fully tested
-  Modified by DGL at BYU 3/07/2014 + added EASE2 capability
-  Modified by DGL at BYU 8/16/2014 + added error message when required environment variable not defined
-  Modified by MAH at NSIDC 10/10/2014 - compile directive for Intel math library
-  Modified by DGL at BYU 1/18/2015 + modified local time for LTOD, name scheme
-  Modified by MAH at NSIDC 01/20/2015 - added DGL's changes into meas_meta_make.c for repo
 
 ******************************************************************/
 
