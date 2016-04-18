@@ -503,6 +503,7 @@ int read_sir_data(FILE *imf, int nhead, int idatatype,
   float s, soff, amag;
   int i,j,k;
   char *b;
+  int dumb;
   
   short *a;
 
@@ -546,7 +547,7 @@ int read_sir_data(FILE *imf, int nhead, int idatatype,
       
     case 4:     /* floats */
 #ifdef SWAP
-      fread((char *)a, sizeof(short), 2*nsx, imf) ;
+      dumb = fread((char *)a, sizeof(short), 2*nsx, imf) ;
       swap(a,nsx);
       for (j = 0; j < nsx; j++){
 	un.i2[1]=a[j*2];
@@ -555,12 +556,12 @@ int read_sir_data(FILE *imf, int nhead, int idatatype,
 	*(stval+k+j) = amag;              /* floating point array */
       }
 #else
-      fread((char *) (stval+k), sizeof(float), nsx, imf);
+      dumb = fread((char *) (stval+k), sizeof(float), nsx, imf);
 #endif
       break;
       
     default:    /* 0 or 2: read two byte integers */
-      fread((char *)a, sizeof(short), nsx, imf) ;
+      dumb = fread((char *)a, sizeof(short), nsx, imf) ;
 #ifdef SWAP	
       swap(a,nsx);
 #endif
@@ -707,6 +708,8 @@ int read_sir_data_byte(FILE *imf, int nhead, int idatatype,
 
   float s, soff, amag, bscale;
   int i, j, k, imag;
+
+  int dumb;
   
   short *a;
 
@@ -762,7 +765,7 @@ int read_sir_data_byte(FILE *imf, int nhead, int idatatype,
       
     case 4:     /* floats */
 #ifdef SWAP
-      fread((char *)a, sizeof(short), 2*nsx, imf) ;
+      dumb = fread((char *)a, sizeof(short), 2*nsx, imf) ;
       swap(a,nsx);
       for (j = 0; j < nsx; j++){
 	un.i2[1]=a[j*2];
@@ -777,7 +780,7 @@ int read_sir_data_byte(FILE *imf, int nhead, int idatatype,
 	*(out+k+j) = imag;
       }
 #else
-      fread((char *)a, sizeof(float), nsx, imf);
+      dumb = fread((char *)a, sizeof(float), nsx, imf);
       for (j = 0; j < nsx; j++){
 	amag = *(((float *) a) + j);              /* floating point value */
 	if (amag > smax) amag = smax;
@@ -792,7 +795,7 @@ int read_sir_data_byte(FILE *imf, int nhead, int idatatype,
       break;
       
     default:    /* 0 or 2: read two byte integers */
-      fread((char *)a, sizeof(short), nsx, imf) ;
+      dumb = fread((char *)a, sizeof(short), nsx, imf) ;
 #ifdef SWAP	
       swap(a,nsx);
 #endif
@@ -1431,11 +1434,11 @@ int write_sir_header3(FILE *imf, int *nhead, int nhtype, int idatatype,
    kk = kk - minv;
    if (kk < -minv) {
       kk = -minv;
-      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3: underflow on 'anodata' %f %d %d %d\n",am,ioff,iscale,kk);
+      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3: underflow on 'anodata' %f %d %d %ld\n",am,ioff,iscale,kk);
    }
    if (kk > maxv) {
       kk = maxv;
-      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3: overflow on 'anodata' %f %d %d %d\n",am,ioff,iscale,kk);
+      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3: overflow on 'anodata' %f %d %d %ld\n",am,ioff,iscale,kk);
    }
    temp[48] = kk;
 
@@ -1444,11 +1447,11 @@ int write_sir_header3(FILE *imf, int *nhead, int nhtype, int idatatype,
    kk = kk - minv;
    if (kk < -minv) {
       kk = -minv;
-      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3:underflow on 'vmin' %f %d %d %d\n",am,ioff,iscale,kk);
+      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3:underflow on 'vmin' %f %d %d %ld\n",am,ioff,iscale,kk);
    }
    if (kk > maxv) {
       kk = maxv;
-      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3:overflow on 'vmin' %f %d %d %d\n",am,ioff,iscale,kk);
+      if (idatatype != 4) fprintf(stdout,"*** write_sir_header3:overflow on 'vmin' %f %d %d %ld\n",am,ioff,iscale,kk);
    }
    temp[49] = kk;
 
@@ -1457,11 +1460,11 @@ int write_sir_header3(FILE *imf, int *nhead, int nhtype, int idatatype,
    kk = kk - minv;
    if (kk < -minv) {
       kk = -minv;
-      if (idatatype != 4) fprintf(stdout,"*** underflow on 'vmax' %f %d %d %d\n",am,ioff,iscale,kk);
+      if (idatatype != 4) fprintf(stdout,"*** underflow on 'vmax' %f %d %d %ld\n",am,ioff,iscale,kk);
    }
    if (kk > maxv) {
       kk = maxv;
-      if (idatatype != 4) fprintf(stdout,"*** overflow on 'vmax' %f %d %d %d\n",am,ioff,iscale,kk);
+      if (idatatype != 4) fprintf(stdout,"*** overflow on 'vmax' %f %d %d %ld\n",am,ioff,iscale,kk);
    }
    temp[50] = kk;
 
