@@ -53,14 +53,12 @@ ifeq ($(LOCALE),NSIDCsnow)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),int.nsidc.org)
   $(warning Build location: $(LOCALE))
   NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib
-  ZLIB_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
@@ -81,7 +79,6 @@ else
   NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
   HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
   HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
-  ZLIB_LIBDIR = /auto/users/long/src/linux/netcdf/zlib-1.2.3/lib
 endif
 
 #
@@ -89,7 +86,7 @@ endif
 #------------------------------------------------------------------------
 MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
-LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
+LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lgsx -lutils -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g
 ifeq ($(LOCALE),JANUSicc)
