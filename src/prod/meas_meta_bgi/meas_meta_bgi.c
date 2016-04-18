@@ -73,32 +73,6 @@ float difthres=5.0;               /* BGI-AVE difference QA threshold */
 int Nsize=0;                      /* (built into the code) */
 float wscale=0.001;  /* pattern scale coversion factor int->float */
 
-/****************************************************************************/
-
-void eprintf(char *s)
-{ /* print to both stdout and stderr to catch errors */
-  fprintf(stdout,"%s",s);
-  fflush(stdout);
-  fprintf(stderr,"%s",s);
-  fflush(stderr);
-}
-
-void eprintfi(char *s, int a)
-{ /* print to both stdout and stderr to catch errors */
-  fprintf(stdout,s,a);
-  fflush(stdout);
-  fprintf(stderr,s,a);
-  fflush(stderr);
-}
-
-void eprintfc(char *s, char *a)
-{ /* print to both stdout and stderr to catch errors */
-  fprintf(stdout,s,a);
-  fflush(stdout);
-  fprintf(stderr,s,a);
-  fflush(stderr);
-}
-
 /* function prototypes */
 
 void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx);
@@ -226,7 +200,7 @@ int main(int argc, char **argv)
 
   imf = fopen(file_in,"r"); 
   if (imf == NULL) {
-     eprintfc("ERROR: cannot open input setup file: %s\n",argv[1]); 
+    fprintf( stderr, "%s: ERROR: cannot open input setup file: %s\n", __FILE__, argv[1] ); 
      exit(-1);
   }
  
@@ -308,18 +282,17 @@ int main(int argc, char **argv)
    if (fread(&dumb,   sizeof(int)  , 1, imf) == 0) Ferror(54);/* record trailer */
 
    /* file header read completed, summarize */
-   printf("\nInput file header info: '%s'\n",file_in);
-   printf("  Year, day range: %d %d - %d\n",iyear,isday,ieday);
-   printf("  Image size: %d x %d = %d   Projection: %d\n",nsx,nsy,nsx*nsy,iopt);
-   printf("  Origin: %f,%f  Span: %f,%f\n",a0,b0,xdeg,ydeg);
-   printf("  Scales: %f,%f  Pol: %d  Reg: %d\n",ascale,bscale,ipol,iregion);
-   printf("  Region: '%s'   Records: %d\n",regname,irecords);
-   printf("  Corners: LL %f,%f UR %f,%f\n",latl,lonl,lath,lonh);
-   printf("  Grid size: %d x %d = %d  Scales %d %d\n",nsx2,nsy2,nsx2*nsy2,non_size_x,non_size_y);
-   printf("  Grid Origin: %f,%f  Grid Span: %f,%f\n",a02,b02,xdeg2,ydeg2);
-   printf("  Grid Scales: %f,%f\n",ascale2,bscale2);
-   printf("\n");
-   fflush(stdout);
+   fprintf( stderr, "%s:\nInput file header info: '%s'\n", __FILE__, file_in );
+   fprintf( stderr, "  Year, day range: %d %d - %d\n",iyear,isday,ieday);
+   fprintf( stderr, "  Image size: %d x %d = %d   Projection: %d\n",nsx,nsy,nsx*nsy,iopt);
+   fprintf( stderr, "  Origin: %f,%f  Span: %f,%f\n",a0,b0,xdeg,ydeg);
+   fprintf( stderr, "  Scales: %f,%f  Pol: %d  Reg: %d\n",ascale,bscale,ipol,iregion);
+   fprintf( stderr, "  Region: '%s'   Records: %d\n",regname,irecords);
+   fprintf( stderr, "  Corners: LL %f,%f UR %f,%f\n",latl,lonl,lath,lonh);
+   fprintf( stderr, "  Grid size: %d x %d = %d  Scales %d %d\n",nsx2,nsy2,nsx2*nsy2,non_size_x,non_size_y);
+   fprintf( stderr, "  Grid Origin: %f,%f  Grid Span: %f,%f\n",a02,b02,xdeg2,ydeg2);
+   fprintf( stderr, "  Grid Scales: %f,%f\n",ascale2,bscale2);
+   fprintf( stderr, "\n");
 
    /* read output file names and misc variables
 
@@ -343,7 +316,7 @@ int main(int argc, char **argv)
      if (strstr(line,"Beam_code") != NULL) {
        x = strchr(line,'=');
        ibeam=atoi(++x);
-       printf("Beam code %d\n",ibeam);
+       fprintf( stderr, "Beam code %d\n",ibeam);
      }
 
      if (strstr(line,"Max_Fill") != NULL) {
@@ -354,38 +327,38 @@ int main(int argc, char **argv)
      if ( strstr( line, " Producer_id" ) != NULL ) {
        x = strchr( line,'=' );
        swath_producer_id = ( cetb_swath_producer_id )atoi(++x);
-       printf( "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
+       fprintf( stderr, "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
      }
 
      if ( strstr( line, " Platform_id" ) != NULL ) {
        x = strchr( line,'=' );
        platform_id = ( cetb_platform_id )atoi(++x);
-       printf( "Platform_id %s\n", cetb_platform_id_name[ platform_id ] );
+       fprintf( stderr, "Platform_id %s\n", cetb_platform_id_name[ platform_id ] );
      }
 
      if ( strstr( line, " Sensor_id" ) != NULL ) {
        x = strchr( line,'=' );
        sensor_id = ( cetb_sensor_id )atoi(++x);
-       printf( "Sensor_id %s\n", cetb_sensor_id_name[ sensor_id ] );
+       fprintf( stderr, "Sensor_id %s\n", cetb_sensor_id_name[ sensor_id ] );
      }
 
      if ( strstr( line, " Pass_direction" ) != NULL ) {
        x = strchr( line,'=' );
        direction_id = ( cetb_direction_id )atoi(++x);
-       printf( "Direction_id %s\n", cetb_direction_id_name[ direction_id ] );
+       fprintf( stderr, "Direction_id %s\n", cetb_direction_id_name[ direction_id ] );
      }
 
 
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
-       printf("Wscale %f\n",wscale);
+       fprintf( stderr, "Wscale %f\n",wscale);
      }
 
      if (strstr(line,"Sensor") != NULL) {
        x = strchr(line,'=');
        strncpy(sensor_in,++x,40);
        no_trailing_blanks(sensor_in);
-       printf("Sensor '%s'\n",sensor_in);
+       fprintf( stderr, "Sensor '%s'\n",sensor_in);
      }
 
      if ((x = strchr(line+4,' ')) != NULL) *x='\0'; /* truncate off any trailing spaces */
@@ -398,7 +371,7 @@ int main(int argc, char **argv)
        }
        if (strstr(x,"F") != NULL || strstr(x,"f") != NULL)
 	 HASAZANG=0;
-       printf("Has azimuth angle: %d\n",HASAZANG);       
+       fprintf( stderr, "Has azimuth angle: %d\n",HASAZANG);       
      }
 
      if (strstr(line,"SIRF_A_file") != NULL) {
@@ -451,7 +424,7 @@ int main(int argc, char **argv)
    }
      
    head_len = ftell(imf);
-   printf("Input header file length %ld\n",head_len);
+   fprintf( stderr, "%s: Input header file length %ld\n", __FUNCTION__, head_len);
    nls=nls-head_len;
 
    fflush(stdout);
@@ -459,28 +432,27 @@ int main(int argc, char **argv)
 /* header read completed, now determine how much program memory to allocate */
 
   nspace = nls * file_savings;/* space to allocate for measurement storage */
-  printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
+  fprintf( stderr, "%s:  File size: %ld  Space allocated: %ld\n", __FILE__, nls, nspace );
   if ( 0 != utils_allocate_clean_aligned_memory( (void ** )&space, ( size_t )nspace*sizeof(char) ) ) {
-      eprintf("*** Inadequate memory for data file storage\n");
+    fprintf( stderr, "%s: *** Inadequate memory for data file measurement storage\n", __FILE__ );
       exit(-1);
   }
 
 /* allocate storage space for image and working array */
 
   nsize = nsx * nsy;
-  
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val, ( size_t )nsize*sizeof(float) ) ) {
-    eprintf("*** Inadequate memory for data file storage\n");
+    fprintf( stderr, "%s: *** Inadequate memory for image and working array storage\n", __FILE__ );
     exit(-1);
   }
 
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp, ( size_t )nsize*sizeof(float) ) ) {
-    eprintf("*** Inadequate memory for data file storage\n");
+    fprintf( stderr, "%s: *** Inadequate memory for data file storage\n", __FILE__ );
     exit(-1);
   }
   
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&cnts, ( size_t )nsize*sizeof(float) ) ) {
-    eprintf("*** Inadequate memory for data file storage\n");
+    fprintf( stderr, "%s: *** Inadequate memory for data file storage\n", __FILE__ );
     exit(-1);
   }
   
@@ -509,7 +481,7 @@ int main(int argc, char **argv)
      /*6 items at 4 bytes each: 24 bytes if azimuth angle */
      if (nbyte+HS < nspace) {
        	if ((dumb=fread(store, sizeof(char), HS, imf)) != HS) {
-          eprintfi(" *** Error reading input file data at 180 %d\n",dumb);
+          fprintf( stderr, " *** Error reading input file data at 180 %d\n",dumb);
 	  exit(-1);
         }
         if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
@@ -520,7 +492,7 @@ int main(int argc, char **argv)
         iadd  = *((int *)   (store+16));
 
 	if (count > MAXFILL) {
-	  printf("*** Count error %d  record %d\n",count,nrec);
+	  fprintf( stderr, "%s: *** Count error %d  record %d\n", __FILE__, count, nrec );
 	  count=MAXFILL;	  
 	}
 
@@ -536,7 +508,7 @@ int main(int argc, char **argv)
 	if (nbyte+count*4 < nspace) {
 	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(110);
 	   if (fread(store, sizeof(int), count, imf) != count) {
-	      eprintf(" *** Error reading input file data at 111\n");
+	     fprintf( stderr, "%s: *** Error reading input file data at 111\n", __FILE__ );
 	      goto label;
 	   }
 
@@ -547,8 +519,8 @@ int main(int argc, char **argv)
 	   }
 	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(112);
 	} else {
-	   eprintfi(" *** out of storage space 1 *** %d\n",ncnt);
-	   fprintf(stderr," *** out of storage space 1 *** %d %ld %ld\n",ncnt,nbyte,nspace);
+	  fprintf( stderr, "%s: *** out of storage space 1 *** %d\n", __FILE__, ncnt );
+	  fprintf( stderr, "%s: *** out of storage space 1 *** %d %ld %ld\n", __FILE__, ncnt, nbyte, nspace );
 	   exit(-1);
 	}
 
@@ -556,7 +528,7 @@ int main(int argc, char **argv)
 	if (nbyte+count*2 < nspace) {
 	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1101);
 	   if (fread(store, sizeof(short int), count, imf) != count) {
-	      eprintf(" *** Error reading input file data at 1111\n");
+	     fprintf( stderr, "%s: *** Error reading input file data at 1111\n", __FILE__ );
 	      goto label;
 	   }
 	   if (keep == 1) {
@@ -568,16 +540,16 @@ int main(int argc, char **argv)
 	   }
 	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1121);
 	} else {
-	   eprintfi(" *** out of storage space 2 *** %d\n",ncnt);
-	   fprintf(stderr," *** out of storage space 2 *** %d %ld %ld\n",ncnt,nbyte,nspace);
+	  fprintf( stderr, "%s: *** out of storage space 2 *** %d\n", __FILE__, ncnt);
+	  fprintf( stderr,"%s: *** out of storage space 2 *** %d %ld %ld\n", __FILE__, ncnt, nbyte, nspace );
 	   exit(-1);
 	}
 
 	nrec++;
 
      } else {
-       eprintfi(" *** out of storage space 3 *** %d\n",ncnt);
-       fprintf(stderr," *** out of storage space 3 *** %d %ld\n",ncnt,nspace);
+       fprintf( stderr, "%s: *** out of storage space 3 *** %d\n", __FILE__, ncnt );
+       fprintf( stderr, "%s: *** out of storage space 3 *** %d %ld\n", __FILE__, ncnt, nspace );
        exit(-1);
      }
     }
@@ -587,17 +559,16 @@ int main(int argc, char **argv)
 /* print measurement file storage requirements */
 
   ratio=100.0 * (float) nbyte / (float) nls;
-  printf("  Input file read into ram\n");
-  printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
-	 nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
-  fflush(stdout);
+  fprintf( stderr, "%s:  Input file read into ram\n", __FILE__ );
+  fprintf( stderr, "%s:  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
+	   __FILE__, nrec, ncnt, nbyte, nspace, ratio, 100.0*file_savings );
 
   /* determine maximum hits */
 
   nmax=0;
   for (i=0; i< nsize; i++)
     if (cnts[i] > nmax) nmax=cnts[i];
-  printf("\nMaximum hits above threshold: %d  max size: %d  thres %f\n",nmax, mwork, ithres);
+  fprintf( stderr, "%s: \nMaximum hits above threshold: %d  max size: %d  thres %f\n", __FILE__, nmax, mwork, ithres );
   mdim = mwork * 2+1;
  
   /* BG processing */
@@ -605,7 +576,7 @@ int main(int argc, char **argv)
   /* allocate index array and BGI working arrays*/
 
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&indx, ( size_t )nsize*nmax*sizeof(char *) ) ) {
-    eprintf("*** Inadequate memory for data file storage\n");
+    fprintf( stderr, "%s: *** Inadequate memory for index array and BGI working array\n", __FILE__ );
     exit(-1);
   }
   z = dmatrix(1,nmax,1,nmax);
@@ -622,17 +593,17 @@ int main(int argc, char **argv)
   tb2 = dvector(1,nmax);
 
   if ( 0 != utils_allocate_clean_aligned_memory( (void **)&patarr, ( size_t )mdim*mdim*nmax*sizeof(float) ) ) {
-    eprintf("*** Inadequate memory for data file storage, patarr\n");
+    fprintf( stderr, "%s: *** Inadequate memory for data file storage, patarr\n", __FILE__ );
     exit(-1);
   }
 
   if ( 0 != utils_allocate_clean_aligned_memory( (void **)&ix0, ( size_t )(nmax+1)*sizeof(int) ) ) {
-    eprintf("*** Inadequate memory for data file storage, ix0\n");
+    fprintf( stderr, "%s: *** Inadequate memory for data file storage, ix0\n", __FILE__ );
     exit(-1);
   }
 
   if ( 0 != utils_allocate_clean_aligned_memory( (void **)&iy0, ( size_t )(nmax+1)*sizeof(int) ) ) {
-    eprintf("*** Inadequate memory for data file storage, iy0\n");
+    fprintf( stderr, "%s: *** Inadequate memory for data file storage, iy0\n", __FILE__ );
     exit(-1);
   }
 
@@ -640,7 +611,7 @@ int main(int argc, char **argv)
       || u1 == NULL || v == NULL || aveweights == NULL || v1 == NULL
       || ind == NULL || adds == NULL || work == NULL || c == NULL
       || tb2 == NULL || patarr == NULL || ix0 == NULL || iy0 == NULL) {
-    printf("*** error allocating BGI work arrays \n");
+    fprintf( stderr, "%s: *** error allocating BGI work arrays \n", __FILE__ );
     exit(-1);
   }
 
@@ -668,7 +639,7 @@ int main(int argc, char **argv)
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
   }
 
-  printf("Index array created %d %d\n",nsize,ncnt);
+  fprintf( stderr, "%s: Index array created %d %d\n", __FILE__, nsize, ncnt );
   
 /* Begin BGI processing */
 
@@ -679,7 +650,7 @@ int main(int argc, char **argv)
 
     /* print progress */
     if ((its % nsx) == nsx/2  && (its/nsx) % 50 == 0) {
-      printf("Processing row %d of %d  %f\n",its/nsx,nsy,amin);
+      fprintf( stderr, "%s: Processing row %d of %d  %f\n", __FILE__, its/nsx, nsy, amin );
       fflush( stdout );
     }
     
@@ -729,7 +700,7 @@ int main(int argc, char **argv)
 	      if (ix >= 0 && iy >= 0 && ix < mdim && iy < mdim)
 		patarr3d(ix,iy,m) = weight_array[i]*wscale;
 	      else
-		printf("*** patarr error %d %d %d  %d\n",i,ix,iy,its);
+		fprintf( stderr, "%s: *** patarr error %d %d %d  %d\n", __FILE__, i, ix, iy, its);
 	    }
 	}
       }
@@ -867,15 +838,15 @@ int main(int argc, char **argv)
     } 
   }
 
-  printf("\nMaximum hits above threshold: %d  max size: %d  thres %f\n",nmax,mdim, ithres);
+  fprintf(stderr, "\n%s: Maximum hits above threshold: %d  max size: %d  thres %f\n", __FUNCTION__, nmax, mdim, ithres );
 
   if (median_flag) { /* median filter image */
-    printf("Applying Median Filter to BG image result\n");    
+    fprintf( stderr, "%s: Applying Median Filter to BG image result\n", __FILE__ );    
     filter(a_val, 3, 0, nsx, nsy, a_temp, tb_fill_value_float, tb_missing_value_float);  /* 3x3 modified median filter */
   }
 
   /* output image file */
-  printf("\n"); 
+  fprintf( stderr, "\n" ); 
   if ( 0 != cetb_file_add_var( cetb, "TB", NC_USHORT, a_val,
 			       ( size_t )nsx, ( size_t ) nsy,
 			       CETB_FILE_TB_STANDARD_NAME,
@@ -902,9 +873,9 @@ int main(int argc, char **argv)
   cetb_file_close( cetb );
 
   if (errors == 0) {
-    printf("No errors encountered\n");
+    fprintf( stderr, "%s: No errors encountered\n", __FUNCTION__ );
   } else {
-    printf("Processing errors encountered\n");
+    fprintf( stderr, "%s: Processing errors encountered\n", __FUNCTION__ );
   }
   
   /* end of program */
