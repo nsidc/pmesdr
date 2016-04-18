@@ -22,8 +22,6 @@
 
 #include "utils.h"
 #include "cetb_file.h"
-#include "ezdump.h"
-#include "sir3.h"
 
 #define VERSION 1.2
 
