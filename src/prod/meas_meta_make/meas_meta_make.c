@@ -285,7 +285,7 @@ float get_prompt_farg(int argc, int *argn, char *argv[], char *prompt, float def
   if (*argn > argc || argv[*argn] == NULL) {
     printf("%s ",prompt);
     fgets(line,sizeof(line),stdin);
-    sscanf(line,"%d",&val);
+    sscanf(line,"%f",&val);
   } else
     sscanf(argv[*argn],"%f",&val);
   (*argn)++;
@@ -694,54 +694,12 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 	if (iasc==5) cpol='n'; /* noon/night */
       }
 
-     /* section names */
-      sprintf(setname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend);
-      sprintf(lisname,"%c%c%c%c-%3s%0.2d-%0.3d-%0.3d.lis",sen,cegg,chan,cpol,reg,iy,dstart,dend);
-      sprintf(a_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"sir");
-      sprintf(b_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"sir");
-      sprintf(i_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"sir");
-      sprintf(j_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"sir");
-      sprintf(c_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"sir");
-      sprintf(p_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"sir");
-      sprintf(v_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"sir");
-      sprintf(e_name, "%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'E',reg,iy,dstart,dend,"sir");
-      sprintf(aa_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"ave");
-      sprintf(bb_name,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"ave");
-      sprintf(non_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"non");
-      sprintf(non_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"non");
-      sprintf(non_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"non");
-      sprintf(grd_aname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'a',reg,iy,dstart,dend,"grd");
-      sprintf(grd_bname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'b',reg,iy,dstart,dend,"grd");
-      sprintf(grd_vname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'V',reg,iy,dstart,dend,"grd");
-      sprintf(grd_iname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'I',reg,iy,dstart,dend,"grd");
-      sprintf(grd_jname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'J',reg,iy,dstart,dend,"grd");
-      sprintf(grd_cname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'C',reg,iy,dstart,dend,"grd");
-      sprintf(grd_pname,"%c%c%c%c-%c-%3s%0.2d-%0.3d-%0.3d.%3s",sen,cegg,chan,cpol,'p',reg,iy,dstart,dend,"grd");
-      
-      /* save *-a-*.sir, .ave names for job script */
-      //name_store(iregion)=a_name;      
-      //name_store2(iregion)=aa_name;
-    
-      /* write out product names to meta file */
+     /* Only need to save the name of the setup file */
+      sprintf(setname,"%c%c%c%c-%3s%2d-%03d-%03d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend);
+      /* there are no longer product file names to write out to the meta file, however, the logic of the
+       * setup program requries the Begin_ and End_product_file_names tags */
     fprintf(mout,"  Setup_file=%s\n",setname);
     fprintf(mout,"  Begin_product_file_names\n");
-    fprintf(mout,"   SIRF_A_file=%s\n",a_name);
-    fprintf(mout,"   SIRF_C_file=%s\n",c_name);
-    fprintf(mout,"   SIRF_I_file=%s\n",i_name);
-    fprintf(mout,"   SIRF_J_file=%s\n",j_name);
-    fprintf(mout,"   SIRF_E_file=%s\n",e_name);
-    fprintf(mout,"   SIRF_V_file=%s\n",v_name);
-    fprintf(mout,"   SIRF_P_file=%s\n",p_name);
-    fprintf(mout,"   AVE_A_file=%s\n",aa_name);
-    fprintf(mout,"   GRD_A_file=%s\n",grd_aname);
-    fprintf(mout,"   GRD_V_file=%s\n",grd_vname);
-    fprintf(mout,"   GRD_I_file=%s\n",grd_iname);
-    fprintf(mout,"   GRD_J_file=%s\n",grd_jname);
-    fprintf(mout,"   GRD_C_file=%s\n",grd_cname);
-    fprintf(mout,"   GRD_P_file=%s\n",grd_pname);
-    fprintf(mout,"   NON_A_file=%s\n",non_aname);
-    fprintf(mout,"   NON_V_file=%s\n",non_vname);
-    fprintf(mout,"   Info_file=%s\n",lisname);
     fprintf(mout,"  End_product_file_names\n");
 
       /* add SIRF commands to job script */
