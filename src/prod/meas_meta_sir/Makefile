@@ -60,17 +60,14 @@ ifeq ($(LOCALE),NSIDCsnow)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),NSIDCdev)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),int.nsidc.org)
   $(warning Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib
   HDF5_LIBDIR = /usr/lib
-  ZLIB_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
@@ -87,29 +84,26 @@ else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
 endif
 
 #
 # end configuration section
 #------------------------------------------------------------------------
-MEAS_INCDIR = ../../sirlib/c/include
-MEAS_LIBDIR = ../../sirlib/c
-LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
+LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
 	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I../meas_undump $(CONFIG_CFLAGS)
+CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS)
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I../meas_undump -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -O3 -ipo -g -xHost -no-prec-div
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -I$(NETCDF4_INCDIR) -I../meas_undump -g
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -g
 endif
-DEPEND_LIBS = $(LIBDIR)/libcetb.a $(MEAS_LIBDIR)/libcsir.a
+DEPEND_LIBS = $(LIBDIR)/libcetb.a 
 
-SRCS = meas_meta_sir.c ../meas_undump/netcdf_dump.c
-OBJS = meas_meta_sir.o netcdf_dump.o
-HDRS = $(INCDIR)/cetb.h $(INCDIR)/cetb_file.h $(MEAS_INCDIR)/sir3.h ../meas_undump/ezdump.h
+SRCS = meas_meta_sir.c 
+OBJS = meas_meta_sir.o 
+HDRS = $(INCDIR)/cetb.h $(INCDIR)/cetb_file.h 
 BIN = meas_meta_sir
 
 RSSFILES = $(wildcard $(TESTDIR)/setupRSS/e2*/F*E2*.setup)
@@ -123,9 +117,6 @@ all : $(BIN)
 
 $(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS) 
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
-
-netcdf_dump.o : ../meas_undump/netcdf_dump.c 
-	$(CC) $(CFLAGS) -c -o $@ ../meas_undump/netcdf_dump.c
 
 install :
 	$(MKDIR) $(BINDIR)
