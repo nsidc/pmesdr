@@ -73,18 +73,18 @@ float wscale=0.001;  /* pattern scale coversion factor int->float */
 
 /* function prototypes */
 
-void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx);
+static void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx);
 
-void make_indx(int nmax, int count, int fill_array[], short int response_array[], float ithres, char **indx, char * pointer);
+static void make_indx(int nmax, int count, int fill_array[], short int response_array[], float ithres, char **indx, char * pointer);
 
-void Ferror(int i);
+static void Ferror(int i);
 
-void filter(float *val, int size, int opt, int nsx, int nsy, float
+static void filter(float *val, int size, int opt, int nsx, int nsy, float
 	    *temp, float thres, float missing);
 
-void no_trailing_blanks(char *s);
+static void no_trailing_blanks(char *s);
 
-char *addpath(char *outpath, char *name, char *temp);
+static char *addpath(char *outpath, char *name, char *temp);
 
 /****************************************************************************/
 
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   char outpath[FILENAME_MAX];
 
   float latl, lonl, lath, lonh;
-  char regname[11], *s;
+  char regname[11];
   int dumb, nrec, ncnt, i, j, m, nsize;
   long int nls, nbyte;
   float ratio;
@@ -130,19 +130,14 @@ int main(int argc, char **argv)
   int non_size_x, non_size_y, nsx2, nsy2, ix, iy;
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
-  int Nfiles_out=1;  
-
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
   int iregion, ipol, iopt;  
-  char crproc[101], crtime[29];
   float xdeg, ydeg, ascale, bscale, a0, b0;
-
-  time_t tod;
 
   int its, irec, keep;
   float amin;
 
-  char a_name[100], info_name[100], line[100];
+  char line[100];
 
   cetb_file_class *cetb;
   cetb_swath_producer_id swath_producer_id;
@@ -152,12 +147,10 @@ int main(int argc, char **argv)
   unsigned short tb_fill_value=CETB_TB_FILL_VALUE;
   unsigned short tb_missing_value=CETB_TB_MISSING_VALUE;
   unsigned short tb_valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
-  int ncerr;
 
   float tb_fill_value_float;
   float tb_missing_value_float;
 
-  int storage = 0;
   long head_len;
   int errors = 0;
 
@@ -167,7 +160,7 @@ int main(int argc, char **argv)
   int nmax, mdim, mdim2, mwork, k, dx, dy, i1, j1;
   int *ix0, *iy0, *ind, *adds;
   char **indx;
-  float sum, *patarr;  
+  float *patarr;  
   double **z, **zc, *u, *v, *u1, *v1, *c, *work, *tb2;
   double p, value1, value2;
   int *fill_array;
@@ -372,17 +365,6 @@ int main(int argc, char **argv)
        fprintf( stderr, "Has azimuth angle: %d\n",HASAZANG);       
      }
 
-     if (strstr(line,"SIRF_A_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(a_name,++x,100);
-       no_trailing_blanks(a_name);
-     }
-     if (strstr(line,"Info_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(info_name,++x,100);
-       no_trailing_blanks(info_name);
-     }
-      
      if (strstr(line,"End_header") != NULL) {
        end_flag = 1;
      }
@@ -395,12 +377,7 @@ int main(int argc, char **argv)
    if (argc > 7) sscanf(argv[7],"%d",&i);
    if (i==1) median_flag=1;   
    if (i==0) median_flag=0;
-   printf("Median flag: %d\n",median_flag);
-
-   printf("\n");
-   printf("A output file: '%s'\n",a_name);
-   printf("Info file: '%s'\n",info_name);
-   printf("\n");
+   fprintf( stderr, "%s: Median flag: %d\n", __FILE__, median_flag );
 
    /*
     * Initialize cetb_file.
@@ -809,7 +786,7 @@ int main(int argc, char **argv)
 
       /* compute work vector */
 	for (i=1; i <= m; i++)
-	  work[i] =  cos(bgi_gamma) *v[i] + u[i] * (1.0 - cos(bgi_gamma)  * value1)/value2;
+	  work[i] =  ( cos(bgi_gamma) * v[i] ) + u[i] * ( (1.0 - cos(bgi_gamma)  * value1)/value2 );
       
       /* solve linear system z c = work [compute z^-1 work]  (destroyed in process) */
 	dlubksb(zc,m,ind,work);
