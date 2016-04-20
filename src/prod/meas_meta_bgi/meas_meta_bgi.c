@@ -84,8 +84,6 @@ static void filter(float *val, int size, int opt, int nsx, int nsy, float
 
 static void no_trailing_blanks(char *s);
 
-static char *addpath(char *outpath, char *name, char *temp);
-
 /****************************************************************************/
 
 /* global array variables used for storing images*/
@@ -786,7 +784,7 @@ int main(int argc, char **argv)
 
       /* compute work vector */
 	for (i=1; i <= m; i++)
-	  work[i] =  ( cos(bgi_gamma) * v[i] ) + u[i] * ( (1.0 - cos(bgi_gamma)  * value1)/value2 );
+	  work[i] =  ( cos(bgi_gamma) * v[i] ) + ( u[i] * ( (1.0 - ( cos(bgi_gamma)  * value1) )/value2 ) );
       
       /* solve linear system z c = work [compute z^-1 work]  (destroyed in process) */
 	dlubksb(zc,m,ind,work);
@@ -933,7 +931,7 @@ void make_indx(int nmax, int count, int fill_array[], short int response_array[]
 
 /* modified median or smoothing filter routine */
 
-float median(float *array, int count);
+static float median(float *array, int count);
 
 void filter(float *val, int size, int mode, int nsx, int nsy, 
 	    float *temp, float thres, float missing)
@@ -1024,12 +1022,6 @@ void no_trailing_blanks(char *s)
     n--;
   }
   return;
-}
-
-char *addpath(char *outpath, char *name, char *temp)
-{ /* append path to name, return pointer to temp */
-  sprintf(temp,"%s/%s",outpath,name);
-  return(temp);  
 }
 
 /****************************************************************************/
