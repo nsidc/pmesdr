@@ -61,18 +61,14 @@ static void Ferror(int i)
 
 /* function prototypes */
 
-static int get_measurements(char *store, char *store2, float *tbval, float *ang, int *count,
-		     int *ktime, int *iadd, int *nrec);
-
-static void get_updates(float tbval, float ang, int count, int *fill_array,
+static void get_updates(float tbval, int count, int *fill_array,
 		 short int *response_array, int its );
 
 static void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
 
-static void time_updates(float tbval, float ktime, float ant, int count,
-		  int *fill_array, short int *response_array);
+static void time_updates(float tbval, float ktime, int count, int *fill_array);
 
-static void stat_updates(float tbval, float ang, int count, int *fill_array,
+static void stat_updates(float tbval, int count, int *fill_array,
 		  short int *response_array);
 
 static void filter(float *val, int size, int opt, int nsx, int nsy, float
@@ -622,7 +618,7 @@ int main(int argc, char **argv)
       store = store+HS;
       store2 = store + 4*count;
 
-      get_updates(tbval, ang, count, (int *) store, (short int *) store2, its);
+      get_updates(tbval, count, (int *) store, (short int *) store2, its);
 
       /* compute AVE image during first iteration */
       if (its == 0) 
@@ -832,7 +828,7 @@ int main(int argc, char **argv)
     store = store+HS;
     store2 = store+4*count;
 
-    stat_updates(tbval, ang, count, (int *) store, (short int *) store2);
+    stat_updates(tbval, count, (int *) store, (short int *) store2);
     store = store+4*count;
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
@@ -941,7 +937,7 @@ int main(int argc, char **argv)
     store = store+HS;
     store2 = store+4*count;     
 
-    time_updates(tbval, (float) ktime, ang, count, (int *) store, (short int *) store2);
+    time_updates(tbval, (float) ktime, count, (int *) store);
     store = store+4*count;
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
@@ -1349,8 +1345,7 @@ int main(int argc, char **argv)
 
 /* SIR algorithm update step */
 
-void get_updates(float tbval, float ang, int count, int fill_array[],
-		 short int response_array[], int its)
+void get_updates(float tbval, int count, int fill_array[], short int response_array[], int its)
 {
   float total = 0.0, num=0.0;
   float ave, scale, update;
@@ -1367,7 +1362,7 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
     ave=total/num;
   else
     return;
-  if (ave == 0.0) return;
+  if (fabs(ave-0.0) <= 1e-8) return;
 
   /* for each measurement hitting a pixel calculate updates */
 
@@ -1380,9 +1375,9 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
     else                   /* unless scale is negative */
       scale=1.0;
     if (scale > 1.0)       /* constraining function */
-      update = 1.0/((0.5/ave)*(1.0-1.0/scale)+1.0/(*(a_val+n-1) * scale));
+      update = (float)(1.0/((0.5/ave)*(1.0-1.0/scale)+1.0/(*(a_val+n-1) * scale)));
     else
-      update = 0.5 * ave * (1.0 - scale) + *(a_val+n-1) * scale;
+      update = (float)(0.5 * ave * (1.0 - scale) + *(a_val+n-1) * scale);
 
     (*(tot+n-1)) = (*(tot+n-1)) + m;
     *(a_temp+n-1) = (*(a_temp+n-1) * ( *(tot+n-1) - m) + update * m) / *(tot+n-1);
@@ -1423,8 +1418,8 @@ void compute_ave(float tbval, float ang, int count, int fill_array[],
 
 /* modified median, circular median, or smoothing filter routine */
 
-float median(float *array, int count);
-float cmedian(float *array, int count, float center);
+static float median(float *array, int count);
+static float cmedian(float *array, int count, float center);
 
 void filter(float *val, int size, int mode, int nsx, int nsy, 
 	    float *temp, float thres)
@@ -1489,7 +1484,7 @@ float cmedian(float array[], int count, float center)
     sum = 0.0;
     for (j=0; j < count; j++)
       if (i != j)
-	sum=sum+(180.0-abs(180.0-abs(array[i]-array[j])));
+	sum=sum+(180-abs(180-abs(array[i]-array[j])));
     if (sum < temp) {
       temp = sum;
       k = i;
@@ -1521,7 +1516,7 @@ float median(float array[], int count)
     temp=0.0;
     for (i=count/2-1; i <= count/2+3; i++)
       temp=temp+array[i-1];
-    temp=temp/5.0;
+    temp=temp/5;
   }
   return(temp);
 }
@@ -1530,7 +1525,7 @@ float median(float array[], int count)
 
 /* routine to compute the spatial response function weighted variance and error from measurements */
 
-void stat_updates(float tbval, float ang, int count, int fill_array[],
+void stat_updates(float tbval, int count, int fill_array[],
 		  short int response_array[])
 {
   float ave, sigv;
@@ -1546,8 +1541,8 @@ void stat_updates(float tbval, float ang, int count, int fill_array[],
     total = total + m * sigv;
     num = num + m;
   }
-  if (num == 0) return;
-  ave =(double) (total/num);
+  if (abs(num-0) < 1e-8) return;
+  ave =(total/num);
   
   for (i=0; i < count; i++) {
     n=fill_array[i];
@@ -1565,69 +1560,17 @@ void stat_updates(float tbval, float ang, int count, int fill_array[],
 
 /* routine to compute time estimates from measurements */
 
-void time_updates(float tbval, float ktime, float ang __attribute__ ((unused)), int count,
-		  int fill_array[], short int response_array[])
+void time_updates(float tbval, float ktime, int count, int fill_array[])
 {
-  float ave;
   int i, n;
   
   for (i=0; i < count; i++) {
     n=fill_array[i];
     *(tot+n-1) = *(tot+n-1) + 1;
-    ave = tbval;
     *(sx+n-1) = *(sx+n-1) + ktime;
-    *(sy+n-1) = *(sy+n-1) + 1.0;
+    *(sy+n-1) = *(sy+n-1) + 1;
   }
   return;
-}
-
-
-int get_measurements(char *store, char *store2, float *tbval, float *ang, int *count,
-		     int *ktime, int *iadd, int *nrec)
-{  /* returns the next set of measurement from the file */
-  int dumb, flag=1;
-  
-  while (flag == 1) {
-    if (fread(&dumb, sizeof(int), 1, imf) != 0) {  /* fortran record header */
-      /*	   read	 (50,err=500,end=500) tbval,ang,count,ktime,iadd
-		   read (50,err=500,end=500) (fill_array(i),i=1,count)   */
-      if (fread(store, sizeof(char), HS, imf) != HS) Ferror(200);
-      if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(201); /* fortran 
-								record trailer */
-      *tbval = *((float *) (store+0));
-      *ang   = *((float *) (store+4));
-      *count = *((int *)   (store+8));
-      *ktime = *((int *)   (store+12));
-      *iadd  = *((int *)   (store+16));
-
-      /* read fill_array pixel indices */
-      if (*count * 4 < nspace) {
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(210); 
-	if (fread(store, sizeof(int), *count, imf) != *count) Ferror(211);
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(212);
-      } else {
-	fprintf( stderr, "%s:  *** fill_array storage error 3 *** %d\n", __FUNCTION__, *nrec );
-	fprintf( stderr, "%s:  *** fill_array storage error 3 *** %d %d %ld\n", __FUNCTION__, *nrec, *count, nspace );
-	return(-1);
-      }
-
-      /* read response_array values */
-      if (*count * 2 < nspace) {
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(2101); 
-	if (fread(store2, sizeof(short int), *count, imf) != *count) Ferror(2111);
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(2121);
-      } else {
-	fprintf( stderr, "%s:  *** fill_array storage error 4 *** %d\n", __FUNCTION__, *nrec);
-	fprintf( stderr, "%s:  *** fill_array storage error 4 *** %d %ld\n", __FUNCTION__, *nrec, nspace);
-	return(-1);
-      }
-      (*nrec)++;
-	
-      if (*tbval < CETB_TB_SCALED_MAX && *tbval > CETB_TB_SCALED_MIN) return(0);
-    } else      /* end of file (or file err) encountered */
-      return(1);
-  }
-  return(0);
 }
 
 
