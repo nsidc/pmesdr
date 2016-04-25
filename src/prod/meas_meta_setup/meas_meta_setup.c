@@ -132,7 +132,7 @@ FILE * get_meta(char *mname, char *outpath, int *dstart,
 		int *year, char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *save_area, cetb_platform_id *cetb_platform);
+		region_save *save_area, cetb_platform_id *cetb_platform);
 
 void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store);
 
@@ -214,7 +214,6 @@ int main(int argc,char *argv[])
   int flatten=0;                  /* default: use rounded response function */  
   int median_flag=0;              /* default: do not use median filter */
   int inc_correct=0;              /* default: do not do incidence angle correction */
-  int KSAT=13;                    /* assign a default value */
 
   int irec = 0; /* input cells counter */
   int jrec = 0; /* output record counter */
@@ -248,8 +247,7 @@ int main(int argc,char *argv[])
   for (n=0; n<NSAVE; n++)
     jrec2[n] = 0;  /* measurements for each output region */
   
-  //printf("Code version: %s\n",fcdr_input);  
-  printf("MEaSures Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
+  fprintf( stderr, "MEaSUREs Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
 
   /* optionally get the box size of pixels to use for calculating MRF for each */
   /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
@@ -260,47 +258,47 @@ int main(int argc,char *argv[])
       case 'b':
 	++argv; --argc;
 	if (sscanf(*argv,"%d", &box_size) != 1) {
-	  fprintf(stderr,"meas_meta_setup: can't read box size %s\n", *argv);
+	  fprintf( stderr, "meas_meta_setup: can't read box size %s\n", *argv);
 	  exit(-1);
 	}
 	fprintf( stderr, "box size is %d\n", box_size );
 	break;
       default:
-	fprintf(stderr,"meas_meta_setup: Invalid option %c\n", *option);
+	fprintf(stderr, "meas_meta_setup: Invalid option %c\n", *option);
 	exit(-1);
       } /* end switch */
     } /* end loop for each input command option */
   } /* end loop while still input arguments */
 
   if (argc < 2) {
-    printf("\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
-    printf(" input parameters:\n");
-    printf("   -b box_size is optional input argument to specify box_size for MRF\n");
-    printf("      default box_size is 80 for early regression testing\n");
-    printf("   meta_in     = input meta file\n");
-    printf("   outpath     = output path\n\n");
+    fprintf( stderr, "\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
+    fprintf( stderr, " input parameters:\n");
+    fprintf( stderr, "   -b box_size is optional input argument to specify box_size for MRF\n");
+    fprintf( stderr, "      default box_size is 80 for early regression testing\n");
+    fprintf( stderr, "   meta_in     = input meta file\n");
+    fprintf( stderr, "   outpath     = output path\n\n");
     exit (-1);
   }
 
   /* get input meta file name */
   sscanf(*argv++,"%s",mname);
-  printf("\nMetafile name: %s \n",mname);
+  fprintf( stderr, "\nMetafile name: %s \n",mname);
 
   /* get output path */
   sscanf(*argv++,"%s",outpath);
-  printf("\nOutput path: %s \n",outpath);
+  fprintf( stderr, "\nOutput path: %s \n",outpath);
 
   /* get meta_file region information and open output files */
   file_id = get_meta(mname, outpath, &dstart, &dend, &mstart, &mend, &year,
 		     prog_name, prog_version ,&response_threshold, &flatten, &median_flag,
 		     &inc_correct, &b_correct, &angle_ref, 
-		     &KSAT, &save_area, &cetb_platform);
+		     &save_area, &cetb_platform);
   if (file_id == NULL) {
     fprintf(stderr,"*** could not open meta file %s/%s\n",outpath,mname);    
     exit(-1);  
   }
 
-  printf("Number of output setup files %d\n",save_area.nregions);
+  fprintf( stderr, "Number of output setup files %d\n",save_area.nregions);
   
   /* convert response threshold from dB to normal space */
   response_threshold=pow(10.,0.1*response_threshold);  
@@ -321,12 +319,12 @@ int main(int argc,char *argv[])
       fprintf( stderr, "meas_meta_setup: fatal error in routine\n" );
       exit ( -1 );
     }
-    printf("Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
+    fprintf( stderr, "Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
   }
   
   /* pre-compute pixel locations for each region */
   compute_locations(&save_area, &nregions, &noffset, &latlon_store, &flatlon_store);
-  printf("\n");
+  fprintf( stderr, "\n");
 
   /* initialize some pixel counters */
   icc=0;
@@ -438,15 +436,11 @@ int main(int argc,char *argv[])
 	timedecode( *(gsx->scantime[first_scan_loc]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	timedecode( *(gsx->scantime[first_scan_loc]+last_scan_loc),	\
 		    &iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-	printf("* start time:  %lf  %d %d %d %d %d %d %d\n",		\
+	fprintf( stderr, "* start time:  %lf  %d %d %d %d %d %d %d\n",	\
 	       *(gsx->scantime[first_scan_loc]),iyear,iday,imon,jday,ihour,imin,isec);    
-	printf("* stop time:   %lf  %d %d %d %d %d %d %d\n",		\
+	fprintf( stderr, "* stop time:   %lf  %d %d %d %d %d %d %d\n",	\
 	       *(gsx->scantime[first_scan_loc]+last_scan_loc),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
-      
-	printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc]),iyear,iday,imon,jday,ihour,imin,isec);
-	printf("last scan: %lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc]+last_scan_loc), \
-	       iyeare,idaye,imone,jdaye,ihoure,imine,isece);
-	printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+	fprintf( stderr, "search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
 
 	iday=jday;    /* use day of year (jday) for day search */
 	idaye=jdaye;    
@@ -494,7 +488,7 @@ int main(int argc,char *argv[])
 	  krec=krec+1;	/* count total scans read */
 	  nrec=nrec+1;      /* count scans read in file */
       
-	  if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
+	  if ((krec%500)==0) fprintf( stderr, "Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
 	  if ( *(gsx->scantime[loc]+iscan) == gsx->fill_scantime[loc] ) goto label_350; // do not process this scan - until gsx is fixed
 	  /* scan time.  All measurements in this scan assigned this time */
@@ -516,7 +510,7 @@ int main(int argc,char *argv[])
 	    }
 	  }  else {
 	    if (ktime<0) {
-	      printf("*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
+	      fprintf( stderr, "*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
 	    }
 	  }
       
@@ -769,8 +763,8 @@ int main(int argc,char *argv[])
 		  jrec++; /* a count of total records written */
 		  jrec2[iregion]++; /* records/region */
 		  if (count >= MAXFILL) { /* error handling -- this should not occur! */
-		    printf("*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
-		    printf("center %f %f  %d %d %d  count %d\n",cen_lat,cen_lon,iscan,ii,ibeam,count);
+		    fprintf( stderr, "*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
+		    fprintf( stderr, "center %f %f  %d %d %d  count %d\n",cen_lat,cen_lon,iscan,ii,ibeam,count);
 		    count=MAXFILL;
 		  }
 
@@ -821,37 +815,36 @@ int main(int argc,char *argv[])
       } /* end of locs loop */
     }
     label_3501:;  /* end of input file */
-    /* printf("end of input file\n"); */
 
     /* input file has been processed */
     if (shortf) {
-      printf("\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
-      printf("Region counts: ");
+      fprintf( stderr, "\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
+      fprintf( stderr, "Region counts: ");
       for (j=0; j<save_area.nregions; j++)
-	printf(" %d",jrec2[j]);
-      printf("\n");
-      printf("Input File Completed:  %s\n",fname);
-      printf("Last Day %d in Range: %d - %d\n\n",iday,dstart,dend);
-      printf("Number of measurements: %d\n",icc);
-      printf("IPR count average:  %lf\n",(icc>0? cave/(float) icc: cave));
-      printf("IPR count max,min:  %d %d \n",icmax,icmin);
-      printf("Tb max,min:  %f %f \n\n",tbmax,tbmin);
+	fprintf( stderr, " %d",jrec2[j]);
+      fprintf( stderr, "\n");
+      fprintf( stderr, "Input File Completed:  %s\n",fname);
+      fprintf( stderr, "Last Day %d in Range: %d - %d\n\n",iday,dstart,dend);
+      fprintf( stderr, "Number of measurements: %d\n",icc);
+      fprintf( stderr, "IPR count average:  %lf\n",(icc>0? cave/(float) icc: cave));
+      fprintf( stderr, "IPR count max,min:  %d %d \n",icmax,icmin);
+      fprintf( stderr, "Tb max,min:  %f %f \n\n",tbmax,tbmin);
   
       if (iday <= dend)
-	printf("*** DAY RANGE IS NOT FINISHED ***\n");
-      printf("End of day period reached %d %d \n",iday,dend);
+	fprintf( stderr, "*** DAY RANGE IS NOT FINISHED ***\n");
+      fprintf( stderr, "End of day period reached %d %d \n",iday,dend);
     }
                /* input file loop */
-    printf("Done with setup records %d %d\n",irec,krec);
+    fprintf( stderr, "Done with setup records %d %d\n",irec,krec);
     free( gsx_fname[infile] );
   }
 
   /* close output setup files */
   for (j=0; j<save_area.nregions; j++) {
-    printf("\nRegion %d %s beam %d records %d\n",save_area.sav_regnum[j],
+    fprintf( stderr, "\nRegion %d %s beam %d records %d\n",save_area.sav_regnum[j],
 	   save_area.sav_regname[j],save_area.sav_ibeam[j],jrec2[j]);
     no_trailing_blanks(save_area.sav_fname2[j]);
-    printf("Output data written to %s\n",save_area.sav_fname2[j]);
+    fprintf( stderr, "Output data written to %s\n",save_area.sav_fname2[j]);
     if ( j == 0 ) {
       fclose(save_area.reg_lu[j]);
       save_area.reg_lu[j] = NULL;
@@ -870,11 +863,11 @@ int main(int argc,char *argv[])
 	}
     }
   }
-  printf("\n");
+  fprintf( stderr, "\n");
 
   /* close input meta file */	    
   fclose(file_id);
-  printf("Setup program successfully completed\n");
+  fprintf( stderr, "Setup program successfully completed\n");
 
   return(0); /* successful termination */
 }
@@ -886,7 +879,7 @@ FILE * get_meta(char *mname, char *outpath,
 		char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *a, cetb_platform_id *cetb_platform)
+		region_save *a, cetb_platform_id *cetb_platform)
 {
   /* read meta file, open output .setup files, write .setup file headers, and 
      store key parameters in memory */
@@ -925,10 +918,10 @@ FILE * get_meta(char *mname, char *outpath,
   ireg=0;
   ninst=0;
 
-  printf("open meta file %s\n",mname);
+  fprintf( stderr, "%s: open meta file %s\n", __FUNCTION__, mname);
   file_id=fopen(mname,"r");
   if (file_id == NULL) {
-    printf("*** could not open input meta file %s\n",mname);
+    fprintf( stderr, "%s: *** could not open input meta file %s\n", __FUNCTION__, mname);
     return(file_id);
   }
 
@@ -939,7 +932,7 @@ FILE * get_meta(char *mname, char *outpath,
     fgets(line,sizeof(line),file_id);
     no_trailing_blanks(line);
     if (ferror(file_id)) {
-      printf("*** error reading meta file\n");
+      fprintf( stderr, "%s: *** error reading meta file\n", __FUNCTION__ );
       flag=0;
     } else {
       
@@ -949,27 +942,16 @@ FILE * get_meta(char *mname, char *outpath,
       if (strstr(line,"Sensor") != NULL) {
 	x = strchr(line,'=');
 	strncpy(sensor,++x,40);
-	printf("Sensor string='%s'\n",sensor);
 	/* Here is where you can get the sensor ENUM */
 	for ( count=0; count < CETB_NUM_PLATFORMS; count++ ) {
 	  if ( strcmp( sensor, cetb_platform_id_name[count] ) == 0 ) {
 	    *cetb_platform = (cetb_platform_id) count;
 	  }
 	}
-	printf( " **** cetb_platform_id *** is %d\n", *cetb_platform );
-	if (strncmp(sensor,"SSMI",4)==0) {	    
-	  sscanf(&sensor[7],"%2d",KSAT);
-	  printf(" SSMI platform %d\n",*KSAT);
-	}	
+	fprintf( stderr, "%s: **** cetb_platform_id *** is %d\n", __FUNCTION__, *cetb_platform );
+
       }
 
-      if (strstr(line,"Instrument") != NULL) {
-	x = strchr(line,'=');
-	ninst=atoi(++x);
-	printf("Instrument code=%d\n",ninst);
-	*KSAT=ninst;	
-      }
-      
       if (strstr(line,"Start_Year") != NULL) {
 	x = strchr(line,'=');
 	*year=atoi(++x);
