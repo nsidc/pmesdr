@@ -100,15 +100,15 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[FILENAME_MAX], tstr[350];
+  char outpath[FILENAME_MAX];
 
   float latl, lonl, lath, lonh;
-  char regname[11], *s;
-  int dumb, nrec, ncnt, i, j, n, ii, iii, nsize;
+  char regname[11];
+  int dumb, nrec, ncnt, i, ii, iii, nsize;
   long int nls, nbyte;
   float ratio, fn, ninv;
   char *space, *store, *store2;
-  float tbval, ang, azang=0.0;
+  float tbval, ang, azang;
   int count, ktime, iadd, end_flag;
   char *x;
   int irecords;
@@ -124,26 +124,16 @@ int main(int argc, char **argv)
   float anodata_V=CETB_FILE_TB_STDDEV_FILL_VALUE;
   float anodata_E=-15.0;
 
-  int Nfiles_out;  
-  
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
   int iregion, ipol, iopt;
-  char pol, sensor[41], crproc[101], crtime[29];
   float xdeg, ydeg, ascale, bscale, a0, b0;
 
-  time_t tod;
-
-  int its, irec, year, keep;  
+  int its, irec, keep;  
   float total, tmax;
-  float amin, amax, bmin, bmax, weight, temp, old_amin, old_amax;
+  float amin, amax, bmin, bmax, temp, old_amin, old_amax;
   float old_bmin, old_bmax, denom;
 
-  char a_name[100], b_name[100], c_name[100], p_name[100], 
-    v_name[100], e_name[100], i_name[100], j_name[100],
-    a_name_ave[100], b_name_ave[100], non_aname[100], grd_iname[100], grd_jname[100],
-    non_vname[100], grd_aname[100], grd_bname[100], grd_vname[100], 
-    grd_pname[100], grd_cname[100], 
-    info_name[100], line[100];
+  char line[100];
 
   cetb_file_class *cetb_sir;
   cetb_file_class *cetb_grd;
@@ -165,16 +155,12 @@ int main(int argc, char **argv)
   short theta_fill_value=CETB_FILE_THETA_FILL_VALUE;
   short theta_valid_range[ 2 ] = { CETB_FILE_THETA_MIN, CETB_FILE_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
-  int ncerr;
 
   long head_len;
-  int errors = 0, gerr;
-  char polch;
+  int errors = 0;
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
-
-  char *error_msg;
 
   /*
    * Set output_debug=1 to get all output images
@@ -302,7 +288,7 @@ int main(int argc, char **argv)
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
-       a_init=atof(++x);
+       a_init=(float)atof(++x);
        fprintf( stderr, "%s: A_initialization of %f\n", __FUNCTION__, a_init );
      }
 
@@ -586,7 +572,7 @@ int main(int argc, char **argv)
   fclose(imf);
 
   /* print measurement file storage requirements */
-  ratio=100.0 * (float) nbyte / (float) nls;
+  ratio=(float)(100.0 * (float) nbyte / (float) nls);
   fprintf( stderr, "%s:  Input file read into ram\n", __FILE__ );
   fprintf( stderr, "%s:  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
 	   __FILE__, nrec, ncnt, nbyte, nspace, ratio, 100.0*file_savings );
@@ -647,7 +633,6 @@ int main(int argc, char **argv)
       if (count % 2 == 1) store=store+2;  /* ensure word boundary */
     }
 
-done:
     /* after processing all measurements for this iteration and
        updating the A image, clear arrays */
 
@@ -667,7 +652,7 @@ done:
 	    *(sx2+i) = *(sx2+i) / *(sy+i);
 	    *(sx2+i) = *(sx2+i) - *(sx+i) * *(sx+i);
 	    if (*(sx2+i) > 0.0) 
-	      *(sx2+i) = sqrt((double) *(sx2+i));
+	      *(sx2+i) = (float)sqrt((double) *(sx2+i));
 	    else
 	      *(sx2+i) = 0.;
 	  } else {
@@ -852,7 +837,6 @@ done:
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
   }
-done1:
 
   amin =  32000.0;            /* for user stats */
   amax = -32000.0;
@@ -869,7 +853,7 @@ done1:
       if (*(sy+i) > 0.0) {
 	*(sxy+i) = *(sy+i) - *(sx+i) * *(sx+i);
 	if (*(sxy+i) > 0.0) 
-	  *(sxy+i) = sqrt( (double) *(sxy+i));
+	  *(sxy+i) = (float)sqrt( (double) *(sxy+i));
 	else
 	  *(sxy+i) = 0.0;
       } else
@@ -962,7 +946,6 @@ done1:
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
   }
-done2:
 
   amin =  32000.0;            /* for user stats */
   amax = -32000.0;
@@ -1074,11 +1057,11 @@ done2:
 		 __FILE__, iadd, ix, iy, non_size_x, non_size_y );
       } else {
 	fn = *(tot + iadd);
-	*(tot +  iadd) = *(tot +   iadd) + 1.0;                    /* count */
+	*(tot +  iadd) = *(tot +   iadd) + 1;                    /* count */
 	if ( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX ) {
-	  *(num_samples + iadd) = *(num_samples + iadd) + 1;         /* num_samples for each pixel */
+	  *(num_samples + iadd) = *(num_samples + iadd) + (unsigned char)1;         /* num_samples for each pixel */
 	}
-	ninv = 1./ *(tot + iadd);
+	ninv = 1/ *(tot + iadd);
 	*(sx +   iadd) = (*(sx +   iadd) * fn + ang)*ninv;         /* mean inc angle */
 	*(sx2 +  iadd) = (*(sx2 +  iadd) * fn + ang*ang)*ninv;     /* var inc angle */
 	*(a_val+ iadd) = (*(a_val+ iadd) * fn + tbval)*ninv;	   /* mean Tb */
@@ -1088,7 +1071,6 @@ done2:
       }
     }
   }
-done3:
 
   amin =  32000.0;            /* for user stats */
   amax = -32000.0;
@@ -1109,7 +1091,7 @@ done3:
       if (*(tot+i) > 1.0) {
 	temp =  *(sy+i) - (*(a_val+i) * *(a_val+i));
 	if (temp > 0.0) {
-	  *(sy+i) = sqrt((double) temp);  /* Tb std */ 
+	  *(sy+i) = (float)sqrt((double) temp);  /* Tb std */ 
 	  old_bmin = min(old_bmin, *(sy+i));
 	  old_bmax = max(old_bmax, *(sy+i));
 	} else
@@ -1120,7 +1102,7 @@ done3:
       if (*(tot+i) > 1.0) {
 	denom = *(sx2+i) - (*(sx+i) * *(sx+i));
 	if (denom > 0.0) {
-	  *(sx2+i) = sqrt((double) denom);  /* inc std */
+	  *(sx2+i) = (float)sqrt((double) denom);  /* inc std */
 	  bmin = min(bmin, *(sx2+i));
 	  bmax = max(bmax, *(sx2+i));
 	} else

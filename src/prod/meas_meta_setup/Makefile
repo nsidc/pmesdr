@@ -91,7 +91,7 @@ LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(MEAS_LIBDIR) \
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall # -Zp8 # 
+  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div -w3 # -Zp8 # 
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -g
