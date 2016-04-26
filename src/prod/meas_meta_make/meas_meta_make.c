@@ -29,7 +29,7 @@
 #define mod(a,b) ((a) % (b))
 #define abs(x) ((x) >= 0 ? (x) : -(x))
 
-int nint(float r)
+static int nint(float r)
 {
   int ret_val = r;
   if (ret_val - r > 0.5) ret_val--;
@@ -49,10 +49,9 @@ char rname[] = "regiondef1.dat";  /* file defining region codes */
 
 /* function prototypes */
 
-int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[], 
-		     char *mname, int F_num );
+static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int F_num );
 
-int get_file_names(FILE *mout, int argc, int *argn, char *argv[]);
+static int get_file_names(FILE *mout, int *argn, char *argv[]);
 
 /* declare specific map projection prototypes needed */
 
@@ -74,14 +73,14 @@ extern void ease2_map_info(int iopt, int isc, int ind,
 int main(int argc,char *argv[])
 {
  
-  char mname[256], line[1024];  
+  char mname[256];  
   time_t tod;
   char ltime[29];
   int argn=1;
   char platform[28];
   int Fn=0;
   cetb_platform_id F_num=CETB_NO_PLATFORM;
-  FILE *mout, *jout;
+  FILE *mout;
 
   
   printf("MEaSures Meta_Make Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
@@ -139,10 +138,10 @@ int main(int argc,char *argv[])
   fprintf(mout,"Sensor=%s\n",platform);
 
   /* get rest of input region parameters and write to file */
-  get_region_parms( mout,jout,argc,&argn,argv,mname,F_num );
+  get_region_parms( mout,argc,&argn,argv,F_num );
 
   /* get list of input files and save to file */
-  get_file_names(mout,argc,&argn,argv);
+  get_file_names(mout,&argn,argv);
 
   /* close output files */
   fclose(mout);
@@ -158,7 +157,7 @@ int main(int argc,char *argv[])
 
 /****************************************************************************/
 
-int get_file_names(FILE *mout, int argc, int *argn, char *argv[])
+static int get_file_names(FILE *mout, int *argn, char *argv[])
 {  /* read swath data files from list file and write to meta file */
 
   char lname[1000], line[1000];
@@ -261,7 +260,7 @@ void getregdata(int regnum, int *iproj, int *dateline, float *latl, float *lonl,
 
 /* utility routines */
 
-int get_prompt_iarg(int argc, int *argn, char *argv[], char *prompt, int deflt)
+static int get_prompt_iarg(int argc, int *argn, char *argv[], char *prompt, int deflt)
 {
   static char line[120];
   int val=deflt;  
@@ -277,7 +276,7 @@ int get_prompt_iarg(int argc, int *argn, char *argv[], char *prompt, int deflt)
   return(val);
 }
 
-float get_prompt_farg(int argc, int *argn, char *argv[], char *prompt, float deflt)
+static float get_prompt_farg(int argc, int *argn, char *argv[], char *prompt, float deflt)
 {
   static char line[120];
   float val=deflt;  
@@ -293,7 +292,7 @@ float get_prompt_farg(int argc, int *argn, char *argv[], char *prompt, float def
   return(val);
 }
 
-char *get_prompt_sarg(int argc, int *argn, char *argv[], char *prompt, char *deflt, char *buff, int blen)
+static char *get_prompt_sarg(int argc, int *argn, char *argv[], char *prompt, char *deflt, char *buff, int blen)
 {
   if (*argn > argc || argv[*argn] == NULL) {
     printf("%s ",prompt);
@@ -305,7 +304,7 @@ char *get_prompt_sarg(int argc, int *argn, char *argv[], char *prompt, char *def
 }
 
 
-int get_prompt_larg(int argc, int *argn, char *argv[], char *prompt, int deflt)
+static int get_prompt_larg(int argc, int *argn, char *argv[], char *prompt, int deflt)
 {
   static char line[120], *s;
   int val=deflt;  
@@ -329,15 +328,14 @@ int get_prompt_larg(int argc, int *argn, char *argv[], char *prompt, int deflt)
 
 /* routine that reads the input args and generates region definitions */
 
-int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[], 
-		      char *mname, int F_num )
+static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int F_num )
 {
   /* define meta regions and file sections  and write to meta and job files */
 
   int err=0;  
   int negg=2; /* only do eggs */
-  int sections=FALSE, nsection;
-  char fnamel[1000], regname[11], reg[4], cpol, sen, cegg, chan;
+  int nsection;
+  char regname[11], reg[4], cpol, sen, cegg, chan;
   char TF[]={'F', 'T'};
   int dstart, dend, year, mstart, mend;
   float a_init, a_offset, b_init, b_weight, angle_ref, response_threshold;
@@ -346,25 +344,17 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
   int pfile;
   FILE *pid;
   int nregions, poleflag, dateline, iproj, regnum, iregion, ircnt;
-  float latl, lonl, lath, lonh, deglat, deglon;
+  float latl, lonl, lath, lonh;
   int projt, nsx, nsy, xdim, ydim, nease;
   float ascale, bscale, xdeg, ydeg, a0, b0, aorglon, aorglat;
-  float maplxlon, maprxlon, maplxlat, maprxlat, mapuylat, mapuylon, maplylat, maplylon;
-  float x0, y0, lmostx, rmostx, umosty, lmosty;
-  int toil, iasc, ibeam, ipolar;
+  float maplxlon, maprxlon;
+  int iasc, ibeam, ipolar;
   int non_size;
-  float ascale_s, bscale_s, a0_s, b0_s, xdeg_s, ydeg_s;
-  int nsx_s, nsy_s, nsect, nt, nsx2, nsy2;
-  float a02, b02, xdeg2, ydeg2, ascale2, bscale2;
-  int isection, ix, iy, ix1, iy1, ix2, iy2, jx1, jy1, jx2, jy2;
-  int ix1g, iy1g, ix2g, iy2g, jx1g, jy1g, jx2g, jy2g;
-  float temp, alpha, tsplit1, tsplit2;
-
-  char a_name[120], b_name[120], i_name[120], j_name[120], c_name[120], p_name[120],
-    v_name[120], e_name[120], lisname[120], aa_name[120], bb_name[120], non_aname[120], 
-    non_bname[120], non_vname[120], grd_aname[120], grd_bname[120],grd_vname[120], 
-    grd_iname[120], grd_jname[120], grd_pname[120], grd_cname[120], setname[120], *fname;
-
+  int nsect, nsx2, nsy2;
+  float ascale2, bscale2;
+  int isection, iy, ix1, iy1, ix2, iy2, jx1, jy1, jx2, jy2;
+  float tsplit1, tsplit2;
+  char setname[120];
   double map_equatorial_radius_m,map_eccentricity, e2,
     map_reference_latitude, map_reference_longitude, 
     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
@@ -426,7 +416,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
   fscanf(pid,"%d",&nregions);
   printf("Number of regions: %d\n",nregions);
 
-  sections=FALSE;
   fprintf(mout," Num_Regions=%2d\n",nregions);
   
   /* for each region, read in the parameters that define the region 
@@ -560,20 +549,8 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
     /* optionally section region in to smaller images for processing.  They will be recombined later */
     nsection=0;
     fprintf(mout,"  Sectioning_code=%d\n",nsection);
-    if (nsection > 0) sections=TRUE;
-
-  /* save unsectioned projection info */
-    ascale_s=ascale;
-    bscale_s=bscale;
-    a0_s=a0;
-    b0_s=b0;
-    xdeg_s=xdeg;
-    ydeg_s=ydeg;
-    nsx_s=nsx;
-    nsy_s=nsy;
 
     nsect=(nsection % 100);    /* number of sections */
-    nt=nsection/100;           /* section type code */
 
     /* for each output section (0=unsection region) */
     for (isection=0; isection<=nsect; isection++) {
@@ -611,16 +588,6 @@ int get_region_parms( FILE *mout, FILE *jout, int argc, int *argn, char *argv[],
 	fprintf(stderr,"*** WARNING: Projection type can not generate Non-enhanced parameters ***\n");
       }
 
-      /* compute grid pixel locations */
-      ix1g=(ix1-1)/non_size+1;
-      iy1g=(iy1-1)/non_size+1;
-      ix2g=(ix2-1)/non_size+1;
-      iy2g=(iy2-1)/non_size+1;
-      jx1g=(jx1-1)/non_size+1;
-      jy1g=(jy1-1)/non_size+1;
-      jx2g=(jx2-1)/non_size+1;
-      jy2g=(jy2-1)/non_size+1;
-    
       /* write grid projection info to meta file */
 
       fprintf(mout,"   Grid_scale_x=%d\n", non_size);
