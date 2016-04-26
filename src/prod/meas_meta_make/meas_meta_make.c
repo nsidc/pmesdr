@@ -29,14 +29,6 @@
 #define mod(a,b) ((a) % (b))
 #define abs(x) ((x) >= 0 ? (x) : -(x))
 
-static int nint(float r)
-{
-  int ret_val = r;
-  if (ret_val - r > 0.5) ret_val--;
-  if (r - ret_val > 0.5) ret_val++;
-  return(ret_val);
-}
-
 #define TRUE 1
 #define FALSE 0
 
@@ -207,7 +199,7 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
 
 /* *********************************************************************** */
 
-void getregdata(int regnum, int *iproj, int *dateline, float *latl, float *lonl,
+static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float *lonl,
 		float *lath, float *lonh, char *regname)
 {
   char line[180], *s, *p;  
@@ -276,23 +268,7 @@ static int get_prompt_iarg(int argc, int *argn, char *argv[], char *prompt, int 
   return(val);
 }
 
-static float get_prompt_farg(int argc, int *argn, char *argv[], char *prompt, float deflt)
-{
-  static char line[120];
-  float val=deflt;  
-
-  if (*argn > argc || argv[*argn] == NULL) {
-    printf("%s ",prompt);
-    fgets(line,sizeof(line),stdin);
-    sscanf(line,"%f",&val);
-  } else
-    sscanf(argv[*argn],"%f",&val);
-  (*argn)++;
-
-  return(val);
-}
-
-static char *get_prompt_sarg(int argc, int *argn, char *argv[], char *prompt, char *deflt, char *buff, int blen)
+static char *get_prompt_sarg(int argc, int *argn, char *argv[], char *prompt, char *buff, int blen)
 {
   if (*argn > argc || argv[*argn] == NULL) {
     printf("%s ",prompt);
@@ -302,29 +278,6 @@ static char *get_prompt_sarg(int argc, int *argn, char *argv[], char *prompt, ch
   (*argn)++;
   return(buff);
 }
-
-
-static int get_prompt_larg(int argc, int *argn, char *argv[], char *prompt, int deflt)
-{
-  static char line[120], *s;
-  int val=deflt;  
-
-  if (*argn > argc || argv[*argn] == NULL) {
-    printf("%s ",prompt);
-    fgets(line,sizeof(line),stdin);
-    s=line;
-  } else
-    s=argv[*argn];
-  (*argn)++;
-
-  if (s[0]=='T' || s[0]=='t' || s[0]=='Y' || s[0]=='y' || s[0]=='1')
-    val=TRUE;
-  if (s[0]=='F' || s[0]=='f' || s[0]=='N' || s[0]=='n' || s[0]=='0')
-    val=FALSE;
-
-  return(val);
-}
-
 
 /* routine that reads the input args and generates region definitions */
 
@@ -352,7 +305,7 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
   int non_size;
   int nsect, nsx2, nsy2;
   float ascale2, bscale2;
-  int isection, iy, ix1, iy1, ix2, iy2, jx1, jy1, jx2, jy2;
+  int isection, iy;
   float tsplit1, tsplit2;
   char setname[120];
   double map_equatorial_radius_m,map_eccentricity, e2,
@@ -403,7 +356,7 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
   fprintf(mout," Median_filter=%c\n", TF[median_flag]);
 
   /* read region parameters definition file name */
-  (void) get_prompt_sarg(argc,argn,argv,"Enter region parameters file name: (NONE for manual input)","NONE",rfile, sizeof(rfile));
+  (void) get_prompt_sarg(argc,argn,argv,"Enter region parameters file name: (NONE for manual input)",rfile, sizeof(rfile));
   printf("rfile=%s  %d\n",rfile,strncmp(rfile,"NONE",4));  
  
   pfile=TRUE;
