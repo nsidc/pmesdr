@@ -66,7 +66,7 @@ static void get_updates(float tbval, int count, int *fill_array,
 
 static void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
 
-static void time_updates(float tbval, float ktime, int count, int *fill_array);
+static void time_updates(float ktime, int count, int *fill_array);
 
 static void stat_updates(float tbval, int count, int *fill_array,
 		  short int *response_array);
@@ -937,7 +937,7 @@ int main(int argc, char **argv)
     store = store+HS;
     store2 = store+4*count;     
 
-    time_updates(tbval, (float) ktime, count, (int *) store);
+    time_updates((float) ktime, count, (int *) store);
     store = store+4*count;
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
@@ -952,7 +952,7 @@ int main(int argc, char **argv)
       total = total + *(tot+i);
 
       if (*(tot+i) > 1) 
-	if (*(sy+i) != 0.0) 
+	if (*(sy+i) >= 1e-8) 
 	  *(sxy+i) = *(sx+i) / *(sy+i);
 	else
 	  *(sxy+i) =0.0;
@@ -1055,7 +1055,7 @@ int main(int argc, char **argv)
 	fn = *(tot + iadd);
 	*(tot +  iadd) = *(tot +   iadd) + 1;                    /* count */
 	if ( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX ) {
-	  *(num_samples + iadd) = *(num_samples + iadd) + (unsigned char)1;         /* num_samples for each pixel */
+	  *(num_samples + iadd) = (unsigned char)(*(num_samples + iadd) + 1);         /* num_samples for each pixel */
 	}
 	ninv = 1/ *(tot + iadd);
 	*(sx +   iadd) = (*(sx +   iadd) * fn + ang)*ninv;         /* mean inc angle */
@@ -1560,7 +1560,7 @@ void stat_updates(float tbval, int count, int fill_array[],
 
 /* routine to compute time estimates from measurements */
 
-void time_updates(float tbval, float ktime, int count, int fill_array[])
+void time_updates(float ktime, int count, int fill_array[])
 {
   int i, n;
   

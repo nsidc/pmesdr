@@ -27,3 +27,7 @@ lib*.a
 src/prod/cetb_file/test/EASE*nc
 /include/cetb_file.h
 /include/gsx.h
+/testing/AMSRE200*
+/testing/CSU200*
+/testing/RSS200*
+
