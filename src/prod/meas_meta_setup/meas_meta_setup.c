@@ -124,7 +124,7 @@ typedef struct { /* BYU region information storage */
 
 /* BYU SSM/I approximate spatial response computation */
 
-static float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
+static float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajor, float semiminor);
 static void write_filenames_to_header( gsx_class *gsx, region_save *save_area );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
@@ -728,8 +728,7 @@ int main(int argc,char *argv[])
 			 location, and projection rotation and scaling */
 		      rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
 		      //		      gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-		      sum = gsx_antenna_response( x_rel, y_rel, theta, thetai,	\
-					       *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
+		      sum = gsx_antenna_response( x_rel, y_rel, theta, *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
 		      if (sum > response_threshold) {
 			if (flatten) sum=1.0;    /* optionally flatten response */
 			fill_array[count]=iadd1; /* address of pixel */
@@ -1551,8 +1550,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     /* hash file name */
     sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
 	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    abs((int)round(a->sav_a0[iregion])), abs((int)round(a->sav_b0[iregion])),
-	    abs((int)round(a->sav_xdeg[iregion])),abs((int)round(a->sav_ydeg[iregion])));
+	    abs((int)(round(a->sav_a0[iregion]))), abs((int)(round(a->sav_b0[iregion]))),
+	    abs((int)(round(a->sav_xdeg[iregion]))),abs((int)(round(a->sav_ydeg[iregion]))));
 
     if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
@@ -1606,8 +1605,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  if (iadd>=nsize) iadd=0;
 	  iadd=2*iadd+(*noffset)[iregion];
 
-	  (*latlon_store)[iadd] = (int)nint(clat*200.0);
-	  (*latlon_store)[iadd+1] = (int)nint(clon*175.0);
+	  (*latlon_store)[iadd] = (short int)nint(clat*200.f);
+	  (*latlon_store)[iadd+1] = (short int)nint(clon*175.f);
 	}
       }
 
@@ -1665,14 +1664,14 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
  *
  ************************************************************************/
 
-float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
+float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajor, float semiminor)
 {
   static float lnonehalf=-0.6931471;  /* ln(0.5) */
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 
   /* rotate coordinate system to align with look direction */
-  x=cos(theta*DTR)*x_rel - sin(theta*DTR)*y_rel;
-  y=sin(theta*DTR)*x_rel + cos(theta*DTR)*y_rel;
+  x=((cos(theta*DTR))*x_rel) - ((sin(theta*DTR))*y_rel);
+  y=((sin(theta*DTR))*x_rel) + ((cos(theta*DTR))*y_rel);
   
   /* compute approximate antenna response
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
@@ -1708,13 +1707,13 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
   rel_rlon=alon-rlon;
   if (abs(rel_rlon) > 180.0) {
     if (rel_rlon > 0.0)
-      rel_rlon=rel_rlon-360.0;
+      rel_rlon=rel_rlon-360.f;
     else
-      rel_rlon=rel_rlon+360.0;
+      rel_rlon=rel_rlon+360.f;
   }
-  r2=r*cos(rlat*DTR);
-  *x_rel=r2*sin(rel_rlon*DTR);
-  *y_rel=r*sin(rel_rlat*DTR)+(1.-cos(rel_rlon*DTR))*sin(rlat*DTR)*r2;
+  r2=r*(float)(cos(rlat*DTR));
+  *x_rel=(float)(r2*(sin(rel_rlon*DTR)));
+  *y_rel=(float)((r*(sin(rel_rlat*DTR)))+((1.-(cos(rel_rlon*DTR)))*(sin(rlat*DTR))*r2));
 }
 
 /* *********************************************************************** */
