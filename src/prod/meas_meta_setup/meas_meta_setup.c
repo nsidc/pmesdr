@@ -20,6 +20,7 @@
 #else
 #include <math.h>
 #endif
+#include <float.h>
 
 #include "cetb.h"
 #include "utils.h"
@@ -59,14 +60,14 @@
 
 /****************************************************************************/
 
-int nint(float r)
+static int nint(float r)
 {
   int ret_val = r;  if (ret_val - r > 0.5) ret_val--;
   if (r - ret_val > 0.5) ret_val++;
   return(ret_val);
 }
 
-void no_trailing_blanks(char *s)
+static void no_trailing_blanks(char *s)
 {  /* remove trailing blanks (spaces) and line feeds from string */
   int n=strlen(s);
   
@@ -80,7 +81,7 @@ void no_trailing_blanks(char *s)
   return;
 }
 
-void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
+static void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
 { /* convert ascii time tag into year, day, hour, minute */
   int imon, mday;
   float secs;
@@ -89,7 +90,7 @@ void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
   return;                                                                                                                 
 }
 
-int isleapyear(int year) 
+static int isleapyear(int year) 
 { /* is year a leap year? */
   if (year==4*(year/4))  /* this test is only good for 1904-2096! */
     return(1);
@@ -127,23 +128,23 @@ static float gsx_antenna_response(float x_rel, float y_rel, float theta, float t
 static void write_filenames_to_header( gsx_class *gsx, region_save *save_area );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
-FILE * get_meta(char *mname, char *outpath, int *dstart, 
+static FILE * get_meta(char *mname, char *outpath, int *dstart, 
                 int *dend, int *mstart, int *mend, 
 		int *year, char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
 		region_save *save_area, cetb_platform_id *cetb_platform);
 
-void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store);
+static void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store);
 
-void timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *ihour, int *imin, int *isec, int refyear);
+static void timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *ihour, int *imin, int *isec, int refyear);
 
-void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
+static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
 
-float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
+static float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
 	     float ascale, float bscale, float a0, float b0, int *stat);
 
-void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
+static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
 
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
@@ -160,39 +161,38 @@ int main(int argc,char *argv[])
   int ret_status=1;
 
   char fname[250], mname[250];
-  char line[1025], outpath[250];
+  char outpath[250];
   char ftempname[250];
   char *option;
   
-  int i,j,k,n;
-  int dend2, ilenyear, nrec, iscan, iscan1, iasc, ii, nsum;
+  int i,j,n;
+  int dend2, ilenyear, nrec, iscan, iasc, ii;
   char *s;
-  float ant_az, cen_lat, cen_lon, ctime, lata, az_bias;
+  float cen_lat, cen_lon, ctime;
   double cave;  
 
   /* output record information */
-  float tb,az,thetai,azang=0.0;
+  float tb,thetai,azang=0.0;
   int count,ktime,iadd, fill_array[MAXFILL+1];
   short int response_array[MAXFILL+1];  
 
   int jrec2[NSAVE];  /* measurement counter for each region */
   int dateline;      /* when 1, region crosses dateline */
 
-  FILE *file_id, *datafile, *fout;
+  FILE *file_id;
 
-  int ipolar,flag,ascend;
+  int flag,ascend;
   int dstart,dend,mstart,mend,year,iregion;
   int iday,iyear,imon,ihour,imin,isec,jday;
   int idaye,iyeare,imone,ihoure,imine,isece,jdaye;
 
-  int inlonrange,ilow,ihigh,nmeas;
-  float a,b,rat,theta_orb,esep_ang,ang2,theta;
+  float theta;
   
-  int ib,ibeam,icc,icmax,icmin,nfile,file_read_error;  
+  int ibeam,icc,icmax,icmin,nfile;  
   float cx,cy,lath,latl,lonh,lonl;
   int nsx,nsy,projt,ltdflag;
   float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
-  int shortf,offset;
+  int shortf;
   float tbmin=1.e10,tbmax=-1.e10; 
   
   int iadd1, box_size;
@@ -201,12 +201,11 @@ int main(int argc,char *argv[])
   /* memory for storage of pixel locations */
   int nregions,*noffset;
   short int *latlon_store;
-  float *flatlon_store;  
 
   int ix1,ix2,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,iy1,iy2,ix,iy,cnt;
   float clat,clon,dlat,dlon,sum;
-  float eqlon, xhigh_lon, xlow_lon, sc_last_lat, sc_last_lon;
-  float dscale, tsplit1, tsplit2, alat1, alon1,x_rel, y_rel;
+  float eqlon, xhigh_lon, xlow_lon, sc_last_lat;
+  float dscale, alat1, alon1,x_rel, y_rel;
   float tsplit1_mins, tsplit2_mins;
   float fractional_orbit;
 
@@ -219,23 +218,17 @@ int main(int argc,char *argv[])
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
   int mcnt=0;
-  int sub_count;
 
   /*
    * begin to add in GSX variables
    */
   gsx_class *gsx=NULL;
   int gsx_count;
-  char *csu;
-  int csu_length;
   int first_file=0;
   int first_scan_loc;
   int last_scan_loc;
   int status;
-  int hscans;
-  int lscans;
   char *gsx_fname[MAX_INPUT_FILES];
-  long int pos;
   int infile;
   int loc;
   int imeas;
@@ -301,7 +294,7 @@ int main(int argc,char *argv[])
   fprintf( stderr, "Number of output setup files %d\n",save_area.nregions);
   
   /* convert response threshold from dB to normal space */
-  response_threshold=pow(10.,0.1*response_threshold);  
+  response_threshold=(float)(pow(10.,0.1*response_threshold));  
  
   /* Set flag for local time of day filtered images */
   ltdflag=0;
@@ -323,7 +316,7 @@ int main(int argc,char *argv[])
   }
   
   /* pre-compute pixel locations for each region */
-  compute_locations(&save_area, &nregions, &noffset, &latlon_store, &flatlon_store);
+  compute_locations(&save_area, &nregions, &noffset, &latlon_store);
   fprintf( stderr, "\n");
 
   /* initialize some pixel counters */
@@ -369,6 +362,10 @@ int main(int argc,char *argv[])
         gsx = gsx_init( fname );
 	write_filenames_to_header( gsx, &save_area );
 	status = utils_allocate_clean_aligned_memory( (void**)&gsx_fname[nfile], strlen(fname)+1 );
+	if ( 0 != status ) {
+	  fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
+	  exit (-1);
+	}
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
 	if ( nfile > MAX_INPUT_FILES ) {
@@ -394,9 +391,8 @@ int main(int argc,char *argv[])
     }
     strcpy(fname, gsx_fname[infile]);
   
-    /* initialize last spacecraft position */
+    /* initialize last spacecraft latitude */
     sc_last_lat=-1.e25;
-    sc_last_lon=-1.e25;
 
     /*
      * read data from file into gsx_class variable
@@ -490,7 +486,7 @@ int main(int argc,char *argv[])
       
 	  if ((krec%500)==0) fprintf( stderr, "Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-	  if ( *(gsx->scantime[loc]+iscan) == gsx->fill_scantime[loc] ) goto label_350; // do not process this scan - until gsx is fixed
+	  if ( (*(gsx->scantime[loc]+iscan) - gsx->fill_scantime[loc]) <= DBL_EPSILON ) goto label_350; // do not process this scan - until gsx is fixed
 	  /* scan time.  All measurements in this scan assigned this time */
 	  timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	  iday = jday;
@@ -527,18 +523,18 @@ int main(int argc,char *argv[])
 
 	  /* compute the orientation of the nadir track with respect to north */
 	  fractional_orbit = ( float ) iscan/nscans;
-	  eqlon = fractional_orbit * 360.0;
-	  if (eqlon<0.0) eqlon=eqlon+360.0;      
+	  eqlon = (float)(fractional_orbit * 360.0);
+	  if (eqlon<0.0) eqlon=(float)(eqlon+360.0);      
 	  /*
 	    find the longitude of the equator crossing of the middle measurement to use in computing the
 	    longitudes that separate ascending and descending for this rev */
-	  xhigh_lon=eqlon+90.0;
-	  xlow_lon =eqlon-90.0;
+	  xhigh_lon=(float)(eqlon+90.0);
+	  xlow_lon =(float)(eqlon-90.0);
 	   
-	  if (xhigh_lon >  180.0) xhigh_lon=xhigh_lon-360.0;
-	  if (xhigh_lon < -180.0) xhigh_lon=xhigh_lon+360.0;
-	  if (xlow_lon  >  180.0) xlow_lon =xlow_lon -360.0;
-	  if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
+	  if (xhigh_lon >  180.0) xhigh_lon=(float)(xhigh_lon-360.0);
+	  if (xhigh_lon < -180.0) xhigh_lon=(float)(xhigh_lon+360.0);
+	  if (xlow_lon  >  180.0) xlow_lon =(float)(xlow_lon -360.0);
+	  if (xlow_lon  < -180.0) xlow_lon =(float)(xlow_lon +360.0);
 
 	  /* here test for AMSRE that doesn't have sc_lat and sc_lon and get asc desc flag from file name */
 	  /* set asc/dsc flag for measurements */
@@ -549,7 +545,6 @@ int main(int argc,char *argv[])
 	      ascend=1;
 
 	    sc_last_lat = *(gsx->sc_latitude[loc]+iscan); 
-	    sc_last_lon = *(gsx->sc_longitude[loc]+iscan);
 	  } else {
 	    if ( CETB_ASC_PASSES == gsx->pass_direction )
 	      ascend=1;
@@ -598,15 +593,7 @@ int main(int argc,char *argv[])
 		cen_lon = *(gsx->longitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal latitude */
 
 		if (tb < *(gsx->validRange[gsx_count])) goto label_3400; /* skip bad measurements */
-		if (thetai == 0.0) goto label_3400; /* skip bad measurements */
-	  
-		/* first, determine if measurement is in the longitude range for ascending or descending */
-		inlonrange=0;
-		if (xhigh_lon > 0.0 && xlow_lon < 0.0) {
-		  if (cen_lon <= xhigh_lon && cen_lon >= xlow_lon) inlonrange=1;
-		} else {
-		  if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
-		}
+		if (thetai < FLT_EPSILON) goto label_3400; /* skip bad measurements */
 	  
 		/* check ascending/descending orbit pass flag (see cetb.h for definitions) */
 		iasc=save_area.sav_ascdes[iregion];
@@ -624,8 +611,8 @@ int main(int argc,char *argv[])
 
 		cy=cen_lat;
 		cx=cen_lon;
-		if (cx >  180.0) cx=cx-360.0;
-		if (cx < -180.0) cx=cx+360.0;
+		if (cx >  180.0) cx=(float)(cx-360.0);
+		if (cx < -180.0) cx=(float)(cx+360.0);
 
 		/* region lat/lon extent */
 		lath=save_area.sav_lath[iregion];
@@ -654,12 +641,12 @@ int main(int argc,char *argv[])
 		}
 
 		if (dateline) { /* convert lon to ascending order */
-		  if (lonl < 0.0) lonl=lonl+360.0;
-		  if (cx < -180.0) cx=cx+360.0;
+		  if (lonl < 0.0) lonl=(float)(lonl+360.0);
+		  if (cx < -180.0) cx=(float)(cx+360.0);
 		} else {	/* convert lon to -180 to 180 range */
-		  if (cx > 180.0) cx=cx-360.0;
-		  if (cx < -180.0) cx=cx+360.0;
-		  if (cx > 180.0) cx=cx-360.0;
+		  if (cx > 180.0) cx=(float)(cx-360.0);
+		  if (cx < -180.0) cx=(float)(cx+360.0);
+		  if (cx > 180.0) cx=(float)(cx-360.0);
 		}
 
 		/* check to see if center is within region */
@@ -694,8 +681,8 @@ int main(int argc,char *argv[])
 		/* assign the center of the pixel containing the measurement location to
 		   be the "new" measurement center lat/lon.  this "quantizes" the measurement
 		   centers to the center of the output pixel */
-		x=ix2+0.5;
-		y=iy2+0.5;
+		x=(float)(ix2+0.5);
+		y=(float)(iy2+0.5);
 		pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
 
 		/* define size of box centered at(ix2,iy2) in which the gain response 
@@ -704,7 +691,7 @@ int main(int argc,char *argv[])
 
 		box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
 		if ( box_size < 0 ) {
-		  exit -1;
+		  exit (-1);
 		}
 
 		ixsize=dscale*box_size; 
@@ -734,8 +721,8 @@ int main(int argc,char *argv[])
 		    iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
 		    if (iadd1 >= 0 & iadd1 < nsx*nsy) {		  
 		      /* get pre-computed lat/lon of pixel */
-		      alat1=latlon_store[iadd1*2+  noffset[iregion]]/200.0;
-		      alon1=latlon_store[iadd1*2+1+noffset[iregion]]/175.0;
+		      alat1=(float)(latlon_store[iadd1*2+  noffset[iregion]]/200.0);
+		      alon1=(float)(latlon_store[iadd1*2+1+noffset[iregion]]/175.0);
 
 		      /* compute antenna pattern response at each pixel based on beam number, 
 			 location, and projection rotation and scaling */
@@ -886,11 +873,11 @@ FILE * get_meta(char *mname, char *outpath,
  
   FILE *file_id, *ftemp;  
 
-  int irecords=0,ireg;
+  int ireg;
   char line[100], lin[100];
   int asc_des;
   float lath,latl,lonh,lonl;
-  int poleflag,regnum,projt=0;
+  int regnum,projt=0;
   float aorglat,aorglon;
   int nsx,nsy;
   float ascale,bscale,a0,b0,xdeg,ydeg,xdim,ydim;
@@ -902,13 +889,13 @@ FILE * get_meta(char *mname, char *outpath,
   char fname2[180];
   char outname[350];
   char sensor[40]="SSMI something";
-  int ibeam, ninst=0;  
+  int ibeam;  
 
   int flag, flag_out, flag_region, flag_section, flag_files;
   float a_init,a_offset;
   int nits;
 
-  char *s, *x;
+  char *x;
   int z, nsection, isection, cnt;
   float tsplit1=1.0, tsplit2=13.0;
 
@@ -916,7 +903,6 @@ FILE * get_meta(char *mname, char *outpath,
 
   iregion=0;
   ireg=0;
-  ninst=0;
 
   fprintf( stderr, "%s: open meta file %s\n", __FUNCTION__, mname);
   file_id=fopen(mname,"r");
@@ -979,12 +965,12 @@ FILE * get_meta(char *mname, char *outpath,
       
       if (strstr(line,"A_initialization") != NULL) {
 	x = strchr(line,'=');
-	a_init=atof(++x);
+	a_init=(float)atof(++x);
       }      
       
       if (strstr(line,"A_offset") != NULL) {
 	x = strchr(line,'=');
-	a_offset=atof(++x);
+	a_offset=(float)atof(++x);
       }
       
       if (strstr(line,"Max_iterations") != NULL) {
@@ -994,22 +980,22 @@ FILE * get_meta(char *mname, char *outpath,
       
       if (strstr(line,"Reference_incidence_angle") != NULL) {
 	x = strchr(line,'=');
-	*angle_ref=atof(++x);
+	*angle_ref=(float)atof(++x);
       }
       
       if (strstr(line,"Incidence_ang_correct") != NULL) {
 	x = strchr(line,'=');
-	*inc_correct=atof(++x);
+	*inc_correct=(float)atof(++x);
       }
       
       if (strstr(line,"B_correct_value") != NULL) {
 	x = strchr(line,'=');
-	*b_correct=atof(++x);
+	*b_correct=(float)atof(++x);
       }
       
       if (strstr(line,"Response_threshold") != NULL) {
 	x = strchr(line,'=');
-	*response_threshold=atof(++x);
+	*response_threshold=(float)atof(++x);
       }
       
       if (strstr(line,"Flat_response") != NULL) {
@@ -1055,34 +1041,28 @@ FILE * get_meta(char *mname, char *outpath,
       
 	    if (strstr(line,"Latitude_low") != NULL) {
 	      x = strchr(line,'=');
-	      latl=atof(++x);
+	      latl=(float)atof(++x);
 	    }
       
 	    if (strstr(line,"Latitude_high") != NULL) {
 	      x = strchr(line,'=');
-	      lath=atof(++x);
+	      lath=(float)atof(++x);
 	    }
       
 	    if (strstr(line,"Longitude_low") != NULL) {
 	      x = strchr(line,'=');
-	      lonl=atof(++x);
+	      lonl=(float)atof(++x);
 	    }
       
 	    if (strstr(line,"Longitude_high") != NULL) {
 	      x = strchr(line,'=');
-	      lonh=atof(++x);
+	      lonh=(float)atof(++x);
 	    }
 
 	    if (strstr(line,"Dateline_crossing") != NULL) {
 	      x = strchr(line,'='); x++;	
 	      if (*x== 'F' || *x== 'f') dateline=0;
 	      else dateline=1;	
-	    }
-
-	    if (strstr(line,"Polar_flag") != NULL) {
-	      x = strchr(line,'='); x++;	
-	      if (*x== 'F' || *x== 'f') poleflag=0;
-	      else poleflag=1;	
 	    }
 
 	    if (strstr(line,"AscDesc_flag") != NULL) {
@@ -1142,44 +1122,44 @@ FILE * get_meta(char *mname, char *outpath,
       
 		  if (strstr(line,"Projection_origin_x") != NULL) {
 		    x = strchr(line,'=');
-		    aorglat =atof(++x);
+		    aorglat =(float)atof(++x);
 		    ydeg=aorglat;
 		  }
 
 		  if (strstr(line,"Projection_origin_y") != NULL) {
 		    x = strchr(line,'=');
-		    aorglon =atof(++x);
+		    aorglon =(float)atof(++x);
 		    xdeg=aorglon;
 		  }
 
 		  if (strstr(line,"Projection_offset_x") != NULL) {
 		    x = strchr(line,'=');
-		    a0=atof(++x);
+		    a0=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_offset_y") != NULL) {
 		    x = strchr(line,'=');
-		    b0=atof(++x);
+		    b0=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_scale_x") != NULL) {
 		    x = strchr(line,'=');
-		    ascale=atof(++x);
+		    ascale=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_scale_y") != NULL) {
 		    x = strchr(line,'=');
-		    bscale=atof(++x);
+		    bscale=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_dim_x") != NULL) {
 		    x = strchr(line,'=');
-		    xdim=atof(++x);
+		    xdim=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_dim_y") != NULL) {
 		    x = strchr(line,'=');
-		    ydim=atof(++x);
+		    ydim=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Image_size_x") != NULL) {
@@ -1194,42 +1174,42 @@ FILE * get_meta(char *mname, char *outpath,
 
 		  if (strstr(line,"Grid_projection_origin_x") != NULL) {
 		    x = strchr(line,'=');
-		    ydeg2=atof(++x);
+		    ydeg2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_origin_y") != NULL) {
 		    x = strchr(line,'=');
-		    xdeg2=atof(++x);
+		    xdeg2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_offset_x") != NULL) {
 		    x = strchr(line,'=');
-		    a02=atof(++x);
+		    a02=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_offset_y") != NULL) {
 		    x = strchr(line,'=');
-		    b02=atof(++x);
+		    b02=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_scale_x") != NULL) {
 		    x = strchr(line,'=');
-		    ascale2=atof(++x);
+		    ascale2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_scale_y") != NULL) {
 		    x = strchr(line,'=');
-		    bscale2=atof(++x);
+		    bscale2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_scale_x") != NULL) {
 		    x = strchr(line,'=');
-		    non_size_x=atof(++x);
+		    non_size_x=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_scale_y") != NULL) {
 		    x = strchr(line,'=');
-		    non_size_y =atof(++x);
+		    non_size_y =(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_size_x") != NULL) {
@@ -1239,12 +1219,12 @@ FILE * get_meta(char *mname, char *outpath,
 
                   if (strstr(line,"Local_time_split1") != NULL) {
 		    x = strchr(line,'=');
-		    tsplit1=atof(++x);
+		    tsplit1=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Local_time_split2") != NULL) {
 		    x = strchr(line,'=');
-		    tsplit2=atof(++x);
+		    tsplit2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_size_y") != NULL) {
@@ -1517,7 +1497,7 @@ FILE * get_meta(char *mname, char *outpath,
   return(file_id);
 }
 
-void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store) 
+void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store) 
 {  
   /* compute the lat,lon of each pixel in the image regions and store in
      global arrays.  This reduces the computational load */
@@ -1571,8 +1551,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     /* hash file name */
     sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
 	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    abs(nint(a->sav_a0[iregion])), abs(nint(a->sav_b0[iregion])),
-	    abs(nint(a->sav_xdeg[iregion])),abs(nint(a->sav_ydeg[iregion])));
+	    abs((int)round(a->sav_a0[iregion])), abs((int)round(a->sav_b0[iregion])),
+	    abs((int)round(a->sav_xdeg[iregion])),abs((int)round(a->sav_ydeg[iregion])));
 
     if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
@@ -1614,9 +1594,9 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
       /* compute pixel locations */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
-	y=iy+1.5; /* center of pixel, 1-based */
+	y=(float)(iy+1.5); /* center of pixel, 1-based */
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {
-	  x=ix+1.5; /* center of pixel, 1-based */
+	  x=(float)(ix+1.5); /* center of pixel, 1-based */
 	  pixtolatlon(x, y, &clon, &clat, a->sav_projt[iregion], 
 		      a->sav_xdeg[iregion], a->sav_ydeg[iregion],
 		      a->sav_ascale[iregion], a->sav_bscale[iregion],
@@ -1626,8 +1606,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  if (iadd>=nsize) iadd=0;
 	  iadd=2*iadd+(*noffset)[iregion];
 
-	  (*latlon_store)[iadd]=  nint(clat*200.0);
-	  (*latlon_store)[iadd+1]=nint(clon*175.0);
+	  (*latlon_store)[iadd] = (int)nint(clat*200.0);
+	  (*latlon_store)[iadd+1] = (int)nint(clon*175.0);
 	}
       }
 
