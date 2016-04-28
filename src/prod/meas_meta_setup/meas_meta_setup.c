@@ -31,6 +31,10 @@
 #define prog_version 0.3 /* program version */
 #define prog_name "meas_meta_setup"
 
+#ifdef JANUSicc
+#pragma warning (disable:981)
+#endif
+
 /* This code can read and process several different data sets.
  * In order to achieve that, the input source files must first be processed into GSX files
  */
@@ -159,6 +163,7 @@ static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 static void combine_setup_files( region_save *a, int execution_flag );
 static int julday(int mm, int id, int iyyy);
+static void caldat(int julian, int *mm, int *id, int *iyyy);
 
 /****************************************************************************/
 
@@ -1773,9 +1778,9 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 		   &map_reference_latitude, &map_reference_longitude, 
 		   &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
 		   &map_scale, &bcols, &brows, &r0, &s0, &epsilon);
-    *x=1./(map_scale*0.001); /* km/pixel rather than m/pixel */
-    *y=1./(map_scale*0.001);
-    r= 1./(map_scale*0.001);
+    *x=(float)(1./(map_scale*0.001)); /* km/pixel rather than m/pixel */
+    *y=(float)(1./(map_scale*0.001));
+    r= (float)(1./(map_scale*0.001));
     break;
   default: /* unknown transformation type */
     *x=0.0;
@@ -1838,10 +1843,10 @@ int julday(int mm, int id, int iyyy) {
     jy=jy-1;
     jm=mm+13;
   }
-  juday=floor(365.25*jy)+floor(30.6001*jm)+id+1720995;
-  if (id+31*(mm+12*iyyy) >= IGREG) {
-    ja=floor(0.01*jy);
-    juday=juday+2-ja+floor(0.25*ja);
+  juday=(int)(floor(365.25*jy)+floor(30.6001*jm)+id+1720995);
+  if ( (id+(31*(mm+12*iyyy))) >= IGREG ) {
+    ja=(int)floor(0.01*jy);
+    juday=(int)(juday+2-ja+floor(0.25*ja));
   }
   return(juday);
 }
@@ -1853,15 +1858,15 @@ void caldat(int julian, int *mm, int *id, int *iyyy) {
   int jalpha, ja, jb, jc, jd, je;
   
   if (julian >= IGREG) {     
-    jalpha=floor(((julian-1867216)-0.25)/36524.25);
-    ja=julian+1+jalpha-floor(0.25*jalpha);
+    jalpha=(int)(floor(((julian-1867216)-0.25)/36524.25));
+    ja=(int)(julian+1+jalpha-floor(0.25*jalpha));
   } else
     ja=julian;
   jb=ja+1524;
-  jc=floor(6680.+((jb-2439870)-122.1)/365.25);
-  jd=365*jc+floor(0.25*jc);
-  je=floor((jb-jd)/30.6001);
-  *id=jb-jd-floor(30.6001*je);
+  jc=(int)(floor(6680.+((jb-2439870)-122.1)/365.25));
+  jd=(int)(365*jc+floor(0.25*jc));
+  je=(int)(floor((jb-jd)/30.6001));
+  *id=(int)(jb-jd-floor(30.6001*je));
   *mm=je-1;
   if (*mm > 12)
     *mm=*mm-12;
@@ -1880,8 +1885,8 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
   /* given a time in seconds from the start of 1987 (1/1/87 0Z) determine
      the year, month, day, hour, minute, and second */
 
-  int itime=time;
-  int ijd=time/(24*3600);
+  int itime=(int)time;
+  int ijd=(int)(time/(24*3600));
   int ijd0, ijd1;  
   
   if (ijd < 0) ijd=ijd-1;
@@ -1890,7 +1895,7 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
   ijd1=julday(1,1,*iyear);
   *jday=ijd+ijd0-ijd1+1;   /* day of the year */
 
-  itime=time-(julday(*imon,*iday,*iyear)-ijd0)*24*3600;
+  itime=(int)(time-(julday(*imon,*iday,*iyear)-ijd0)*24*3600);
   *ihour=mod(itime/3600,24);
   *imin=mod(itime-*ihour*3600,60*60)/60;
   *isec=mod(itime-*ihour*3600-*imin*60,60);
