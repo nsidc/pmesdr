@@ -94,15 +94,6 @@ static void no_trailing_blanks(char *s)
   return;
 }
 
-static void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
-{ /* convert ascii time tag into year, day, hour, minute */
-  int imon, mday;
-  float secs;
-  /* '19970600301015123.150300 '1997 1 3 60 1 51 23 */
-  sscanf(time_tag,"%4d%3d%2d%2d%2d%2d%7f",iyear,iday,&imon,&mday,ihour,imin,&secs);
-  return;                                                                                                                 
-}
-
 static int isleapyear(int year) 
 { /* is year a leap year? */
   if (year==4*(year/4))  /* this test is only good for 1904-2096! */
