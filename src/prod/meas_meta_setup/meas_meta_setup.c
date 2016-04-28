@@ -154,8 +154,7 @@ static void timedecode(double time, int *iyear, int *jday, int *imon, int *iday,
 
 static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
 
-static float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, int *stat);
+static float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat);
 
 static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
@@ -320,7 +319,6 @@ int main(int argc,char *argv[])
   /* compute approximate projection grid scale factors for later use */
   for (iregion=0; iregion<save_area.nregions; iregion++) {      
     save_area.sav_km[iregion]=km2pix(&dlon,&dlat,save_area.sav_projt[iregion],
-				     save_area.sav_xdeg[iregion],   save_area.sav_ydeg[iregion],
 				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion], &ret_status);
     if ( ret_status != 1 ) {
       fprintf( stderr, "meas_meta_setup: fatal error in routine\n" );
@@ -1732,8 +1730,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 
 /* *********************************************************************** */
 
-float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, int *stat)
+float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat)
 { 
   /*
     determine the approximate "nominal" conversion coefficients for
@@ -1786,7 +1783,7 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
     *x=0.0;
     *y=0.0;
     *stat = 0;
-    fprintf( stderr, "km2pix: Unknown transformation type - %d region id\n", iopt );
+    fprintf( stderr, "%s: Unknown transformation type - %d region id\n", __FUNCTION__, iopt );
   }
   return(r);
 }
