@@ -1550,8 +1550,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     /* hash file name */
     sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
 	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    abs((int)(round(a->sav_a0[iregion]))), abs((int)(round(a->sav_b0[iregion]))),
-	    abs((int)(round(a->sav_xdeg[iregion]))),abs((int)(round(a->sav_ydeg[iregion]))));
+	    abs(round(a->sav_a0[iregion])), abs(round(a->sav_b0[iregion])),
+	    abs(round(a->sav_xdeg[iregion])), abs(round(a->sav_ydeg[iregion])));
 
     if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
@@ -1670,8 +1670,8 @@ float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajo
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 
   /* rotate coordinate system to align with look direction */
-  x=((cos(theta*DTR))*x_rel) - ((sin(theta*DTR))*y_rel);
-  y=((sin(theta*DTR))*x_rel) + ((cos(theta*DTR))*y_rel);
+  x=(float)(((cos(theta*DTR))*x_rel) - ((sin(theta*DTR))*y_rel));
+  y=(float)(((sin(theta*DTR))*x_rel) + ((cos(theta*DTR))*y_rel));
   
   /* compute approximate antenna response
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
@@ -1701,7 +1701,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 
   float r,r2,rel_rlat,rel_rlon;
 
-  r=(1.0-(sin(rlat*DTR)*sin(rlat*DTR))*FLAT)*AEARTH;
+  r=(float)((1.0-((sin(rlat*DTR)*sin(rlat*DTR))*FLAT))*AEARTH);
 
   rel_rlat=alat-rlat;
   rel_rlon=alon-rlon;
