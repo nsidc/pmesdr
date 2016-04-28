@@ -29,6 +29,10 @@
 #include "nr.h"
 #include "nrutil.h"
 
+#ifdef JANUSicc
+#pragma warning (disable:981)
+#endif
+
 static void dlubksb(double **a, int n, int *indx, double b[]);
 static void dludcmp(double **a, int n, int *indx, double *d);
 
@@ -165,10 +169,10 @@ int main(int argc, char **argv)
   short int *weight_array;
   double dsum, *aveweights, tbave;
 
-  tb_fill_value_float = CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
-					       CETB_TB_ADD_OFFSET, tb_fill_value );
-  tb_missing_value_float = CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
-						  CETB_TB_ADD_OFFSET, tb_missing_value );
+  tb_fill_value_float = (float)( CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
+							CETB_TB_ADD_OFFSET, tb_fill_value ) );
+  tb_missing_value_float = (float)( CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
+							   CETB_TB_ADD_OFFSET, tb_missing_value ) );
 /* begin program */  
 
   printf("BYU SSM/I meta BG program: C version %f\n",VERSION);
@@ -299,7 +303,7 @@ int main(int argc, char **argv)
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
-       a_init=  atof(++x) ;
+       a_init= (float) atof(++x) ;
      }
 
      if (strstr(line,"Beam_code") != NULL) {
@@ -531,7 +535,7 @@ int main(int argc, char **argv)
 
 /* print measurement file storage requirements */
 
-  ratio=100.0 * (float) nbyte / (float) nls;
+  ratio=(float)( 100.0 * (float) nbyte / (float) nls );
   fprintf( stderr, "%s:  Input file read into ram\n", __FILE__ );
   fprintf( stderr, "%s:  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
 	   __FILE__, nrec, ncnt, nbyte, nspace, ratio, 100.0*file_savings );
@@ -798,7 +802,7 @@ int main(int argc, char **argv)
 	amin=a_val[its];
 
       /* simple Q/A test and replace for bad BGI estimates */
-        if (abs(a_val[its] - tbave) > difthres)
+        if (fabs(a_val[its] - tbave) > difthres)
 	  a_val[its]=(float) tbave;	
 
       /* set data to CETB_TB_MISSING_VALUE if it is OOR */
@@ -998,7 +1002,7 @@ float median(float array[], int count)
     temp=0.0;
     for (i=count/2-1; i <= count/2+3; i++)
       temp=temp+array[i-1];
-    temp=temp/5.0;
+    temp=(float)(temp/5.0);
   }
   return(temp);
 }
