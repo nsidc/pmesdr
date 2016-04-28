@@ -52,13 +52,22 @@
 #define MINUTES_PER_DAY (24*60)
 #define MINUTES_PER_HOUR 60
 
-#define min(a,b) ((a) <= (b) ? (a) : (b))
-#define max(a,b) ((a) >= (b) ? (a) : (b))
+#define min(a,b) (((a) <= (b)) ? (a) : (b))
+#define max(a,b) (((a) >= (b)) ? (a) : (b))
 #define mod(a,b) ((a) % (b))
 #define dmod(a,b) ((a)-floor((a)/(b))*(b))
-#define abs(x) ((x) >= 0 ? (x) : -(x))
+#define abs(x) (((x) >= 0 ) ? (x) : -(x))
 
 /****************************************************************************/
+
+extern void ease2_map_info(int iopt, int isc, int ind, 
+			   double *map_equatorial_radius_m, double *map_eccentricity, 
+			   double *e2, double *map_reference_latitude, 
+			   double *map_reference_longitude, 
+			   double *map_second_reference_latitude,double * sin_phi1, 
+			   double *cos_phi1, double *kz,
+			   double *map_scale, int *bcols, int *brows, 
+			   double *r0, double *s0, double *epsilon);
 
 static int nint(float r)
 {
@@ -142,13 +151,14 @@ static void timedecode(double time, int *iyear, int *jday, int *imon, int *iday,
 static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
 
 static float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0, int *stat);
+	     float ascale, float bscale, int *stat);
 
 static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
 
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 static void combine_setup_files( region_save *a, int execution_flag );
+static int julday(int mm, int id, int iyyy);
 
 /****************************************************************************/
 
@@ -306,8 +316,7 @@ int main(int argc,char *argv[])
   for (iregion=0; iregion<save_area.nregions; iregion++) {      
     save_area.sav_km[iregion]=km2pix(&dlon,&dlat,save_area.sav_projt[iregion],
 				     save_area.sav_xdeg[iregion],   save_area.sav_ydeg[iregion],
-				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion],
-				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion], &ret_status);
+				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion], &ret_status);
     if ( ret_status != 1 ) {
       fprintf( stderr, "meas_meta_setup: fatal error in routine\n" );
       exit ( -1 );
@@ -1550,8 +1559,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     /* hash file name */
     sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
 	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    abs(round(a->sav_a0[iregion])), abs(round(a->sav_b0[iregion])),
-	    abs(round(a->sav_xdeg[iregion])), abs(round(a->sav_ydeg[iregion])));
+	    (int)abs(round(a->sav_a0[iregion])), (int)abs(round(a->sav_b0[iregion])),
+	    (int)abs(round(a->sav_xdeg[iregion])), (int)abs(round(a->sav_ydeg[iregion])));
 
     if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
@@ -1670,8 +1679,8 @@ float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajo
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 
   /* rotate coordinate system to align with look direction */
-  x=(float)(((cos(theta*DTR))*x_rel) - ((sin(theta*DTR))*y_rel));
-  y=(float)(((sin(theta*DTR))*x_rel) + ((cos(theta*DTR))*y_rel));
+  x=(float) ( ( (cos(theta*DTR) ) * x_rel ) - ( (sin(theta*DTR) ) * y_rel ) );
+  y=(float) ( ( (sin(theta*DTR) ) * x_rel ) + ( (cos(theta*DTR) ) * y_rel ) );
   
   /* compute approximate antenna response
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
@@ -1701,7 +1710,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 
   float r,r2,rel_rlat,rel_rlon;
 
-  r=(float)((1.0-((sin(rlat*DTR)*sin(rlat*DTR))*FLAT))*AEARTH);
+  r=(float) ( ( 1.0 - ( ( (sin(rlat*DTR) ) * (sin(rlat*DTR) ) ) * FLAT ) ) * AEARTH );
 
   rel_rlat=alat-rlat;
   rel_rlon=alon-rlon;
@@ -1719,7 +1728,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 /* *********************************************************************** */
 
 float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0, int *stat)
+	     float ascale, float bscale, int *stat)
 { 
   /*
     determine the approximate "nominal" conversion coefficients for
@@ -1743,7 +1752,6 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 
   */
 
-  float radearth=6378.135;       /* radius of the earth in km */
   float r=0.0;
 
   double map_equatorial_radius_m,map_eccentricity, e2,
