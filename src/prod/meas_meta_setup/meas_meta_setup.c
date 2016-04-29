@@ -269,12 +269,12 @@ int main(int argc,char *argv[])
   } /* end loop while still input arguments */
 
   if (argc < 2) {
-    fprintf( stderr, "\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
-    fprintf( stderr, " input parameters:\n");
-    fprintf( stderr, "   -b box_size is optional input argument to specify box_size for MRF\n");
-    fprintf( stderr, "      default box_size is 80 for early regression testing\n");
-    fprintf( stderr, "   meta_in     = input meta file\n");
-    fprintf( stderr, "   outpath     = output path\n\n");
+    printf( "\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
+    printf( " input parameters:\n");
+    printf( "   -b box_size is optional input argument to specify box_size for MRF\n");
+    printf( "      default box_size is 80 for early regression testing\n");
+    printf( "   meta_in     = input meta file\n");
+    printf( "   outpath     = output path\n\n");
     exit (-1);
   }
 
@@ -1015,14 +1015,14 @@ FILE * get_meta(char *mname, char *outpath,
       if (strstr(line,"Num_Regions") != NULL) {
 	x = strchr(line,'=');
 	a->nregions=atoi(++x);
-	printf("Regions in meta file: %d\n",a->nregions);
+	fprintf( stderr, "%s: Regions in meta file: %d\n", __FUNCTION__, a->nregions);
       }
 
       if (strstr(line,"Begin_region_description") != NULL) {
 	/* new region started set some default values */
 	asc_des=CETB_ALL_PASSES;	/* use both asc/desc orbits */
 	ireg=ireg+1;
-	printf("Region %d of %d  Total regions: %d\n",ireg,a->nregions,iregion);
+	fprintf( stderr, "%s: Region %d of %d  Total regions: %d\n", __FUNCTION__, ireg,a->nregions,iregion);
 
 	/* read region information */
 	flag_region=1;
@@ -1030,7 +1030,7 @@ FILE * get_meta(char *mname, char *outpath,
 	  fgets(line,sizeof(line),file_id);
 	  no_trailing_blanks(line);
 	  if (ferror(file_id)) {
-	    printf("*** error reading meta file at region \n");
+	    fprintf( stderr, "%s: *** error reading meta file at region \n", __FUNCTION__ );
 	    flag_region=0;
 	  } else {
 	    if (strstr(line,"End_region_description") != NULL)
@@ -1105,7 +1105,7 @@ FILE * get_meta(char *mname, char *outpath,
 		fgets(line,sizeof(line),file_id);
 		no_trailing_blanks(line);
 		if (ferror(file_id)) {
-		  printf("*** error reading meta file at section \n");
+		  fprintf( stderr, "%s: *** error reading meta file at section \n", __FUNCTION__ );
 		  flag_section=0;
 		} else {
 		  if (strstr(line,"End_section_description") != NULL)
@@ -1114,7 +1114,7 @@ FILE * get_meta(char *mname, char *outpath,
 		  if (strstr(line,"Section_id") != NULL) {
 		    x = strchr(line,'=');
 		    isection =atoi(++x);
-		    printf("Section %d image count %d\n",isection,iregion);		    
+		    fprintf( stderr, "%s: Section %d image count %d\n", __FUNCTION__, isection,iregion);		    
 		  }
 
 		  if (strstr(line,"Project_type") != NULL) {
@@ -1254,25 +1254,24 @@ FILE * get_meta(char *mname, char *outpath,
 		      iregion++;
 		      
 		      /* print out region information summary */
-		      printf("\nSIR file header information: %d %d %d %d\n",iregion,a->nregions,isection,nsection);
-		      printf("  Year, day range: %d %d %d %d %d\n",*year,*dstart,*dend,*mstart,*mend);
-		      printf("  Image size: %d x %d   Projection: %d\n",nsx,nsy,projt);
-		      printf("  Origin: %f %f  Span: %f %f\n",a0,b0,xdeg,ydeg);
-		      printf("  Scales: %f %f  Pol (0=h,1=v): %d\n",ascale,bscale,ipolar);
-		      printf("  Region: %s  Num %d\n",regname,regnum);
-		      printf("  Reg LL corner: %f %f   UR corner: %f %f\n",latl,lonl,lath,lonh);
-		      printf("  Origin (lat,lon): %f %f\n",aorglat,aorglon);
-		      printf("  Array Dimensions in Km: x=%f y=%f\n",xdim,ydim);
-		      printf("  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): %d\n",asc_des);
-		      printf("  Grid size: %f %f  Span: %f %f\n",xdeg,ydeg,aorglat,aorglon);
-		      printf("  Scales: %f %f   Origin: %f %f\n",ascale,bscale,a0,b0);
-		      printf("  GRD image size: %d %d  Size: %d %d\n",nsx2,nsy2,non_size_x,non_size_y);
-		      printf("  GRD image span: %f %f  Orig: %f %f\n",xdeg2,ydeg2,a02,b02);		      
-		      printf("  GRD image scale: %f %f\n",ascale2,bscale2);		      
-		      /*printf("  Egg response threshold %f  Flat %d\n",*response_threshold,*flatten); */
-		      printf("  Median filter %d  Ref Inc angle %f\n",*median_flag,*angle_ref);
-		      printf("  Incidence angle correction %d  b_correct %f\n",*inc_correct,*b_correct); 
-                      printf("  Time split: %f %f\n\n",tsplit1,tsplit2);
+		      fprintf( stderr, "\nSIR file header information: %d %d %d %d\n",iregion,a->nregions,isection,nsection);
+		      fprintf( stderr, "  Year, day range: %d %d %d %d %d\n",*year,*dstart,*dend,*mstart,*mend);
+		      fprintf( stderr, "  Image size: %d x %d   Projection: %d\n",nsx,nsy,projt);
+		      fprintf( stderr, "  Origin: %f %f  Span: %f %f\n",a0,b0,xdeg,ydeg);
+		      fprintf( stderr, "  Scales: %f %f  Pol (0=h,1=v): %d\n",ascale,bscale,ipolar);
+		      fprintf( stderr, "  Region: %s  Num %d\n",regname,regnum);
+		      fprintf( stderr, "  Reg LL corner: %f %f   UR corner: %f %f\n",latl,lonl,lath,lonh);
+		      fprintf( stderr, "  Origin (lat,lon): %f %f\n",aorglat,aorglon);
+		      fprintf( stderr, "  Array Dimensions in Km: x=%f y=%f\n",xdim,ydim);
+		      fprintf( stderr, "  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): %d\n",asc_des);
+		      fprintf( stderr, "  Grid size: %f %f  Span: %f %f\n",xdeg,ydeg,aorglat,aorglon);
+		      fprintf( stderr, "  Scales: %f %f   Origin: %f %f\n",ascale,bscale,a0,b0);
+		      fprintf( stderr, "  GRD image size: %d %d  Size: %d %d\n",nsx2,nsy2,non_size_x,non_size_y);
+		      fprintf( stderr, "  GRD image span: %f %f  Orig: %f %f\n",xdeg2,ydeg2,a02,b02);		      
+		      fprintf( stderr, "  GRD image scale: %f %f\n",ascale2,bscale2);		      
+		      fprintf( stderr, "  Median filter %d  Ref Inc angle %f\n",*median_flag,*angle_ref);
+		      fprintf( stderr, "  Incidence angle correction %d  b_correct %f\n",*inc_correct,*b_correct); 
+                      fprintf( stderr, "  Time split: %f %f\n\n",tsplit1,tsplit2);
 		      
 		      /* open output setup file for this section of this region */
 		      sprintf(outname,"%s/%s",outpath,fname2);		      
@@ -1280,7 +1279,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      if ( ftemp != NULL ) {
 			a->reg_lu[iregion-1] = ftemp;
-			printf("Opened setup output file '%s'  %d\n",outname,iregion);
+			fprintf( stderr, "Opened setup output file '%s'  %d\n",outname,iregion);
 		      } else {
 			fprintf( stderr, "Couldnot open setup output file '%s' \n", outname );
 			return ( NULL );
@@ -1440,7 +1439,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      fgets(line,sizeof(line),file_id);
 		      no_trailing_blanks(line);
 		      if (ferror(file_id)) {
-			printf("*** error reading meta file at product files \n");
+			fprintf( stderr, "*** error reading meta file at product files \n");
 			flag_files=0;
 		      } else {
 			if (strstr(line,"End_product_file_names") != NULL) {
@@ -1456,7 +1455,7 @@ FILE * get_meta(char *mname, char *outpath,
 			  }
 		      }
 		    }
-		    printf("Done with setup header for image\n");
+		    fprintf( stderr, "Done with setup header for image\n");
 
 		    /* save region information */
 		    if (flag_out) {
@@ -1543,8 +1542,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     
     (*noffset)[iregion+1] = (*noffset)[iregion]+2*nsize;  /* update pointer */
 
-    printf("\nRegion %d of %d: %dx%d=%d\n",iregion+1,a->nregions, 
-            a->sav_nsx[iregion], a->sav_nsy[iregion],nsize);
+    fprintf( stderr, "\nRegion %d of %d: %dx%d=%d\n",iregion+1,a->nregions, 
+	     a->sav_nsx[iregion], a->sav_nsy[iregion],nsize);
     print_projection(stdout, a->sav_projt[iregion], 
 		    a->sav_xdeg[iregion], a->sav_ydeg[iregion],
 		    a->sav_ascale[iregion], a->sav_bscale[iregion],
@@ -1576,15 +1575,15 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
       if (USE_PRECOMPUTE_FILES) {     /* check to see if pre-computed array 
                                          is available in file */
 	sprintf(line,"%s/%s",p,tempname);
-	printf("Reading pixel locations file: %s\n",line);
+	fprintf( stderr, "Reading pixel locations file: %s\n",line);
 	f=fopen(line,"r");
 	if (f==NULL) {
-	  printf("... could not open precompute file %s will recompute\n",line);	
+	  fprintf( stderr, "... could not open precompute file %s will recompute\n",line);	
 	  goto label_skip;
 	}
 
 	if (fread(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
-	  printf("*** error reading precompute file %s\n",line);	
+	  fprintf( stderr, "*** error reading precompute file %s\n",line);	
 	  fclose(f);
 	  goto label_skip;
 	}
@@ -1616,10 +1615,10 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
       /* write out array to file for next time to save computation*/
       if (USE_PRECOMPUTE_FILES) {
 	sprintf(line,"%s/%s",p,tempname);
-	printf("Writing pixel locations file: %s\n",line);
+	fprintf( stderr, "Writing pixel locations file: %s\n",line);
 	f=fopen(line,"wx");
 	if (f==NULL) {
-	  printf("	*** error opening output precompute file %s\n",line);	
+	  fprintf( stderr, "	*** error opening output precompute file %s\n",line);	
 	  goto label_read;
 	}      
 

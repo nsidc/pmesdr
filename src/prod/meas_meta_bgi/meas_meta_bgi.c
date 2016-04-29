@@ -206,7 +206,7 @@ int main(int argc, char **argv)
   if (argc > 6) sscanf(argv[6],"%f",&difthres);
   /* (more later) */
 
-  printf("BGI options: omega=%f gamma=%lf delta2=%f gain thres=%f difthres=%f\n",omega, bgi_gamma, delta2, ithres, difthres);
+  fprintf( stderr, "BGI options: omega=%f gamma=%lf delta2=%f gain thres=%f difthres=%f\n",omega, bgi_gamma, delta2, ithres, difthres);
 
   /* get input file size */
   fseek(imf, 0L, REL_EOF);
@@ -451,7 +451,7 @@ int main(int argc, char **argv)
   nbyte = 0;        /* file size in bytes */
   store=space;      /* storage pointer */
   
-  printf("Begin setup file copy into memory\n");
+  fprintf( stderr, "Begin setup file copy into memory\n");
   while (fread(&dumb, sizeof(int), 1, imf) != 0) {
 
      /*5 items at 4 bytes each: 20 bytes if no azimuth angle */
