@@ -957,7 +957,7 @@ int main(int argc, char **argv)
       total = total + *(tot+i);
 
       if (*(tot+i) > 1) 
-	if (*(sy+i) >= FLT_EPSILON) 
+	if (fabs(*(sy+i)) >= FLT_EPSILON) 
 	  *(sxy+i) = *(sx+i) / *(sy+i);
 	else
 	  *(sxy+i) =0.0;
@@ -1367,7 +1367,7 @@ void get_updates(float tbval, int count, int fill_array[], short int response_ar
     ave=total/num;
   else
     return;
-  if (fabs(ave-0.0) <= FLT_EPSILON) return;
+  if (fabs(ave) <= FLT_EPSILON) return;
 
   /* for each measurement hitting a pixel calculate updates */
 
@@ -1546,7 +1546,7 @@ void stat_updates(float tbval, int count, int fill_array[],
     total = total + m * sigv;
     num = num + m;
   }
-  if (abs(num-0) < FLT_EPSILON) return;
+  if (abs(num) < FLT_EPSILON) return;
   ave =(total/num);
   
   for (i=0; i < count; i++) {
