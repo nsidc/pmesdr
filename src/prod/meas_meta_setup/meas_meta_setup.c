@@ -418,6 +418,10 @@ int main(int argc,char *argv[])
 
     /* initialize the flag_file list for each region in this setup run */
     if ( NULL != file_flag ) {
+      fprintf( stderr, "%s: ***** %d file with name %s and file_flag contents \n", __FILE__, infile-1, gsx_fname[infile-1] );
+      for ( iregion = 0; iregion<save_area.nregions; iregion++ ) {
+	fprintf( stderr, "\t %d region and %d file_flag\n", iregion, *(file_flag+iregion) );
+      }
       free( file_flag );
       file_flag = NULL;
     }
@@ -787,6 +791,8 @@ int main(int argc,char *argv[])
 	  
 		/* write measurement and addresses to setup output file */
 		if (count > 1) {
+		  /* if there is a measurement, then set the value of file_flag to be 1 for this file and projection */
+		  *(file_flag+iregion) = 1;
 		  jrec++; /* a count of total records written */
 		  jrec2[iregion]++; /* records/region */
 		  if (count >= MAXFILL) { /* error handling -- this should not occur! */
@@ -867,6 +873,7 @@ int main(int argc,char *argv[])
                /* input file loop */
     fprintf( stderr, "Done with setup records %d %d\n",irec,krec);
     free( gsx_fname[infile] );
+    write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
   } /* input file read loop 1050 */
 
   /* close output setup files */
@@ -2082,7 +2089,7 @@ void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *fil
   int iregion;
 
   for ( iregion=0; iregion<save_area->nregions; iregion++ ) {
-    if ( 0 == *(file_flag+iregion) ) { //this file has not previously been written out
+    if ( 1 == *(file_flag+iregion) ) { //this file been written read
       *(position_data+iregion) = ftell( save_area->reg_lu[iregion]);
       fseek( save_area->reg_lu[iregion], *(position_filename+iregion), SEEK_SET );
       fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
@@ -2090,7 +2097,6 @@ void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *fil
       sprintf(lin," Input_file=%s (GSX_version:%s)", gsx->source_file, gsx->gsx_version);
       fwrite(lin,100,1,save_area->reg_lu[iregion]); 
       fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
-      *(file_flag+iregion) = 1;
       *(position_filename+iregion) = ftell( save_area->reg_lu[iregion]);
       fseek( save_area->reg_lu[iregion], *(position_data+iregion), SEEK_SET );
     }
