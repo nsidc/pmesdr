@@ -841,7 +841,6 @@ int main(int argc,char *argv[])
 	      }
 	      }
 	      label_3400:; /* end of regions loop */
-	      write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
 	    }
 	    /* At the end of the regions loop, check to see if any file names need to be writte out */
 	    
@@ -2074,7 +2073,7 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
  * Input:
  *   gsx structure - holds the filename and the version
  *   save_area - contains the information on the open output setup files
- *   file_flag - keeps track of whether or not a filename has already been written out to the file
+ *   file_flag - keeps track of whether or not a filename was used for that projection
  *   position_filename - keeps track of the place to write the next filename in each region's setup file
  *   position_data - keeps track of the place from which to continue writing out data in each region's setup file
  *
