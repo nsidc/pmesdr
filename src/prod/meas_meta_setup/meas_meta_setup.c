@@ -835,9 +835,9 @@ int main(int argc,char *argv[])
 	      }
 	      }
 	      label_3400:; /* end of regions loop */
+	      write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
 	    }
 	    /* At the end of the regions loop, check to see if any file names need to be writte out */
-	    write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
 	    
 	  }  /* end of measurements loop */
 	label_350:; /* end of scan loop */
