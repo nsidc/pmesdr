@@ -613,7 +613,7 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
       }
 
      /* Only need to save the name of the setup file */
-      sprintf(setname,"%c%c%c%c-%3s%2d-%03d-%03d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend);
+      sprintf(setname,"%c%c%c%c-%3s%02d-%03d-%03d.setup",sen,cegg,chan,cpol,reg,iy,dstart,dend);
       /* there are no longer product file names to write out to the meta file, however, the logic of the
        * setup program requries the Begin_ and End_product_file_names tags */
     fprintf(mout,"  Setup_file=%s\n",setname);
