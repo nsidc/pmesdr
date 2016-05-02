@@ -129,7 +129,9 @@ typedef struct { /* BYU region information storage */
 /* BYU SSM/I approximate spatial response computation */
 
 static float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajor, float semiminor);
-static void write_filenames_to_header( gsx_class *gsx, region_save *save_area );
+static void write_blanklines_to_header( region_save *save_area );
+static void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
+				       unsigned long *position_filename, unsigned long *position_data );
 static void write_end_header( region_save *save_area );
 static void write_header_info( gsx_class *gsx, region_save *save_area );
 static FILE * get_meta(char *mname, char *outpath, int *dstart, 
@@ -203,6 +205,11 @@ int main(int argc,char *argv[])
   int iadd1, box_size;
   float b_correct, angle_ref;
 
+  /* file position pointers */
+  unsigned long *position_filename;
+  unsigned long *position_data;
+  int *file_flag=NULL;
+  
   /* memory for storage of pixel locations */
   int nregions,*noffset;
   short int *latlon_store;
@@ -334,6 +341,21 @@ int main(int argc,char *argv[])
   flag=1;              /* end flag */
   nfile=0;             /* L1B input file counter */
 
+  /* Before running through the list of input files, save the file position for each setup output region */
+  status = utils_allocate_clean_aligned_memory( (void**)&position_filename, save_area.nregions*sizeof(long int) );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Couldn't allocate memory for file name position variables\n", __FILE__ );
+    exit (-1);
+  }
+  status = utils_allocate_clean_aligned_memory( (void**)&position_data, save_area.nregions*sizeof(long int) );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Couldn't allocate memory for file data position variables\n", __FILE__ );
+    exit (-1);
+  }
+  for ( iregion = 0; iregion < save_area.nregions; iregion++ ) {
+    *(position_filename+iregion) = ftell( save_area.reg_lu[iregion] );
+  }
+    
   /* Run through all of the input data files so that a list of them can be written out to the setup file */
   while(flag) { 
     
@@ -363,7 +385,7 @@ int main(int argc,char *argv[])
 	strcpy(fname, ftempname);
 	no_trailing_blanks(fname);    
         gsx = gsx_init( fname );
-	write_filenames_to_header( gsx, &save_area );
+	write_blanklines_to_header( &save_area );
 	status = utils_allocate_clean_aligned_memory( (void**)&gsx_fname[nfile], strlen(fname)+1 );
 	if ( 0 != status ) {
 	  fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
@@ -385,7 +407,7 @@ int main(int argc,char *argv[])
   }
   
   for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
-    
+
   label_330:; /* read next file name from list gsx_fname */
     /* before reading in the next file, free the memory from the previous gsx pointer */
     if ( NULL != gsx ) {
@@ -393,6 +415,19 @@ int main(int argc,char *argv[])
       gsx = NULL;
     }
     strcpy(fname, gsx_fname[infile]);
+
+    /* initialize the flag_file list for each region in this setup run */
+    if ( NULL != file_flag ) {
+      free( file_flag );
+      file_flag = NULL;
+    }
+    status = utils_allocate_clean_aligned_memory( (void**)&file_flag, sizeof(int)*(save_area.nregions) );
+    if ( 0 != status ) {
+      fprintf( stderr, "%s: Unable to allocate memory for file_flag array\n", __FILE__ );
+      exit (-1);
+    } else {
+      fprintf( stderr, "%s: file_flag allocated\n", __FILE__ );
+    }
   
     /* initialize last spacecraft latitude */
     sc_last_lat=-1.e25;
@@ -418,6 +453,9 @@ int main(int argc,char *argv[])
       if ( CETB_AQUA == cetb_platform ) {
 	combine_setup_files( &save_area, 1 );
       }
+      fprintf( stderr, "%s: First file to be read\n", __FILE__ );
+    } else {
+      fprintf( stderr, "%s: Subsequent file to be read\n", __FILE__ );
     }
 
     /* Here is where you loop through all of the different measurement sets in the file */
@@ -539,7 +577,7 @@ int main(int argc,char *argv[])
 	  if (xlow_lon  >  180.0) xlow_lon =(float)(xlow_lon -360.0);
 	  if (xlow_lon  < -180.0) xlow_lon =(float)(xlow_lon +360.0);
 
-	  /* here test for AMSRE that doesn't have sc_lat and sc_lon and get asc desc flag from file name */
+	  /* here test for AMSRE that doesn't have spacecraft position and get asc desc flag from gsx variable */
 	  /* set asc/dsc flag for measurements */
 	  if ( CETB_AMSRE != gsx->short_sensor ) {
 	    if (*(gsx->sc_latitude[loc]+iscan)-sc_last_lat < 0.0 ) 
@@ -798,6 +836,9 @@ int main(int argc,char *argv[])
 	      }
 	      label_3400:; /* end of regions loop */
 	    }
+	    /* At the end of the regions loop, check to see if any file names need to be writte out */
+	    write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
+	    
 	  }  /* end of measurements loop */
 	label_350:; /* end of scan loop */
 	}
@@ -826,7 +867,7 @@ int main(int argc,char *argv[])
                /* input file loop */
     fprintf( stderr, "Done with setup records %d %d\n",irec,krec);
     free( gsx_fname[infile] );
-  }
+  } /* input file read loop 1050 */
 
   /* close output setup files */
   for (j=0; j<save_area.nregions; j++) {
@@ -2026,25 +2067,59 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
  * Input:
  *   gsx structure - holds the filename and the version
  *   save_area - contains the information on the open output setup files
+ *   file_flag - keeps track of whether or not a filename has already been written out to the file
+ *   position_filename - keeps track of the place to write the next filename in each region's setup file
+ *   position_data - keeps track of the place from which to continue writing out data in each region's setup file
  *
  * Return:
- *   0 on success, 1 on failure
+ *   None
  */
-void write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
+void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
+				unsigned long *position_filename, unsigned long *position_data ) {
   int cnt=100;
   char lin[100];
   int z;
   int iregion;
 
-  for ( iregion=1; iregion<=save_area->nregions; iregion++ ) { 
-     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); 
+  for ( iregion=0; iregion<save_area->nregions; iregion++ ) {
+    if ( 0 == *(file_flag+iregion) ) { //this file has not previously been written out
+      *(position_data+iregion) = ftell( save_area->reg_lu[iregion]);
+      fseek( save_area->reg_lu[iregion], *(position_filename+iregion), SEEK_SET );
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
+      for(z=0;z<100;z++)lin[z]=' '; 
+      sprintf(lin," Input_file=%s (GSX_version:%s)", gsx->source_file, gsx->gsx_version);
+      fwrite(lin,100,1,save_area->reg_lu[iregion]); 
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
+      *(file_flag+iregion) = 1;
+      *(position_filename+iregion) = ftell( save_area->reg_lu[iregion]);
+      fseek( save_area->reg_lu[iregion], *(position_data+iregion), SEEK_SET );
+    }
+  } 
+}
+
+/* write_blanklines_to_header - writes a blank line for each filename in the metafile
+ * during processing we loop through each file and each output region and only then go back
+ * to write out the filename if we use measurements from the file.
+ *
+ * Input:
+ *   gsx structure - holds the filename and the version
+ *   save_area - contains the information on the open output setup files
+ *
+ * Return:
+ *   0 on success, 1 on failure
+ */
+void write_blanklines_to_header( region_save *save_area ) {
+  int cnt=100;
+  char lin[100];
+  int z;
+  int iregion;
+
+  for ( iregion=0; iregion<save_area->nregions; iregion++ ) { 
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
      for(z=0;z<100;z++)lin[z]=' '; 
-     sprintf(lin," Input_file=%s (GSX_version:%s)", gsx->source_file, gsx->gsx_version);
-     fwrite(lin,100,1,save_area->reg_lu[iregion-1]); 
-     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+     fwrite(lin,100,1,save_area->reg_lu[iregion]); 
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
    } 
-  fprintf( stderr, "****%s, source file %s, gsx_version %s\n", __FUNCTION__, gsx->source_file, gsx->gsx_version );
-  fprintf( stderr, "****%s, last line written%s\n", __FUNCTION__, lin );
 }
 /*
  * write_end_header - writes out the End_file line that is used in sir and bgi
