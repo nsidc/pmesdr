@@ -58,9 +58,8 @@ extern void ease2_map_info(int iopt, int isc, int ind,
 			   double *r0, double *s0, double *epsilon);
 
 /****************************************************************************/
-/* note: program is designed to be run from command line OR interactively 
+/* note: program is designed to be run from command line and NOT interactively
 */
-
 
 int main(int argc,char *argv[])
 {
@@ -75,18 +74,18 @@ int main(int argc,char *argv[])
   FILE *mout;
 
   
-  printf( "MEaSures Meta_Make Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
+  fprintf( stderr, "%s: MEaSures Meta_Make Program\nProgram: %s  Version: %f\n\n", __FILE__, prog_name,prog_version);
 
   if (argc < 8) {
-    printf( "\nusage: %s meta_name platform start_day stop_day year def in_list\n\n",argv[0]);
-    printf( " input parameters:\n");
-    printf( "   meta_name   = meta file output name\n");
-    printf( "   platform    = name of the platform as cetb_platform_id (from cetb.h)\n");
-    printf( "   start_day   = start day\n");
-    printf( "   end_day     = end day\n");
-    printf( "   year        = year input\n");
-    printf( "   def         = region def file \n");
-    printf( "   in_list     = name of input file containing list of swath files\n\n");
+    fprintf( stderr, "\n%s: usage: %s meta_name platform start_day stop_day year def in_list\n\n", __FILE__, argv[0] );
+    fprintf( stderr, " %s: input parameters:\n", __FILE__ );
+    fprintf( stderr, "   %s: meta_name   = meta file output name\n", __FILE__ );
+    fprintf( stderr, "   %s: platform    = name of the platform as cetb_platform_id (from cetb.h)\n", __FILE__ );
+    fprintf( stderr, "   %s: start_day   = start day\n", __FILE__ );
+    fprintf( stderr, "   %s: end_day     = end day\n", __FILE__ );
+    fprintf( stderr, "   %s: year        = year input\n", __FILE__ );
+    fprintf( stderr, "   %s: def         = region def file \n", __FILE__ );
+    fprintf( stderr, "   %s: in_list     = name of input file containing list of swath files\n\n", __FILE__ );
     exit (-1);
   }
 
@@ -96,7 +95,7 @@ int main(int argc,char *argv[])
 
   /* get meta file name */
   sscanf(argv[argn],"%s",mname);
-  fprintf( stderr, "\nMetafile name: %s \n",mname);
+  fprintf( stderr, "%s: Metafile name: %s \n", __FILE__,mname);
   argn++;  
 
   /* get satellite number as a cetb_platform_id enum */
@@ -111,16 +110,16 @@ int main(int argc,char *argv[])
     Fn++;
   }
   if (F_num<=CETB_NO_PLATFORM || F_num>=CETB_NUM_PLATFORMS) {
-    fprintf( stderr,"*** error decoding platform number: %s \n",platform );
+    fprintf( stderr, "%s: *** error decoding platform number: %s \n", __FILE__, platform );
     exit(-1);
   }
-  fprintf( stderr, "\nPlatform number: %s %s \n",platform,cetb_platform_id_name[F_num]);
+  fprintf( stderr, "%s: Platform number: %s %s \n", __FILE__, platform, cetb_platform_id_name[F_num] );
 
   /* open output meta file and write header */
-  fprintf( stderr, "Opening meta output file %s\n",mname);
+  fprintf( stderr, "%s: Opening meta output file %s\n", __FILE__, mname);
   mout=fopen(mname,"w");
   if (mout==NULL) {
-    fprintf(stderr,"*** could not open output meta file: %s\n",mname);
+    fprintf( stderr, "%s: *** could not open output meta file: %s\n", __FILE__, mname);
     exit(-1);
   }
   fprintf(mout,"File=%s\n",mname);
@@ -137,8 +136,8 @@ int main(int argc,char *argv[])
 
   /* close output files */
   fclose(mout);
-  fprintf( stderr, "Finished writing meta file %s\n",mname);
-  fprintf( stderr, "\nAll done\n");
+  fprintf( stderr, "%s: Finished writing meta file %s\n", __FILE__, mname);
+  fprintf( stderr, "%s: All done\n", __FILE__ );
 
   exit( 0 );
 
@@ -163,10 +162,10 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
 
   if (lname[0]!='\0') { /* read file names from input list file */
     /* open input list file */
-    fprintf( stderr, "Opening input list file %s\n",lname);
+    fprintf( stderr, "%s: Opening input list file %s\n", __FUNCTION__, lname);
     Lfile=fopen(lname,"r");
     if (Lfile==NULL) {
-      fprintf(stderr,"*** could not open input list file %s\n",lname);
+      fprintf( stderr, "%s: *** could not open input list file %s\n", __FUNCTION__, lname);
       exit(-1);
     }
 
@@ -178,7 +177,6 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
 	break;
       } else if (line[0]!='\0' && strlen(line)>1) {
 	fprintf(mout," Input_file=%s",line);
-	fprintf(stdout,"Input_file=%s",line);
 	count++;
       } else
 	last=0;
@@ -190,7 +188,7 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
 
   fprintf(mout,"End_input_file_list\n");
 
-  fprintf( stderr, "Total number of input files: %d\n",count);
+  fprintf( stderr, "%s: Total number of input files: %d\n", __FUNCTION__, count);
   return(0);
 }
   
@@ -207,13 +205,13 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
   /* try to get environment variable */
   p=getenv("SIR_region");
   if (p==NULL) {
-    fprintf( stderr, "*** standard regions environment variable 'SIR_region' not defined!\n");    
+    fprintf( stderr, "%s: *** standard regions environment variable 'SIR_region' not defined!\n", __FUNCTION__ );    
     p=rname; /* use default if environment variable not available */
   }  
 
   FILE *rid=fopen(p,"r");
   if (rid==NULL) {
-    fprintf(stderr,"*** could not open standard regions file %s\n",p);
+    fprintf( stderr, "%s: *** could not open standard regions file %s\n", __FUNCTION__, p);
     exit(-1);
   }
 
@@ -225,7 +223,7 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
   do {
     /* read line of input file and check */
     if (fgets(line,180,rid) == NULL || regnum1==9999 || regnum1==0) {
-      fprintf(stderr,"*** region %d not found in %s\n",regnum,p);
+      fprintf( stderr, "%s: *** region %d not found in %s\n", __FUNCTION__, regnum,p);
       exit(-1);
       last=0;
     }	
@@ -235,7 +233,7 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
     strncpy(regname,s,10);
     regname[10]='\0';
     if (regnum1 == 9999 || regnum1 == 0) {
-      fprintf(stderr,"*** region %d not found in %s\n",regnum,p);
+      fprintf( stderr, "%s: *** region %d not found in %s\n", __FUNCTION__, regnum, p );
       exit(-1);
       last=0;
     }	
@@ -250,33 +248,6 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
 }
 
 /* utility routines */
-
-static int get_prompt_iarg(int argc, int *argn, char *argv[], char *prompt, int deflt)
-{
-  static char line[120];
-  int val=deflt;  
-
-  if (*argn > argc || argv[*argn] == NULL) {
-    printf("%s ",prompt);
-    fgets(line,sizeof(line),stdin);
-    sscanf(line,"%d",&val);
-  } else
-    sscanf(argv[*argn],"%d",&val);
-  (*argn)++;
-
-  return(val);
-}
-
-static char *get_prompt_sarg(int argc, int *argn, char *argv[], char *prompt, char *buff, int blen)
-{
-  if (*argn > argc || argv[*argn] == NULL) {
-    printf("%s ",prompt);
-    fgets(buff,blen,stdin);
-  } else
-    strncpy(buff,argv[*argn],blen);
-  (*argn)++;
-  return(buff);
-}
 
 /* routine that reads the input args and generates region definitions */
 
@@ -316,13 +287,16 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
   fprintf(mout,"Egg_or_slice=%d\n",negg);
 
   /* read time period information */
-  dstart=get_prompt_iarg(argc,argn,argv,"Enter starting day: ",1);
-  dend=get_prompt_iarg(argc,argn,argv,"Enter ending day: ",1);
-  year=get_prompt_iarg(argc,argn,argv,"Enter year (XXXX): ",1997);
+  sscanf( argv[*argn], "%d", &dstart );
+  (*argn)++;
+  sscanf( argv[*argn], "%d", &dend );
+  (*argn)++;
+  sscanf( argv[*argn], "%d", &year );
+  (*argn)++;
   mstart=0;  /* start minute of day */
   mend=1440; /* end minute of day */
 
-  fprintf( stderr, "Input day range %d to %d year %d\n",dstart,dend,year);
+  fprintf( stderr, "%s: Input day range %d to %d year %d\n", __FUNCTION__, dstart, dend, year );
   
   /* write to meta file */ 	
   fprintf(mout,"Begin_description\n");	 
@@ -355,18 +329,19 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
   fprintf(mout," Median_filter=%c\n", TF[median_flag]);
 
   /* read region parameters definition file name */
-  (void) get_prompt_sarg(argc,argn,argv,"Enter region parameters file name: (NONE for manual input)",rfile, sizeof(rfile));
-  fprintf( stderr, "rfile=%s  %d\n",rfile,strncmp(rfile,"NONE",4));  
+  strncpy( rfile, argv[*argn], sizeof( rfile ) );
+  (*argn)++;
+  fprintf( stderr, "%s: rfile=%s  %d\n", __FUNCTION__, rfile, strncmp(rfile,"NONE",4) );  
  
   pfile=TRUE;
   fprintf(mout," Region_parameters_file=%s\n",rfile);
   pid=fopen(rfile,"r");
   if (pid==NULL) {
-    fprintf(stderr,"*** could not open region parameters file: %s\n",rfile);
+    fprintf( stderr, "%s: *** could not open region parameters file: %s\n", __FUNCTION__, rfile );
     exit(-1);      
   }
   fscanf(pid,"%d",&nregions);
-  fprintf( stderr, "Number of regions: %d\n",nregions);
+  fprintf( stderr, "%s: Number of regions: %d\n", __FUNCTION__, nregions);
   fprintf(mout," Num_Regions=%2d\n",nregions);
   
   /* for each region, read in the parameters that define the region 
@@ -379,31 +354,32 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
     /* region ID number */ 
 
     fscanf(pid,"%d",&regnum);
-    fprintf( stderr, "Region %d number: %d\n",iregion,regnum);
+    fprintf( stderr, "%s: Region %d number: %d\n", __FUNCTION__, iregion, regnum );
     
     /* define region, using auto definition if possible */
     strncpy(regname,"Custom",10);
     if (regnum > 0) { /* use region definition from standard region definition file */
       getregdata(regnum,&iproj,&dateline,&latl,&lonl,&lath,&lonh,regname);
       if (((regnum >= 0) && (regnum < 100)) || (regnum >= 120)) poleflag=0; /* non-polar area */
-      fprintf( stderr, "Region name: '%s'  Def Proj %d  Dateline %d\n",regname,iproj,dateline);
+      fprintf( stderr, "%s: Region name: '%s'  Def Proj %d  Dateline %d\n",
+	       __FUNCTION__, regname, iproj, dateline );
     } else {
-      fprintf( stderr, " Region is not defined and out of bounds " );
+      fprintf( stderr, "%s: Region is not defined and out of bounds\n", __FUNCTION__ );
       exit(-1);
     }
     
     /* print region ID number and bounding box info */
-    fprintf( stderr, "\nRegion definition information\n");
-    fprintf( stderr, "  Latitude range:  %f %f\n",latl,lath);
-    fprintf( stderr, "  Longitude range: %f %f\n",lonl,lonh);
-    fprintf( stderr, "  Region polar code (0=arbitrary, 1=N pol, 2=S pole: %d\n",poleflag);
+    fprintf( stderr, "%s: Region definition information\n", __FUNCTION__ );
+    fprintf( stderr, "%s:  Latitude range:  %f %f\n", __FUNCTION__, latl, lath );
+    fprintf( stderr, "%s:  Longitude range: %f %f\n", __FUNCTION__, lonl, lonh );
+    fprintf( stderr, "%s:  Region polar code (0=arbitrary, 1=N pol, 2=S pole: %d\n", __FUNCTION__, poleflag );
     if (dateline) {
-      fprintf( stderr, "  Region crosses dateline\n");
+      fprintf( stderr, "%s:  Region crosses dateline\n", __FUNCTION__ );
       maplxlon=min(lonh,lonl);
       maprxlon=max(lonh,lonl);
       lonl=maplxlon;
       lonh=maprxlon;
-      fprintf( stderr, "  Corrected longitude range: %f %f\n",lonl,lonh);
+      fprintf( stderr, "%s:  Corrected longitude range: %f %f\n", __FUNCTION__, lonl, lonh );
     }
      
     /* write region ID number and bound box info to meta file */
@@ -423,7 +399,7 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
     projt=iproj;  /* default value from region definition file */
     /* This version of meas_meta_make only does EASE2-N, -S, -T */
     if ( projt > 10 || projt < 8 ) {
-      fprintf( stderr, "Only acceptable projections are 308, 309, 310, EASE2-N, -S, -T\n" );
+      fprintf( stderr, "%s: Only acceptable projections are 308, 309, 310, EASE2-N, -S, -T\n", __FUNCTION__ );
       exit(-1);
     }
     /* projection codes 
@@ -465,19 +441,19 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
       break;
 
     default:
-      fprintf(stderr,"*** Error selecting projection type %d ***\n", projt);
+      fprintf(stderr,"%s: *** Error selecting projection type %d ***\n", __FUNCTION__, projt );
       exit(-1);      
     }
   
     /* select ascending/descending data */
     iasc=0;
     fscanf(pid,"%d",&iasc);
-    fprintf( stderr, "Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) %d\n",iasc);
+    fprintf( stderr, "%s: Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) %d\n", __FUNCTION__, iasc );
     fprintf(mout,"  AscDesc_flag=%2d\n",iasc);
 
     /* Selection is based on whichever platform is specified on the input */
     fscanf(pid,"%d",&ibeam);
-    fprintf( stderr, "Beam index (1=19H,2=19V,3=22V,4=37H,5=37V,6=85H,7=85V): %d\n",ibeam);
+    fprintf( stderr, "%s: Beam index (1=19H,2=19V,3=22V,4=37H,5=37V,6=85H,7=85V): %d\n", __FUNCTION__, ibeam );
     ipolar=0;   /* h pol */
     if (ibeam==2 || ibeam==3 || ibeam==5 || ibeam==7) ipolar=1; /* v pol */
     fprintf(mout,"  Polarization=%d\n",ipolar);
@@ -493,8 +469,8 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
     non_size=(1 << (nease) );
  
     if (non_size*(nsx/non_size) != nsx || non_size*(nsy/non_size) != nsy) {
-      fprintf(stderr,"*** warning: non grid size parameter %d does not evenly divide image size: %d %d\n",non_size,nsx,nsy);
-      fprintf(stdout,"*** warning: non grid size parameter %d does not evenly divide image size: %d %d\n",non_size,nsx,nsy);
+      fprintf(stderr,"%s: *** warning: non grid size parameter %d does not evenly divide image size: %d %d\n",
+	      __FUNCTION__, non_size, nsx, nsy );
     }
 
     /* optionally section region in to smaller images for processing.  They will be recombined later */
@@ -527,8 +503,10 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
       /* generate parameters for non-enhanced gridded images */
       nsx2=nsx/non_size;
       nsy2=nsy/non_size;
-      if (non_size*nsx2 != nsx || non_size*nsy2 != nsy)
-	fprintf(stderr,"*** WARNING: non grid size %d ' does not evenly divide image size %d %d\n",non_size,nsx,nsy);
+      if (non_size*nsx2 != nsx || non_size*nsy2 != nsy) {
+	fprintf( stderr, "%s: *** WARNING: non grid size %d ' does not evenly divide image size %d %d\n",
+		 __FUNCTION__, non_size, nsx, nsy );
+      }
       ascale2=ascale;
       bscale2=bscale;
       if (projt==8 || projt==9 || projt==10) { /* EASE2 */
@@ -536,7 +514,8 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
       } else {
 	nsx2=nsx;
 	nsy2=nsy;
-	fprintf(stderr,"*** WARNING: Projection type can not generate Non-enhanced parameters ***\n");
+	fprintf( stderr, "%s: *** WARNING: Projection type can not generate Non-enhanced parameters ***\n",
+		 __FUNCTION__ );
       }
 
       /* write grid projection info to meta file */
@@ -632,7 +611,7 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
   
   if (pfile) fclose(pid);
 	      
-  fprintf( stderr, "\nTotal regional images: %d Regions: %d\n", ircnt,nregions);
+  fprintf( stderr, "%s: Total regional images: %d Regions: %d\n", __FUNCTION__, ircnt, nregions );
   return(err);  
 
 }

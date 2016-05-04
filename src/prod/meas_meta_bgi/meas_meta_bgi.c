@@ -29,6 +29,10 @@
 #include "nr.h"
 #include "nrutil.h"
 
+/* The following pragma supresses the icc warning regarding the order in which operands are
+ * evaluated.  This appears to be a known issue with this compiler
+ * See https://software.intel.com/en-us/forums/intel-c-compiler/topic/308661 for example
+ */
 #ifdef JANUSicc
 #pragma warning (disable:981)
 #endif
@@ -49,7 +53,6 @@ static void dludcmp(double **a, int n, int *indx, double *d);
 
 /* some variables and their default values */
 
-float a_init=180.0;           /* initial A (TB) value */
 int   nits=30;                /* number of SIR iterations */
 char  sensor_in[40];          /* sensor description string */
 int   MAXFILL=1000;           /* maximum number of pixels in response */
@@ -175,18 +178,18 @@ int main(int argc, char **argv)
 							   CETB_TB_ADD_OFFSET, tb_missing_value ) );
 /* begin program */  
 
-  printf("BYU SSM/I meta BG program: C version %f\n",VERSION);
+  fprintf( stderr, "%s: BYU SSM/I meta BG program: C version %f\n", __FILE__, VERSION);
 
   if (argc < 3) {
-    printf("\nusage: %s setup_in outpath gamma delta2 ithres\n\n",argv[0]);
-    printf(" input parameters:\n");
-    printf("   setup_in = input setup file\n");
-    printf("   outpath  = output path\n");
-    printf("   gamma    = BGI gamma parameter\n");
-    printf("   delta2   = BGI delta2 (noise variance)\n");
-    printf("   ithres   = gain threshold (in normal space)\n");
-    printf("   difthres = BGI-AVE Q/A threshold\n");
-    printf("   mflag    = median filter if 1, do not run if 0, default is 1 for BGI\n");
+    fprintf( stderr, "%s: \nusage: %s setup_in outpath gamma delta2 ithres\n\n", __FILE__, argv[0]);
+    fprintf( stderr, "%s:  input parameters:\n", __FILE__ );
+    fprintf( stderr, "%s:    setup_in = input setup file\n", __FILE__ );
+    fprintf( stderr, "%s:    outpath  = output path\n", __FILE__ );
+    fprintf( stderr, "%s:    gamma    = BGI gamma parameter\n", __FILE__ );
+    fprintf( stderr, "%s:    delta2   = BGI delta2 (noise variance)\n", __FILE__ );
+    fprintf( stderr, "%s:    ithres   = gain threshold (in normal space)\n", __FILE__ );
+    fprintf( stderr, "%s:    difthres = BGI-AVE Q/A threshold\n", __FILE__ );
+    fprintf( stderr, "%s:    mflag    = median filter if 1, do not run if 0, default is 1 for BGI\n", __FILE__ );
     return(-1);
   }
   file_in=argv[1];
@@ -206,7 +209,8 @@ int main(int argc, char **argv)
   if (argc > 6) sscanf(argv[6],"%f",&difthres);
   /* (more later) */
 
-  fprintf( stderr, "BGI options: omega=%f gamma=%lf delta2=%f gain thres=%f difthres=%f\n",omega, bgi_gamma, delta2, ithres, difthres);
+  fprintf( stderr, "%s: BGI options: omega=%f gamma=%lf delta2=%f gain thres=%f difthres=%f\n",
+	   __FILE__ ,omega, bgi_gamma, delta2, ithres, difthres);
 
   /* get input file size */
   fseek(imf, 0L, REL_EOF);
@@ -276,15 +280,19 @@ int main(int argc, char **argv)
 
    /* file header read completed, summarize */
    fprintf( stderr, "%s:\nInput file header info: '%s'\n", __FILE__, file_in );
-   fprintf( stderr, "  Year, day range: %d %d - %d\n",iyear,isday,ieday);
-   fprintf( stderr, "  Image size: %d x %d = %d   Projection: %d\n",nsx,nsy,nsx*nsy,iopt);
-   fprintf( stderr, "  Origin: %f,%f  Span: %f,%f\n",a0,b0,xdeg,ydeg);
-   fprintf( stderr, "  Scales: %f,%f  Pol: %d  Reg: %d\n",ascale,bscale,ipol,iregion);
-   fprintf( stderr, "  Region: '%s'   Records: %d\n",regname,irecords);
-   fprintf( stderr, "  Corners: LL %f,%f UR %f,%f\n",latl,lonl,lath,lonh);
-   fprintf( stderr, "  Grid size: %d x %d = %d  Scales %d %d\n",nsx2,nsy2,nsx2*nsy2,non_size_x,non_size_y);
-   fprintf( stderr, "  Grid Origin: %f,%f  Grid Span: %f,%f\n",a02,b02,xdeg2,ydeg2);
-   fprintf( stderr, "  Grid Scales: %f,%f\n",ascale2,bscale2);
+   fprintf( stderr, "  %s: Year, day range: %d %d - %d\n", __FILE__, iyear,isday,ieday);
+   fprintf( stderr, "  %s: Image size: %d x %d = %d   Projection: %d\n",
+	    __FILE__ , nsx,nsy,nsx*nsy,iopt);
+   fprintf( stderr, "  %s: Origin: %f,%f  Span: %f,%f\n", __FILE__ , a0,b0,xdeg,ydeg);
+   fprintf( stderr, "  %s: Scales: %f,%f  Pol: %d  Reg: %d\n",
+	    __FILE__ , ascale,bscale,ipol,iregion);
+   fprintf( stderr, "  %s: Region: '%s'   Records: %d\n", __FILE__ , regname,irecords);
+   fprintf( stderr, "  %s: Corners: LL %f,%f UR %f,%f\n", __FILE__ , latl,lonl,lath,lonh);
+   fprintf( stderr, "  %s: Grid size: %d x %d = %d  Scales %d %d\n",
+	    __FILE__ , nsx2,nsy2,nsx2*nsy2,non_size_x,non_size_y);
+   fprintf( stderr, "  %s: Grid Origin: %f,%f  Grid Span: %f,%f\n",
+	    __FILE__ , a02,b02,xdeg2,ydeg2);
+   fprintf( stderr, "  %s: Grid Scales: %f,%f\n", __FILE__ , ascale2,bscale2);
    fprintf( stderr, "\n");
 
    /* read output file names and misc variables
@@ -296,20 +304,15 @@ int main(int argc, char **argv)
 
    end_flag = 0;
    do {
-     
+
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(70);
      if (fread(line,   sizeof(char), 100, imf) == 0) Ferror(71);
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(72);
 
-     if (strstr(line,"A_initialization") != NULL) {
-       x = strchr(line,'=');
-       a_init= (float) atof(++x) ;
-     }
-
      if (strstr(line,"Beam_code") != NULL) {
        x = strchr(line,'=');
        ibeam=atoi(++x);
-       fprintf( stderr, "Beam code %d\n",ibeam);
+       fprintf( stderr, "%s: Beam code %d\n", __FILE__ , ibeam);
      }
 
      if (strstr(line,"Max_Fill") != NULL) {
@@ -320,38 +323,38 @@ int main(int argc, char **argv)
      if ( strstr( line, " Producer_id" ) != NULL ) {
        x = strchr( line,'=' );
        swath_producer_id = ( cetb_swath_producer_id )atoi(++x);
-       fprintf( stderr, "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
+       fprintf( stderr, "%s: Producer_id %s\n", __FILE__, cetb_swath_producer_id_name[ swath_producer_id ] );
      }
 
      if ( strstr( line, " Platform_id" ) != NULL ) {
        x = strchr( line,'=' );
        platform_id = ( cetb_platform_id )atoi(++x);
-       fprintf( stderr, "Platform_id %s\n", cetb_platform_id_name[ platform_id ] );
+       fprintf( stderr, "%s: Platform_id %s\n", __FILE__, cetb_platform_id_name[ platform_id ] );
      }
 
      if ( strstr( line, " Sensor_id" ) != NULL ) {
        x = strchr( line,'=' );
        sensor_id = ( cetb_sensor_id )atoi(++x);
-       fprintf( stderr, "Sensor_id %s\n", cetb_sensor_id_name[ sensor_id ] );
+       fprintf( stderr, "%s: Sensor_id %s\n", __FILE__, cetb_sensor_id_name[ sensor_id ] );
      }
 
      if ( strstr( line, " Pass_direction" ) != NULL ) {
        x = strchr( line,'=' );
        direction_id = ( cetb_direction_id )atoi(++x);
-       fprintf( stderr, "Direction_id %s\n", cetb_direction_id_name[ direction_id ] );
+       fprintf( stderr, "%s: Direction_id %s\n", __FILE__, cetb_direction_id_name[ direction_id ] );
      }
 
 
      if (strstr(line,"Response_Multiplier") != NULL) {
        x = strchr(line,'=');
-       fprintf( stderr, "Wscale %f\n",wscale);
+       fprintf( stderr, "%s: Wscale %f\n", __FILE__,wscale);
      }
 
      if (strstr(line,"Sensor") != NULL) {
        x = strchr(line,'=');
        strncpy(sensor_in,++x,40);
        no_trailing_blanks(sensor_in);
-       fprintf( stderr, "Sensor '%s'\n",sensor_in);
+       fprintf( stderr, "%s: Sensor '%s'\n", __FILE__,sensor_in);
      }
 
      if ((x = strchr(line+4,' ')) != NULL) *x='\0'; /* truncate off any trailing spaces */
@@ -364,7 +367,7 @@ int main(int argc, char **argv)
        }
        if (strstr(x,"F") != NULL || strstr(x,"f") != NULL)
 	 HASAZANG=0;
-       fprintf( stderr, "Has azimuth angle: %d\n",HASAZANG);       
+       fprintf( stderr, "%s: Has azimuth angle: %d\n", __FILE__, HASAZANG );       
      }
 
      if (strstr(line,"End_header") != NULL) {
@@ -391,20 +394,18 @@ int main(int argc, char **argv)
 			  CETB_BGI,
 			  swath_producer_id );
    if ( !cetb ) {
-     fprintf( stderr, "%s: Error initializing cetb_file.\n", __FUNCTION__ );
+     fprintf( stderr, "%s: Error initializing cetb_file.\n", __FILE__ );
      exit( -1 );
    }
 
    if ( 0 != cetb_file_open( cetb ) ) {
-     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FUNCTION__, cetb->filename );
+     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__, cetb->filename );
      exit( -1 );
    }
      
    head_len = ftell(imf);
-   fprintf( stderr, "%s: Input header file length %ld\n", __FUNCTION__, head_len);
+   fprintf( stderr, "%s: Input header file length %ld\n", __FILE__, head_len);
    nls=nls-head_len;
-
-   fflush(stdout);
 
 /* header read completed, now determine how much program memory to allocate */
 
@@ -451,14 +452,14 @@ int main(int argc, char **argv)
   nbyte = 0;        /* file size in bytes */
   store=space;      /* storage pointer */
   
-  fprintf( stderr, "Begin setup file copy into memory\n");
+  fprintf( stderr, "%s: Begin setup file copy into memory\n", __FILE__ );
   while (fread(&dumb, sizeof(int), 1, imf) != 0) {
 
      /*5 items at 4 bytes each: 20 bytes if no azimuth angle */
      /*6 items at 4 bytes each: 24 bytes if azimuth angle */
      if (nbyte+HS < nspace) {
        	if ((dumb=fread(store, sizeof(char), HS, imf)) != HS) {
-          fprintf( stderr, " *** Error reading input file data at 180 %d\n",dumb);
+          fprintf( stderr, "%s: *** Error reading input file data at 180 %d\n", __FILE__, dumb);
 	  exit(-1);
         }
         if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
@@ -496,7 +497,6 @@ int main(int argc, char **argv)
 	   }
 	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(112);
 	} else {
-	  fprintf( stderr, "%s: *** out of storage space 1 *** %d\n", __FILE__, ncnt );
 	  fprintf( stderr, "%s: *** out of storage space 1 *** %d %ld %ld\n", __FILE__, ncnt, nbyte, nspace );
 	   exit(-1);
 	}
@@ -517,7 +517,6 @@ int main(int argc, char **argv)
 	   }
 	   if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1121);
 	} else {
-	  fprintf( stderr, "%s: *** out of storage space 2 *** %d\n", __FILE__, ncnt);
 	  fprintf( stderr,"%s: *** out of storage space 2 *** %d %ld %ld\n", __FILE__, ncnt, nbyte, nspace );
 	   exit(-1);
 	}
@@ -525,7 +524,6 @@ int main(int argc, char **argv)
 	nrec++;
 
      } else {
-       fprintf( stderr, "%s: *** out of storage space 3 *** %d\n", __FILE__, ncnt );
        fprintf( stderr, "%s: *** out of storage space 3 *** %d %ld\n", __FILE__, ncnt, nspace );
        exit(-1);
      }
@@ -535,7 +533,7 @@ int main(int argc, char **argv)
 
 /* print measurement file storage requirements */
 
-  ratio=(float)( 100.0 * (float) nbyte / (float) nls );
+  ratio = 100.f * ( (float) nbyte / (float) nls );
   fprintf( stderr, "%s:  Input file read into ram\n", __FILE__ );
   fprintf( stderr, "%s:  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
 	   __FILE__, nrec, ncnt, nbyte, nspace, ratio, 100.0*file_savings );
@@ -788,7 +786,7 @@ int main(int argc, char **argv)
 
       /* compute work vector */
 	for (i=1; i <= m; i++)
-	  work[i] =  ( cos(bgi_gamma) * v[i] ) + ( u[i] * ( (1.0 - ( cos(bgi_gamma)  * value1) )/value2 ) );
+	  work[i] =  ( cos(bgi_gamma) * v[i] ) + ( u[i] * ( (1.0 - ( cos(bgi_gamma)  * value1) ) / value2 ) );
       
       /* solve linear system z c = work [compute z^-1 work]  (destroyed in process) */
 	dlubksb(zc,m,ind,work);
@@ -802,7 +800,7 @@ int main(int argc, char **argv)
 	amin=a_val[its];
 
       /* simple Q/A test and replace for bad BGI estimates */
-        if (fabs(a_val[its] - tbave) > difthres)
+        if (abs((int)(a_val[its] - tbave)) > difthres)
 	  a_val[its]=(float) tbave;	
 
       /* set data to CETB_TB_MISSING_VALUE if it is OOR */
@@ -815,7 +813,7 @@ int main(int argc, char **argv)
     } 
   }
 
-  fprintf(stderr, "\n%s: Maximum hits above threshold: %d  max size: %d  thres %f\n", __FUNCTION__, nmax, mdim, ithres );
+  fprintf(stderr, "\n%s: Maximum hits above threshold: %d  max size: %d  thres %f\n", __FILE__, nmax, mdim, ithres );
 
   if (median_flag) { /* median filter image */
     fprintf( stderr, "%s: Applying Median Filter to BG image result\n", __FILE__ );    
@@ -844,15 +842,15 @@ int main(int argc, char **argv)
     
   if ( 0 != cetb_file_add_bgi_parameters( cetb, bgi_gamma, omega, delta2,
 					  ithres, difthres, median_flag ) ) {
-    fprintf( stderr, "%s: Error adding BGI parameters to %s.\n", __FUNCTION__, cetb->filename );
+    fprintf( stderr, "%s: Error adding BGI parameters to %s.\n", __FILE__, cetb->filename );
     exit( -1 );
   }
   cetb_file_close( cetb );
 
   if (errors == 0) {
-    fprintf( stderr, "%s: No errors encountered\n", __FUNCTION__ );
+    fprintf( stderr, "%s: No errors encountered\n", __FILE__ );
   } else {
-    fprintf( stderr, "%s: Processing errors encountered\n", __FUNCTION__ );
+    fprintf( stderr, "%s: Processing errors encountered\n", __FILE__ );
   }
   
   /* end of program */
@@ -1002,16 +1000,14 @@ float median(float array[], int count)
     temp=0.0;
     for (i=count/2-1; i <= count/2+3; i++)
       temp=temp+array[i-1];
-    temp=(float)(temp/5.0);
+    temp=temp/5.f;
   }
   return(temp);
 }
 
 void Ferror(int i)
 {
-  fprintf(stdout,"*** Error reading input file at %d ***\n",i);
-  fprintf(stderr,"*** Error reading input file at %d ***\n",i);
-  fflush(stdout);
+  fprintf(stderr, "%s: *** Error reading input file at %d ***\n", __FILE__, i );
   fflush(stderr);
   return;
 }
