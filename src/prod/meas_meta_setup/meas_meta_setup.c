@@ -31,6 +31,10 @@
 #define prog_version 0.3 /* program version */
 #define prog_name "meas_meta_setup"
 
+/* The following pragma supresses the icc warning regarding the order in which operands are
+ * evaluated.  This appears to be a known issue with this compiler
+ * See https://software.intel.com/en-us/forums/intel-c-compiler/topic/308661 for example
+ */
 #ifdef JANUSicc
 #pragma warning (disable:981)
 #endif
