@@ -331,7 +331,7 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
   /* read region parameters definition file name */
   strncpy( rfile, argv[*argn], sizeof( rfile ) );
   (*argn)++;
-  fprintf( stderr, "%s: rfile=%s  %d\n", __FUNCTION__, rfile, strncmp(rfile,"NONE",4) );  
+  fprintf( stderr, "%s: rfile=%s \n", __FUNCTION__, rfile );  
  
   pfile=TRUE;
   fprintf(mout," Region_parameters_file=%s\n",rfile);
@@ -516,6 +516,7 @@ static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int 
 	nsy2=nsy;
 	fprintf( stderr, "%s: *** WARNING: Projection type can not generate Non-enhanced parameters ***\n",
 		 __FUNCTION__ );
+
       }
 
       /* write grid projection info to meta file */
