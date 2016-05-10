@@ -41,7 +41,7 @@ char rname[] = "regiondef1.dat";  /* file defining region codes */
 
 /* function prototypes */
 
-static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int F_num );
+static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num );
 
 static int get_file_names(FILE *mout, int *argn, char *argv[]);
 
@@ -129,7 +129,7 @@ int main(int argc,char *argv[])
   fprintf(mout,"Sensor=%s\n",platform);
 
   /* get rest of input region parameters and write to file */
-  get_region_parms( mout,argc,&argn,argv,F_num );
+  get_region_parms( mout,&argn,argv,F_num );
 
   /* get list of input files and save to file */
   get_file_names(mout,&argn,argv);
@@ -251,7 +251,7 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
 
 /* routine that reads the input args and generates region definitions */
 
-static int get_region_parms( FILE *mout, int argc, int *argn, char *argv[], int F_num )
+static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num )
 {
   /* define meta regions and file sections  and write to meta and job files */
 

@@ -55,7 +55,6 @@ static int valid_resolution_factor( int factor );
 static int valid_sensor_id( cetb_sensor_id sensor_id );
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
 static int yyyydoy_to_days_since_epoch( int year, int doy,
-					const char *units,
 					double *days_since_epoch );
 
 /*********************************************************************
@@ -107,8 +106,8 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
 
   /* Convert the recon_str to lower case, so we find paths like "/.../bgiCSU" */
   recon_str = strdup( cetb_reconstruction_id_name[ reconstruction_id ] );
-  for ( i=0; i < strlen( recon_str ); i++ ) {
-    recon_str[i] = tolower( recon_str[i] );
+  for ( i=0; i < (int)strlen( recon_str ); i++ ) {
+    recon_str[i] = (char)tolower( recon_str[i] );
   }
   
   ptr = strstr( outpath, recon_str );
@@ -522,7 +521,7 @@ int cetb_file_add_var( cetb_file_class *this,
       
       for ( row=0; row<rows; row++ ) {
 	for ( i=0;i <cols; i++ ) {
-	  *( ushort_data + ((row*cols)+i) ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+	  *( ushort_data + ((row*cols)+i) ) = (unsigned short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
 								   *( (float *)data + (((rows-row-1)*cols)+i) ) );
 	}
       }
@@ -554,7 +553,7 @@ int cetb_file_add_var( cetb_file_class *this,
       
       for ( row=0; row<rows; row++ ) {
 	for ( i=0; i<cols; i++ ) {
-	  *( short_data + ((row*cols)+i) ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+	  *( short_data + ((row*cols)+i) ) = (short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
 								  *( (float *)data + (((rows-row-1)*cols)+i) ) );
 	}
       }
@@ -1306,7 +1305,7 @@ int set_all_dimensions( cetb_file_class *this ) {
     return STATUS_FAILURE;
   }
 
-  for ( i = 0; i < rows; i++ ) {
+  for ( i = 0; i < (int)rows; i++ ) {
     vals[ rows - i - 1 ]
       = ( (double) i - ( (double) rows / 2.0 ) )
       * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
@@ -1339,7 +1338,7 @@ int set_all_dimensions( cetb_file_class *this ) {
     return STATUS_FAILURE;
   }
 
-  for ( i = 0; i < cols; i++ ) {
+  for ( i = 0; i < (int)cols; i++ ) {
     vals[ i ] = ( (double) i - ( (double) cols / 2.0 ) )
       * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
   }
@@ -1367,7 +1366,6 @@ int set_all_dimensions( cetb_file_class *this ) {
    */
   if ( STATUS_OK !=
        ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
-  					       units,
   					       &days_since_epoch ) ) ) {
     fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
     return STATUS_FAILURE;
@@ -1772,7 +1770,6 @@ int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
  *
  */
 int yyyydoy_to_days_since_epoch( int year, int doy,
-				 const char *units,
 				 double *days_since_epoch ) {
 
   int status;

@@ -35,10 +35,6 @@
 #define INFOFILE 1            /* define to create info file, undefine to not create */
 #undef INFOFILE               /* do not create info file */
 
-#ifdef JANUSicc
-#pragma warning (disable:981)
-#endif
-
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 
