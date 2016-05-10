@@ -125,11 +125,11 @@ typedef struct { /* BYU region information storage */
 /* BYU SSM/I approximate spatial response computation */
 
 static float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajor, float semiminor);
-static void write_blanklines_to_header( region_save *save_area );
-static void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
+static int write_blanklines_to_header( region_save *save_area );
+static int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
 				       unsigned long *position_filename, unsigned long *position_data );
-static void write_end_header( region_save *save_area );
-static void write_header_info( gsx_class *gsx, region_save *save_area );
+static int write_end_header( region_save *save_area );
+static int write_header_info( gsx_class *gsx, region_save *save_area );
 static FILE * get_meta(char *mname, char *outpath, int *dstart, 
                 int *dend, int *mstart, int *mend, 
 		int *year, char *prog_n, float prog_v,
@@ -381,7 +381,11 @@ int main(int argc,char *argv[])
 	strcpy(fname, ftempname);
 	no_trailing_blanks(fname);    
         gsx = gsx_init( fname );
-	write_blanklines_to_header( &save_area );
+	status = write_blanklines_to_header( &save_area );
+	if ( 0 != status ) {
+	  fprintf( stderr, "%s: *** couldn't write out blank lines for filenames\n", __FILE__ );
+	  exit (-1);
+	}
 	status = utils_allocate_clean_aligned_memory( (void**)&gsx_fname[nfile], strlen(fname)+1 );
 	if ( 0 != status ) {
 	  fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
@@ -399,7 +403,11 @@ int main(int argc,char *argv[])
   }
 
   if ( 0 == nfile ) { /* there are no input files in the meta file */
-      write_end_header( &save_area );
+      status = write_end_header( &save_area );
+      if ( 0 != status ) {
+	fprintf( stderr, "%s: *** couldn't write out end header information\n", __FILE__ );
+	exit (-1);
+      }
   }
   
   for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
@@ -447,8 +455,16 @@ int main(int argc,char *argv[])
     /* if this is the first file to be read, then write out the final header info for downstream processing */
     if ( 0 == first_file ) {
       first_file++;
-      write_header_info( gsx, &save_area );
-      write_end_header( &save_area );
+      status = write_header_info( gsx, &save_area );
+      if ( 0 != status ) {
+	fprintf( stderr, "%s: *** couldn't write out remaining header information\n", __FILE__ );
+	exit (-1);
+      }
+      status = write_end_header( &save_area );
+      if ( 0 != status ) {
+	fprintf( stderr, "%s: *** couldn't write out end header information\n", __FILE__ );
+	exit (-1);
+      }
       /* If this is AMSRE, combine the output setup files for a and b scans and close the unneeded output file */
       if ( CETB_AQUA == cetb_platform ) {
 	combine_setup_files( &save_area, 1 );
@@ -869,7 +885,11 @@ int main(int argc,char *argv[])
                /* input file loop */
     fprintf( stderr, "Done with setup records %d %d\n",irec,krec);
     free( gsx_fname[infile] );
-    write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
+    status = write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
+    if ( 0 != status ) {
+      fprintf( stderr, "%s: *** couldn't write %s filename to output setup file\n", __FILE__, gsx->source_file );
+      exit (-1);
+    }
   } /* input file read loop 1050 */
 
   /* close output setup files */
@@ -2027,7 +2047,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
  *   none
  *
  */
-void write_header_info( gsx_class *gsx, region_save *save_area ) {
+int write_header_info( gsx_class *gsx, region_save *save_area ) {
   int cnt=100;
   char lin[100];
   int z;
@@ -2061,7 +2081,10 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
     }
+  } else {
+    return (-1);
   }
+  return (0);
 }
 
 /* write_filenames_to_header - writes out the input data files that were used to
@@ -2075,17 +2098,17 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
  *   position_data - keeps track of the place from which to continue writing out data in each region's setup file
  *
  * Return:
- *   None
+ *   status - 0 on success
  */
-void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
-				unsigned long *position_filename, unsigned long *position_data ) {
+int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
+			       unsigned long *position_filename, unsigned long *position_data ) {
   int cnt=100;
   char lin[100];
   int z;
   int iregion;
 
   for ( iregion=0; iregion<save_area->nregions; iregion++ ) {
-    if ( 1 == *(file_flag+iregion) ) { //this file been written read
+    if ( 1 == *(file_flag+iregion) ) { //this file has been used for the setup file
       *(position_data+iregion) = ftell( save_area->reg_lu[iregion]);
       fseek( save_area->reg_lu[iregion], *(position_filename+iregion), SEEK_SET );
       fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
@@ -2096,7 +2119,8 @@ void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *fil
       *(position_filename+iregion) = ftell( save_area->reg_lu[iregion]);
       fseek( save_area->reg_lu[iregion], *(position_data+iregion), SEEK_SET );
     }
-  } 
+  }
+  return (0);
 }
 
 /* write_blanklines_to_header - writes a blank line for each filename in the metafile
@@ -2110,7 +2134,7 @@ void write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *fil
  * Return:
  *   0 on success, 1 on failure
  */
-void write_blanklines_to_header( region_save *save_area ) {
+int write_blanklines_to_header( region_save *save_area ) {
   int cnt=100;
   char lin[100];
   int z;
@@ -2121,7 +2145,8 @@ void write_blanklines_to_header( region_save *save_area ) {
      for(z=0;z<100;z++)lin[z]=' '; 
      fwrite(lin,100,1,save_area->reg_lu[iregion]); 
      fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
-   } 
+   }
+  return (0);
 }
 /*
  * write_end_header - writes out the End_file line that is used in sir and bgi
@@ -2133,7 +2158,7 @@ void write_blanklines_to_header( region_save *save_area ) {
  *   none
  *
  */
-void write_end_header( region_save *save_area ){
+int write_end_header( region_save *save_area ){
   int cnt=100;
   char lin[100];
   int z;
@@ -2146,6 +2171,7 @@ void write_end_header( region_save *save_area ){
     fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
   }
+  return (0);
 }
 
 /*
