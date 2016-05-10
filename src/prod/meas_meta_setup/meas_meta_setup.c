@@ -169,7 +169,7 @@ int main(int argc,char *argv[])
   char *option;
   
   int i,j,n;
-  int dend2, ilenyear, nrec, iscan, iasc, ii;
+  int dend2, ilenyear, nrec, iscan, iasc;
   char *s;
   float cen_lat, cen_lon, ctime;
   double cave;  
@@ -638,12 +638,13 @@ int main(int argc,char *argv[])
 	  
 		/* check ascending/descending orbit pass flag (see cetb.h for definitions) */
 		iasc=save_area.sav_ascdes[iregion];
-		if (iasc != (int)CETB_ALL_PASSES)
+		if (iasc != (int)CETB_ALL_PASSES) {
 		  if (iasc == (int)CETB_ASC_PASSES) {
 		    if (!ascend) goto label_3400;
 		  } else if (iasc == (int)CETB_DES_PASSES) {
 		    if (ascend) goto label_3400;
 		  }
+		}
 
 		/* extract local-time-of-day split values  - these are sensor and projection dependent */
 
@@ -760,7 +761,7 @@ int main(int argc,char *argv[])
 		  for (ix1=ixsize1; ix1<=ixsize2; ix1++) {
 		    ix=ix1+ix2; /* 1-based address */
 		    iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
-		    if (iadd1 >= 0 & iadd1 < nsx*nsy) {		  
+		    if ( ( iadd1 >= 0 ) & ( iadd1 < nsx*nsy ) ) {		  
 		      /* get pre-computed lat/lon of pixel */
 		      alat1=(float)(latlon_store[iadd1*2+  noffset[iregion]]/200.0);
 		      alon1=(float)(latlon_store[iadd1*2+1+noffset[iregion]]/175.0);
@@ -793,7 +794,7 @@ int main(int argc,char *argv[])
 		  jrec2[iregion]++; /* records/region */
 		  if (count >= MAXFILL) { /* error handling -- this should not occur! */
 		    fprintf( stderr, "*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
-		    fprintf( stderr, "center %f %f  %d %d %d  count %d\n",cen_lat,cen_lon,iscan,ii,ibeam,count);
+		    fprintf( stderr, "center %f %f  %d %d  count %d\n",cen_lat,cen_lon,iscan,ibeam,count);
 		    count=MAXFILL;
 		  }
 
