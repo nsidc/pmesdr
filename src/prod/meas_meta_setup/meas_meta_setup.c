@@ -543,7 +543,11 @@ int main(int argc,char *argv[])
       
 	  if ((krec%500)==0) fprintf( stderr, "Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-	  if ( (*(gsx->scantime[loc]+iscan) - gsx->fill_scantime[loc]) <= DBL_EPSILON ) goto label_350; // do not process this scan - until gsx is fixed
+	  if ( (*(gsx->scantime[loc]+iscan) - gsx->fill_scantime[loc]) <= DBL_EPSILON ) goto label_350;
+	  /* do not process this scan if the time is set to the scantime fillvalue
+	   * it's possible that we may want to change gsx to simply eliminate bad scan lines
+	   * rather than flag them with the fill value
+	   */
 	  /* scan time.  All measurements in this scan assigned this time */
 	  timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	  iday = jday;
@@ -580,18 +584,18 @@ int main(int argc,char *argv[])
 
 	  /* compute the orientation of the nadir track with respect to north */
 	  fractional_orbit = ( float ) iscan/nscans;
-	  eqlon = (float)(fractional_orbit * 360.0);
-	  if (eqlon<0.0) eqlon=(float)(eqlon+360.0);      
+	  eqlon = (fractional_orbit * 360.f);
+	  if (eqlon<0.0) eqlon=(eqlon+360.f);      
 	  /*
 	    find the longitude of the equator crossing of the middle measurement to use in computing the
 	    longitudes that separate ascending and descending for this rev */
-	  xhigh_lon=(float)(eqlon+90.0);
-	  xlow_lon =(float)(eqlon-90.0);
+	  xhigh_lon=(eqlon+90.f);
+	  xlow_lon =(eqlon-90.f);
 	   
-	  if (xhigh_lon >  180.0) xhigh_lon=(float)(xhigh_lon-360.0);
-	  if (xhigh_lon < -180.0) xhigh_lon=(float)(xhigh_lon+360.0);
-	  if (xlow_lon  >  180.0) xlow_lon =(float)(xlow_lon -360.0);
-	  if (xlow_lon  < -180.0) xlow_lon =(float)(xlow_lon +360.0);
+	  if (xhigh_lon >  180.f) xhigh_lon=(xhigh_lon-360.f);
+	  if (xhigh_lon < -180.f) xhigh_lon=(xhigh_lon+360.f);
+	  if (xlow_lon  >  180.f) xlow_lon =(xlow_lon -360.f);
+	  if (xlow_lon  < -180.f) xlow_lon =(xlow_lon +360.f);
 
 	  /* here test for AMSRE that doesn't have spacecraft position and get asc desc flag from gsx variable */
 	  /* set asc/dsc flag for measurements */
@@ -650,7 +654,7 @@ int main(int argc,char *argv[])
 		cen_lon = *(gsx->longitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal latitude */
 
 		if (tb < *(gsx->validRange[gsx_count])) goto label_3400; /* skip bad measurements */
-		if (thetai < FLT_EPSILON) goto label_3400; /* skip bad measurements */
+		if (fabs(thetai) < FLT_EPSILON) goto label_3400; /* skip bad measurements */
 	  
 		/* check ascending/descending orbit pass flag (see cetb.h for definitions) */
 		iasc=save_area.sav_ascdes[iregion];
@@ -669,8 +673,8 @@ int main(int argc,char *argv[])
 
 		cy=cen_lat;
 		cx=cen_lon;
-		if (cx >  180.0) cx=(float)(cx-360.0);
-		if (cx < -180.0) cx=(float)(cx+360.0);
+		if (cx >  180.0) cx=(cx-360.f);
+		if (cx < -180.0) cx=(cx+360.f);
 
 		/* region lat/lon extent */
 		lath=save_area.sav_lath[iregion];
@@ -699,12 +703,12 @@ int main(int argc,char *argv[])
 		}
 
 		if (dateline) { /* convert lon to ascending order */
-		  if (lonl < 0.0) lonl=(float)(lonl+360.0);
-		  if (cx < -180.0) cx=(float)(cx+360.0);
+		  if (lonl < 0.0) lonl=(lonl+360.f);
+		  if (cx < -180.0) cx=(cx+360.f);
 		} else {	/* convert lon to -180 to 180 range */
-		  if (cx > 180.0) cx=(float)(cx-360.0);
-		  if (cx < -180.0) cx=(float)(cx+360.0);
-		  if (cx > 180.0) cx=(float)(cx-360.0);
+		  if (cx > 180.0) cx=(cx-360.f);
+		  if (cx < -180.0) cx=(cx+360.f);
+		  if (cx > 180.0) cx=(cx-360.f);
 		}
 
 		/* check to see if center is within region */
@@ -739,8 +743,8 @@ int main(int argc,char *argv[])
 		/* assign the center of the pixel containing the measurement location to
 		   be the "new" measurement center lat/lon.  this "quantizes" the measurement
 		   centers to the center of the output pixel */
-		x=(float)(ix2+0.5);
-		y=(float)(iy2+0.5);
+		x=(ix2+0.5f);
+		y=(iy2+0.5f);
 		pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
 
 		/* define size of box centered at(ix2,iy2) in which the gain response 
@@ -779,8 +783,8 @@ int main(int argc,char *argv[])
 		    iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
 		    if ( ( iadd1 >= 0 ) & ( iadd1 < nsx*nsy ) ) {		  
 		      /* get pre-computed lat/lon of pixel */
-		      alat1=(float)(latlon_store[iadd1*2+  noffset[iregion]]/200.0);
-		      alon1=(float)(latlon_store[iadd1*2+1+noffset[iregion]]/175.0);
+		      alat1=(latlon_store[iadd1*2+  noffset[iregion]]/200.f);
+		      alon1=(latlon_store[iadd1*2+1+noffset[iregion]]/175.f);
 
 		      /* compute antenna pattern response at each pixel based on beam number, 
 			 location, and projection rotation and scaling */
@@ -1659,9 +1663,9 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
       /* compute pixel locations */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
-	y=(float)(iy+1.5); /* center of pixel, 1-based */
+	y=(iy+1.5f); /* center of pixel, 1-based */
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {
-	  x=(float)(ix+1.5); /* center of pixel, 1-based */
+	  x=(ix+1.5f); /* center of pixel, 1-based */
 	  pixtolatlon(x, y, &clon, &clat, a->sav_projt[iregion], 
 		      a->sav_xdeg[iregion], a->sav_ydeg[iregion],
 		      a->sav_ascale[iregion], a->sav_bscale[iregion],
@@ -1829,9 +1833,9 @@ float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat
 		   &map_reference_latitude, &map_reference_longitude, 
 		   &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
 		   &map_scale, &bcols, &brows, &r0, &s0, &epsilon);
-    *x=(float)(1./(map_scale*0.001)); /* km/pixel rather than m/pixel */
-    *y=(float)(1./(map_scale*0.001));
-    r= (float)(1./(map_scale*0.001));
+    *x=(1.f/(map_scale*0.001)); /* km/pixel rather than m/pixel */
+    *y=(1.f/(map_scale*0.001));
+    r= (1.f/(map_scale*0.001));
     break;
   default: /* unknown transformation type */
     *x=0.0;
