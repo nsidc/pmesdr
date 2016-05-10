@@ -108,7 +108,7 @@ elif [[ "$HOSTNAME" == "snow"* ]]; then
   # Initialize the virtualenv that was built for running on snow
   . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
   export PMESDR_COMPARE_TOLERANCE=0.01
-  export PMESDR_MAX_DIFF_PIXELS=0
+  export PMESDR_MAX_DIFF_PIXELS=100
 
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
@@ -116,7 +116,7 @@ elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
   export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
-  export PMESDR_MAX_DIFF_PIXELS=0
+  export PMESDR_MAX_DIFF_PIXELS=100
 
 else
 
