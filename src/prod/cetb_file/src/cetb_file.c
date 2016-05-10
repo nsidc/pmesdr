@@ -19,6 +19,7 @@
 #include "calcalcs.h"
 #include "cetb.h"
 #include "cetb_file.h"
+#include "utils.h"
 
 /*********************************************************************
  * Internal data and function prototypes
@@ -29,7 +30,6 @@
 #define MAX_STR_LENGTH 256
 #define DEFLATE_LEVEL 9
 
-static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -187,13 +187,13 @@ cetb_file_class *cetb_file_init( char *dirname,
   if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
 
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&this, sizeof( cetb_file_class ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&this, sizeof( cetb_file_class ) ) ) {
     return NULL;
   }
   
   this->fid = 0;
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&(this->filename), FILENAME_MAX + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&(this->filename), FILENAME_MAX + 1 ) ) {
     return NULL;
   }
   
@@ -504,7 +504,7 @@ int cetb_file_add_var( cetb_file_class *this,
      */
     if ( NC_USHORT == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&ushort_data,
+      status = utils_allocate_clean_aligned_memory( ( void * )&ushort_data,
     					      sizeof( unsigned short ) * 1 * rows * cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
@@ -536,7 +536,7 @@ int cetb_file_add_var( cetb_file_class *this,
 
     } else if ( NC_SHORT == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&short_data,
+      status = utils_allocate_clean_aligned_memory( ( void * )&short_data,
     					      sizeof( short ) * 1 * rows * cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
@@ -583,7 +583,7 @@ int cetb_file_add_var( cetb_file_class *this,
      */
     if ( NC_FLOAT == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * 1 * cols * rows );
+      status = utils_allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * 1 * cols * rows );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for flipped float_data.\n", __FUNCTION__ );
     	return 1;
@@ -604,7 +604,7 @@ int cetb_file_add_var( cetb_file_class *this,
       
     } else if ( NC_UBYTE == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&uchar_data,
+      status = utils_allocate_clean_aligned_memory( ( void * )&uchar_data,
 					      sizeof( unsigned char ) * 1 * cols * rows );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for flipped uchar_data.\n", __FUNCTION__ );
@@ -921,30 +921,6 @@ void cetb_file_close( cetb_file_class *this ) {
  *********************************************************************/
 
 /*
- * allocate_clean_aligned_memory - allocate aligned memory that is
- *                                 zeroed out.
- *
- * input:
- *   this : void ** address of pointer to new memory
- *   size : size_t size of memory to allocate
- *
- * output: n/a
- *
- * returns : STATUS_OK for success, or error message to stderr and STATUS_FAILURE
- * 
- */
-int allocate_clean_aligned_memory( void **this, size_t size ) {
-
-  if ( 0 != posix_memalign( this, CETB_FILE_ALIGNMENT, size ) ) {
-    perror( __FUNCTION__ );
-    return STATUS_FAILURE;
-  }
-  memset( *this, 0, size );
-  return STATUS_OK;
-
-}
-
-/*
  * channel_name - Determine the frequency and polarization string from
  *               the input sensor and beam_id
  *               Beam_id values must correspond to the values
@@ -1004,7 +980,7 @@ char *current_time_stamp( void ) {
   struct tm *loctime;
 
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&p, MAX_STR_LENGTH + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&p, MAX_STR_LENGTH + 1 ) ) {
     return NULL;
   }
 
@@ -1241,7 +1217,7 @@ char *pmesdr_release_version( void ) {
     return NULL;
   }
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&version_str, fileinfo.st_size + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&version_str, fileinfo.st_size + 1 ) ) {
     return NULL;
   }
   
@@ -1326,7 +1302,7 @@ int set_all_dimensions( cetb_file_class *this ) {
    * decreasing from a maximum at the top row to the bottom row.
    */
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&vals, rows * sizeof( double ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&vals, rows * sizeof( double ) ) ) {
     return STATUS_FAILURE;
   }
 
@@ -1359,7 +1335,7 @@ int set_all_dimensions( cetb_file_class *this ) {
    * the right
    */
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&vals, cols * sizeof( double ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&vals, cols * sizeof( double ) ) ) {
     return STATUS_FAILURE;
   }
 
