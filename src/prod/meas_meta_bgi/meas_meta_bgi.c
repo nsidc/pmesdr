@@ -29,14 +29,6 @@
 #include "nr.h"
 #include "nrutil.h"
 
-/* The following pragma supresses the icc warning regarding the order in which operands are
- * evaluated.  This appears to be a known issue with this compiler
- * See https://software.intel.com/en-us/forums/intel-c-compiler/topic/308661 for example
- */
-#ifdef JANUSicc
-#pragma warning (disable:981)
-#endif
-
 static void dlubksb(double **a, int n, int *indx, double b[]);
 static void dludcmp(double **a, int n, int *indx, double *d);
 
@@ -80,9 +72,9 @@ float wscale=0.001;  /* pattern scale coversion factor int->float */
 
 /* function prototypes */
 
-static void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx);
+static void count_hits(int count, int fill_array[], short int response_array[], float thres, int cnt[], int *mdim, int nsx);
 
-static void make_indx(int nmax, int count, int fill_array[], short int response_array[], float ithres, char **indx, char * pointer);
+static void make_indx(int nmax, int count, int fill_array[], short int response_array[], float thres, char **indx, char * pointer);
 
 static void Ferror(int i);
 
@@ -866,7 +858,7 @@ int main(int argc, char **argv)
 
 /* ***************** support routines **************** */
 
-void count_hits(int count, int fill_array[], short int response_array[], float ithres, int cnt[], int *mdim, int nsx)
+void count_hits(int count, int fill_array[], short int response_array[], float thres, int cnt[], int *mdim, int nsx)
 {
   register int i,n,m,x,y,xx,yx,xn,yn;
   int mpeak=-1;  
@@ -877,7 +869,7 @@ void count_hits(int count, int fill_array[], short int response_array[], float i
     if (m > mpeak) mpeak=m;
   }
   /* compute (local) threshold based on peak response */
-  mpeak=ithres*mpeak;
+  mpeak=thres*mpeak;
 
   /* find minimum size bounding box */
   yx=xx=0;
@@ -906,7 +898,7 @@ void count_hits(int count, int fill_array[], short int response_array[], float i
   *mdim=max(x,y);
 }
 
-void make_indx(int nmax, int count, int fill_array[], short int response_array[], float ithres, char **indx, char *pointer)
+void make_indx(int nmax, int count, int fill_array[], short int response_array[], float thres, char **indx, char *pointer)
 {
   static int i,j,m,n,mpeak=-1;
 
@@ -917,13 +909,13 @@ void make_indx(int nmax, int count, int fill_array[], short int response_array[]
       if (m > mpeak) mpeak=m;
     }
   /* compute (local) threshold based on peak response */
-  mpeak=ithres*mpeak;
+  mpeak=thres*mpeak;
 
   for (i=0; i < count; i++) 
     if (fill_array[i] > 0) {
       n=fill_array[i]-1;
       m=response_array[i];
-      if (m >= ithres) {
+      if (m >= thres) {
 	j = 0;
 	while (j < nmax && indx[n*nmax+j] != NULL) j++;
 	if (j < nmax) indx[n*nmax+j]=pointer;
