@@ -1833,9 +1833,9 @@ float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat
 		   &map_reference_latitude, &map_reference_longitude, 
 		   &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
 		   &map_scale, &bcols, &brows, &r0, &s0, &epsilon);
-    *x=(1.f/(map_scale*0.001)); /* km/pixel rather than m/pixel */
-    *y=(1.f/(map_scale*0.001));
-    r= (1.f/(map_scale*0.001));
+    *x=(1.f/(float)(map_scale*0.001)); /* km/pixel rather than m/pixel */
+    *y=(1.f/(float)(map_scale*0.001));
+    r= (1.f/(float)(map_scale*0.001));
     break;
   default: /* unknown transformation type */
     *x=0.0;
