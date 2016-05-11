@@ -280,16 +280,16 @@ int main(int argc, char **argv)
    do {
      
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) {
-       fprintf( stderr, "%s: reached Ferror(70)\n", __FUNCTION__ );
-       end_flag = 1;
+       fprintf( stderr, "%s: reached Ferror(70), Error in setup file\n", __FILE__ );
+       exit (-1);
      }
      if (fread(line,   sizeof(char), 100, imf) == 0) {
-       fprintf( stderr, "%s: reached Ferror(71)\n", __FUNCTION__ );
-       end_flag = 1;
+       fprintf( stderr, "%s: reached Ferror(71), Error in setup file\n", __FILE__ );
+       exit (-1);
      }
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) { 
-       fprintf( stderr, "%s: reached Ferror(72)\n", __FUNCTION__ );
-       end_flag = 1;
+       fprintf( stderr, "%s: reached Ferror(72), Error in setup file\n", __FILE__ );
+       exit (-1);
      }
 
      if (strstr(line,"A_initialization") != NULL) {
