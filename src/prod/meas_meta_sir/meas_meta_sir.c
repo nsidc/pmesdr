@@ -16,6 +16,7 @@
 #else
 #include <math.h>
 #endif
+#include <float.h>
 #include <string.h>
 #include <time.h>
 #include <netcdf.h>
@@ -51,61 +52,30 @@ int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 
 /****************************************************************************/
 
-
-/* some error print shortcuts 
-   errors output to stderr */
-
-void eprintf(char *s)
-{ 
-  fprintf(stderr,"%s",s);
-  fflush(stderr);
-  return;
-}
-
-void eprintfi(char *s, int a)
+static void Ferror(int i)
 {
-  fprintf(stderr,s,a);
-  fflush(stderr);
-  return;
-}
-
-void eprintfc(char *s, char *a)
-{
-  fprintf(stderr,s,a);
-  fflush(stderr);
-  return;
-}
-
-void Ferror(int i)
-{
-  fprintf(stderr,"*** Error reading input file at %d ***\n",i);
-  fflush(stderr);
+  fprintf( stderr, "*** Error reading input file at %d ***\n", i );
+  fflush( stderr );
   return;
 }
 
 
 /* function prototypes */
 
-int get_measurements(char *store, char *store2, float *tbval, float *ang, int *count,
-		     int *ktime, int *iadd, int *nrec);
-
-void get_updates(float tbval, float ang, int count, int *fill_array,
+static void get_updates(float tbval, int count, int *fill_array,
 		 short int *response_array, int its );
 
-void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
+static void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
 
-void time_updates(float tbval, float ktime, float ant, int count,
-		  int *fill_array, short int *response_array);
+static void time_updates(float ktime, int count, int *fill_array);
 
-void stat_updates(float tbval, float ang, int count, int *fill_array,
+static void stat_updates(float tbval, int count, int *fill_array,
 		  short int *response_array);
 
-void filter(float *val, int size, int opt, int nsx, int nsy, float
+static void filter(float *val, int size, int opt, int nsx, int nsy, float
 	    *temp, float thres);
 
-void no_trailing_blanks(char *s);
-
-char *addpath(char *outpath, char *name, char *temp);
+static void no_trailing_blanks(char *s);
 
 /****************************************************************************/
 
@@ -127,15 +97,15 @@ int main(int argc, char **argv)
 {
 
   char *file_in;
-  char outpath[FILENAME_MAX], tstr[350];
+  char outpath[FILENAME_MAX];
 
   float latl, lonl, lath, lonh;
-  char regname[11], *s;
-  int dumb, nrec, ncnt, i, j, n, ii, iii, nsize;
+  char regname[11];
+  int dumb, nrec, ncnt, i, ii, iii, nsize;
   long int nls, nbyte;
   float ratio, fn, ninv;
   char *space, *store, *store2;
-  float tbval, ang, azang=0.0;
+  float tbval, ang, azang;
   int count, ktime, iadd, end_flag;
   char *x;
   int irecords;
@@ -151,26 +121,16 @@ int main(int argc, char **argv)
   float anodata_V=CETB_FILE_TB_STDDEV_FILL_VALUE;
   float anodata_E=-15.0;
 
-  int Nfiles_out;  
-  
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
   int iregion, ipol, iopt;
-  char pol, sensor[41], crproc[101], crtime[29];
   float xdeg, ydeg, ascale, bscale, a0, b0;
 
-  time_t tod;
-
-  int its, irec, year, keep;  
+  int its, irec, keep;  
   float total, tmax;
-  float amin, amax, bmin, bmax, weight, temp, old_amin, old_amax;
+  float amin, amax, bmin, bmax, temp, old_amin, old_amax;
   float old_bmin, old_bmax, denom;
 
-  char a_name[100], b_name[100], c_name[100], p_name[100], 
-    v_name[100], e_name[100], i_name[100], j_name[100],
-    a_name_ave[100], b_name_ave[100], non_aname[100], grd_iname[100], grd_jname[100],
-    non_vname[100], grd_aname[100], grd_bname[100], grd_vname[100], 
-    grd_pname[100], grd_cname[100], 
-    info_name[100], line[100];
+  char line[100];
 
   cetb_file_class *cetb_sir;
   cetb_file_class *cetb_grd;
@@ -192,16 +152,12 @@ int main(int argc, char **argv)
   short theta_fill_value=CETB_FILE_THETA_FILL_VALUE;
   short theta_valid_range[ 2 ] = { CETB_FILE_THETA_MIN, CETB_FILE_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
-  int ncerr;
 
   long head_len;
-  int errors = 0, gerr;
-  char polch;
+  int errors = 0;
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
-
-  char *error_msg;
 
   /*
    * Set output_debug=1 to get all output images
@@ -226,14 +182,14 @@ int main(int argc, char **argv)
 
   imf = fopen(file_in,"r"); 
   if (imf == NULL) {
-     eprintfc("ERROR: cannot open input setup file: %s\n",argv[1]); 
+    fprintf( stderr, "%s: ERROR: cannot open input setup file: %s\n", __FILE__, argv[1] ); 
      exit(-1);
   }
 
   strcpy(outpath,"./"); /* default output path */
   if (argc > 2) 
     sscanf(argv[2],"%s",outpath);
-  printf("Output path %s: ",outpath);
+  fprintf( stderr, "%s: Output path %s: ", __FILE__, outpath );
 
   /* get input file size */
   fseek(imf, 0L, REL_EOF);
@@ -300,17 +256,18 @@ int main(int argc, char **argv)
    if (fread(&dumb,   sizeof(int)  , 1, imf) == 0) Ferror(54);/* record trailer */
 
    /* file header read completed, summarize */
-   printf("\nInput file header info: '%s'\n",file_in);
-   printf("  Year, day range: %d %d - %d\n",iyear,isday,ieday);
-   printf("  Image size: %d x %d = %d   Projection: %d\n",nsx,nsy,nsx*nsy,iopt);
-   printf("  Origin: %f,%f  Span: %f,%f\n",a0,b0,xdeg,ydeg);
-   printf("  Scales: %f,%f  Pol: %d  Reg: %d\n",ascale,bscale,ipol,iregion);
-   printf("  Region: '%s'   Records: %d\n",regname,irecords);
-   printf("  Corners: LL %f,%f UR %f,%f\n",latl,lonl,lath,lonh);
-   printf("  Grid size: %d x %d = %d  Scales %d %d\n",nsx2,nsy2,nsx2*nsy2,non_size_x,non_size_y);
-   printf("  Grid Origin: %f,%f  Grid Span: %f,%f\n",a02,b02,xdeg2,ydeg2);
-   printf("  Grid Scales: %f,%f\n",ascale2,bscale2);
-   printf("\n");
+   fprintf( stderr, "\n%s:   Input file header info: '%s'\n", __FILE__, file_in );
+   fprintf( stderr, "%s:   Year, day range: %d %d - %d\n", __FILE__, iyear, isday, ieday);
+   fprintf( stderr, "%s:   Image size: %d x %d = %d   Projection: %d\n", __FILE__, nsx, nsy, nsx*nsy, iopt );
+   fprintf( stderr, "%s:   Origin: %f,%f  Span: %f,%f\n", __FILE__, a0, b0, xdeg, ydeg );
+   fprintf( stderr, "%s:   Scales: %f,%f  Pol: %d  Reg: %d\n", __FILE__, ascale, bscale, ipol, iregion );
+   fprintf( stderr, "%s:   Region: '%s'   Records: %d\n", __FILE__, regname, irecords );
+   fprintf( stderr, "%s:   Corners: LL %f,%f UR %f,%f\n", __FILE__, latl, lonl, lath, lonh );
+   fprintf( stderr, "%s:   Grid size: %d x %d = %d  Scales %d %d\n", __FILE__, nsx2, nsy2, nsx2*nsy2,
+	    non_size_x, non_size_y );
+   fprintf( stderr, "%s:   Grid Origin: %f,%f  Grid Span: %f,%f\n", __FILE__, a02, b02, xdeg2, ydeg2 );
+   fprintf( stderr, "%s:   Grid Scales: %f,%f\n", __FILE__, ascale2, bscale2 );
+   fprintf( stderr, "\n" );
 
    /* read output file names and misc variables
 
@@ -325,54 +282,53 @@ int main(int argc, char **argv)
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(70);
      if (fread(line,   sizeof(char), 100, imf) == 0) Ferror(71);
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(72);
-     /* printf("line read '%s'\n",line); */
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
-       a_init=atof(++x);
-       printf("A_initialization of %f\n",a_init);
+       a_init=(float)atof(++x);
+       fprintf( stderr, "%s: A_initialization of %f\n", __FUNCTION__, a_init );
      }
 
      if (strstr(line,"Beam_code") != NULL) {
        x = strchr(line,'=');
        ibeam=atoi(++x);
-       printf("Beam code %d\n",ibeam);
+       fprintf( stderr, "%s: Beam code %d\n", __FUNCTION__, ibeam );
      }
 
      if (strstr(line,"Max_iterations") != NULL) {
        x = strchr(line,'=');
        nits=atoi(++x);
-       printf("Max iterations of %d\n",nits);
+       fprintf( stderr, "%s: Max iterations of %d\n", __FUNCTION__, nits );
      }
 
      if (strstr(line,"Max_Fill") != NULL) {
        x = strchr(line,'=');
        MAXFILL=atoi(++x);
-       printf("Max fill %d\n",MAXFILL);
+       fprintf( stderr, "%s: Max fill %d\n", __FUNCTION__, MAXFILL);
      }
 
      if ( strstr( line, " Producer_id" ) != NULL ) {
        x = strchr( line,'=' );
        swath_producer_id = ( cetb_swath_producer_id )atoi(++x);
-       printf( "Producer_id %s\n", cetb_swath_producer_id_name[ swath_producer_id ] );
+       fprintf( stderr,  "%s: Producer_id %s\n",  __FUNCTION__, cetb_swath_producer_id_name[ swath_producer_id ] );
      }
 
      if ( strstr( line, " Platform_id" ) != NULL ) {
        x = strchr( line,'=' );
        platform_id = ( cetb_platform_id )atoi(++x);
-       printf( "Platform_id %s\n", cetb_platform_id_name[ platform_id ] );
+       fprintf( stderr,  "%s: Platform_id %s\n",  __FUNCTION__, cetb_platform_id_name[ platform_id ] );
      }
 
      if ( strstr( line, " Sensor_id" ) != NULL ) {
        x = strchr( line,'=' );
        sensor_id = ( cetb_sensor_id )atoi(++x);
-       printf( "Sensor_id %s\n", cetb_sensor_id_name[ sensor_id ] );
+       fprintf( stderr,  "%s: Sensor_id %s\n",  __FUNCTION__, cetb_sensor_id_name[ sensor_id ] );
      }
 
      if ( strstr( line, " Pass_direction" ) != NULL ) {
        x = strchr( line,'=' );
        direction_id = ( cetb_direction_id )atoi(++x);
-       printf( "Direction_id %s\n", cetb_direction_id_name[ direction_id ] );
+       fprintf( stderr,  "%s: Direction_id %s\n",  __FUNCTION__, cetb_direction_id_name[ direction_id ] );
      }
 
      if (strstr(line,"Response_Multiplier") != NULL) {
@@ -383,7 +339,7 @@ int main(int argc, char **argv)
        x = strchr(line,'=');
        strncpy(sensor_in,++x,40);
        no_trailing_blanks(sensor_in);
-       printf("Sensor '%s'\n",sensor_in);
+       fprintf( stderr, "%s: Sensor '%s'\n", __FUNCTION__, sensor_in);
      }
 
      if ((x = strchr(line+4,' ')) != NULL) *x='\0'; /* truncate off any trailing spaces */
@@ -394,7 +350,7 @@ int main(int argc, char **argv)
 	 median_flag=1;
        if (strstr(x,"F") != NULL || strstr(x,"f") != NULL)
 	 median_flag=0;
-       printf("Median flag: %d\n",median_flag);       
+       fprintf( stderr, "%s: Median flag: %d\n", __FUNCTION__, median_flag);       
      }
 
      if (strstr(line,"Has_Azimuth_Angle") != NULL) {
@@ -405,95 +361,9 @@ int main(int argc, char **argv)
        }
        if (strstr(x,"F") != NULL || strstr(x,"f") != NULL)
 	 HASAZANG=0;
-       printf("Has azimuth angle: %d\n",HASAZANG);       
+       fprintf( stderr, "%s: Has azimuth angle: %d\n", __FUNCTION__, HASAZANG);       
      }
 
-     if (strstr(line,"SIRF_A_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(a_name,++x,100);
-       no_trailing_blanks(a_name);
-     }
-     if (strstr(line,"SIRF_C_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(c_name,++x,100);
-       no_trailing_blanks(c_name);
-     }
-     if (strstr(line,"SIRF_I_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(i_name,++x,100);
-       no_trailing_blanks(i_name);
-     }
-     if (strstr(line,"SIRF_J_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(j_name,++x,100);
-       no_trailing_blanks(j_name);
-       }
-     if (strstr(line,"SIRF_E_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(e_name,++x,100);
-       no_trailing_blanks(e_name);
-     }
-     if (strstr(line,"SIRF_V_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(v_name,++x,100);
-       no_trailing_blanks(v_name);
-     }
-     if (strstr(line,"SIRF_P_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(p_name,++x,100);
-       no_trailing_blanks(p_name);
-     }
-     if (strstr(line,"AVE_A_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(a_name_ave,++x,100);
-       no_trailing_blanks(a_name_ave);
-     }
-     if (strstr(line,"NON_A_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(non_aname,++x,100);
-       no_trailing_blanks(non_aname);
-     }
-     if (strstr(line,"NON_V_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(non_vname,++x,100);
-       no_trailing_blanks(non_vname);
-     }
-     if (strstr(line,"GRD_A_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(grd_aname,++x,100);
-       no_trailing_blanks(grd_aname);
-     }
-     if (strstr(line,"GRD_V_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(grd_vname,++x,100);
-       no_trailing_blanks(grd_vname);
-     }
-     if (strstr(line,"GRD_I_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(grd_iname,++x,100);
-       no_trailing_blanks(grd_iname);
-     }
-     if (strstr(line,"GRD_J_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(grd_jname,++x,100);
-       no_trailing_blanks(grd_jname);
-     }
-     if (strstr(line,"GRD_P_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(grd_pname,++x,100);
-       no_trailing_blanks(grd_pname);
-       }
-     if (strstr(line,"GRD_C_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(grd_cname,++x,100);
-       no_trailing_blanks(grd_cname);
-     }
-     if (strstr(line,"Info_file") != NULL) {
-       x = strchr(line,'=');
-       strncpy(info_name,++x,100);
-       no_trailing_blanks(info_name);
-     }
-      
      if (strstr(line,"End_header") != NULL) {
        end_flag = 1;
      }
@@ -551,15 +421,15 @@ int main(int argc, char **argv)
    }
      
    head_len = ftell(imf);
-   printf("Input header file length %ld\n",head_len);
+   fprintf( stderr, "%s: Input header file length %ld\n", __FILE__, head_len );
    nls=nls-head_len;
 
 /* header read completed, now determine how much program memory to allocate */
 
    nspace = nls * file_savings;/* space to allocate for measurement storage */
-   printf("  File size: %ld  Space allocated: %ld\n",nls,nspace);
+   fprintf( stderr, "%s: File size: %ld  Space allocated: %ld\n", __FILE__, nls, nspace );
    if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space, ( size_t )nspace*sizeof(char)) ) {
-     eprintf("*** Inadequate memory for data file storage\n");
+     fprintf( stderr, "%s: *** Inadequate memory for data file storage\n", __FILE__ );
      exit(-1);
    }
 
@@ -612,14 +482,14 @@ int main(int argc, char **argv)
   nbyte = 0;        /* file size in bytes */
   store=space;      /* storage pointer */
   
-  printf("Begin setup file copy into memory\n");
+  fprintf( stderr, "%s: Begin setup file copy into memory\n", __FILE__ );
   while (fread(&dumb, sizeof(int), 1, imf) != 0) {
 
     /*5 items at 4 bytes each: 20 bytes if no azimuth angle */
     /*6 items at 4 bytes each: 24 bytes if azimuth angle */
     if (nbyte+HS < nspace) {
       if ((dumb=fread(store, sizeof(char), HS, imf)) != HS) {
-	eprintfi(" *** Error reading input file data at 180 %d\n", dumb);
+	fprintf ( stderr, "%s: *** Error reading input file data at 180 %d\n", __FILE__, dumb);
 	exit(-1);
       }
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
@@ -633,8 +503,8 @@ int main(int argc, char **argv)
 	azang = *((float *) (store+20));
 
       if (count > MAXFILL) {
-	printf("*** Count error %d  record %d\n",count,nrec);
-	printf("    %f %f %d %d \n",tbval,ang,ktime,iadd);
+	fprintf( stderr, "%s: *** Count error %d  record %d\n", __FILE__, count, nrec );
+	fprintf( stderr, "%s: %f %f %d %d \n", __FILE__, tbval, ang, ktime, iadd );
 	count=MAXFILL;
       }
 
@@ -653,7 +523,7 @@ int main(int argc, char **argv)
       if (nbyte+count*4 < nspace) {
 	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(110);
 	if (fread(store, sizeof(int), count, imf) != count) {
-	  eprintf(" *** Error reading input file data at 111\n");
+	  fprintf( stderr, "%s:  *** Error reading input file data at 111\n", __FILE__ );
 	  /* exit(-1); */
 	  goto label;
 	}
@@ -663,8 +533,8 @@ int main(int argc, char **argv)
 	  store=store+count*4;
 	}
       } else {
-	eprintfi(" *** out of storage space 1 *** %d\n", ncnt);
-	printf(" *** out of storage space 1 *** %d %ld %ld\n",ncnt,nbyte,nspace);
+	fprintf( stderr, "%s:  *** out of storage space 1 *** %d\n", __FILE__, ncnt);
+	fprintf( stderr, "%s:  *** out of storage space 1 *** %d %ld %ld\n",__FILE__, ncnt, nbyte, nspace );
 	exit(-1);
       }
 
@@ -672,7 +542,7 @@ int main(int argc, char **argv)
       if (nbyte+count*2 < nspace) {
 	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1111);
 	if (fread(store, sizeof(short int), count, imf) != count) {
-	  eprintf(" *** Error reading input file data at 1111\n");
+	  fprintf( stderr, "%s:  *** Error reading input file data at 1111\n", __FILE__ );
 	  goto label;
 	}
 	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1121);
@@ -682,16 +552,16 @@ int main(int argc, char **argv)
 	  store=store+count*2;
 	}
       } else {
-	eprintfi(" *** out of storage space 2 *** %d\n", ncnt);
-	printf(" *** out of storage space 2 *** %d %ld %ld\n",ncnt,nbyte,nspace);
+	fprintf( stderr, "%s:  *** out of storage space 2 *** %d\n", __FILE__, ncnt);
+	fprintf( stderr, "%s:  *** out of storage space 2 *** %d %ld %ld\n", __FILE__, ncnt, nbyte, nspace );
 	exit(-1);
       }
 
       nrec++;
 
     } else {
-      eprintfi(" *** out of storage space 3 *** %d %ld\n", ncnt);
-      printf(" *** out of storage space 3 *** %d %ld\n",ncnt,nspace);
+      fprintf( stderr, "%s:  *** out of storage space 3 *** %d \n", __FILE__, ncnt);
+      fprintf( stderr, "%s:  *** out of storage space 3 *** %d %ld\n", __FILE__, ncnt, nspace);
       exit(-1);
     }
   }
@@ -699,10 +569,10 @@ int main(int argc, char **argv)
   fclose(imf);
 
   /* print measurement file storage requirements */
-  ratio=100.0 * (float) nbyte / (float) nls;
-  printf("  Input file read into ram\n");
-  printf("  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
-	 nrec,ncnt,nbyte,nspace,ratio,100.0*file_savings);
+  ratio=(float)(100.0 * (float) nbyte / (float) nls);
+  fprintf( stderr, "%s:  Input file read into ram\n", __FILE__ );
+  fprintf( stderr, "%s:  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
+	   __FILE__, nrec, ncnt, nbyte, nspace, ratio, 100.0*file_savings );
 
 /* Begin SIR/SIRF processing.  First initialize working arrays. */
 
@@ -726,13 +596,13 @@ int main(int argc, char **argv)
   old_amin=a_init;
   old_amax=a_init;
   
-  printf("\nSIR parameters: A_init=%f  N=%d\n",a_init,nits);
+  fprintf( stderr, "%s: \nSIR parameters: A_init=%f  N=%d\n", __FILE__, a_init, nits );
 
   /* for each iteration of SIR */
 
   for (its=0; its < nits; its++) {
 
-    printf("\nSIR iteration %d %d\n",its+1,ncnt);
+    fprintf( stderr, "%s: \nSIR iteration %d %d\n", __FILE__, its+1, ncnt);
 
     /* for each measurement, accumulate results */
 
@@ -749,7 +619,7 @@ int main(int argc, char **argv)
       store = store+HS;
       store2 = store + 4*count;
 
-      get_updates(tbval, ang, count, (int *) store, (short int *) store2, its);
+      get_updates(tbval, count, (int *) store, (short int *) store2, its);
 
       /* compute AVE image during first iteration */
       if (its == 0) 
@@ -760,7 +630,6 @@ int main(int argc, char **argv)
       if (count % 2 == 1) store=store+2;  /* ensure word boundary */
     }
 
-done:
     /* after processing all measurements for this iteration and
        updating the A image, clear arrays */
 
@@ -780,7 +649,7 @@ done:
 	    *(sx2+i) = *(sx2+i) / *(sy+i);
 	    *(sx2+i) = *(sx2+i) - *(sx+i) * *(sx+i);
 	    if (*(sx2+i) > 0.0) 
-	      *(sx2+i) = sqrt((double) *(sx2+i));
+	      *(sx2+i) = (float)sqrt((double) *(sx2+i));
 	    else
 	      *(sx2+i) = 0.;
 	  } else {
@@ -812,9 +681,9 @@ done:
       }	
     }
 
-    if (its == 0) printf(" Average weight: %.4f\n",total/nsize);
-    printf(" A min max  --> %f %f %d\n",amin,amax,its+1);
-    printf(" A change   --> %f %f\n",amin-old_amin,amax-old_amax);
+    if (its == 0) fprintf( stderr, "%s:  Average weight: %.4f\n", __FILE__, total/nsize );
+    fprintf( stderr, "%s:  A min max  --> %f %f %d\n", __FILE__, amin, amax, its+1 );
+    fprintf( stderr, "%s:  A change   --> %f %f\n", __FILE__, amin-old_amin, amax-old_amax );
 
     old_amin=amin;
     old_amax=amax;
@@ -850,7 +719,7 @@ done:
     }
 
   }    /* end of loop for each SIR iteration */
-  printf(" weight max --> %f Average weight: %.4f\n",tmax,total/nsize);
+  fprintf( stderr, "%s:  weight max --> %f Average weight: %.4f\n", __FILE__, tmax, total/nsize );
 
   if ( 0 != cetb_file_add_var( cetb_sir, "TB",
 			       NC_USHORT, a_val,
@@ -935,7 +804,7 @@ done:
 
 /* create STD and Err images */
 
-  printf("\nBegin creation of STD images\n");  
+  fprintf( stderr, "%s: \nBegin creation of STD images\n", __FILE__ );  
 
   /* initialize arrays */
 
@@ -960,12 +829,11 @@ done:
     store = store+HS;
     store2 = store+4*count;
 
-    stat_updates(tbval, ang, count, (int *) store, (short int *) store2);
+    stat_updates(tbval, count, (int *) store, (short int *) store2);
     store = store+4*count;
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
   }
-done1:
 
   amin =  32000.0;            /* for user stats */
   amax = -32000.0;
@@ -982,7 +850,7 @@ done1:
       if (*(sy+i) > 0.0) {
 	*(sxy+i) = *(sy+i) - *(sx+i) * *(sx+i);
 	if (*(sxy+i) > 0.0) 
-	  *(sxy+i) = sqrt( (double) *(sxy+i));
+	  *(sxy+i) = (float)sqrt( (double) *(sxy+i));
 	else
 	  *(sxy+i) = 0.0;
       } else
@@ -999,8 +867,8 @@ done1:
     }
   }
     
-  printf(" Tb STD min   max --> %f %f\n",amin,amax);
-  printf(" Tb ERR min   max --> %f %f\n",bmin,bmax);
+  fprintf( stderr, "%s:  Tb STD min   max --> %f %f\n", __FILE__, amin, amax );
+  fprintf( stderr, "%s:  Tb ERR min   max --> %f %f\n", __FILE__, bmin, bmax );
 
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_std_dev",
 			       NC_USHORT, sxy,
@@ -1044,7 +912,7 @@ done1:
 
 /* create time image */
 
-  printf("\nBegin creation of time image\n");  
+  fprintf( stderr, "%s: \nBegin creation of time image\n", __FILE__ );  
 
   /* initialize arrays */
 
@@ -1070,12 +938,11 @@ done1:
     store = store+HS;
     store2 = store+4*count;     
 
-    time_updates(tbval, (float) ktime, ang, count, (int *) store, (short int *) store2);
+    time_updates((float) ktime, count, (int *) store);
     store = store+4*count;
     store = store+2*count;
     if (count % 2 == 1) store=store+2;  /* ensure word boundary */
   }
-done2:
 
   amin =  32000.0;            /* for user stats */
   amax = -32000.0;
@@ -1086,7 +953,7 @@ done2:
       total = total + *(tot+i);
 
       if (*(tot+i) > 1) 
-	if (*(sy+i) != 0.0) 
+	if (fabs(*(sy+i)) >= FLT_EPSILON) 
 	  *(sxy+i) = *(sx+i) / *(sy+i);
 	else
 	  *(sxy+i) =0.0;
@@ -1101,7 +968,7 @@ done2:
       *(sxy+i) = anodata_P;
   }
 
-  printf(" Time min   max --> %f %f\n",amin,amax);
+  fprintf( stderr, "%s:  Time min   max --> %f %f\n", __FILE__, amin, amax );
 
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_time",
   			       NC_SHORT, sxy,
@@ -1126,7 +993,7 @@ done2:
    these are grd images pixel replicated to be at the same 
    resolution of the ave and sir images */
 
-  printf("\nBegin creation of non-enhanced GRD images\n");
+  fprintf( stderr, "%s: \nBegin creation of non-enhanced GRD images\n", __FILE__ );
 
   /* note that this should be the case!: (grid*non_size = sir size)
      nsx2 = nsx/non_size_x;
@@ -1183,15 +1050,15 @@ done2:
     /* compute unweighted, normalized stats for measurements hitting grid element */
 
       if (iadd >= nsx2*nsy2 || iadd < 0) {  /* keep only in-image measurements */
-	printf("*** Non-enhanced address error: %d %d %d %d %d\n",
-	       iadd,ix,iy,non_size_x,non_size_y);
+	fprintf( stderr, "%s: *** Non-enhanced address error: %d %d %d %d %d\n",
+		 __FILE__, iadd, ix, iy, non_size_x, non_size_y );
       } else {
 	fn = *(tot + iadd);
-	*(tot +  iadd) = *(tot +   iadd) + 1.0;                    /* count */
+	*(tot +  iadd) = *(tot +   iadd) + 1;                    /* count */
 	if ( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX ) {
-	  *(num_samples + iadd) = *(num_samples + iadd) + 1;         /* num_samples for each pixel */
+	  *(num_samples + iadd) = (unsigned char)(*(num_samples + iadd) + 1);         /* num_samples for each pixel */
 	}
-	ninv = 1./ *(tot + iadd);
+	ninv = 1/ *(tot + iadd);
 	*(sx +   iadd) = (*(sx +   iadd) * fn + ang)*ninv;         /* mean inc angle */
 	*(sx2 +  iadd) = (*(sx2 +  iadd) * fn + ang*ang)*ninv;     /* var inc angle */
 	*(a_val+ iadd) = (*(a_val+ iadd) * fn + tbval)*ninv;	   /* mean Tb */
@@ -1201,7 +1068,6 @@ done2:
       }
     }
   }
-done3:
 
   amin =  32000.0;            /* for user stats */
   amax = -32000.0;
@@ -1222,7 +1088,7 @@ done3:
       if (*(tot+i) > 1.0) {
 	temp =  *(sy+i) - (*(a_val+i) * *(a_val+i));
 	if (temp > 0.0) {
-	  *(sy+i) = sqrt((double) temp);  /* Tb std */ 
+	  *(sy+i) = (float)sqrt((double) temp);  /* Tb std */ 
 	  old_bmin = min(old_bmin, *(sy+i));
 	  old_bmax = max(old_bmax, *(sy+i));
 	} else
@@ -1233,7 +1099,7 @@ done3:
       if (*(tot+i) > 1.0) {
 	denom = *(sx2+i) - (*(sx+i) * *(sx+i));
 	if (denom > 0.0) {
-	  *(sx2+i) = sqrt((double) denom);  /* inc std */
+	  *(sx2+i) = (float)sqrt((double) denom);  /* inc std */
 	  bmin = min(bmin, *(sx2+i));
 	  bmax = max(bmax, *(sx2+i));
 	} else
@@ -1254,10 +1120,10 @@ done3:
     }
   }
 
-  printf(" Non-enhanced/Grid A  min   max --> %f %f\n",amin,amax);
-  printf(" Non-enhanced/Grid V  min   max --> %f %f\n",old_bmin,old_bmax);
-  printf(" Non-enhanced/Grid I  min   max --> %f %f\n",bmin,bmax);
-  printf(" Non-enhanced/Grid C        max --> %.1f\n",tmax);
+  fprintf( stderr, "%s:  Non-enhanced/Grid A  min   max --> %f %f\n", __FILE__, amin, amax );
+  fprintf( stderr, "%s:  Non-enhanced/Grid V  min   max --> %f %f\n", __FILE__, old_bmin, old_bmax );
+  fprintf( stderr, "%s:  Non-enhanced/Grid I  min   max --> %f %f\n", __FILE__, bmin, bmax );
+  fprintf( stderr, "%s:  Non-enhanced/Grid C        max --> %.1f\n", __FILE__, tmax );
 
   if ( 0 != cetb_file_add_var( cetb_grd, "TB",
 			       NC_USHORT, a_val,
@@ -1457,42 +1323,11 @@ done3:
   cetb_file_close( cetb_sir );
 
   if (errors == 0) {
-    printf("No errors encountered\n");
-#ifdef INFOFILE
-    /* write out info file if processing is completed successfully */
-    printf("Info file: %s\n",info_name);
-    omf = fopen(info_name,"w"); 
-    if (omf == NULL) {
-      eprintfc("ERROR: cannot open info file: '%s'\n", info_name); 
-    } else {
-      fprintf(omf,"SIR Processing of '%s' successfully completed\n",file_in);
-      fprintf(omf,"A output file: '%s'\n",a_name);
-      fprintf(omf,"I output file: '%s'\n",i_name);
-      fprintf(omf,"J output file: '%s'\n",j_name);
-      fprintf(omf,"C output file: '%s'\n",c_name);
-      fprintf(omf,"P output file: '%s'\n",p_name);
-      fprintf(omf,"V output file: '%s'\n",v_name);
-      fprintf(omf,"E output file: '%s'\n",e_name);
-      fprintf(omf,"AVE A output file: '%s'\n",a_name_ave);
-      if (CREATE_NON) {
-	fprintf(omf,"NON A output file: '%s'\n",non_aname);
-	fprintf(omf,"NON V output file: '%s'\n",non_vname);
-      }
-      fprintf(omf,"GRD A output file: '%s'\n",grd_aname);
-      fprintf(omf,"GRD V output file: '%s'\n",grd_vname);
-      fprintf(omf,"GRD I output file: '%s'\n",grd_iname);
-      fprintf(omf,"GRD J output file: '%s'\n",grd_jname);
-      fprintf(omf,"GRD P output file: '%s'\n",grd_pname);
-      fprintf(omf,"GRD C output file: '%s'\n",grd_cname);
-      fclose(omf);
-    }
-#endif
+    fprintf( stderr, "%s: No errors encountered\n", __FILE__ );
   } else
-    printf("Processing errors encountered\n");
+    fprintf( stderr, "%s: Processing errors encountered\n", __FILE__ );
   
   /* end of program */
-  /* printf("De-allocating memory\n");  */
-
   /* free malloc'ed memory (not strictly necessary, but good to be explicit) */
   free(space);
   free(a_val);
@@ -1511,8 +1346,7 @@ done3:
 
 /* SIR algorithm update step */
 
-void get_updates(float tbval, float ang, int count, int fill_array[],
-		 short int response_array[], int its)
+void get_updates(float tbval, int count, int fill_array[], short int response_array[], int its)
 {
   float total = 0.0, num=0.0;
   float ave, scale, update;
@@ -1529,7 +1363,7 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
     ave=total/num;
   else
     return;
-  if (ave == 0.0) return;
+  if (fabs(ave) <= FLT_EPSILON) return;
 
   /* for each measurement hitting a pixel calculate updates */
 
@@ -1542,9 +1376,9 @@ void get_updates(float tbval, float ang, int count, int fill_array[],
     else                   /* unless scale is negative */
       scale=1.0;
     if (scale > 1.0)       /* constraining function */
-      update = 1.0/((0.5/ave)*(1.0-1.0/scale)+1.0/(*(a_val+n-1) * scale));
+      update = (float)(1.0/((0.5/ave)*(1.0-1.0/scale)+1.0/(*(a_val+n-1) * scale)));
     else
-      update = 0.5 * ave * (1.0 - scale) + *(a_val+n-1) * scale;
+      update = (float)(0.5 * ave * (1.0 - scale) + *(a_val+n-1) * scale);
 
     (*(tot+n-1)) = (*(tot+n-1)) + m;
     *(a_temp+n-1) = (*(a_temp+n-1) * ( *(tot+n-1) - m) + update * m) / *(tot+n-1);
@@ -1585,8 +1419,8 @@ void compute_ave(float tbval, float ang, int count, int fill_array[],
 
 /* modified median, circular median, or smoothing filter routine */
 
-float median(float *array, int count);
-float cmedian(float *array, int count, float center);
+static float median(float *array, int count);
+static float cmedian(float *array, int count, float center);
 
 void filter(float *val, int size, int mode, int nsx, int nsy, 
 	    float *temp, float thres)
@@ -1651,7 +1485,7 @@ float cmedian(float array[], int count, float center)
     sum = 0.0;
     for (j=0; j < count; j++)
       if (i != j)
-	sum=sum+(180.0-abs(180.0-abs(array[i]-array[j])));
+	sum=sum+(180-abs(180-abs(array[i]-array[j])));
     if (sum < temp) {
       temp = sum;
       k = i;
@@ -1683,7 +1517,7 @@ float median(float array[], int count)
     temp=0.0;
     for (i=count/2-1; i <= count/2+3; i++)
       temp=temp+array[i-1];
-    temp=temp/5.0;
+    temp=temp/5;
   }
   return(temp);
 }
@@ -1692,7 +1526,7 @@ float median(float array[], int count)
 
 /* routine to compute the spatial response function weighted variance and error from measurements */
 
-void stat_updates(float tbval, float ang, int count, int fill_array[],
+void stat_updates(float tbval, int count, int fill_array[],
 		  short int response_array[])
 {
   float ave, sigv;
@@ -1708,8 +1542,8 @@ void stat_updates(float tbval, float ang, int count, int fill_array[],
     total = total + m * sigv;
     num = num + m;
   }
-  if (num == 0) return;
-  ave =(double) (total/num);
+  if (abs(num) < FLT_EPSILON) return;
+  ave =(total/num);
   
   for (i=0; i < count; i++) {
     n=fill_array[i];
@@ -1727,76 +1561,17 @@ void stat_updates(float tbval, float ang, int count, int fill_array[],
 
 /* routine to compute time estimates from measurements */
 
-void time_updates(float tbval, float ktime, float ang __attribute__ ((unused)), int count,
-		  int fill_array[], short int response_array[])
+void time_updates(float ktime, int count, int fill_array[])
 {
-  float ave;
   int i, n;
   
   for (i=0; i < count; i++) {
     n=fill_array[i];
     *(tot+n-1) = *(tot+n-1) + 1;
-    ave = tbval;
     *(sx+n-1) = *(sx+n-1) + ktime;
-    *(sy+n-1) = *(sy+n-1) + 1.0;
+    *(sy+n-1) = *(sy+n-1) + 1;
   }
   return;
-}
-
-
-int get_measurements(char *store, char *store2, float *tbval, float *ang, int *count,
-		     int *ktime, int *iadd, int *nrec)
-{  /* returns the next set of measurement from the file */
-  int dumb, flag=1;
-  
-  while (flag == 1) {
-    if (fread(&dumb, sizeof(int), 1, imf) != 0) {  /* fortran record header */
-      /*	   read	 (50,err=500,end=500) tbval,ang,count,ktime,iadd
-		   read (50,err=500,end=500) (fill_array(i),i=1,count)   */
-      if (fread(store, sizeof(char), HS, imf) != HS) Ferror(200);
-      if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(201); /* fortran 
-								record trailer */
-      *tbval = *((float *) (store+0));
-      *ang   = *((float *) (store+4));
-      *count = *((int *)   (store+8));
-      *ktime = *((int *)   (store+12));
-      *iadd  = *((int *)   (store+16));
-      /* if (HASAZANG)
-       *azang = *((float *) (store+20)); */
-      
-      /*
-      if (*tbval==0.0 || abs(*tbval) > 400.0)
-	printf("record %d %f %f %d %d %d\n",*nrec,*tbval,*ang,*count,*ktime,*iadd);
-      */
-
-      /* read fill_array pixel indices */
-      if (*count * 4 < nspace) {
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(210); 
-	if (fread(store, sizeof(int), *count, imf) != *count) Ferror(211);
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(212);
-      } else {
-	eprintfi(" *** fill_array storage error 3 *** %d\n", *nrec);
-	fprintf(stderr," *** fill_array storage error 3 *** %d %d %ld\n", *nrec,*count,nspace);
-	return(-1);
-      }
-
-      /* read response_array values */
-      if (*count * 2 < nspace) {
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(2101); 
-	if (fread(store2, sizeof(short int), *count, imf) != *count) Ferror(2111);
-	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(2121);
-      } else {
-	eprintfi(" *** fill_array storage error 4 *** %d\n", *nrec);
-	fprintf(stderr," *** fill_array storage error 4 *** %d %ld\n",*nrec,nspace);
-	return(-1);
-      }
-      (*nrec)++;
-	
-      if (*tbval < CETB_TB_SCALED_MAX && *tbval > CETB_TB_SCALED_MIN) return(0);
-    } else      /* end of file (or file err) encountered */
-      return(1);
-  }
-  return(0);
 }
 
 
@@ -1810,13 +1585,6 @@ void no_trailing_blanks(char *s)
     n--;
   }
   return;
-}
-
-
-char *addpath(char *outpath, char *name, char *temp)
-{ /* append path to name, return pointer to temp */
-  sprintf(temp,"%s/%s",outpath,name);
-  return(temp);  
 }
 
   
