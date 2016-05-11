@@ -279,9 +279,18 @@ int main(int argc, char **argv)
    end_flag = 0;
    do {
      
-     if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(70);
-     if (fread(line,   sizeof(char), 100, imf) == 0) Ferror(71);
-     if (fread(&dumb,   sizeof(int),   1, imf) == 0) Ferror(72);
+     if (fread(&dumb,   sizeof(int),   1, imf) == 0) {
+       fprintf( stderr, "%s: reached Ferror(70)\n", __FUNCTION__ );
+       end_flag = 1;
+     }
+     if (fread(line,   sizeof(char), 100, imf) == 0) {
+       fprintf( stderr, "%s: reached Ferror(71)\n", __FUNCTION__ );
+       end_flag = 1;
+     }
+     if (fread(&dumb,   sizeof(int),   1, imf) == 0) { 
+       fprintf( stderr, "%s: reached Ferror(72)\n", __FUNCTION__ );
+       end_flag = 1;
+     }
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
