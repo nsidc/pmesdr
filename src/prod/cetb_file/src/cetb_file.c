@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
@@ -18,6 +19,7 @@
 #include "calcalcs.h"
 #include "cetb.h"
 #include "cetb_file.h"
+#include "utils.h"
 
 /*********************************************************************
  * Internal data and function prototypes
@@ -28,7 +30,6 @@
 #define MAX_STR_LENGTH 256
 #define DEFLATE_LEVEL 9
 
-static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -54,7 +55,6 @@ static int valid_resolution_factor( int factor );
 static int valid_sensor_id( cetb_sensor_id sensor_id );
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
 static int yyyydoy_to_days_since_epoch( int year, int doy,
-					const char *units,
 					double *days_since_epoch );
 
 /*********************************************************************
@@ -106,8 +106,8 @@ cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outp
 
   /* Convert the recon_str to lower case, so we find paths like "/.../bgiCSU" */
   recon_str = strdup( cetb_reconstruction_id_name[ reconstruction_id ] );
-  for ( i=0; i < strlen( recon_str ); i++ ) {
-    recon_str[i] = tolower( recon_str[i] );
+  for ( i=0; i < (int)strlen( recon_str ); i++ ) {
+    recon_str[i] = (char)tolower( recon_str[i] );
   }
   
   ptr = strstr( outpath, recon_str );
@@ -186,13 +186,13 @@ cetb_file_class *cetb_file_init( char *dirname,
   if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
 
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&this, sizeof( cetb_file_class ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&this, sizeof( cetb_file_class ) ) ) {
     return NULL;
   }
   
   this->fid = 0;
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&(this->filename), FILENAME_MAX + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&(this->filename), FILENAME_MAX + 1 ) ) {
     return NULL;
   }
   
@@ -254,7 +254,6 @@ int cetb_file_open( cetb_file_class *this ) {
   char template_filename[ FILENAME_MAX ];
   char *ptr_path;
   int template_fid;
-  FILE *filep;
 
   if ( !this->filename ) {
     fprintf( stderr, "%s: Cannot open cetb file with empty filename.\n",
@@ -263,7 +262,7 @@ int cetb_file_open( cetb_file_class *this ) {
   }
   
   /* Create a new cetb file */
-  if ( status = nc_create( this->filename, NC_NETCDF4, &(this->fid) ) ) {
+  if ( ( status = nc_create( this->filename, NC_NETCDF4, &(this->fid) ) ) ) {
     fprintf( stderr, "%s: Error creating cetb_filename=%s: %s.\n",
   	     __FUNCTION__, this->filename, nc_strerror( status ) );
     return 1;
@@ -282,7 +281,7 @@ int cetb_file_open( cetb_file_class *this ) {
   strncpy( template_filename, ptr_path, FILENAME_MAX );
   strcat( template_filename,
   	  "/src/prod/cetb_file/templates/cetb_global_template.nc" );
-  if ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) {
+  if ( ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
   	     __FUNCTION__, template_filename, nc_strerror( status ) );
     return 0;
@@ -301,7 +300,7 @@ int cetb_file_open( cetb_file_class *this ) {
     return 1;
   }
   
-  if ( status = nc_close( template_fid ) ) {
+  if ( ( status = nc_close( template_fid ) ) ) {
     fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
 	     __FUNCTION__, template_filename, nc_strerror( status ) );
   }
@@ -372,9 +371,7 @@ int cetb_file_add_var( cetb_file_class *this,
 
   int status;
   int dim_ids[ ] = { this->time_dim_id, this->rows_dim_id, this->cols_dim_id };
-  long int row, col;
-  size_t start[ ] = { 0, 0, 0 };
-  size_t count[ ] = { 0, 0, 0 };
+  long int row;
   float *float_data;
   unsigned char *uchar_data;
   int var_id;
@@ -407,7 +404,7 @@ int cetb_file_add_var( cetb_file_class *this,
    * follows DIWG convention, with "most rapidly-changing
    * dimension last in C arrays"
    */
-  if ( status = nc_def_var( this->fid, var_name, xtype, 3, dim_ids, &var_id ) ) {
+  if ( ( status = nc_def_var( this->fid, var_name, xtype, 3, dim_ids, &var_id ) ) ) {
     fprintf( stderr, "%s: Error defining %s variable : %s.\n",
   	     __FUNCTION__, var_name, nc_strerror( status ) );
     return 1;
@@ -422,76 +419,76 @@ int cetb_file_add_var( cetb_file_class *this,
   nc_def_var_deflate( this->fid, var_id, 1, 1, DEFLATE_LEVEL );
 
   if ( NULL != standard_name ) {
-    if ( status = nc_put_att_text( this->fid, var_id, "standard_name",
-				   strlen(standard_name), standard_name ) ) {
+    if ( ( status = nc_put_att_text( this->fid, var_id, "standard_name",
+				     strlen(standard_name), standard_name ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 	       __FUNCTION__, var_name, "standard_name", standard_name, nc_strerror( status ) );
       return 1;
     }
   }
   
-  if ( status = nc_put_att_text( this->fid, var_id, "long_name",
-				 strlen(long_name), long_name ) ) {
+  if ( ( status = nc_put_att_text( this->fid, var_id, "long_name",
+				   strlen(long_name), long_name ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 	     __FUNCTION__, var_name, "long_name", long_name, nc_strerror( status ) );
     return 1;
   }
   
-  if ( status = nc_put_att_text( this->fid, var_id, "units",
-				 strlen(units), units ) ) {
+  if ( ( status = nc_put_att_text( this->fid, var_id, "units",
+				   strlen(units), units ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 	     __FUNCTION__, var_name, "units", units, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_def_var_fill( this->fid, var_id, 0, fill_value_p ) ) {
+  if ( ( status = nc_def_var_fill( this->fid, var_id, 0, fill_value_p ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
 	     __FUNCTION__, var_name, "fill_value", nc_strerror( status ) );
     return 1;
   }
 
   if ( NULL != missing_value_p ) {
-    if ( status = nc_put_att( this->fid, var_id, "missing_value",
-			      xtype, 1, missing_value_p ) ) {
+    if ( ( status = nc_put_att( this->fid, var_id, "missing_value",
+				xtype, 1, missing_value_p ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s: %s.\n",
 	       __FUNCTION__, var_name, "missing_value", nc_strerror( status ) );
       return 1;
     }
   }
-  if ( status = nc_put_att( this->fid, var_id, "valid_range",
-			    xtype, 2, valid_range_p ) ) {
+  if ( ( status = nc_put_att( this->fid, var_id, "valid_range",
+			      xtype, 2, valid_range_p ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
   	     __FUNCTION__, var_name, "valid_range", nc_strerror( status ) );
     return 1;
   }
 
   if ( CETB_PACK == do_pack ) {
-    if ( status = nc_put_att_text( this->fid, var_id, "packing_convention",
-				   strlen(packing_convention), packing_convention ) ) {
+    if ( ( status = nc_put_att_text( this->fid, var_id, "packing_convention",
+				     strlen(packing_convention), packing_convention ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 	       __FUNCTION__, var_name, "packing_convention", packing_convention,
 	       nc_strerror( status ) );
       return 1;
     }
   
-    if ( status = nc_put_att_text( this->fid, var_id, "packing_convention_description",
+    if ( ( status = nc_put_att_text( this->fid, var_id, "packing_convention_description",
 				   strlen(packing_convention_description),
-				   packing_convention_description ) ) {
+				     packing_convention_description ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 	       __FUNCTION__, var_name, "packing_convention_description",
 	       packing_convention_description, nc_strerror( status ) );
       return 1;
     }
   
-    if ( status = nc_put_att_float( this->fid, var_id, "scale_factor",
-				    NC_FLOAT, 1, &scale_factor ) ) {
+    if ( ( status = nc_put_att_float( this->fid, var_id, "scale_factor",
+				      NC_FLOAT, 1, &scale_factor ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %f: %s.\n",
 	       __FUNCTION__, var_name, "scale_factor", scale_factor, nc_strerror( status ) );
       return 1;
     }
 
-    if ( status = nc_put_att_float( this->fid, var_id, "add_offset",
-				    NC_FLOAT, 1, &add_offset ) ) {
+    if ( ( status = nc_put_att_float( this->fid, var_id, "add_offset",
+				      NC_FLOAT, 1, &add_offset ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %f: %s.\n",
 	       __FUNCTION__, var_name, "add_offset", add_offset, nc_strerror( status ) );
       return 1;
@@ -506,7 +503,7 @@ int cetb_file_add_var( cetb_file_class *this,
      */
     if ( NC_USHORT == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&ushort_data,
+      status = utils_allocate_clean_aligned_memory( ( void * )&ushort_data,
     					      sizeof( unsigned short ) * 1 * rows * cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
@@ -524,12 +521,12 @@ int cetb_file_add_var( cetb_file_class *this,
       
       for ( row=0; row<rows; row++ ) {
 	for ( i=0;i <cols; i++ ) {
-	  *( ushort_data + ((row*cols)+i) ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+	  *( ushort_data + ((row*cols)+i) ) = (unsigned short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
 								   *( (float *)data + (((rows-row-1)*cols)+i) ) );
 	}
       }
 
-	if ( status = nc_put_var_ushort( this->fid, var_id, ushort_data ) ) {
+      if ( ( status = nc_put_var_ushort( this->fid, var_id, ushort_data ) ) ) {
 	  fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
 	  return 1;
 	}
@@ -538,7 +535,7 @@ int cetb_file_add_var( cetb_file_class *this,
 
     } else if ( NC_SHORT == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&short_data,
+      status = utils_allocate_clean_aligned_memory( ( void * )&short_data,
     					      sizeof( short ) * 1 * rows * cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
@@ -556,12 +553,12 @@ int cetb_file_add_var( cetb_file_class *this,
       
       for ( row=0; row<rows; row++ ) {
 	for ( i=0; i<cols; i++ ) {
-	  *( short_data + ((row*cols)+i) ) = CETB_FILE_PACK_DATA( scale_factor, add_offset,
+	  *( short_data + ((row*cols)+i) ) = (short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
 								  *( (float *)data + (((rows-row-1)*cols)+i) ) );
 	}
       }
 
-      if ( status = nc_put_var_short( this->fid, var_id, short_data ) ) {
+      if ( ( status = nc_put_var_short( this->fid, var_id, short_data ) ) ) {
 	fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
 	return 1;
       }
@@ -585,7 +582,7 @@ int cetb_file_add_var( cetb_file_class *this,
      */
     if ( NC_FLOAT == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * 1 * cols * rows );
+      status = utils_allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * 1 * cols * rows );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for flipped float_data.\n", __FUNCTION__ );
     	return 1;
@@ -596,7 +593,7 @@ int cetb_file_add_var( cetb_file_class *this,
 		sizeof( float ) * cols );
       }
 	
-      if ( status = nc_put_var( this->fid, var_id, ( void * )float_data ) ) {
+      if ( ( status = nc_put_var( this->fid, var_id, ( void * )float_data ) ) ) {
 	fprintf( stderr, "%s: Error putting float variable: %s.\n",
 		 __FUNCTION__, nc_strerror( status ) );
 	return 1;
@@ -606,7 +603,7 @@ int cetb_file_add_var( cetb_file_class *this,
       
     } else if ( NC_UBYTE == xtype ) {
 
-      status = allocate_clean_aligned_memory( ( void * )&uchar_data,
+      status = utils_allocate_clean_aligned_memory( ( void * )&uchar_data,
 					      sizeof( unsigned char ) * 1 * cols * rows );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for flipped uchar_data.\n", __FUNCTION__ );
@@ -618,20 +615,20 @@ int cetb_file_add_var( cetb_file_class *this,
 		sizeof( unsigned char ) * cols );
       }
 	
-      if ( status = nc_put_var( this->fid, var_id, ( void * )uchar_data ) ) {
+      if ( ( status = nc_put_var( this->fid, var_id, ( void * )uchar_data ) ) ) {
 	fprintf( stderr, "%s: Error putting uchar variable: %s.\n",
 		 __FUNCTION__, nc_strerror( status ) );
 	return 1;
       }
-      if ( status = nc_put_att( this->fid, var_id, "flag_values", NC_UBYTE,
-				(size_t)1, &(num_samples_max) ) ) {
+      if ( ( status = nc_put_att( this->fid, var_id, "flag_values", NC_UBYTE,
+				  (size_t)1, &(num_samples_max) ) ) ) {
 	fprintf( stderr, "%s: Error setting %s %s %d: %s.\n",
 		 __FUNCTION__, var_name, "flag_values", CETB_FILE_TB_NUM_SAMPLES_MAX, nc_strerror( status ) );
 	return 1;
       }
   
-      if ( status = nc_put_att_text( this->fid, var_id, "flag_meanings", 
-				     strlen(flag_meanings), flag_meanings ) ) {
+      if ( ( status = nc_put_att_text( this->fid, var_id, "flag_meanings", 
+				       strlen(flag_meanings), flag_meanings ) ) ) {
 	fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 		 __FUNCTION__, var_name, "flag_meanings", flag_meanings, nc_strerror( status ) );
 	return 1;
@@ -648,17 +645,17 @@ int cetb_file_add_var( cetb_file_class *this,
     
   }
 
-  if ( status = nc_put_att_text( this->fid, var_id, "grid_mapping",
+  if ( ( status = nc_put_att_text( this->fid, var_id, "grid_mapping",
   				 strlen(grid_mapping),
-				 grid_mapping ) ) {
+				   grid_mapping ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
   	     __FUNCTION__, var_name, "grid_mapping", grid_mapping, nc_strerror( status ) );
     return 1;
   }
   
-  if ( status = nc_put_att_text( this->fid, var_id, "coverage_content_type",
+  if ( ( status = nc_put_att_text( this->fid, var_id, "coverage_content_type",
   				 strlen(coverage_content_type),
-				 coverage_content_type ) ) {
+				   coverage_content_type ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
   	     __FUNCTION__, var_name, "coverage_content_type",
 	     coverage_content_type, nc_strerror( status ) );
@@ -666,8 +663,8 @@ int cetb_file_add_var( cetb_file_class *this,
   }
   
   if ( NULL != calendar ) {
-    if ( status = nc_put_att_text( this->fid, var_id, "calendar",
-				   strlen( calendar ), calendar ) ) {
+    if ( ( status = nc_put_att_text( this->fid, var_id, "calendar",
+				     strlen( calendar ), calendar ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s: %s.\n",
 	       __FUNCTION__, var_name, "calendar", nc_strerror( status ) );
       return 1;
@@ -731,49 +728,49 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+  if ( ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) ) {
     fprintf( stderr, "%s: No 'TB' variable to attach BGI attributes: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
     
-  if ( status = nc_put_att_double( this->fid, var_id, "bgi_gamma",
-				   NC_DOUBLE, 1, &gamma ) ) {
+  if ( ( status = nc_put_att_double( this->fid, var_id, "bgi_gamma",
+				     NC_DOUBLE, 1, &gamma ) ) ) {
     fprintf( stderr, "%s: Error setting bgi_gamma: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, var_id, "bgi_dimensional_tuning_parameter",
-				NC_FLOAT, 1, &dimensional_tuning_parameter ) ) {
+  if ( ( status = nc_put_att_float( this->fid, var_id, "bgi_dimensional_tuning_parameter",
+				    NC_FLOAT, 1, &dimensional_tuning_parameter ) ) ) {
     fprintf( stderr, "%s: Error setting bgi_dimensional_tuning_parameter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, var_id, "bgi_noise_variance",
-				NC_FLOAT, 1, &noise_variance ) ) {
+  if ( ( status = nc_put_att_float( this->fid, var_id, "bgi_noise_variance",
+				    NC_FLOAT, 1, &noise_variance ) ) ) {
     fprintf( stderr, "%s: Error setting bgi_noise_variance: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, var_id, "bgi_db_threshold",
-				NC_FLOAT, 1, &db_threshold ) ) {
+  if ( ( status = nc_put_att_float( this->fid, var_id, "bgi_db_threshold",
+				    NC_FLOAT, 1, &db_threshold ) ) ) {
     fprintf( stderr, "%s: Error setting bgi_db_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_float( this->fid, var_id, "bgi_diff_threshold",
-				NC_FLOAT, 1, &diff_threshold ) ) {
+  if ( ( status = nc_put_att_float( this->fid, var_id, "bgi_diff_threshold",
+				    NC_FLOAT, 1, &diff_threshold ) ) ) {
     fprintf( stderr, "%s: Error setting bgi_diff_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
-				NC_INT, 1, &median_filter ) ) {
+  if ( ( status = nc_put_att_int( this->fid, var_id, "median_filter",
+				  NC_INT, 1, &median_filter ) ) ) {
     fprintf( stderr, "%s: Error setting median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
@@ -815,21 +812,21 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
     return 1;
   }
 
-  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+  if ( ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) ) {
     fprintf( stderr, "%s: No 'TB' variable to attach SIR attributes: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
     
-  if ( status = nc_put_att_int( this->fid, var_id, "sir_number_of_iterations",
-				NC_INT, 1, &number_of_iterations ) ) {
+  if ( ( status = nc_put_att_int( this->fid, var_id, "sir_number_of_iterations",
+				  NC_INT, 1, &number_of_iterations ) ) ) {
     fprintf( stderr, "%s: Error setting sir_number_of_iterations: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
-				NC_INT, 1, &median_filter ) ) {
+  if ( ( status = nc_put_att_int( this->fid, var_id, "median_filter",
+				  NC_INT, 1, &median_filter ) ) ) {
     fprintf( stderr, "%s: Error setting sir_median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
@@ -869,14 +866,14 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
     return 1;
   }
   
-  if ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) {
+  if ( ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) ) {
     fprintf( stderr, "%s: No 'TB' variable to attach GRD attributes: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
     
-  if ( status = nc_put_att_int( this->fid, var_id, "median_filter",
-				NC_INT, 1, &median_filter ) ) {
+  if ( ( status = nc_put_att_int( this->fid, var_id, "median_filter",
+				  NC_INT, 1, &median_filter ) ) ) {
     fprintf( stderr, "%s: Error setting median_filter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
@@ -904,7 +901,7 @@ void cetb_file_close( cetb_file_class *this ) {
   
   if ( !this ) return;
   if ( this->filename ) {
-    if ( status = nc_close( this->fid ) ) {
+    if ( ( status = nc_close( this->fid ) ) ) {
       fprintf( stderr, "%s: Error closing file=%s: %s.\n",
 	       __FUNCTION__, this->filename, nc_strerror( status ) );
     }
@@ -921,30 +918,6 @@ void cetb_file_close( cetb_file_class *this ) {
 /*********************************************************************
  * Internal function definitions
  *********************************************************************/
-
-/*
- * allocate_clean_aligned_memory - allocate aligned memory that is
- *                                 zeroed out.
- *
- * input:
- *   this : void ** address of pointer to new memory
- *   size : size_t size of memory to allocate
- *
- * output: n/a
- *
- * returns : STATUS_OK for success, or error message to stderr and STATUS_FAILURE
- * 
- */
-int allocate_clean_aligned_memory( void **this, size_t size ) {
-
-  if ( 0 != posix_memalign( this, CETB_FILE_ALIGNMENT, size ) ) {
-    perror( __FUNCTION__ );
-    return STATUS_FAILURE;
-  }
-  memset( *this, 0, size );
-  return STATUS_OK;
-
-}
 
 /*
  * channel_name - Determine the frequency and polarization string from
@@ -1006,7 +979,7 @@ char *current_time_stamp( void ) {
   struct tm *loctime;
 
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&p, MAX_STR_LENGTH + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&p, MAX_STR_LENGTH + 1 ) ) {
     return NULL;
   }
 
@@ -1048,7 +1021,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   char *time_stamp;
   char *software_version;
 
-  if ( status = nc_inq_natts( template_fid, &num_attributes ) ) {
+  if ( ( status = nc_inq_natts( template_fid, &num_attributes ) ) ) {
     fprintf( stderr, "%s: "
   	     "Error getting num attributes from cetb template file: %s.\n",
   	     __FUNCTION__, nc_strerror( status ) );
@@ -1059,14 +1032,14 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
    * Copy all global attributes from template file to CETB file
    */
   for ( i = 0; i < num_attributes; i++ ) { 
-    if ( status = nc_inq_attname( template_fid, NC_GLOBAL,
-  				  i, attribute_name ) ) {
+    if ( ( status = nc_inq_attname( template_fid, NC_GLOBAL,
+				    i, attribute_name ) ) ) {
       fprintf( stderr, "%s: Error getting attribute index %d: %s.\n",
   	       __FUNCTION__, i, nc_strerror( status ) );
       return 1;
     }
-    if ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
-  			       this->fid, NC_GLOBAL ) ) {
+    if ( ( status = nc_copy_att( template_fid, NC_GLOBAL, attribute_name,
+				 this->fid, NC_GLOBAL ) ) ) {
       fprintf( stderr, "%s: Error copying %s: %s.\n",
   	       __FUNCTION__, attribute_name, nc_strerror( status ) );
       return 1;
@@ -1077,35 +1050,35 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
    * Set the global attributes that need to be specific for this file:
    */
   software_version = pmesdr_release_version();
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "software_version_id",
-				 strlen( software_version ),
-				 software_version ) ) {
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "software_version_id",
+				   strlen( software_version ),
+				   software_version ) ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
   	     __FUNCTION__, "software_version_id", software_version, nc_strerror( status ) );
     return 1;
   }
   free( software_version );
   
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "platform",
-   				 strlen( cetb_gcmd_platform_keyword[ this->platform_id ] ),
-  				 cetb_gcmd_platform_keyword[ this->platform_id ] ) ) {
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "platform",
+				   strlen( cetb_gcmd_platform_keyword[ this->platform_id ] ),
+				   cetb_gcmd_platform_keyword[ this->platform_id ] ) ) ) {
      fprintf( stderr, "%s: Error setting %s: %s.\n",
    	     __FUNCTION__, "platform", nc_strerror( status ) );
      return 1;
    }
 
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "sensor",
-  				 strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
-  				 cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) {
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "sensor",
+				   strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
+				   cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "sensor", nc_strerror( status ) );
     return 1;
   }
 
   time_stamp = current_time_stamp();
-  if ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
-  				 strlen( time_stamp ), 
-  				 time_stamp ) ) {
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
+				   strlen( time_stamp ), 
+				   time_stamp ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "date_created", nc_strerror( status ) );
     return 1;
@@ -1142,25 +1115,25 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   
   /* Copy/set the coordinate reference system (crs) metadata */
   strcat( crs_name, cetb_region_id_name[ this->region_id ] );
-  if ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) {
+  if ( ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) ) {
     fprintf( stderr, "%s: Error getting template file crs variable_id: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
   
-  if ( status = nc_copy_var( template_fid, crs_id, this->fid ) ) {
+  if ( ( status = nc_copy_var( template_fid, crs_id, this->fid ) ) ) {
       fprintf( stderr, "%s: Error copying crs: %s.\n",
   	       __FUNCTION__, nc_strerror( status ) );
       return 1;
     }
 
-  if ( status = nc_inq_varid( this->fid, crs_name, &crs_id ) ) {
+  if ( ( status = nc_inq_varid( this->fid, crs_name, &crs_id ) ) ) {
     fprintf( stderr, "%s: Error getting output file crs variable_id: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( status = nc_rename_var( this->fid, crs_id, "crs" ) ) {
+  if ( ( status = nc_rename_var( this->fid, crs_id, "crs" ) ) ) {
     fprintf( stderr, "%s: Error renaming crs variable: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
@@ -1171,7 +1144,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
    * variables and attributes can be added/renamed and attributes
    * can be deleted"
    */
-  if ( status = nc_redef( this->fid ) ) {
+  if ( ( status = nc_redef( this->fid ) ) ) {
     fprintf( stderr, "%s: Error changing to netcdf define mode: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
@@ -1185,18 +1158,18 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
    */
   strcat( long_name, cetb_region_id_name[ this->region_id ] );
   strcat( long_name, cetb_resolution_name[ this->factor ] );
-  if ( status = nc_put_att_text( this->fid, crs_id, "long_name",
-				 strlen( long_name ),
-				 long_name ) ) {
+  if ( ( status = nc_put_att_text( this->fid, crs_id, "long_name",
+				   strlen( long_name ),
+				   long_name ) ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
   	     __FUNCTION__, "long_name", long_name, nc_strerror( status ) );
     return 1;
   }
   
   strcpy( att_name, "scale_factor_at_projection_origin" );
-  if ( status = nc_put_att_double( this->fid, crs_id, att_name, 
-				   NC_DOUBLE, 1,
-				   &cetb_exact_scale_m[ this->region_id ][ this->factor ] ) ) {
+  if ( ( status = nc_put_att_double( this->fid, crs_id, att_name, 
+				     NC_DOUBLE, 1,
+				     &cetb_exact_scale_m[ this->region_id ][ this->factor ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
@@ -1223,7 +1196,6 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
  */
 char *pmesdr_release_version( void ) {
 
-  int status;
   char filename[ FILENAME_MAX ];
   char *ptr_path;
   FILE *filep;
@@ -1244,7 +1216,7 @@ char *pmesdr_release_version( void ) {
     return NULL;
   }
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&version_str, fileinfo.st_size + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&version_str, fileinfo.st_size + 1 ) ) {
     return NULL;
   }
   
@@ -1329,11 +1301,11 @@ int set_all_dimensions( cetb_file_class *this ) {
    * decreasing from a maximum at the top row to the bottom row.
    */
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&vals, rows * sizeof( double ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&vals, rows * sizeof( double ) ) ) {
     return STATUS_FAILURE;
   }
 
-  for ( i = 0; i < rows; i++ ) {
+  for ( i = 0; i < (int)rows; i++ ) {
     vals[ rows - i - 1 ]
       = ( (double) i - ( (double) rows / 2.0 ) )
       * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
@@ -1362,11 +1334,11 @@ int set_all_dimensions( cetb_file_class *this ) {
    * the right
    */
   if ( STATUS_OK
-       != allocate_clean_aligned_memory( ( void * )&vals, cols * sizeof( double ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&vals, cols * sizeof( double ) ) ) {
     return STATUS_FAILURE;
   }
 
-  for ( i = 0; i < cols; i++ ) {
+  for ( i = 0; i < (int)cols; i++ ) {
     vals[ i ] = ( (double) i - ( (double) cols / 2.0 ) )
       * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
   }
@@ -1394,7 +1366,6 @@ int set_all_dimensions( cetb_file_class *this ) {
    */
   if ( STATUS_OK !=
        ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
-  					       units,
   					       &days_since_epoch ) ) ) {
     fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
     return STATUS_FAILURE;
@@ -1457,24 +1428,24 @@ int set_dimension( cetb_file_class *this,
   int var_id;
   int dim_ids[ 1 ];
 
-  if ( status = nc_def_dim( this->fid, name, size, dim_id ) ) {
+  if ( ( status = nc_def_dim( this->fid, name, size, dim_id ) ) ) {
     fprintf( stderr, "%s: Error setting %s dim: %s.\n",
   	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
   }
   dim_ids[ 0 ] = *dim_id;
-  if ( status = nc_def_var( this->fid, name, NC_DOUBLE, 1, dim_ids, &var_id ) ) {
+  if ( ( status = nc_def_var( this->fid, name, NC_DOUBLE, 1, dim_ids, &var_id ) ) ) {
     fprintf( stderr, "%s: Error defining %s variable : %s.\n",
   	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
   }
-  if ( status = nc_put_var_double( this->fid, var_id, vals ) ) {
+  if ( ( status = nc_put_var_double( this->fid, var_id, vals ) ) ) {
     fprintf( stderr, "%s: Error setting %s values: %s.\n",
 	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
   }
-  if ( status = nc_put_att_text( this->fid, var_id, "standard_name",
-  				 strlen(standard_name), standard_name ) ) {
+  if ( ( status = nc_put_att_text( this->fid, var_id, "standard_name",
+				   strlen(standard_name), standard_name ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
   	     __FUNCTION__, name, standard_name, nc_strerror( status ) );
     return 1;
@@ -1482,16 +1453,16 @@ int set_dimension( cetb_file_class *this,
   
   /* long_name attribute isn't required for all variables, only for time */
   if ( NULL != long_name ) {
-    if ( status = nc_put_att_text( this->fid, var_id, "long_name",
-				   strlen(long_name), long_name ) ) {
+    if ( ( status = nc_put_att_text( this->fid, var_id, "long_name",
+				     strlen(long_name), long_name ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s: %s.\n",
 	       __FUNCTION__, name, long_name, nc_strerror( status ) );
       return 1;
     }
   }
   
-  if ( status = nc_put_att_text( this->fid, var_id, "units",
-				 strlen(units), units ) ) {
+  if ( ( status = nc_put_att_text( this->fid, var_id, "units",
+				   strlen(units), units ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
   	     __FUNCTION__, name, units, nc_strerror( status ) );
     return 1;
@@ -1499,22 +1470,22 @@ int set_dimension( cetb_file_class *this,
 
   /* calendar attribute isn't required for all variables, only for time */
   if ( NULL != calendar ) {
-    if ( status = nc_put_att_text( this->fid, var_id, "calendar",
-				   strlen(calendar), calendar ) ) {
+    if ( ( status = nc_put_att_text( this->fid, var_id, "calendar",
+				     strlen(calendar), calendar ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s: %s.\n",
 	       __FUNCTION__, name, calendar, nc_strerror( status ) );
       return 1;
     }
   }
   
-  if ( status = nc_put_att_text( this->fid, var_id, "axis",
-				 strlen(axis), axis ) ) {
+  if ( ( status = nc_put_att_text( this->fid, var_id, "axis",
+				   strlen(axis), axis ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
   	     __FUNCTION__, name, axis, nc_strerror( status ) );
     return 1;
   }
-  if ( status = nc_put_att_double( this->fid, var_id, "valid_range",
-				   NC_DOUBLE, 2, valid_range ) ) {
+  if ( ( status = nc_put_att_double( this->fid, var_id, "valid_range",
+				     NC_DOUBLE, 2, valid_range ) ) ) {
     fprintf( stderr, "%s: Error setting %s valid_range: %s.\n",
   	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
@@ -1799,7 +1770,6 @@ int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
  *
  */
 int yyyydoy_to_days_since_epoch( int year, int doy,
-				 const char *units,
 				 double *days_since_epoch ) {
 
   int status;
@@ -1809,8 +1779,6 @@ int yyyydoy_to_days_since_epoch( int year, int doy,
   int day;
   int date_jday;
   int epoch_jday;
-  ut_system *u_system = NULL;
-  ut_unit *u_1 = NULL;
 
   if ( NULL == ( cal = ccs_init_calendar( calendar ) ) ) {
     fprintf( stderr, "%s: Error initializing calendar.\n", __FUNCTION__ );

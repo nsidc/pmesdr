@@ -54,14 +54,14 @@ SYSLIBS = -lm
 MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
-CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS)
+CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -Wall
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -Wall -Wremarks -wd981 -no-prec-div # -Zp8
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g -Wall
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 

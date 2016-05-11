@@ -9,13 +9,13 @@
 #
 # Set a walltime for the job. The time format is HH:MM:SS - In this case we run for 5 minutes.
 
-#SBATCH --time=02:15:00
+#SBATCH --time=00:30:00
 
 # Set the output file and embed the job number in the filename
 #SBATCH -o output/daily_regression-%j.out
 
 # Select the janus QOS 
-#SBATCH --qos=janus
+#SBATCH --qos=janus-debug
 #
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL

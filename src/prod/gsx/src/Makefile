@@ -86,16 +86,16 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -g
+CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -g
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -g -Wall
 endif
 #DEPEND_LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lgsx -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)

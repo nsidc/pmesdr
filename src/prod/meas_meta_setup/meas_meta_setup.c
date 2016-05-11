@@ -20,6 +20,7 @@
 #else
 #include <math.h>
 #endif
+#include <float.h>
 
 #include "cetb.h"
 #include "utils.h"
@@ -51,22 +52,31 @@
 #define MINUTES_PER_DAY (24*60)
 #define MINUTES_PER_HOUR 60
 
-#define min(a,b) ((a) <= (b) ? (a) : (b))
-#define max(a,b) ((a) >= (b) ? (a) : (b))
+#define min(a,b) (((a) <= (b)) ? (a) : (b))
+#define max(a,b) (((a) >= (b)) ? (a) : (b))
 #define mod(a,b) ((a) % (b))
 #define dmod(a,b) ((a)-floor((a)/(b))*(b))
-#define abs(x) ((x) >= 0 ? (x) : -(x))
+#define abs(x) (((x) >= 0 ) ? (x) : -(x))
 
 /****************************************************************************/
 
-int nint(float r)
+extern void ease2_map_info(int iopt, int isc, int ind, 
+			   double *map_equatorial_radius_m, double *map_eccentricity, 
+			   double *e2, double *map_reference_latitude, 
+			   double *map_reference_longitude, 
+			   double *map_second_reference_latitude,double * sin_phi1, 
+			   double *cos_phi1, double *kz,
+			   double *map_scale, int *bcols, int *brows, 
+			   double *r0, double *s0, double *epsilon);
+
+static int nint(float r)
 {
   int ret_val = r;  if (ret_val - r > 0.5) ret_val--;
   if (r - ret_val > 0.5) ret_val++;
   return(ret_val);
 }
 
-void no_trailing_blanks(char *s)
+static void no_trailing_blanks(char *s)
 {  /* remove trailing blanks (spaces) and line feeds from string */
   int n=strlen(s);
   
@@ -80,16 +90,7 @@ void no_trailing_blanks(char *s)
   return;
 }
 
-void convert_time(char *time_tag, int *iyear, int *iday, int *ihour, int *imin)
-{ /* convert ascii time tag into year, day, hour, minute */
-  int imon, mday;
-  float secs;
-  /* '19970600301015123.150300 '1997 1 3 60 1 51 23 */
-  sscanf(time_tag,"%4d%3d%2d%2d%2d%2d%7f",iyear,iday,&imon,&mday,ihour,imin,&secs);
-  return;                                                                                                                 
-}
-
-int isleapyear(int year) 
+static int isleapyear(int year) 
 { /* is year a leap year? */
   if (year==4*(year/4))  /* this test is only good for 1904-2096! */
     return(1);
@@ -123,31 +124,34 @@ typedef struct { /* BYU region information storage */
 
 /* BYU SSM/I approximate spatial response computation */
 
-static float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor);
-static void write_filenames_to_header( gsx_class *gsx, region_save *save_area );
-static void write_end_header( region_save *save_area );
-static void write_header_info( gsx_class *gsx, region_save *save_area );
-FILE * get_meta(char *mname, char *outpath, int *dstart, 
+static float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajor, float semiminor);
+static int write_blanklines_to_header( region_save *save_area );
+static int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
+				       unsigned long *position_filename, unsigned long *position_data );
+static int write_end_header( region_save *save_area );
+static int write_header_info( gsx_class *gsx, region_save *save_area );
+static FILE * get_meta(char *mname, char *outpath, int *dstart, 
                 int *dend, int *mstart, int *mend, 
 		int *year, char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *save_area, cetb_platform_id *cetb_platform);
+		region_save *save_area, cetb_platform_id *cetb_platform);
 
-void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store);
+static void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store);
 
-void timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *ihour, int *imin, int *isec, int refyear);
+static void timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *ihour, int *imin, int *isec, int refyear);
 
-void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
+static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
 
-float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0, int *stat);
+static float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat);
 
-void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
+static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 		      float ascale, float bscale, float a0, float b0);
 
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 static void combine_setup_files( region_save *a, int execution_flag );
+static int julday(int mm, int id, int iyyy);
+static void caldat(int julian, int *mm, int *id, int *iyyy);
 
 /****************************************************************************/
 
@@ -160,53 +164,56 @@ int main(int argc,char *argv[])
   int ret_status=1;
 
   char fname[250], mname[250];
-  char line[1025], outpath[250];
+  char outpath[250];
   char ftempname[250];
   char *option;
   
-  int i,j,k,n;
-  int dend2, ilenyear, nrec, iscan, iscan1, iasc, ii, nsum;
+  int i,j,n;
+  int dend2, ilenyear, nrec, iscan, iasc;
   char *s;
-  float ant_az, cen_lat, cen_lon, ctime, lata, az_bias;
+  float cen_lat, cen_lon, ctime;
   double cave;  
 
   /* output record information */
-  float tb,az,thetai,azang=0.0;
+  float tb,thetai,azang=0.0;
   int count,ktime,iadd, fill_array[MAXFILL+1];
   short int response_array[MAXFILL+1];  
 
   int jrec2[NSAVE];  /* measurement counter for each region */
   int dateline;      /* when 1, region crosses dateline */
 
-  FILE *file_id, *datafile, *fout;
+  FILE *file_id;
 
-  int ipolar,flag,ascend;
+  int flag,ascend;
   int dstart,dend,mstart,mend,year,iregion;
   int iday,iyear,imon,ihour,imin,isec,jday;
   int idaye,iyeare,imone,ihoure,imine,isece,jdaye;
 
-  int inlonrange,ilow,ihigh,nmeas;
-  float a,b,rat,theta_orb,esep_ang,ang2,theta;
+  float theta;
   
-  int ib,ibeam,icc,icmax,icmin,nfile,file_read_error;  
+  int ibeam,icc,icmax,icmin,nfile;  
   float cx,cy,lath,latl,lonh,lonl;
   int nsx,nsy,projt,ltdflag;
   float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
-  int shortf,offset;
+  int shortf;
   float tbmin=1.e10,tbmax=-1.e10; 
   
   int iadd1, box_size;
   float b_correct, angle_ref;
 
+  /* file position pointers */
+  unsigned long *position_filename;
+  unsigned long *position_data;
+  int *file_flag=NULL;
+  
   /* memory for storage of pixel locations */
   int nregions,*noffset;
   short int *latlon_store;
-  float *flatlon_store;  
 
   int ix1,ix2,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,iy1,iy2,ix,iy,cnt;
   float clat,clon,dlat,dlon,sum;
-  float eqlon, xhigh_lon, xlow_lon, sc_last_lat, sc_last_lon;
-  float dscale, tsplit1, tsplit2, alat1, alon1,x_rel, y_rel;
+  float eqlon, xhigh_lon, xlow_lon, sc_last_lat;
+  float dscale, alat1, alon1,x_rel, y_rel;
   float tsplit1_mins, tsplit2_mins;
   float fractional_orbit;
 
@@ -214,29 +221,22 @@ int main(int argc,char *argv[])
   int flatten=0;                  /* default: use rounded response function */  
   int median_flag=0;              /* default: do not use median filter */
   int inc_correct=0;              /* default: do not do incidence angle correction */
-  int KSAT=13;                    /* assign a default value */
 
   int irec = 0; /* input cells counter */
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
   int mcnt=0;
-  int sub_count;
 
   /*
    * begin to add in GSX variables
    */
   gsx_class *gsx=NULL;
   int gsx_count;
-  char *csu;
-  int csu_length;
   int first_file=0;
   int first_scan_loc;
   int last_scan_loc;
   int status;
-  int hscans;
-  int lscans;
   char *gsx_fname[MAX_INPUT_FILES];
-  long int pos;
   int infile;
   int loc;
   int imeas;
@@ -248,8 +248,7 @@ int main(int argc,char *argv[])
   for (n=0; n<NSAVE; n++)
     jrec2[n] = 0;  /* measurements for each output region */
   
-  //printf("Code version: %s\n",fcdr_input);  
-  printf("MEaSures Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
+  fprintf( stderr, "MEaSUREs Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
 
   /* optionally get the box size of pixels to use for calculating MRF for each */
   /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
@@ -260,50 +259,50 @@ int main(int argc,char *argv[])
       case 'b':
 	++argv; --argc;
 	if (sscanf(*argv,"%d", &box_size) != 1) {
-	  fprintf(stderr,"meas_meta_setup: can't read box size %s\n", *argv);
+	  fprintf( stderr, "meas_meta_setup: can't read box size %s\n", *argv);
 	  exit(-1);
 	}
 	fprintf( stderr, "box size is %d\n", box_size );
 	break;
       default:
-	fprintf(stderr,"meas_meta_setup: Invalid option %c\n", *option);
+	fprintf(stderr, "meas_meta_setup: Invalid option %c\n", *option);
 	exit(-1);
       } /* end switch */
     } /* end loop for each input command option */
   } /* end loop while still input arguments */
 
   if (argc < 2) {
-    printf("\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
-    printf(" input parameters:\n");
-    printf("   -b box_size is optional input argument to specify box_size for MRF\n");
-    printf("      default box_size is 80 for early regression testing\n");
-    printf("   meta_in     = input meta file\n");
-    printf("   outpath     = output path\n\n");
+    printf( "\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
+    printf( " input parameters:\n");
+    printf( "   -b box_size is optional input argument to specify box_size for MRF\n");
+    printf( "      default box_size is 80 for early regression testing\n");
+    printf( "   meta_in     = input meta file\n");
+    printf( "   outpath     = output path\n\n");
     exit (-1);
   }
 
   /* get input meta file name */
   sscanf(*argv++,"%s",mname);
-  printf("\nMetafile name: %s \n",mname);
+  fprintf( stderr, "\nMetafile name: %s \n",mname);
 
   /* get output path */
   sscanf(*argv++,"%s",outpath);
-  printf("\nOutput path: %s \n",outpath);
+  fprintf( stderr, "\nOutput path: %s \n",outpath);
 
   /* get meta_file region information and open output files */
   file_id = get_meta(mname, outpath, &dstart, &dend, &mstart, &mend, &year,
 		     prog_name, prog_version ,&response_threshold, &flatten, &median_flag,
 		     &inc_correct, &b_correct, &angle_ref, 
-		     &KSAT, &save_area, &cetb_platform);
+		     &save_area, &cetb_platform);
   if (file_id == NULL) {
     fprintf(stderr,"*** could not open meta file %s/%s\n",outpath,mname);    
     exit(-1);  
   }
 
-  printf("Number of output setup files %d\n",save_area.nregions);
+  fprintf( stderr, "Number of output setup files %d\n",save_area.nregions);
   
   /* convert response threshold from dB to normal space */
-  response_threshold=pow(10.,0.1*response_threshold);  
+  response_threshold=(float)(pow(10.,0.1*response_threshold));  
  
   /* Set flag for local time of day filtered images */
   ltdflag=0;
@@ -314,19 +313,17 @@ int main(int argc,char *argv[])
   /* compute approximate projection grid scale factors for later use */
   for (iregion=0; iregion<save_area.nregions; iregion++) {      
     save_area.sav_km[iregion]=km2pix(&dlon,&dlat,save_area.sav_projt[iregion],
-				     save_area.sav_xdeg[iregion],   save_area.sav_ydeg[iregion],
-				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion],
-				     save_area.sav_a0[iregion],     save_area.sav_b0[iregion], &ret_status);
+				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion], &ret_status);
     if ( ret_status != 1 ) {
       fprintf( stderr, "meas_meta_setup: fatal error in routine\n" );
       exit ( -1 );
     }
-    printf("Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
+    fprintf( stderr, "Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
   }
   
   /* pre-compute pixel locations for each region */
-  compute_locations(&save_area, &nregions, &noffset, &latlon_store, &flatlon_store);
-  printf("\n");
+  compute_locations(&save_area, &nregions, &noffset, &latlon_store);
+  fprintf( stderr, "\n");
 
   /* initialize some pixel counters */
   icc=0;
@@ -340,6 +337,21 @@ int main(int argc,char *argv[])
   flag=1;              /* end flag */
   nfile=0;             /* L1B input file counter */
 
+  /* Before running through the list of input files, save the file position for each setup output region */
+  status = utils_allocate_clean_aligned_memory( (void**)&position_filename, save_area.nregions*sizeof(long int) );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Couldn't allocate memory for file name position variables\n", __FILE__ );
+    exit (-1);
+  }
+  status = utils_allocate_clean_aligned_memory( (void**)&position_data, save_area.nregions*sizeof(long int) );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Couldn't allocate memory for file data position variables\n", __FILE__ );
+    exit (-1);
+  }
+  for ( iregion = 0; iregion < save_area.nregions; iregion++ ) {
+    *(position_filename+iregion) = ftell( save_area.reg_lu[iregion] );
+  }
+    
   /* Run through all of the input data files so that a list of them can be written out to the setup file */
   while(flag) { 
     
@@ -369,8 +381,16 @@ int main(int argc,char *argv[])
 	strcpy(fname, ftempname);
 	no_trailing_blanks(fname);    
         gsx = gsx_init( fname );
-	write_filenames_to_header( gsx, &save_area );
+	status = write_blanklines_to_header( &save_area );
+	if ( 0 != status ) {
+	  fprintf( stderr, "%s: *** couldn't write out blank lines for filenames\n", __FILE__ );
+	  exit (-1);
+	}
 	status = utils_allocate_clean_aligned_memory( (void**)&gsx_fname[nfile], strlen(fname)+1 );
+	if ( 0 != status ) {
+	  fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
+	  exit (-1);
+	}
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
 	if ( nfile > MAX_INPUT_FILES ) {
@@ -383,11 +403,15 @@ int main(int argc,char *argv[])
   }
 
   if ( 0 == nfile ) { /* there are no input files in the meta file */
-      write_end_header( &save_area );
+      status = write_end_header( &save_area );
+      if ( 0 != status ) {
+	fprintf( stderr, "%s: *** couldn't write out end header information\n", __FILE__ );
+	exit (-1);
+      }
   }
   
   for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
-    
+
   label_330:; /* read next file name from list gsx_fname */
     /* before reading in the next file, free the memory from the previous gsx pointer */
     if ( NULL != gsx ) {
@@ -395,10 +419,26 @@ int main(int argc,char *argv[])
       gsx = NULL;
     }
     strcpy(fname, gsx_fname[infile]);
+
+    /* initialize the flag_file list for each region in this setup run */
+    if ( NULL != file_flag ) {
+      fprintf( stderr, "%s: ***** %d file with name %s and file_flag contents \n", __FILE__, infile-1, gsx_fname[infile-1] );
+      for ( iregion = 0; iregion<save_area.nregions; iregion++ ) {
+	fprintf( stderr, "\t %d region and %d file_flag\n", iregion, *(file_flag+iregion) );
+      }
+      free( file_flag );
+      file_flag = NULL;
+    }
+    status = utils_allocate_clean_aligned_memory( (void**)&file_flag, sizeof(int)*(save_area.nregions) );
+    if ( 0 != status ) {
+      fprintf( stderr, "%s: Unable to allocate memory for file_flag array\n", __FILE__ );
+      exit (-1);
+    } else {
+      fprintf( stderr, "%s: file_flag allocated\n", __FILE__ );
+    }
   
-    /* initialize last spacecraft position */
+    /* initialize last spacecraft latitude */
     sc_last_lat=-1.e25;
-    sc_last_lon=-1.e25;
 
     /*
      * read data from file into gsx_class variable
@@ -415,12 +455,23 @@ int main(int argc,char *argv[])
     /* if this is the first file to be read, then write out the final header info for downstream processing */
     if ( 0 == first_file ) {
       first_file++;
-      write_header_info( gsx, &save_area );
-      write_end_header( &save_area );
+      status = write_header_info( gsx, &save_area );
+      if ( 0 != status ) {
+	fprintf( stderr, "%s: *** couldn't write out remaining header information\n", __FILE__ );
+	exit (-1);
+      }
+      status = write_end_header( &save_area );
+      if ( 0 != status ) {
+	fprintf( stderr, "%s: *** couldn't write out end header information\n", __FILE__ );
+	exit (-1);
+      }
       /* If this is AMSRE, combine the output setup files for a and b scans and close the unneeded output file */
       if ( CETB_AQUA == cetb_platform ) {
 	combine_setup_files( &save_area, 1 );
       }
+      fprintf( stderr, "%s: First file to be read\n", __FILE__ );
+    } else {
+      fprintf( stderr, "%s: Subsequent file to be read\n", __FILE__ );
     }
 
     /* Here is where you loop through all of the different measurement sets in the file */
@@ -438,15 +489,11 @@ int main(int argc,char *argv[])
 	timedecode( *(gsx->scantime[first_scan_loc]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	timedecode( *(gsx->scantime[first_scan_loc]+last_scan_loc),	\
 		    &iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-	printf("* start time:  %lf  %d %d %d %d %d %d %d\n",		\
+	fprintf( stderr, "* start time:  %lf  %d %d %d %d %d %d %d\n",	\
 	       *(gsx->scantime[first_scan_loc]),iyear,iday,imon,jday,ihour,imin,isec);    
-	printf("* stop time:   %lf  %d %d %d %d %d %d %d\n",		\
+	fprintf( stderr, "* stop time:   %lf  %d %d %d %d %d %d %d\n",	\
 	       *(gsx->scantime[first_scan_loc]+last_scan_loc),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
-      
-	printf("first scan:%lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc]),iyear,iday,imon,jday,ihour,imin,isec);
-	printf("last scan: %lf %d %d %d %d %d %d %d\n",*(gsx->scantime[first_scan_loc]+last_scan_loc), \
-	       iyeare,idaye,imone,jdaye,ihoure,imine,isece);
-	printf("search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+	fprintf( stderr, "search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
 
 	iday=jday;    /* use day of year (jday) for day search */
 	idaye=jdaye;    
@@ -494,9 +541,13 @@ int main(int argc,char *argv[])
 	  krec=krec+1;	/* count total scans read */
 	  nrec=nrec+1;      /* count scans read in file */
       
-	  if ((krec%500)==0) printf("Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
+	  if ((krec%500)==0) fprintf( stderr, "Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
 
-	  if ( *(gsx->scantime[loc]+iscan) == gsx->fill_scantime[loc] ) goto label_350; // do not process this scan - until gsx is fixed
+	  if ( (*(gsx->scantime[loc]+iscan) - gsx->fill_scantime[loc]) <= DBL_EPSILON ) goto label_350;
+	  /* do not process this scan if the time is set to the scantime fillvalue
+	   * it's possible that we may want to change gsx to simply eliminate bad scan lines
+	   * rather than flag them with the fill value
+	   */
 	  /* scan time.  All measurements in this scan assigned this time */
 	  timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	  iday = jday;
@@ -516,7 +567,7 @@ int main(int argc,char *argv[])
 	    }
 	  }  else {
 	    if (ktime<0) {
-	      printf("*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
+	      fprintf( stderr, "*possible bug in ktime %d iyear %d year %d iscan %d\n", ktime, iyear, year, iscan);
 	    }
 	  }
       
@@ -533,20 +584,20 @@ int main(int argc,char *argv[])
 
 	  /* compute the orientation of the nadir track with respect to north */
 	  fractional_orbit = ( float ) iscan/nscans;
-	  eqlon = fractional_orbit * 360.0;
-	  if (eqlon<0.0) eqlon=eqlon+360.0;      
+	  eqlon = (fractional_orbit * 360.f);
+	  if (eqlon<0.0) eqlon=(eqlon+360.f);      
 	  /*
 	    find the longitude of the equator crossing of the middle measurement to use in computing the
 	    longitudes that separate ascending and descending for this rev */
-	  xhigh_lon=eqlon+90.0;
-	  xlow_lon =eqlon-90.0;
+	  xhigh_lon=(eqlon+90.f);
+	  xlow_lon =(eqlon-90.f);
 	   
-	  if (xhigh_lon >  180.0) xhigh_lon=xhigh_lon-360.0;
-	  if (xhigh_lon < -180.0) xhigh_lon=xhigh_lon+360.0;
-	  if (xlow_lon  >  180.0) xlow_lon =xlow_lon -360.0;
-	  if (xlow_lon  < -180.0) xlow_lon =xlow_lon +360.0;
+	  if (xhigh_lon >  180.f) xhigh_lon=(xhigh_lon-360.f);
+	  if (xhigh_lon < -180.f) xhigh_lon=(xhigh_lon+360.f);
+	  if (xlow_lon  >  180.f) xlow_lon =(xlow_lon -360.f);
+	  if (xlow_lon  < -180.f) xlow_lon =(xlow_lon +360.f);
 
-	  /* here test for AMSRE that doesn't have sc_lat and sc_lon and get asc desc flag from file name */
+	  /* here test for AMSRE that doesn't have spacecraft position and get asc desc flag from gsx variable */
 	  /* set asc/dsc flag for measurements */
 	  if ( CETB_AMSRE != gsx->short_sensor ) {
 	    if (*(gsx->sc_latitude[loc]+iscan)-sc_last_lat < 0.0 ) 
@@ -555,7 +606,6 @@ int main(int argc,char *argv[])
 	      ascend=1;
 
 	    sc_last_lat = *(gsx->sc_latitude[loc]+iscan); 
-	    sc_last_lon = *(gsx->sc_longitude[loc]+iscan);
 	  } else {
 	    if ( CETB_ASC_PASSES == gsx->pass_direction )
 	      ascend=1;
@@ -604,24 +654,17 @@ int main(int argc,char *argv[])
 		cen_lon = *(gsx->longitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal latitude */
 
 		if (tb < *(gsx->validRange[gsx_count])) goto label_3400; /* skip bad measurements */
-		if (thetai == 0.0) goto label_3400; /* skip bad measurements */
-	  
-		/* first, determine if measurement is in the longitude range for ascending or descending */
-		inlonrange=0;
-		if (xhigh_lon > 0.0 && xlow_lon < 0.0) {
-		  if (cen_lon <= xhigh_lon && cen_lon >= xlow_lon) inlonrange=1;
-		} else {
-		  if (cen_lon <= xhigh_lon || cen_lon >= xlow_lon) inlonrange=1;
-		}
+		if (fabs(thetai) < FLT_EPSILON) goto label_3400; /* skip bad measurements */
 	  
 		/* check ascending/descending orbit pass flag (see cetb.h for definitions) */
 		iasc=save_area.sav_ascdes[iregion];
-		if (iasc != (int)CETB_ALL_PASSES)
+		if (iasc != (int)CETB_ALL_PASSES) {
 		  if (iasc == (int)CETB_ASC_PASSES) {
 		    if (!ascend) goto label_3400;
 		  } else if (iasc == (int)CETB_DES_PASSES) {
 		    if (ascend) goto label_3400;
 		  }
+		}
 
 		/* extract local-time-of-day split values  - these are sensor and projection dependent */
 
@@ -630,8 +673,8 @@ int main(int argc,char *argv[])
 
 		cy=cen_lat;
 		cx=cen_lon;
-		if (cx >  180.0) cx=cx-360.0;
-		if (cx < -180.0) cx=cx+360.0;
+		if (cx >  180.0) cx=(cx-360.f);
+		if (cx < -180.0) cx=(cx+360.f);
 
 		/* region lat/lon extent */
 		lath=save_area.sav_lath[iregion];
@@ -660,12 +703,12 @@ int main(int argc,char *argv[])
 		}
 
 		if (dateline) { /* convert lon to ascending order */
-		  if (lonl < 0.0) lonl=lonl+360.0;
-		  if (cx < -180.0) cx=cx+360.0;
+		  if (lonl < 0.0) lonl=(lonl+360.f);
+		  if (cx < -180.0) cx=(cx+360.f);
 		} else {	/* convert lon to -180 to 180 range */
-		  if (cx > 180.0) cx=cx-360.0;
-		  if (cx < -180.0) cx=cx+360.0;
-		  if (cx > 180.0) cx=cx-360.0;
+		  if (cx > 180.0) cx=(cx-360.f);
+		  if (cx < -180.0) cx=(cx+360.f);
+		  if (cx > 180.0) cx=(cx-360.f);
 		}
 
 		/* check to see if center is within region */
@@ -700,8 +743,8 @@ int main(int argc,char *argv[])
 		/* assign the center of the pixel containing the measurement location to
 		   be the "new" measurement center lat/lon.  this "quantizes" the measurement
 		   centers to the center of the output pixel */
-		x=ix2+0.5;
-		y=iy2+0.5;
+		x=(ix2+0.5f);
+		y=(iy2+0.5f);
 		pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
 
 		/* define size of box centered at(ix2,iy2) in which the gain response 
@@ -710,7 +753,7 @@ int main(int argc,char *argv[])
 
 		box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
 		if ( box_size < 0 ) {
-		  exit -1;
+		  exit (-1);
 		}
 
 		ixsize=dscale*box_size; 
@@ -738,17 +781,16 @@ int main(int argc,char *argv[])
 		  for (ix1=ixsize1; ix1<=ixsize2; ix1++) {
 		    ix=ix1+ix2; /* 1-based address */
 		    iadd1=nsx*(iy-1)+ix-1; /* zero-based address of pixel */
-		    if (iadd1 >= 0 & iadd1 < nsx*nsy) {		  
+		    if ( ( iadd1 >= 0 ) & ( iadd1 < nsx*nsy ) ) {		  
 		      /* get pre-computed lat/lon of pixel */
-		      alat1=latlon_store[iadd1*2+  noffset[iregion]]/200.0;
-		      alon1=latlon_store[iadd1*2+1+noffset[iregion]]/175.0;
+		      alat1=(latlon_store[iadd1*2+  noffset[iregion]]/200.f);
+		      alon1=(latlon_store[iadd1*2+1+noffset[iregion]]/175.f);
 
 		      /* compute antenna pattern response at each pixel based on beam number, 
 			 location, and projection rotation and scaling */
 		      rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
 		      //		      gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-		      sum = gsx_antenna_response( x_rel, y_rel, theta, thetai,	\
-					       *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
+		      sum = gsx_antenna_response( x_rel, y_rel, theta, *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
 		      if (sum > response_threshold) {
 			if (flatten) sum=1.0;    /* optionally flatten response */
 			fill_array[count]=iadd1; /* address of pixel */
@@ -766,11 +808,13 @@ int main(int argc,char *argv[])
 	  
 		/* write measurement and addresses to setup output file */
 		if (count > 1) {
+		  /* if there is a measurement, then set the value of file_flag to be 1 for this file and projection */
+		  *(file_flag+iregion) = 1;
 		  jrec++; /* a count of total records written */
 		  jrec2[iregion]++; /* records/region */
 		  if (count >= MAXFILL) { /* error handling -- this should not occur! */
-		    printf("*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
-		    printf("center %f %f  %d %d %d  count %d\n",cen_lat,cen_lon,iscan,ii,ibeam,count);
+		    fprintf( stderr, "*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
+		    fprintf( stderr, "center %f %f  %d %d  count %d\n",cen_lat,cen_lon,iscan,ibeam,count);
 		    count=MAXFILL;
 		  }
 
@@ -815,43 +859,49 @@ int main(int argc,char *argv[])
 	      }
 	      label_3400:; /* end of regions loop */
 	    }
+	    /* At the end of the regions loop, check to see if any file names need to be writte out */
+	    
 	  }  /* end of measurements loop */
 	label_350:; /* end of scan loop */
 	}
       } /* end of locs loop */
     }
     label_3501:;  /* end of input file */
-    /* printf("end of input file\n"); */
 
     /* input file has been processed */
     if (shortf) {
-      printf("\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
-      printf("Region counts: ");
+      fprintf( stderr, "\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
+      fprintf( stderr, "Region counts: ");
       for (j=0; j<save_area.nregions; j++)
-	printf(" %d",jrec2[j]);
-      printf("\n");
-      printf("Input File Completed:  %s\n",fname);
-      printf("Last Day %d in Range: %d - %d\n\n",iday,dstart,dend);
-      printf("Number of measurements: %d\n",icc);
-      printf("IPR count average:  %lf\n",(icc>0? cave/(float) icc: cave));
-      printf("IPR count max,min:  %d %d \n",icmax,icmin);
-      printf("Tb max,min:  %f %f \n\n",tbmax,tbmin);
+	fprintf( stderr, " %d",jrec2[j]);
+      fprintf( stderr, "\n");
+      fprintf( stderr, "Input File Completed:  %s\n",fname);
+      fprintf( stderr, "Last Day %d in Range: %d - %d\n\n",iday,dstart,dend);
+      fprintf( stderr, "Number of measurements: %d\n",icc);
+      fprintf( stderr, "IPR count average:  %lf\n",(icc>0? cave/(float) icc: cave));
+      fprintf( stderr, "IPR count max,min:  %d %d \n",icmax,icmin);
+      fprintf( stderr, "Tb max,min:  %f %f \n\n",tbmax,tbmin);
   
       if (iday <= dend)
-	printf("*** DAY RANGE IS NOT FINISHED ***\n");
-      printf("End of day period reached %d %d \n",iday,dend);
+	fprintf( stderr, "*** DAY RANGE IS NOT FINISHED ***\n");
+      fprintf( stderr, "End of day period reached %d %d \n",iday,dend);
     }
                /* input file loop */
-    printf("Done with setup records %d %d\n",irec,krec);
+    fprintf( stderr, "Done with setup records %d %d\n",irec,krec);
     free( gsx_fname[infile] );
-  }
+    status = write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
+    if ( 0 != status ) {
+      fprintf( stderr, "%s: *** couldn't write %s filename to output setup file\n", __FILE__, gsx->source_file );
+      exit (-1);
+    }
+  } /* input file read loop 1050 */
 
   /* close output setup files */
   for (j=0; j<save_area.nregions; j++) {
-    printf("\nRegion %d %s beam %d records %d\n",save_area.sav_regnum[j],
+    fprintf( stderr, "\nRegion %d %s beam %d records %d\n",save_area.sav_regnum[j],
 	   save_area.sav_regname[j],save_area.sav_ibeam[j],jrec2[j]);
     no_trailing_blanks(save_area.sav_fname2[j]);
-    printf("Output data written to %s\n",save_area.sav_fname2[j]);
+    fprintf( stderr, "Output data written to %s\n",save_area.sav_fname2[j]);
     if ( j == 0 ) {
       fclose(save_area.reg_lu[j]);
       save_area.reg_lu[j] = NULL;
@@ -870,11 +920,11 @@ int main(int argc,char *argv[])
 	}
     }
   }
-  printf("\n");
+  fprintf( stderr, "\n");
 
   /* close input meta file */	    
   fclose(file_id);
-  printf("Setup program successfully completed\n");
+  fprintf( stderr, "Setup program successfully completed\n");
 
   return(0); /* successful termination */
 }
@@ -886,18 +936,18 @@ FILE * get_meta(char *mname, char *outpath,
 		char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *KSAT, region_save *a, cetb_platform_id *cetb_platform)
+		region_save *a, cetb_platform_id *cetb_platform)
 {
   /* read meta file, open output .setup files, write .setup file headers, and 
      store key parameters in memory */
  
   FILE *file_id, *ftemp;  
 
-  int irecords=0,ireg;
+  int ireg;
   char line[100], lin[100];
   int asc_des;
   float lath,latl,lonh,lonl;
-  int poleflag,regnum,projt=0;
+  int regnum,projt=0;
   float aorglat,aorglon;
   int nsx,nsy;
   float ascale,bscale,a0,b0,xdeg,ydeg,xdim,ydim;
@@ -909,13 +959,13 @@ FILE * get_meta(char *mname, char *outpath,
   char fname2[180];
   char outname[350];
   char sensor[40]="SSMI something";
-  int ibeam, ninst=0;  
+  int ibeam;  
 
   int flag, flag_out, flag_region, flag_section, flag_files;
   float a_init,a_offset;
   int nits;
 
-  char *s, *x;
+  char *x;
   int z, nsection, isection, cnt;
   float tsplit1=1.0, tsplit2=13.0;
 
@@ -923,12 +973,11 @@ FILE * get_meta(char *mname, char *outpath,
 
   iregion=0;
   ireg=0;
-  ninst=0;
 
-  printf("open meta file %s\n",mname);
+  fprintf( stderr, "%s: open meta file %s\n", __FUNCTION__, mname);
   file_id=fopen(mname,"r");
   if (file_id == NULL) {
-    printf("*** could not open input meta file %s\n",mname);
+    fprintf( stderr, "%s: *** could not open input meta file %s\n", __FUNCTION__, mname);
     return(file_id);
   }
 
@@ -939,7 +988,7 @@ FILE * get_meta(char *mname, char *outpath,
     fgets(line,sizeof(line),file_id);
     no_trailing_blanks(line);
     if (ferror(file_id)) {
-      printf("*** error reading meta file\n");
+      fprintf( stderr, "%s: *** error reading meta file\n", __FUNCTION__ );
       flag=0;
     } else {
       
@@ -949,27 +998,16 @@ FILE * get_meta(char *mname, char *outpath,
       if (strstr(line,"Sensor") != NULL) {
 	x = strchr(line,'=');
 	strncpy(sensor,++x,40);
-	printf("Sensor string='%s'\n",sensor);
 	/* Here is where you can get the sensor ENUM */
 	for ( count=0; count < CETB_NUM_PLATFORMS; count++ ) {
 	  if ( strcmp( sensor, cetb_platform_id_name[count] ) == 0 ) {
 	    *cetb_platform = (cetb_platform_id) count;
 	  }
 	}
-	printf( " **** cetb_platform_id *** is %d\n", *cetb_platform );
-	if (strncmp(sensor,"SSMI",4)==0) {	    
-	  sscanf(&sensor[7],"%2d",KSAT);
-	  printf(" SSMI platform %d\n",*KSAT);
-	}	
+	fprintf( stderr, "%s: **** cetb_platform_id *** is %d\n", __FUNCTION__, *cetb_platform );
+
       }
 
-      if (strstr(line,"Instrument") != NULL) {
-	x = strchr(line,'=');
-	ninst=atoi(++x);
-	printf("Instrument code=%d\n",ninst);
-	*KSAT=ninst;	
-      }
-      
       if (strstr(line,"Start_Year") != NULL) {
 	x = strchr(line,'=');
 	*year=atoi(++x);
@@ -997,12 +1035,12 @@ FILE * get_meta(char *mname, char *outpath,
       
       if (strstr(line,"A_initialization") != NULL) {
 	x = strchr(line,'=');
-	a_init=atof(++x);
+	a_init=(float)atof(++x);
       }      
       
       if (strstr(line,"A_offset") != NULL) {
 	x = strchr(line,'=');
-	a_offset=atof(++x);
+	a_offset=(float)atof(++x);
       }
       
       if (strstr(line,"Max_iterations") != NULL) {
@@ -1012,22 +1050,22 @@ FILE * get_meta(char *mname, char *outpath,
       
       if (strstr(line,"Reference_incidence_angle") != NULL) {
 	x = strchr(line,'=');
-	*angle_ref=atof(++x);
+	*angle_ref=(float)atof(++x);
       }
       
       if (strstr(line,"Incidence_ang_correct") != NULL) {
 	x = strchr(line,'=');
-	*inc_correct=atof(++x);
+	*inc_correct=(float)atof(++x);
       }
       
       if (strstr(line,"B_correct_value") != NULL) {
 	x = strchr(line,'=');
-	*b_correct=atof(++x);
+	*b_correct=(float)atof(++x);
       }
       
       if (strstr(line,"Response_threshold") != NULL) {
 	x = strchr(line,'=');
-	*response_threshold=atof(++x);
+	*response_threshold=(float)atof(++x);
       }
       
       if (strstr(line,"Flat_response") != NULL) {
@@ -1045,14 +1083,14 @@ FILE * get_meta(char *mname, char *outpath,
       if (strstr(line,"Num_Regions") != NULL) {
 	x = strchr(line,'=');
 	a->nregions=atoi(++x);
-	printf("Regions in meta file: %d\n",a->nregions);
+	fprintf( stderr, "%s: Regions in meta file: %d\n", __FUNCTION__, a->nregions);
       }
 
       if (strstr(line,"Begin_region_description") != NULL) {
 	/* new region started set some default values */
 	asc_des=CETB_ALL_PASSES;	/* use both asc/desc orbits */
 	ireg=ireg+1;
-	printf("Region %d of %d  Total regions: %d\n",ireg,a->nregions,iregion);
+	fprintf( stderr, "%s: Region %d of %d  Total regions: %d\n", __FUNCTION__, ireg,a->nregions,iregion);
 
 	/* read region information */
 	flag_region=1;
@@ -1060,7 +1098,7 @@ FILE * get_meta(char *mname, char *outpath,
 	  fgets(line,sizeof(line),file_id);
 	  no_trailing_blanks(line);
 	  if (ferror(file_id)) {
-	    printf("*** error reading meta file at region \n");
+	    fprintf( stderr, "%s: *** error reading meta file at region \n", __FUNCTION__ );
 	    flag_region=0;
 	  } else {
 	    if (strstr(line,"End_region_description") != NULL)
@@ -1073,34 +1111,28 @@ FILE * get_meta(char *mname, char *outpath,
       
 	    if (strstr(line,"Latitude_low") != NULL) {
 	      x = strchr(line,'=');
-	      latl=atof(++x);
+	      latl=(float)atof(++x);
 	    }
       
 	    if (strstr(line,"Latitude_high") != NULL) {
 	      x = strchr(line,'=');
-	      lath=atof(++x);
+	      lath=(float)atof(++x);
 	    }
       
 	    if (strstr(line,"Longitude_low") != NULL) {
 	      x = strchr(line,'=');
-	      lonl=atof(++x);
+	      lonl=(float)atof(++x);
 	    }
       
 	    if (strstr(line,"Longitude_high") != NULL) {
 	      x = strchr(line,'=');
-	      lonh=atof(++x);
+	      lonh=(float)atof(++x);
 	    }
 
 	    if (strstr(line,"Dateline_crossing") != NULL) {
 	      x = strchr(line,'='); x++;	
 	      if (*x== 'F' || *x== 'f') dateline=0;
 	      else dateline=1;	
-	    }
-
-	    if (strstr(line,"Polar_flag") != NULL) {
-	      x = strchr(line,'='); x++;	
-	      if (*x== 'F' || *x== 'f') poleflag=0;
-	      else poleflag=1;	
 	    }
 
 	    if (strstr(line,"AscDesc_flag") != NULL) {
@@ -1141,7 +1173,7 @@ FILE * get_meta(char *mname, char *outpath,
 		fgets(line,sizeof(line),file_id);
 		no_trailing_blanks(line);
 		if (ferror(file_id)) {
-		  printf("*** error reading meta file at section \n");
+		  fprintf( stderr, "%s: *** error reading meta file at section \n", __FUNCTION__ );
 		  flag_section=0;
 		} else {
 		  if (strstr(line,"End_section_description") != NULL)
@@ -1150,7 +1182,7 @@ FILE * get_meta(char *mname, char *outpath,
 		  if (strstr(line,"Section_id") != NULL) {
 		    x = strchr(line,'=');
 		    isection =atoi(++x);
-		    printf("Section %d image count %d\n",isection,iregion);		    
+		    fprintf( stderr, "%s: Section %d image count %d\n", __FUNCTION__, isection,iregion);		    
 		  }
 
 		  if (strstr(line,"Project_type") != NULL) {
@@ -1160,44 +1192,44 @@ FILE * get_meta(char *mname, char *outpath,
       
 		  if (strstr(line,"Projection_origin_x") != NULL) {
 		    x = strchr(line,'=');
-		    aorglat =atof(++x);
+		    aorglat =(float)atof(++x);
 		    ydeg=aorglat;
 		  }
 
 		  if (strstr(line,"Projection_origin_y") != NULL) {
 		    x = strchr(line,'=');
-		    aorglon =atof(++x);
+		    aorglon =(float)atof(++x);
 		    xdeg=aorglon;
 		  }
 
 		  if (strstr(line,"Projection_offset_x") != NULL) {
 		    x = strchr(line,'=');
-		    a0=atof(++x);
+		    a0=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_offset_y") != NULL) {
 		    x = strchr(line,'=');
-		    b0=atof(++x);
+		    b0=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_scale_x") != NULL) {
 		    x = strchr(line,'=');
-		    ascale=atof(++x);
+		    ascale=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_scale_y") != NULL) {
 		    x = strchr(line,'=');
-		    bscale=atof(++x);
+		    bscale=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_dim_x") != NULL) {
 		    x = strchr(line,'=');
-		    xdim=atof(++x);
+		    xdim=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Projection_dim_y") != NULL) {
 		    x = strchr(line,'=');
-		    ydim=atof(++x);
+		    ydim=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Image_size_x") != NULL) {
@@ -1212,42 +1244,42 @@ FILE * get_meta(char *mname, char *outpath,
 
 		  if (strstr(line,"Grid_projection_origin_x") != NULL) {
 		    x = strchr(line,'=');
-		    ydeg2=atof(++x);
+		    ydeg2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_origin_y") != NULL) {
 		    x = strchr(line,'=');
-		    xdeg2=atof(++x);
+		    xdeg2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_offset_x") != NULL) {
 		    x = strchr(line,'=');
-		    a02=atof(++x);
+		    a02=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_offset_y") != NULL) {
 		    x = strchr(line,'=');
-		    b02=atof(++x);
+		    b02=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_scale_x") != NULL) {
 		    x = strchr(line,'=');
-		    ascale2=atof(++x);
+		    ascale2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_projection_scale_y") != NULL) {
 		    x = strchr(line,'=');
-		    bscale2=atof(++x);
+		    bscale2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_scale_x") != NULL) {
 		    x = strchr(line,'=');
-		    non_size_x=atof(++x);
+		    non_size_x=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_scale_y") != NULL) {
 		    x = strchr(line,'=');
-		    non_size_y =atof(++x);
+		    non_size_y =(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_size_x") != NULL) {
@@ -1257,12 +1289,12 @@ FILE * get_meta(char *mname, char *outpath,
 
                   if (strstr(line,"Local_time_split1") != NULL) {
 		    x = strchr(line,'=');
-		    tsplit1=atof(++x);
+		    tsplit1=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Local_time_split2") != NULL) {
 		    x = strchr(line,'=');
-		    tsplit2=atof(++x);
+		    tsplit2=(float)atof(++x);
 		  }
 
 		  if (strstr(line,"Grid_size_y") != NULL) {
@@ -1290,25 +1322,24 @@ FILE * get_meta(char *mname, char *outpath,
 		      iregion++;
 		      
 		      /* print out region information summary */
-		      printf("\nSIR file header information: %d %d %d %d\n",iregion,a->nregions,isection,nsection);
-		      printf("  Year, day range: %d %d %d %d %d\n",*year,*dstart,*dend,*mstart,*mend);
-		      printf("  Image size: %d x %d   Projection: %d\n",nsx,nsy,projt);
-		      printf("  Origin: %f %f  Span: %f %f\n",a0,b0,xdeg,ydeg);
-		      printf("  Scales: %f %f  Pol (0=h,1=v): %d\n",ascale,bscale,ipolar);
-		      printf("  Region: %s  Num %d\n",regname,regnum);
-		      printf("  Reg LL corner: %f %f   UR corner: %f %f\n",latl,lonl,lath,lonh);
-		      printf("  Origin (lat,lon): %f %f\n",aorglat,aorglon);
-		      printf("  Array Dimensions in Km: x=%f y=%f\n",xdim,ydim);
-		      printf("  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): %d\n",asc_des);
-		      printf("  Grid size: %f %f  Span: %f %f\n",xdeg,ydeg,aorglat,aorglon);
-		      printf("  Scales: %f %f   Origin: %f %f\n",ascale,bscale,a0,b0);
-		      printf("  GRD image size: %d %d  Size: %d %d\n",nsx2,nsy2,non_size_x,non_size_y);
-		      printf("  GRD image span: %f %f  Orig: %f %f\n",xdeg2,ydeg2,a02,b02);		      
-		      printf("  GRD image scale: %f %f\n",ascale2,bscale2);		      
-		      /*printf("  Egg response threshold %f  Flat %d\n",*response_threshold,*flatten); */
-		      printf("  Median filter %d  Ref Inc angle %f\n",*median_flag,*angle_ref);
-		      printf("  Incidence angle correction %d  b_correct %f\n",*inc_correct,*b_correct); 
-                      printf("  Time split: %f %f\n\n",tsplit1,tsplit2);
+		      fprintf( stderr, "\nSIR file header information: %d %d %d %d\n",iregion,a->nregions,isection,nsection);
+		      fprintf( stderr, "  Year, day range: %d %d %d %d %d\n",*year,*dstart,*dend,*mstart,*mend);
+		      fprintf( stderr, "  Image size: %d x %d   Projection: %d\n",nsx,nsy,projt);
+		      fprintf( stderr, "  Origin: %f %f  Span: %f %f\n",a0,b0,xdeg,ydeg);
+		      fprintf( stderr, "  Scales: %f %f  Pol (0=h,1=v): %d\n",ascale,bscale,ipolar);
+		      fprintf( stderr, "  Region: %s  Num %d\n",regname,regnum);
+		      fprintf( stderr, "  Reg LL corner: %f %f   UR corner: %f %f\n",latl,lonl,lath,lonh);
+		      fprintf( stderr, "  Origin (lat,lon): %f %f\n",aorglat,aorglon);
+		      fprintf( stderr, "  Array Dimensions in Km: x=%f y=%f\n",xdim,ydim);
+		      fprintf( stderr, "  AscDesc flag (0=both,1=asc,2=dsc,3=morn,4=eve,5=mid): %d\n",asc_des);
+		      fprintf( stderr, "  Grid size: %f %f  Span: %f %f\n",xdeg,ydeg,aorglat,aorglon);
+		      fprintf( stderr, "  Scales: %f %f   Origin: %f %f\n",ascale,bscale,a0,b0);
+		      fprintf( stderr, "  GRD image size: %d %d  Size: %d %d\n",nsx2,nsy2,non_size_x,non_size_y);
+		      fprintf( stderr, "  GRD image span: %f %f  Orig: %f %f\n",xdeg2,ydeg2,a02,b02);		      
+		      fprintf( stderr, "  GRD image scale: %f %f\n",ascale2,bscale2);		      
+		      fprintf( stderr, "  Median filter %d  Ref Inc angle %f\n",*median_flag,*angle_ref);
+		      fprintf( stderr, "  Incidence angle correction %d  b_correct %f\n",*inc_correct,*b_correct); 
+                      fprintf( stderr, "  Time split: %f %f\n\n",tsplit1,tsplit2);
 		      
 		      /* open output setup file for this section of this region */
 		      sprintf(outname,"%s/%s",outpath,fname2);		      
@@ -1316,7 +1347,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      if ( ftemp != NULL ) {
 			a->reg_lu[iregion-1] = ftemp;
-			printf("Opened setup output file '%s'  %d\n",outname,iregion);
+			fprintf( stderr, "Opened setup output file '%s'  %d\n",outname,iregion);
 		      } else {
 			fprintf( stderr, "Couldnot open setup output file '%s' \n", outname );
 			return ( NULL );
@@ -1476,7 +1507,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      fgets(line,sizeof(line),file_id);
 		      no_trailing_blanks(line);
 		      if (ferror(file_id)) {
-			printf("*** error reading meta file at product files \n");
+			fprintf( stderr, "*** error reading meta file at product files \n");
 			flag_files=0;
 		      } else {
 			if (strstr(line,"End_product_file_names") != NULL) {
@@ -1492,7 +1523,7 @@ FILE * get_meta(char *mname, char *outpath,
 			  }
 		      }
 		    }
-		    printf("Done with setup header for image\n");
+		    fprintf( stderr, "Done with setup header for image\n");
 
 		    /* save region information */
 		    if (flag_out) {
@@ -1535,7 +1566,7 @@ FILE * get_meta(char *mname, char *outpath,
   return(file_id);
 }
 
-void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store, float **flatlon_store) 
+void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store) 
 {  
   /* compute the lat,lon of each pixel in the image regions and store in
      global arrays.  This reduces the computational load */
@@ -1579,8 +1610,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     
     (*noffset)[iregion+1] = (*noffset)[iregion]+2*nsize;  /* update pointer */
 
-    printf("\nRegion %d of %d: %dx%d=%d\n",iregion+1,a->nregions, 
-            a->sav_nsx[iregion], a->sav_nsy[iregion],nsize);
+    fprintf( stderr, "\nRegion %d of %d: %dx%d=%d\n",iregion+1,a->nregions, 
+	     a->sav_nsx[iregion], a->sav_nsy[iregion],nsize);
     print_projection(stdout, a->sav_projt[iregion], 
 		    a->sav_xdeg[iregion], a->sav_ydeg[iregion],
 		    a->sav_ascale[iregion], a->sav_bscale[iregion],
@@ -1589,8 +1620,8 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     /* hash file name */
     sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
 	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    abs(nint(a->sav_a0[iregion])), abs(nint(a->sav_b0[iregion])),
-	    abs(nint(a->sav_xdeg[iregion])),abs(nint(a->sav_ydeg[iregion])));
+	    (int)abs(round(a->sav_a0[iregion])), (int)abs(round(a->sav_b0[iregion])),
+	    (int)abs(round(a->sav_xdeg[iregion])), (int)abs(round(a->sav_ydeg[iregion])));
 
     if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
@@ -1612,15 +1643,15 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
       if (USE_PRECOMPUTE_FILES) {     /* check to see if pre-computed array 
                                          is available in file */
 	sprintf(line,"%s/%s",p,tempname);
-	printf("Reading pixel locations file: %s\n",line);
+	fprintf( stderr, "Reading pixel locations file: %s\n",line);
 	f=fopen(line,"r");
 	if (f==NULL) {
-	  printf("... could not open precompute file %s will recompute\n",line);	
+	  fprintf( stderr, "... could not open precompute file %s will recompute\n",line);	
 	  goto label_skip;
 	}
 
 	if (fread(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
-	  printf("*** error reading precompute file %s\n",line);	
+	  fprintf( stderr, "*** error reading precompute file %s\n",line);	
 	  fclose(f);
 	  goto label_skip;
 	}
@@ -1632,9 +1663,9 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 
       /* compute pixel locations */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
-	y=iy+1.5; /* center of pixel, 1-based */
+	y=(iy+1.5f); /* center of pixel, 1-based */
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {
-	  x=ix+1.5; /* center of pixel, 1-based */
+	  x=(ix+1.5f); /* center of pixel, 1-based */
 	  pixtolatlon(x, y, &clon, &clat, a->sav_projt[iregion], 
 		      a->sav_xdeg[iregion], a->sav_ydeg[iregion],
 		      a->sav_ascale[iregion], a->sav_bscale[iregion],
@@ -1644,18 +1675,18 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  if (iadd>=nsize) iadd=0;
 	  iadd=2*iadd+(*noffset)[iregion];
 
-	  (*latlon_store)[iadd]=  nint(clat*200.0);
-	  (*latlon_store)[iadd+1]=nint(clon*175.0);
+	  (*latlon_store)[iadd] = (short int)nint(clat*200.f);
+	  (*latlon_store)[iadd+1] = (short int)nint(clon*175.f);
 	}
       }
 
       /* write out array to file for next time to save computation*/
       if (USE_PRECOMPUTE_FILES) {
 	sprintf(line,"%s/%s",p,tempname);
-	printf("Writing pixel locations file: %s\n",line);
+	fprintf( stderr, "Writing pixel locations file: %s\n",line);
 	f=fopen(line,"wx");
 	if (f==NULL) {
-	  printf("	*** error opening output precompute file %s\n",line);	
+	  fprintf( stderr, "	*** error opening output precompute file %s\n",line);	
 	  goto label_read;
 	}      
 
@@ -1703,14 +1734,14 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
  *
  ************************************************************************/
 
-float gsx_antenna_response(float x_rel, float y_rel, float theta, float thetai, float semimajor, float semiminor)
+float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajor, float semiminor)
 {
   static float lnonehalf=-0.6931471;  /* ln(0.5) */
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 
   /* rotate coordinate system to align with look direction */
-  x=cos(theta*DTR)*x_rel - sin(theta*DTR)*y_rel;
-  y=sin(theta*DTR)*x_rel + cos(theta*DTR)*y_rel;
+  x=(float) ( ( (cos(theta*DTR) ) * x_rel ) - ( (sin(theta*DTR) ) * y_rel ) );
+  y=(float) ( ( (sin(theta*DTR) ) * x_rel ) + ( (cos(theta*DTR) ) * y_rel ) );
   
   /* compute approximate antenna response
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
@@ -1740,25 +1771,24 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 
   float r,r2,rel_rlat,rel_rlon;
 
-  r=(1.0-(sin(rlat*DTR)*sin(rlat*DTR))*FLAT)*AEARTH;
+  r=(float) ( ( 1.0 - ( ( (sin(rlat*DTR) ) * (sin(rlat*DTR) ) ) * FLAT ) ) * AEARTH );
 
   rel_rlat=alat-rlat;
   rel_rlon=alon-rlon;
   if (abs(rel_rlon) > 180.0) {
     if (rel_rlon > 0.0)
-      rel_rlon=rel_rlon-360.0;
+      rel_rlon=rel_rlon-360.f;
     else
-      rel_rlon=rel_rlon+360.0;
+      rel_rlon=rel_rlon+360.f;
   }
-  r2=r*cos(rlat*DTR);
-  *x_rel=r2*sin(rel_rlon*DTR);
-  *y_rel=r*sin(rel_rlat*DTR)+(1.-cos(rel_rlon*DTR))*sin(rlat*DTR)*r2;
+  r2=r*(float)(cos(rlat*DTR));
+  *x_rel=(float)(r2*(sin(rel_rlon*DTR)));
+  *y_rel=(float)((r*(sin(rel_rlat*DTR)))+((1.-(cos(rel_rlon*DTR)))*(sin(rlat*DTR))*r2));
 }
 
 /* *********************************************************************** */
 
-float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg, 
-	     float ascale, float bscale, float a0, float b0, int *stat)
+float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat)
 { 
   /*
     determine the approximate "nominal" conversion coefficients for
@@ -1782,7 +1812,6 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 
   */
 
-  float radearth=6378.135;       /* radius of the earth in km */
   float r=0.0;
 
   double map_equatorial_radius_m,map_eccentricity, e2,
@@ -1804,15 +1833,15 @@ float km2pix(float *x, float *y, int iopt, float xdeg, float ydeg,
 		   &map_reference_latitude, &map_reference_longitude, 
 		   &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
 		   &map_scale, &bcols, &brows, &r0, &s0, &epsilon);
-    *x=1./(map_scale*0.001); /* km/pixel rather than m/pixel */
-    *y=1./(map_scale*0.001);
-    r= 1./(map_scale*0.001);
+    *x=(1.f/(float)(map_scale*0.001)); /* km/pixel rather than m/pixel */
+    *y=(1.f/(float)(map_scale*0.001));
+    r= (1.f/(float)(map_scale*0.001));
     break;
   default: /* unknown transformation type */
     *x=0.0;
     *y=0.0;
     *stat = 0;
-    fprintf( stderr, "km2pix: Unknown transformation type - %d region id\n", iopt );
+    fprintf( stderr, "%s: Unknown transformation type - %d region id\n", __FUNCTION__, iopt );
   }
   return(r);
 }
@@ -1869,10 +1898,10 @@ int julday(int mm, int id, int iyyy) {
     jy=jy-1;
     jm=mm+13;
   }
-  juday=floor(365.25*jy)+floor(30.6001*jm)+id+1720995;
-  if (id+31*(mm+12*iyyy) >= IGREG) {
-    ja=floor(0.01*jy);
-    juday=juday+2-ja+floor(0.25*ja);
+  juday=(int)(floor(365.25*jy)+floor(30.6001*jm)+id+1720995);
+  if ( (id+(31*(mm+12*iyyy))) >= IGREG ) {
+    ja=(int)floor(0.01*jy);
+    juday=(int)(juday+2-ja+floor(0.25*ja));
   }
   return(juday);
 }
@@ -1884,15 +1913,15 @@ void caldat(int julian, int *mm, int *id, int *iyyy) {
   int jalpha, ja, jb, jc, jd, je;
   
   if (julian >= IGREG) {     
-    jalpha=floor(((julian-1867216)-0.25)/36524.25);
-    ja=julian+1+jalpha-floor(0.25*jalpha);
+    jalpha=(int)(floor(((julian-1867216)-0.25)/36524.25));
+    ja=(int)(julian+1+jalpha-floor(0.25*jalpha));
   } else
     ja=julian;
   jb=ja+1524;
-  jc=floor(6680.+((jb-2439870)-122.1)/365.25);
-  jd=365*jc+floor(0.25*jc);
-  je=floor((jb-jd)/30.6001);
-  *id=jb-jd-floor(30.6001*je);
+  jc=(int)(floor(6680.+((jb-2439870)-122.1)/365.25));
+  jd=(int)(365*jc+floor(0.25*jc));
+  je=(int)(floor((jb-jd)/30.6001));
+  *id=(int)(jb-jd-floor(30.6001*je));
   *mm=je-1;
   if (*mm > 12)
     *mm=*mm-12;
@@ -1911,8 +1940,8 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
   /* given a time in seconds from the start of 1987 (1/1/87 0Z) determine
      the year, month, day, hour, minute, and second */
 
-  int itime=time;
-  int ijd=time/(24*3600);
+  int itime=(int)time;
+  int ijd=(int)(time/(24*3600));
   int ijd0, ijd1;  
   
   if (ijd < 0) ijd=ijd-1;
@@ -1921,7 +1950,7 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
   ijd1=julday(1,1,*iyear);
   *jday=ijd+ijd0-ijd1+1;   /* day of the year */
 
-  itime=time-(julday(*imon,*iday,*iyear)-ijd0)*24*3600;
+  itime=(int)(time-(julday(*imon,*iday,*iyear)-ijd0)*24*3600);
   *ihour=mod(itime/3600,24);
   *imin=mod(itime-*ihour*3600,60*60)/60;
   *isec=mod(itime-*ihour*3600-*imin*60,60);
@@ -2022,7 +2051,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
  *   none
  *
  */
-void write_header_info( gsx_class *gsx, region_save *save_area ) {
+int write_header_info( gsx_class *gsx, region_save *save_area ) {
   int cnt=100;
   char lin[100];
   int z;
@@ -2056,7 +2085,10 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
     }
+  } else {
+    return (-1);
   }
+  return (0);
 }
 
 /* write_filenames_to_header - writes out the input data files that were used to
@@ -2065,25 +2097,60 @@ void write_header_info( gsx_class *gsx, region_save *save_area ) {
  * Input:
  *   gsx structure - holds the filename and the version
  *   save_area - contains the information on the open output setup files
+ *   file_flag - keeps track of whether or not a filename was used for that projection
+ *   position_filename - keeps track of the place to write the next filename in each region's setup file
+ *   position_data - keeps track of the place from which to continue writing out data in each region's setup file
  *
  * Return:
- *   0 on success, 1 on failure
+ *   status - 0 on success
  */
-void write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
+int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
+			       unsigned long *position_filename, unsigned long *position_data ) {
   int cnt=100;
   char lin[100];
   int z;
   int iregion;
 
-  for ( iregion=1; iregion<=save_area->nregions; iregion++ ) { 
-     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]); 
+  for ( iregion=0; iregion<save_area->nregions; iregion++ ) {
+    if ( 1 == *(file_flag+iregion) ) { //this file has been used for the setup file
+      *(position_data+iregion) = ftell( save_area->reg_lu[iregion]);
+      fseek( save_area->reg_lu[iregion], *(position_filename+iregion), SEEK_SET );
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
+      for(z=0;z<100;z++)lin[z]=' '; 
+      sprintf(lin," Input_file=%s (GSX_version:%s)", gsx->source_file, gsx->gsx_version);
+      fwrite(lin,100,1,save_area->reg_lu[iregion]); 
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
+      *(position_filename+iregion) = ftell( save_area->reg_lu[iregion]);
+      fseek( save_area->reg_lu[iregion], *(position_data+iregion), SEEK_SET );
+    }
+  }
+  return (0);
+}
+
+/* write_blanklines_to_header - writes a blank line for each filename in the metafile
+ * during processing we loop through each file and each output region and only then go back
+ * to write out the filename if we use measurements from the file.
+ *
+ * Input:
+ *   gsx structure - holds the filename and the version
+ *   save_area - contains the information on the open output setup files
+ *
+ * Return:
+ *   0 on success, 1 on failure
+ */
+int write_blanklines_to_header( region_save *save_area ) {
+  int cnt=100;
+  char lin[100];
+  int z;
+  int iregion;
+
+  for ( iregion=0; iregion<save_area->nregions; iregion++ ) { 
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
      for(z=0;z<100;z++)lin[z]=' '; 
-     sprintf(lin," Input_file=%s (GSX_version:%s)", gsx->source_file, gsx->gsx_version);
-     fwrite(lin,100,1,save_area->reg_lu[iregion-1]); 
-     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-   } 
-  fprintf( stderr, "****%s, source file %s, gsx_version %s\n", __FUNCTION__, gsx->source_file, gsx->gsx_version );
-  fprintf( stderr, "****%s, last line written%s\n", __FUNCTION__, lin );
+     fwrite(lin,100,1,save_area->reg_lu[iregion]); 
+     fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
+   }
+  return (0);
 }
 /*
  * write_end_header - writes out the End_file line that is used in sir and bgi
@@ -2095,7 +2162,7 @@ void write_filenames_to_header( gsx_class *gsx, region_save *save_area ) {
  *   none
  *
  */
-void write_end_header( region_save *save_area ){
+int write_end_header( region_save *save_area ){
   int cnt=100;
   char lin[100];
   int z;
@@ -2108,6 +2175,7 @@ void write_end_header( region_save *save_area ){
     fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
   }
+  return (0);
 }
 
 /*
