@@ -422,10 +422,6 @@ int main(int argc,char *argv[])
 
     /* initialize the flag_file list for each region in this setup run */
     if ( NULL != file_flag ) {
-      fprintf( stderr, "%s: ***** %d file with name %s and file_flag contents \n", __FILE__, infile-1, gsx_fname[infile-1] );
-      for ( iregion = 0; iregion<save_area.nregions; iregion++ ) {
-	fprintf( stderr, "\t %d region and %d file_flag\n", iregion, *(file_flag+iregion) );
-      }
       free( file_flag );
       file_flag = NULL;
     }
@@ -433,10 +429,8 @@ int main(int argc,char *argv[])
     if ( 0 != status ) {
       fprintf( stderr, "%s: Unable to allocate memory for file_flag array\n", __FILE__ );
       exit (-1);
-    } else {
-      fprintf( stderr, "%s: file_flag allocated\n", __FILE__ );
-    }
-  
+    } 
+
     /* initialize last spacecraft latitude */
     sc_last_lat=-1.e25;
 
