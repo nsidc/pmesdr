@@ -729,7 +729,15 @@ int main(int argc, char **argv)
 
   }    /* end of loop for each SIR iteration */
   fprintf( stderr, "%s:  weight max --> %f Average weight: %.4f\n", __FILE__, tmax, total/nsize );
-
+  
+  /* Check for OOR values of TB */
+  for ( i = 0; i < nsx*nsy; i++ ) {
+    if ( *(a_val+i) != ( CETB_TB_FILL_VALUE * CETB_TB_SCALE_FACTOR ) ) {
+      if ( ( *(a_val+i) < CETB_TB_SCALED_MIN ) || ( *(a_val+i) > CETB_TB_SCALED_MAX ) ) {
+	*(a_val+i) = ( CETB_TB_MISSING_VALUE * CETB_TB_SCALE_FACTOR );
+      }
+    }
+  }
   if ( 0 != cetb_file_add_var( cetb_sir, "TB",
 			       NC_USHORT, a_val,
 			       ( size_t )nsx, ( size_t ) nsy,
