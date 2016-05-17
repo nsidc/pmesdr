@@ -732,9 +732,9 @@ int main(int argc, char **argv)
   
   /* Check for OOR values of TB */
   for ( i = 0; i < nsx*nsy; i++ ) {
-    if ( *(a_val+i) != ( CETB_TB_FILL_VALUE * CETB_TB_SCALE_FACTOR ) ) {
+    if ( ( *(a_val+i) - ( CETB_TB_FILL_VALUE * CETB_TB_SCALE_FACTOR ) ) >= FLT_EPSILON ) {
       if ( ( *(a_val+i) < CETB_TB_SCALED_MIN ) || ( *(a_val+i) > CETB_TB_SCALED_MAX ) ) {
-	*(a_val+i) = ( CETB_TB_MISSING_VALUE * CETB_TB_SCALE_FACTOR );
+	*(a_val+i) = (float)( CETB_TB_MISSING_VALUE * CETB_TB_SCALE_FACTOR );
       }
     }
   }
