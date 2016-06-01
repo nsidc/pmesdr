@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   float anodata_I=CETB_FILE_THETA_FILL_VALUE;
   float anodata_Ia=CETB_FILE_THETA_FILL_VALUE;
   float anodata_P=CETB_FILE_TB_TIME_FILL_VALUE;
-  float anodata_V=CETB_FILE_TB_STDDEV_FILL_VALUE;
+  float anodata_V=(CETB_FILE_TB_STDDEV_FILL_VALUE*CETB_FILE_TB_STDDEV_SCALE_FACTOR);
   float anodata_E=-15.0;
 
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
@@ -152,6 +152,7 @@ int main(int argc, char **argv)
   short theta_fill_value=CETB_FILE_THETA_FILL_VALUE;
   short theta_valid_range[ 2 ] = { CETB_FILE_THETA_MIN, CETB_FILE_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
+  int missing_tb_flag = 0;
 
   long head_len;
   int errors = 0;
@@ -735,6 +736,7 @@ int main(int argc, char **argv)
     if ( ( *(a_val+i) - ( CETB_TB_FILL_VALUE * CETB_TB_SCALE_FACTOR ) ) >= FLT_EPSILON ) {
       if ( ( *(a_val+i) < CETB_TB_SCALED_MIN ) || ( *(a_val+i) > CETB_TB_SCALED_MAX ) ) {
 	*(a_val+i) = (float)( CETB_TB_MISSING_VALUE * CETB_TB_SCALE_FACTOR );
+	missing_tb_flag = 1;
       }
     }
   }
@@ -887,6 +889,13 @@ int main(int argc, char **argv)
   fprintf( stderr, "%s:  Tb STD min   max --> %f %f\n", __FILE__, amin, amax );
   fprintf( stderr, "%s:  Tb ERR min   max --> %f %f\n", __FILE__, bmin, bmax );
 
+  /* At this point you should check to see if any of the TB values were out of range and if so set the
+     TB_std_dev value to the OOR value for it, viz. (2^16)-2 */
+
+  if ( 1 == missing_tb_flag ) {
+    // need to read the TB data out and find the place where TB is set to missing
+    fprintf( stderr, "%s: Setting missing value in TB_std_dev\n", __FILE__ );
+  }
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_std_dev",
 			       NC_USHORT, sxy,
 			       ( size_t )nsx, ( size_t ) nsy,
