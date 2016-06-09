@@ -20,6 +20,7 @@
 
 #include <sir3.h>
 #include <cetb.h>
+#include <sir_geom.h>
 
 #define prog_version 1.2 /* program version */
 #define prog_name "meas_meta_make"

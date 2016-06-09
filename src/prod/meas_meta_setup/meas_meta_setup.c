@@ -26,7 +26,7 @@
 #include "utils.h"
 #include "gsx.h"
 #include "utils.h"
-#include <sir3.h>
+#include "sir_geom.h"
 
 #define prog_version 0.3 /* program version */
 #define prog_name "meas_meta_setup"
