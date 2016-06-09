@@ -7,10 +7,11 @@
 
 TOPDIR = $(PMESDR_TOP_DIR)
 LIBDIR = $(TOPDIR)/lib
+INCDIR = $(TOPDIR)/include
 
 EXES = csirexample 
 LIB = libcsir.a
-
+HDRS = lib/sir_geom.h
 
 AR = ar
 CC = gcc
@@ -42,6 +43,7 @@ all :  $(LIB)
 install :
 	$(MKDIR) $(LIBDIR)
 	$(INSTALL) $(LIB) $(LIBDIR)
+	$(INSTALL) $(HDRS) $(INCDIR)
 
 # create static c routines library
 libcsir.a : lib/sir_io.c lib/sir_ez.c lib/sir_geom.c 
