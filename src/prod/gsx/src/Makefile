@@ -86,7 +86,7 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall
+CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
