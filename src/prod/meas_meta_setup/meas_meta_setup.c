@@ -60,15 +60,6 @@
 
 /****************************************************************************/
 
-extern void ease2_map_info(int iopt, int isc, int ind, 
-			   double *map_equatorial_radius_m, double *map_eccentricity, 
-			   double *e2, double *map_reference_latitude, 
-			   double *map_reference_longitude, 
-			   double *map_second_reference_latitude,double * sin_phi1, 
-			   double *cos_phi1, double *kz,
-			   double *map_scale, int *bcols, int *brows, 
-			   double *r0, double *s0, double *epsilon);
-
 static int nint(float r)
 {
   int ret_val = r;  if (ret_val - r > 0.5) ret_val--;

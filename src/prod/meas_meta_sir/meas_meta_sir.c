@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   float anodata_I=CETB_FILE_THETA_FILL_VALUE;
   float anodata_Ia=CETB_FILE_THETA_FILL_VALUE;
   float anodata_P=CETB_FILE_TB_TIME_FILL_VALUE;
-  float anodata_V=(CETB_FILE_TB_STDDEV_FILL_VALUE*CETB_FILE_TB_STDDEV_SCALE_FACTOR);
+  float anodata_V=(float)(CETB_FILE_TB_STDDEV_FILL_VALUE*CETB_FILE_TB_STDDEV_SCALE_FACTOR);
   float anodata_E=-15.0;
 
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
@@ -1350,8 +1350,9 @@ int main(int argc, char **argv)
 
   if (errors == 0) {
     fprintf( stderr, "%s: No errors encountered\n", __FILE__ );
-  } else
-    fprintf( stderr, "%s: Processing errors encountered\n", __FILE__ );
+  } else {
+    fprintf( stderr, "%s: Processing errors encountered and azang set to %f\n", __FILE__, azang );
+  }
   
   /* end of program */
   /* free malloc'ed memory (not strictly necessary, but good to be explicit) */
