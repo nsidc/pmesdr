@@ -11,7 +11,7 @@ INCDIR = $(TOPDIR)/include
 
 EXES = csirexample 
 LIB = libcsir.a
-HDRS = lib/sir_geom.h
+HDRS = include/sir_geom.h
 
 AR = ar
 CC = gcc
