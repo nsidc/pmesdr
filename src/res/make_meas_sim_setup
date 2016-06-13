@@ -1,7 +1,0 @@
-#
-# compile script for meas_sim_setup.c
-#
-# written by DGL at BYU  27 Mar 2014
-
-# without libraries 
-gcc -O3 -m64 -I../sirlib/c/include meas_sim_setup.c ../sirlib/c/lib/sir_geom.c ../sirlib/c/lib/sir_io.c ../sirlib/c/lib/sir_ez.c -o meas_sim_setup -lm

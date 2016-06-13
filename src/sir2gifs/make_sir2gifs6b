@@ -1,2 +1,0 @@
-gcc4 -m64 -O2 -I./ sir2gifs6b.c sirllplt2.c preprocess.c ll_fpio2.c ll_nr_fp2.c syms.c ll_util.c ll_ramreplace.c circle.c ../sirlib/c/lib/sir_geom.c ../sirlib/c/lib/sir_io.c -o sir2gifs -lm
-
