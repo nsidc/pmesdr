@@ -100,7 +100,7 @@ DEPEND_LIBS = $(LIBDIR)/libutils.a $(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_setup.c
 OBJS = meas_meta_setup.o
-HDRS = $(INCDIR)/gsx.h $(INCDIR)/cetb.h $(MEAS_INCDIR)/sir3.h
+HDRS = $(INCDIR)/gsx.h $(INCDIR)/cetb.h $(MEAS_INCDIR)/sir_geom.h
 BIN = meas_meta_setup
 
 all : $(BIN)
