@@ -18,7 +18,6 @@
 #endif
 #include <time.h>
 
-#include <sir3.h>
 #include <cetb.h>
 #include <sir_geom.h>
 

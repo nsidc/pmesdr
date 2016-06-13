@@ -67,7 +67,7 @@ DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_make.c
 OBJS = meas_meta_make.o
-HDRS = $(MEAS_INCDIR)/sir3.h $(INCDIR)/cetb.h
+HDRS = $(MEAS_INCDIR)/sir_geom.h $(INCDIR)/cetb.h
 BIN = meas_meta_make
 
 all : $(BIN)
