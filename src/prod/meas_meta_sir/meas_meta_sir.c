@@ -879,13 +879,6 @@ int main(int argc, char **argv)
   fprintf( stderr, "%s:  Tb STD min   max --> %f %f\n", __FILE__, amin, amax );
   fprintf( stderr, "%s:  Tb ERR min   max --> %f %f\n", __FILE__, bmin, bmax );
 
-  /* At this point you should check to see if any of the TB values were out of range and if so set the
-     TB_std_dev value to the OOR value for it, viz. (2^16)-2 */
-
-  if ( 1 == missing_tb_flag ) {
-    // need to read the TB data out and find the place where TB is set to missing
-    fprintf( stderr, "%s: Setting missing value in TB_std_dev\n", __FILE__ );
-  }
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_std_dev",
 			       NC_USHORT, sxy,
 			       ( size_t )nsx, ( size_t ) nsy,
