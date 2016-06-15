@@ -117,7 +117,7 @@ int main(int argc, char **argv)
   float anodata_C=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
   float anodata_I=CETB_FILE_THETA_FILL_VALUE;
   float anodata_Ia=CETB_FILE_THETA_FILL_VALUE;
-  float anodata_P=CETB_FILE_TB_TIME_FILL_VALUE;
+  float anodata_P=(float)((CETB_FILE_TB_TIME_FILL_VALUE*CETB_FILE_TB_TIME_SCALE_FACTOR)-1);
   float anodata_V=(float)(CETB_FILE_TB_STDDEV_FILL_VALUE*CETB_FILE_TB_STDDEV_SCALE_FACTOR);
   float anodata_E=-15.0;
 
@@ -982,7 +982,7 @@ int main(int argc, char **argv)
 	if (fabs(*(sy+i)) >= FLT_EPSILON) 
 	  *(sxy+i) = *(sx+i) / *(sy+i);
 	else
-	  *(sxy+i) =0.0;
+	  *(sxy+i) = anodata_P;
       else
 	*(sxy+i) = anodata_P;
 		
@@ -995,6 +995,8 @@ int main(int argc, char **argv)
   }
 
   fprintf( stderr, "%s:  Time min   max --> %f %f\n", __FILE__, amin, amax );
+  fprintf( stderr, "%s:  TB Time fill values %f %d\n", __FILE__, anodata_P, tb_time_fill_value );
+  fprintf( stderr, "%s:  TB Time values [0] %f and [1]%f\n", __FILE__, *(sxy), *(sxy+1) );
 
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_time",
   			       NC_SHORT, sxy,
