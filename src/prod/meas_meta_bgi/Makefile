@@ -96,10 +96,10 @@ endif
 #------------------------------------------------------------------------
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
 	-lcetb -lutils -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
-CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall
+CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -g

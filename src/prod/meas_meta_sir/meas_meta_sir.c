@@ -117,8 +117,8 @@ int main(int argc, char **argv)
   float anodata_C=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
   float anodata_I=CETB_FILE_THETA_FILL_VALUE;
   float anodata_Ia=CETB_FILE_THETA_FILL_VALUE;
-  float anodata_P=CETB_FILE_TB_TIME_FILL_VALUE;
-  float anodata_V=CETB_FILE_TB_STDDEV_FILL_VALUE;
+  float anodata_P=(float)((CETB_FILE_TB_TIME_FILL_VALUE*CETB_FILE_TB_TIME_SCALE_FACTOR)-1);
+  float anodata_V=(float)(CETB_FILE_TB_STDDEV_FILL_VALUE*CETB_FILE_TB_STDDEV_SCALE_FACTOR);
   float anodata_E=-15.0;
 
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
@@ -730,14 +730,6 @@ int main(int argc, char **argv)
   }    /* end of loop for each SIR iteration */
   fprintf( stderr, "%s:  weight max --> %f Average weight: %.4f\n", __FILE__, tmax, total/nsize );
   
-  /* Check for OOR values of TB */
-  for ( i = 0; i < nsx*nsy; i++ ) {
-    if ( ( *(a_val+i) - ( CETB_TB_FILL_VALUE * CETB_TB_SCALE_FACTOR ) ) >= FLT_EPSILON ) {
-      if ( ( *(a_val+i) < CETB_TB_SCALED_MIN ) || ( *(a_val+i) > CETB_TB_SCALED_MAX ) ) {
-	*(a_val+i) = (float)( CETB_TB_MISSING_VALUE * CETB_TB_SCALE_FACTOR );
-      }
-    }
-  }
   if ( 0 != cetb_file_add_var( cetb_sir, "TB",
 			       NC_USHORT, a_val,
 			       ( size_t )nsx, ( size_t ) nsy,
@@ -973,7 +965,7 @@ int main(int argc, char **argv)
 	if (fabs(*(sy+i)) >= FLT_EPSILON) 
 	  *(sxy+i) = *(sx+i) / *(sy+i);
 	else
-	  *(sxy+i) =0.0;
+	  *(sxy+i) = anodata_P;
       else
 	*(sxy+i) = anodata_P;
 		
@@ -986,6 +978,8 @@ int main(int argc, char **argv)
   }
 
   fprintf( stderr, "%s:  Time min   max --> %f %f\n", __FILE__, amin, amax );
+  fprintf( stderr, "%s:  TB Time fill values %f %d\n", __FILE__, anodata_P, tb_time_fill_value );
+  fprintf( stderr, "%s:  TB Time values [0] %f and [1]%f\n", __FILE__, *(sxy), *(sxy+1) );
 
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_time",
   			       NC_SHORT, sxy,
@@ -1341,8 +1335,9 @@ int main(int argc, char **argv)
 
   if (errors == 0) {
     fprintf( stderr, "%s: No errors encountered\n", __FILE__ );
-  } else
-    fprintf( stderr, "%s: Processing errors encountered\n", __FILE__ );
+  } else {
+    fprintf( stderr, "%s: Processing errors encountered and azang set to %f\n", __FILE__, azang );
+  }
   
   /* end of program */
   /* free malloc'ed memory (not strictly necessary, but good to be explicit) */

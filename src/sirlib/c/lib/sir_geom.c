@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "sir_geom.h"
+
 int intfix(float r)
 {
   int ret_val = r;
