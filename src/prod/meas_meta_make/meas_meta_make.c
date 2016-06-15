@@ -18,8 +18,8 @@
 #endif
 #include <time.h>
 
-#include <sir3.h>
 #include <cetb.h>
+#include <sir_geom.h>
 
 #define prog_version 1.2 /* program version */
 #define prog_name "meas_meta_make"
@@ -44,18 +44,6 @@ char rname[] = "regiondef1.dat";  /* file defining region codes */
 static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num );
 
 static int get_file_names(FILE *mout, int *argn, char *argv[]);
-
-/* declare specific map projection prototypes needed */
-
-extern void ease2_map_info(int iopt, int isc, int ind, 
-			   double *map_equatorial_radius_m, 
-			   double *map_eccentricity, double *e2,
-			   double *map_reference_latitude, 
-			   double *map_reference_longitude, 
-			   double *map_second_reference_latitude,
-			   double *sin_phi1, double *cos_phi1, double *kz,
-			   double *map_scale, int *bcols, int *brows, 
-			   double *r0, double *s0, double *epsilon);
 
 /****************************************************************************/
 /* note: program is designed to be run from command line and NOT interactively

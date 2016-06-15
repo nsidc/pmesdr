@@ -86,11 +86,11 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall
+CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981
+  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)

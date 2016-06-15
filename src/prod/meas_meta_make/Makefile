@@ -54,10 +54,10 @@ SYSLIBS = -lm
 MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
-CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -Wall
+CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -Wall -Wremarks -wd981 -no-prec-div # -Zp8
+  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
@@ -67,7 +67,7 @@ DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_make.c
 OBJS = meas_meta_make.o
-HDRS = $(MEAS_INCDIR)/sir3.h $(INCDIR)/cetb.h
+HDRS = $(MEAS_INCDIR)/sir_geom.h $(INCDIR)/cetb.h
 BIN = meas_meta_make
 
 all : $(BIN)

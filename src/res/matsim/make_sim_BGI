@@ -1,7 +1,0 @@
-#
-# compile script for sim_BGI.c
-#
-# written by DGL at BYU 21 Jun 2014
-
-# with sir libraries 
-gcc -m64 -I../../sirlib/c/include -I./ sim_BGI.c -o sim_BGI -L../../sirlib/c -lcsir -lm
