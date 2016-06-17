@@ -928,9 +928,6 @@ void cetb_file_close( cetb_file_class *this ) {
 int cetb_file_check_consistency( char *file_name ) {
   int status=0;
   int nc_fileid;
-  int varid;
-  float *float_data;
-  float *more_float_data;
 
   if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
