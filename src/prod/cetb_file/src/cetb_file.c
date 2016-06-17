@@ -522,7 +522,7 @@ int cetb_file_add_var( cetb_file_class *this,
       for ( row=0; row<rows; row++ ) {
 	for ( i=0;i <cols; i++ ) {
 	  *( ushort_data + ((row*cols)+i) ) = (unsigned short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
-								   *( (float *)data + (((rows-row-1)*cols)+i) ) );
+							( *( (float *)data + (((rows-row-1)*cols)+i) ) ) );
 	}
       }
 
@@ -554,7 +554,7 @@ int cetb_file_add_var( cetb_file_class *this,
       for ( row=0; row<rows; row++ ) {
 	for ( i=0; i<cols; i++ ) {
 	  *( short_data + ((row*cols)+i) ) = (short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
-								  *( (float *)data + (((rows-row-1)*cols)+i) ) );
+						    (*( (float *)data + (((rows-row-1)*cols)+i) ) ) );
 	}
       }
 
@@ -562,7 +562,7 @@ int cetb_file_add_var( cetb_file_class *this,
 	fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
 	return 1;
       }
-      
+
       free( short_data );
 
     } else {
@@ -915,6 +915,37 @@ void cetb_file_close( cetb_file_class *this ) {
 
 }
 
+/*
+ * cetb_file_check_consistency - check to make sure the variables are within valid range
+ *
+ *  input: NETCDF file name
+ *
+ *  output: status variable
+ *
+ *  result: OOR values are set to missing
+ *
+ */
+int cetb_file_check_consistency( char *file_name ) {
+  int status=0;
+  int nc_fileid;
+  int varid;
+  float *float_data;
+  float *more_float_data;
+
+  if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
+    fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
+    return -1;
+  }
+
+  if ( ( status = nc_close( nc_fileid ) ) ) {
+    fprintf( stderr, "%s: nc_close error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
+    return -1;
+  }
+
+  return status;
+
+}
+ 
 /*********************************************************************
  * Internal function definitions
  *********************************************************************/
