@@ -222,38 +222,3 @@ void test_init_for_valid_cetb_temperate( void ) {
   
 }
 
-void test_get_direction( void ) {
-
-  char info_name[ FILENAME_MAX ] = "FD1m-stuff";
-  TEST_ASSERT_TRUE( CETB_MORNING_PASSES == cetb_get_direction_id_from_info_name( info_name ) );
-  
-}
-
-void test_get_bogus_direction( void ) {
-
-  char info_name[ FILENAME_MAX ] = "FD1z-bogus";
-  TEST_ASSERT_TRUE( CETB_NO_DIRECTION == cetb_get_direction_id_from_info_name( info_name ) );
-  
-}
-    
-void test_get_producer_sir( void ) {
-
-  char outpath[ FILENAME_MAX ] = "/here/is/stuff/sirCSU/";
-  TEST_ASSERT_TRUE( CETB_CSU == cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );
-  
-}
-
-void test_get_producer_bgi( void ) {
-
-  char outpath[ FILENAME_MAX ] = "/home/vagrant/measures-byu/NSIDCtest/bgiCSU";
-  TEST_ASSERT_TRUE( CETB_CSU == cetb_get_swath_producer_id_from_outpath( outpath, CETB_BGI ) );
-  
-}
-
-void test_get_bogus_producer( void ) {
-
-  char outpath[ FILENAME_MAX ] = "/here/is/stuff/bogus/";
-  TEST_ASSERT_TRUE( CETB_NO_PRODUCER
-		    == cetb_get_swath_producer_id_from_outpath( outpath, CETB_SIR ) );  
-}
-
