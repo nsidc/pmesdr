@@ -219,7 +219,7 @@ void test_cetb_tbs( void ) {
   };
   float sample_tb0 = 50.002;
   float sample_tb1 = 100.008;
-  float sample_tb_time0 = -1440.0;
+  float sample_tb_time0 = (float)(CETB_FILE_TB_TIME_FILL_VALUE*CETB_FILE_TB_TIME_SCALE_FACTOR);
   float sample_tb_time1 = 1440.0;
   float sample_num_samples0 = 254;
   float sample_num_samples1 = 100;
@@ -328,6 +328,12 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
 
   cetb_file_close( cetb );
+
+  status = cetb_file_check_consistency( "testing" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( -1, status, "checking consistency" );
+
+  status = cetb_file_check_consistency( test_filename );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "checking consistency" );
 
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
@@ -482,7 +488,7 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading time data" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
 						      CETB_FILE_TB_TIME_ADD_OFFSET,
-						      sample_tb_time0 ),
+						      NC_MIN_SHORT ),
 				 time_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_time element" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
