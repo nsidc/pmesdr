@@ -12,6 +12,7 @@
 
 #include "unity.h"
 #include "calcalcs.h"
+#include "cetb_define.h"
 #include "cetb_file.h"
 
 /*
@@ -193,14 +194,14 @@ void test_cetb_tbs( void ) {
   float scale_factor;
   float add_offset;
   unsigned char *ubyte_data;
-  unsigned char ubyte_fill_value=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
+  unsigned char ubyte_fill_value=CETB_TB_NUM_SAMPLES_FILL_VALUE;
   unsigned char ubyte_valid_range[ 2 ] = {
-    CETB_FILE_TB_NUM_SAMPLES_MIN,
-    CETB_FILE_TB_NUM_SAMPLES_MAX
+    CETB_TB_NUM_SAMPLES_MIN,
+    CETB_TB_NUM_SAMPLES_MAX
   };
   unsigned char ubyte_expected_tb_num_samples_valid_range[ 2 ] = {
-    CETB_FILE_TB_NUM_SAMPLES_MIN,
-    CETB_FILE_TB_NUM_SAMPLES_MAX
+    CETB_TB_NUM_SAMPLES_MIN,
+    CETB_TB_NUM_SAMPLES_MAX
   };
   short *time_data;
   int int_fill_value=CETB_TB_FILL_VALUE;
@@ -208,18 +209,18 @@ void test_cetb_tbs( void ) {
     CETB_TB_MIN,
     CETB_TB_MAX
   };
-  short short_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
+  short short_fill_value=CETB_TB_TIME_FILL_VALUE;
   short short_valid_range[ 2 ] = {
-    CETB_FILE_TB_TIME_MIN,
-    CETB_FILE_TB_TIME_MAX
+    CETB_TB_TIME_MIN,
+    CETB_TB_TIME_MAX
   };
   int int_expected_tb_time_valid_range[ 2 ] = {
-    CETB_FILE_TB_TIME_MIN,
-    CETB_FILE_TB_TIME_MAX
+    CETB_TB_TIME_MIN,
+    CETB_TB_TIME_MAX
   };
   float sample_tb0 = 50.002;
   float sample_tb1 = 100.008;
-  float sample_tb_time0 = (float)(CETB_FILE_TB_TIME_FILL_VALUE*CETB_FILE_TB_TIME_SCALE_FACTOR);
+  float sample_tb_time0 = (float)(CETB_TB_TIME_FILL_VALUE*CETB_TB_TIME_SCALE_FACTOR);
   float sample_tb_time1 = 1440.0;
   float sample_num_samples0 = 254;
   float sample_num_samples1 = 100;
@@ -251,10 +252,10 @@ void test_cetb_tbs( void ) {
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
   
-  fill_value = CETB_FILE_TB_STDDEV_FILL_VALUE;
-  missing_value = CETB_FILE_TB_STDDEV_MISSING_VALUE;
-  valid_range[ 0 ] = CETB_FILE_TB_STDDEV_MIN;
-  valid_range[ 1 ] = CETB_FILE_TB_STDDEV_MAX;
+  fill_value = CETB_TB_STDDEV_FILL_VALUE;
+  missing_value = CETB_TB_STDDEV_MISSING_VALUE;
+  valid_range[ 0 ] = CETB_TB_STDDEV_MIN;
+  valid_range[ 1 ] = CETB_TB_STDDEV_MAX;
   status = cetb_file_add_var( cetb, "TB_std_dev",
 			      NC_USHORT,
 			      float_data,
@@ -266,8 +267,8 @@ void test_cetb_tbs( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
-			      (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
+			      (float) CETB_TB_STDDEV_SCALE_FACTOR,
+			      (float) CETB_TB_STDDEV_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_std_dev" );
 
@@ -322,8 +323,8 @@ void test_cetb_tbs( void ) {
 			      NULL,
 			      &short_valid_range,
 			      CETB_PACK,
-			      (float) CETB_FILE_TB_TIME_SCALE_FACTOR,
-			      (float) CETB_FILE_TB_TIME_ADD_OFFSET,
+			      (float) CETB_TB_TIME_SCALE_FACTOR,
+			      (float) CETB_TB_TIME_ADD_OFFSET,
 			      "gregorian" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
 
@@ -486,13 +487,13 @@ void test_cetb_tbs( void ) {
 
   status = nc_get_var_short( nc_fileid, tb_time_var_id, time_data );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading time data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
-						      CETB_FILE_TB_TIME_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_TIME_SCALE_FACTOR,
+						      CETB_TB_TIME_ADD_OFFSET,
 						      NC_MIN_SHORT ),
 				 time_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_time element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
-						      CETB_FILE_TB_TIME_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_TIME_SCALE_FACTOR,
+						      CETB_TB_TIME_ADD_OFFSET,
 						      sample_tb_time1 ),
 				 time_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_time element" );
