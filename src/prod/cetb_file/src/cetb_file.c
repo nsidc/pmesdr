@@ -859,7 +859,8 @@ int cetb_file_check_consistency( char *file_name ) {
   int tb_varid, tb_std_dev_varid, rows_varid, cols_varid;
   unsigned short *tb_ushort_data, *tb_std_dev_ushort_data;
   size_t rows, cols;
-  int index, missing_flag=0;
+  int missing_flag=0;
+  unsigned int index;
   
   if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
@@ -920,7 +921,7 @@ int cetb_file_check_consistency( char *file_name ) {
     return -1;
   }
 
-  for ( index=0; index<rows*cols; index++ ) {
+  for ( index=0; index<(int)rows*cols; index++ ) {
     if ( CETB_TB_FILL_VALUE != *(tb_ushort_data+index) ) {
       if ( ( CETB_TB_MIN > *(tb_ushort_data+index) ) || ( CETB_TB_MAX < *(tb_ushort_data+index) ) ) {
 	*(tb_ushort_data+index) = CETB_TB_MISSING_VALUE;
