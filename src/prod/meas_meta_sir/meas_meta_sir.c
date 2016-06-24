@@ -99,6 +99,7 @@ int main(int argc, char **argv)
 
   char *file_in;
   char outpath[FILENAME_MAX];
+  char cetb_sir_filename[FILENAME_MAX]; // Required to save the name for consistency checking at end
 
   float latl, lonl, lath, lonh;
   char regname[11];
@@ -1330,7 +1331,16 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
+  strcpy( cetb_sir_filename, cetb_sir->filename );
+  
   cetb_file_close( cetb_sir );
+
+  /* Now check to make sure that there are no OOR temps and set to MISSING if so */
+  if ( 0 != cetb_file_check_consistency( cetb_sir_filename ) ) {
+    fprintf( stderr, "%s: Error running file consistency check file %s\n", __FILE__,
+	     cetb_sir_filename );
+    exit( -1 );
+  }
 
   if (errors == 0) {
     fprintf( stderr, "%s: No errors encountered\n", __FILE__ );
