@@ -847,16 +847,142 @@ void cetb_file_close( cetb_file_class *this ) {
  *
  *  result: OOR values are set to missing
  *
+ *  this function retrieves the TB values from the file and checks them all to make sure they are
+ *  within the required range.  Any values outside the required range, but != the fill value
+ *  should be set to missing.  IFF any TB values are set to missing, then the corresponding TB_std_dev
+ *  value should be set to missing.
+ *
  */
 int cetb_file_check_consistency( char *file_name ) {
   int status=0;
   int nc_fileid;
-
+  int tb_varid, tb_std_dev_varid, rows_varid, cols_varid;
+  unsigned short *tb_short_data, *tb_std_dev_short_data;
+  size_t rows, cols, tb_valid_range_len, tb_std_dev_valid_range_len;
+  int index;
+  unsigned short tb_fill, tb_std_dev_fill, *tb_valid_range, *tb_std_dev_valid_range;
+  nc_type xtypep;
+  
   if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
     return -1;
   }
 
+  if ( ( status = nc_inq_varid( nc_fileid, "TB", &tb_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_varid error=%s: TB\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  } else {
+    fprintf( stderr, "%s: got TB varid %d\n", __FUNCTION__, tb_varid );
+  }
+
+  if ( ( status = nc_inq_varid( nc_fileid, "TB_std_dev", &tb_std_dev_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_varid error=%s: TB_std_dev\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  } else {
+    fprintf( stderr, "%s: got TB_std_dev varid %d\n", __FUNCTION__, tb_std_dev_varid );
+  }
+
+
+  if ( ( status = nc_inq_dimid( nc_fileid, "rows", &rows_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: rows\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_dimlen( nc_fileid, rows_varid, &rows ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimlen error=%s: row length\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_dimid( nc_fileid, "cols", &cols_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: cols\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_dimlen( nc_fileid, cols_varid, &cols ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: col length\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_short_data,
+						sizeof( short int ) * 1 * cols * rows );
+  if ( status != 0 ) {
+    fprintf( stderr, "%s: couldn't allocate memory for TB array\n", __FUNCTION__ );
+    return -1;
+  }
+
+  if ( ( status = nc_get_var_short( nc_fileid, tb_varid, tb_short_data ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve temperature data, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_short_data,
+						sizeof( short int ) * 1 * cols * rows );
+  if ( status != 0 ) {
+    fprintf( stderr, "%s: couldn't allocate memory for TB array\n", __FUNCTION__ );
+    return -1;
+  }
+
+  if ( ( status = nc_get_var_short( nc_fileid, tb_std_dev_varid, tb_std_dev_short_data ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve temp std dev data, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_get_att_short( nc_fileid, tb_varid, "_FillValue", &tb_fill ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve tb_fill, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_attlen( nc_fileid, tb_varid, "valid_range", &tb_valid_range_len ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve tb_valid_range, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  } else {
+    fprintf( stderr, "%s: tb_valid_range_len is %d\n", __FUNCTION__, (int)tb_valid_range_len );
+  }
+  
+  if ( ( status = nc_inq_atttype( nc_fileid, tb_varid, "valid_range", &xtypep ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve tb_valid_range type, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  } else {
+    fprintf( stderr, "%s: tb_valid_range type is %d\n", __FUNCTION__, xtypep );
+  }
+  
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_valid_range,
+						sizeof( unsigned short ) * tb_valid_range_len );
+  if ( status != 0 ) {
+    fprintf( stderr, "%s: couldn't allocate memory for TB_valid_range array\n", __FUNCTION__ );
+    return -1;
+  }
+
+  if ( ( status = nc_get_att_ushort( nc_fileid, tb_varid, "valid_range", tb_valid_range ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve tb_valid_range, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_get_att_ushort( nc_fileid, tb_std_dev_varid, "_FillValue", &tb_std_dev_fill ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve tb_std_dev_fill, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_attlen( nc_fileid, tb_std_dev_varid, "valid_range", &tb_std_dev_valid_range_len ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve tb_valid_range, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+  
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_valid_range,
+						sizeof( unsigned short ) * tb_std_dev_valid_range_len );
+  if ( status != 0 ) {
+    fprintf( stderr, "%s: couldn't allocate memory for TB_std_dev_valid_range array\n", __FUNCTION__ );
+    return -1;
+  }
+
+  if ( ( status = nc_get_att_ushort( nc_fileid, tb_std_dev_varid, "valid_range", tb_std_dev_valid_range ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve tb_fill, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  for ( index=0; index<rows*cols; index++ ) {
+  }
+    
   if ( ( status = nc_close( nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_close error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
     return -1;
