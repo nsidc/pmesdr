@@ -75,39 +75,15 @@ void setUp( void ) {
 void tearDown( void ) {
 
 }
-
-void test_cetb_tbs_wrong_dims( void ) {
-
-  int status;
-  size_t rows=2;
-  size_t cols=3;
-  float *data;
-  unsigned short fill_value=CETB_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_TB_MISSING_VALUE;
-  unsigned short valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
-  status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
-  TEST_ASSERT_EQUAL_INT( 0, status );
-  
-  status = cetb_file_add_var( cetb, "TB",
-			      NC_USHORT,
-			      data,
-			      cols, rows,
-			      CETB_FILE_TB_STANDARD_NAME,
-			      "SIR TB",
-			      CETB_FILE_TB_UNIT,
-			      &fill_value,
-			      &missing_value,
-			      &valid_range,
-			      CETB_PACK,
-			      (float) CETB_TB_SCALE_FACTOR,
-			      (float) CETB_TB_ADD_OFFSET,
-			      NULL );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 1, status, "bad dimensions" );
-  cetb_file_close( cetb );
-
-}
-
-void test_cetb_tbs( void ) {
+/*
+ * This function is to test the file_consistency function of cetb_file
+ *
+ * Insert temperatures that are OOR and ensure that they come back as set to missing
+ *
+ * Also check that TB_std_dev has the corresponding value set to missing
+ *
+ */
+void test_cetb_file_consistency( void ) {
 
   int i;
   int nc_fileid=0;
@@ -166,10 +142,10 @@ void test_cetb_tbs( void ) {
   };
   float sample_tb0 = 50.002;
   float sample_tb1 = 100.008;
-  float sample_tb_time0 = (float)(CETB_TB_TIME_FILL_VALUE*CETB_TB_TIME_SCALE_FACTOR);
-  float sample_tb_time1 = 1440.0;
-  float sample_num_samples0 = 254;
-  float sample_num_samples1 = 100;
+  float sample_tb2 = 365.05;
+  float sample_tb_std_dev0 = 0.9;
+  float sample_tb_std_dev1 = 2.0;
+  float sample_tb_std_dev2 = 3.1;
   float float_fill_value=-1.;
   float float_missing_value=-2.;
   float float_valid_range[ 2 ] = {
@@ -182,6 +158,7 @@ void test_cetb_tbs( void ) {
 
   float_data[ 0 ] = sample_tb0;     // First element of array (row=0)
   float_data[ cols ] = sample_tb1;  // First column of array (row=1)
+  float_data[ (rows*cols) - 1 ] = sample_tb2; // Last element of array 
   status = cetb_file_add_var( cetb, "TB",
 			      NC_USHORT,
 			      float_data,
@@ -198,6 +175,9 @@ void test_cetb_tbs( void ) {
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
   
+  float_data[ 0 ] = sample_tb_std_dev0;     // First element of array (row=0)
+  float_data[ cols ] = sample_tb_std_dev1;  // First column of array (row=1)
+  float_data[ (rows*cols) - 1 ] = sample_tb_std_dev2; // Last element of array 
   fill_value = CETB_TB_STDDEV_FILL_VALUE;
   missing_value = CETB_TB_STDDEV_MISSING_VALUE;
   valid_range[ 0 ] = CETB_TB_STDDEV_MIN;
@@ -217,62 +197,6 @@ void test_cetb_tbs( void ) {
 			      (float) CETB_TB_STDDEV_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_std_dev" );
-
-  status = cetb_file_add_var( cetb, "TB_dump",
-			      NC_FLOAT,
-			      float_data,
-			      cols, rows,
-			      NULL,
-			      "SIR TB Dump Variable",
-			      CETB_FILE_TB_UNIT,
-			      &float_fill_value,
-			      &float_missing_value,
-			      &float_valid_range,
-			      CETB_NO_PACK,
-			      0.0,
-			      0.0,
-			      NULL );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_dump" );
-
-  status = allocate_clean_aligned_memory( ( void * )&ubyte_data, sizeof( unsigned char ) * rows * cols );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ubyte_data" );
-  ubyte_data[ 0 ] = sample_num_samples0;
-  ubyte_data[ cols ] = sample_num_samples1;
-  status = cetb_file_add_var( cetb, "TB_num_samples",
-			      NC_UBYTE,
-			      ubyte_data,
-			      cols, rows,
-			      NULL,
-			      "SIR TB Number of Measurements",
-			      "count",
-			      &ubyte_fill_value,
-			      NULL,
-			      &ubyte_valid_range,
-			      CETB_NO_PACK,
-			      0.0,
-			      0.0,
-			      NULL );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_num_samples" );
-
-  status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for TB time float_data" );
-  float_data[ 0 ] = sample_tb_time0;
-  float_data[ cols ] = sample_tb_time1;
-  status = cetb_file_add_var( cetb, "TB_time",
-			      NC_SHORT,
-			      float_data,
-			      cols, rows,
-			      NULL,
-			      "SIR TB Time of Day",
-			      "minutes since 1987-01-01 00:00:00",
-			      &short_fill_value,
-			      NULL,
-			      &short_valid_range,
-			      CETB_PACK,
-			      (float) CETB_TB_TIME_SCALE_FACTOR,
-			      (float) CETB_TB_TIME_ADD_OFFSET,
-			      "gregorian" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
 
   cetb_file_close( cetb );
 
@@ -309,140 +233,40 @@ void test_cetb_tbs( void ) {
 						      sample_tb1 ),
 				 tb_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_data element" );
-
-
-  /* Confirm the expected variable attributes are in the output file */
-  att_p = get_text_att( nc_fileid, tb_var_id, "standard_name" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_TB_STANDARD_NAME, att_p, "TB standard_name" );
-  free( att_p );
-  att_p = get_text_att( nc_fileid, tb_var_id, "long_name" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "SIR TB", att_p, "TB long_name" );
-  free( att_p );
-  att_p = get_text_att( nc_fileid, tb_var_id, "units" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_TB_UNIT, att_p, "TB units" );
-  free( att_p );
-
-  /* _FillValue, missing_value and valid_range */
-  status = nc_inq_var_fill( nc_fileid, tb_var_id, NULL, &fill_value );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_FILL_VALUE, fill_value, "TB _FillValue" );
-  status = nc_get_att_ushort( nc_fileid, tb_var_id, "missing_value", &missing_value );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_MISSING_VALUE, missing_value,
-				 "TB missing_value" );
-  
-
-  status = nc_get_att_ushort( nc_fileid, tb_var_id, "valid_range", valid_range );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( expected_tb_valid_range[ 0 ], valid_range[ 0 ],
-				 "tb valid_range min" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( expected_tb_valid_range[ 1 ], valid_range[ 1 ],
-				 "tb valid_range max" );
-
-  /* scale_factor, add_offset, packing_convention, packing_convention_description */
-  att_p = get_text_att( nc_fileid, tb_var_id, "packing_convention" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_PACKING_CONVENTION,
-				    att_p, "TB packing_convention" );
-  free( att_p );
-  att_p = get_text_att( nc_fileid, tb_var_id, "packing_convention_description" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_PACKING_CONVENTION_DESC,
-				    att_p, "TB packing_convention_description" );
-  free( att_p );
-  status = nc_get_att_float( nc_fileid, tb_var_id, "scale_factor", &scale_factor );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_TB_SCALE_FACTOR, scale_factor,
-				   "tb scale_factor" );
-  status = nc_get_att_float( nc_fileid, tb_var_id, "add_offset", &add_offset );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_TB_ADD_OFFSET, add_offset,
-				   "tb add_offset" );
-
-  att_p = get_text_att( nc_fileid, tb_var_id, "grid_mapping" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_GRID_MAPPING, att_p, "TB grid_mapping" );
-  free( att_p );
-  
-  att_p = get_text_att( nc_fileid, tb_var_id, "coverage_content_type" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_COVERAGE_CONTENT_TYPE, att_p,
-				    "TB coverage_content_type" );
-  free( att_p );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
+						      CETB_TB_ADD_OFFSET,
+						      600.0 ),
+				 tb_data[ cols-1 ],     // Last element of first row array
+				 "sample2 tb_data element" );
   
   /* Confirm the expected TB_std_dev variable is in the output file */
   status = nc_inq_varid( nc_fileid, "TB_std_dev", &tb_stddev_var_id );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
 
-  /* There should not be a standard name for std dev */
-  status = nc_inq_attlen( nc_fileid, tb_stddev_var_id, "standard_name", &att_len );
-  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_std_dev standard_name" );
-
-  /* Confirm the expected TB_num_samples variable is in the output file */
-  status = nc_inq_varid( nc_fileid, "TB_num_samples", &tb_num_samples_var_id );
+  /* Read the actual TB_std_dev data */
+  status = nc_inq_var( nc_fileid, tb_stddev_var_id, 0, &xtype, &ndims, dim_ids, &natts );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
-
-  /* There should be a flag_values attribute for TB_num_samples */
-  status = nc_inq_attlen( nc_fileid, tb_num_samples_var_id, "flag_values", &att_len );
-  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "expected TB_num_samples flag_values" );
-
-  /* There should be a flag_meanings attribute for TB_num_samples */
-  status = nc_inq_attlen( nc_fileid, tb_num_samples_var_id, "flag_meanings", &att_len );
-  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "expected TB_num_samples flag_meanings" );
-
-  /* There should not be a standard name for num samples */
-  status = nc_inq_attlen( nc_fileid, tb_num_samples_var_id, "standard_name", &att_len );
-  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_num_samples standard_name" );
-
-  status = nc_get_att_ubyte( nc_fileid, tb_num_samples_var_id, "valid_range", ubyte_valid_range );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( ubyte_expected_tb_num_samples_valid_range[ 0 ], ubyte_valid_range[ 0 ],
-				 "tb_num_samples valid_range min" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( ubyte_expected_tb_num_samples_valid_range[ 1 ], ubyte_valid_range[ 1 ],
-				 "tb_num_samples valid_range max" );
-
-  /* Read the actual TB_num_samples data */
-  status = nc_inq_var( nc_fileid, tb_num_samples_var_id, 0, &xtype, &ndims, dim_ids, &natts );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_UBYTE, xtype, "unexpected TB_num_samples data type" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_USHORT, xtype, "unexpected TB_std_dev data type" );
   
-  /* Zero out the ubyte_data values */
+  /* Zero out the ushort_data values */
   for ( i = 0; i < ( rows * cols ); i++ ) {
-    *( ubyte_data + i ) = 255;
+    *( tb_data + i ) = 0;
   }
-  status = nc_get_var_ubyte( nc_fileid, tb_num_samples_var_id, ubyte_data );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb_num_samples data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples0,
-				 ubyte_data[ cols * ( rows - 1 ) ], // First elements of last row
-				 "sample0 tb_num_samples element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( sample_num_samples1,
-				 ubyte_data[ cols * (rows - 2 ) ], // First element of second-to-last row
-				 "sample1 tb_num_samples element" );
-
-  /* Confirm the expected TB_time variable is in the output file */
-  status = nc_inq_varid( nc_fileid, "TB_time", &tb_time_var_id );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
-
-  /* There should not be a standard name for time */
-  status = nc_inq_attlen( nc_fileid, tb_time_var_id, "standard_name", &att_len );
-  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_time standard_name" );
-
-  status = nc_get_att_int( nc_fileid, tb_time_var_id, "valid_range", int_valid_range );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( int_expected_tb_time_valid_range[ 0 ], int_valid_range[ 0 ],
-				 "tb_time valid_range min" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( int_expected_tb_time_valid_range[ 1 ], int_valid_range[ 1 ],
-				 "tb_time valid_range max" );
-
-  status = allocate_clean_aligned_memory( ( void * )&time_data, sizeof( short ) * rows * cols );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for short_data" );
-
-  status = nc_get_var_short( nc_fileid, tb_time_var_id, time_data );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading time data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_TIME_SCALE_FACTOR,
-						      CETB_TB_TIME_ADD_OFFSET,
-						      NC_MIN_SHORT ),
-				 time_data[ cols * ( rows - 1 ) ],     // First element of last row
-				 "sample0 tb_time element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_TIME_SCALE_FACTOR,
-						      CETB_TB_TIME_ADD_OFFSET,
-						      sample_tb_time1 ),
-				 time_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
-				 "sample1 tb_time element" );
+  status = nc_get_var_ushort( nc_fileid, tb_stddev_var_id, tb_data );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb_std_dev data" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_STDDEV_SCALE_FACTOR,
+						      CETB_TB_STDDEV_ADD_OFFSET,
+						      sample_tb_std_dev0 ),
+				 tb_data[ cols * ( rows - 1 ) ], // First element of last row
+				 "sample0 tb_std_dev element" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_STDDEV_SCALE_FACTOR,
+						      CETB_TB_STDDEV_ADD_OFFSET,
+						      sample_tb_std_dev1 ),
+				 tb_data[ cols * (rows - 2 ) ], // First element of second-to-last row
+				 "sample1 tb_std_dev element" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_STDDEV_MISSING_VALUE,
+				 tb_data[ cols-1 ], // Last element at end of first row
+				 "sample2 tb_std_dev element" );
 
   nc_close( nc_fileid );
 
