@@ -1,8 +1,8 @@
 /*
- * test_cetb_variables - Unit tests for populating cetb_file objects with TB data
+ * test_cetb_file_consistency - Unit tests for testing possible OOR values in TB data
  *
- * 01-Sep-2015 M. J. Brodzik brodzik@nsidc.org 303-492-8263
- * Copyright (C) 2015 Regents of the University of Colorado and Brigham Young University
+ * 22-Jun-2016 M. A. Hardman mhardman@nsidc.org 303-492-2969
+ * Copyright (C) 2016 Regents of the University of Colorado and Brigham Young University
  */
 #include <float.h>
 #include <netcdf.h>
@@ -73,60 +73,6 @@ void setUp( void ) {
 }
 
 void tearDown( void ) {
-
-}
-
-void test_cetb_tbs_unpacking( void ) {
-
-  int status;
-  int i; 
-  size_t size=3;
-  unsigned short *packed;
-  float *unpacked;
-  float expected[ 3 ] = { 50., 220., 600. };
-
-  cetb_file_close( cetb );
-
-  status = allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for packed array" );
-  status = allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating mamory for unpacked array" );
-
-  packed[ 0 ] = 5000;
-  packed[ 1 ] = 22000;
-  packed[ 2 ] = 60000;
-
-  for ( i = 0; i < size; i++ ) {
-    *( unpacked + i ) = CETB_FILE_UNPACK_DATA( 0.01, 0.0, *( packed + i ) );
-    TEST_ASSERT_EQUAL_FLOAT_MESSAGE( expected[ i ], unpacked[ i ], "bad unpack" );
-  }
-
-}
-
-void test_cetb_tbs_packing( void ) {
-
-  int status;
-  int i; 
-  size_t size=3;
-  unsigned short *packed;
-  float *unpacked;
-  unsigned short expected[ 9 ] = { 20000, 20001, 20001 };
-
-  cetb_file_close( cetb );
-
-  status = allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for packed array" );
-  status = allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating mamory for unpacked array" );
-
-  unpacked[ 0 ] = 200.0049;
-  unpacked[ 1 ] = 200.0050;
-  unpacked[ 2 ] = 200.0051;
-
-  for ( i = 0; i < size; i++ ) {
-    *( packed + i ) = CETB_FILE_PACK_DATA( 0.01, 0.0, *( unpacked + i ) );
-    TEST_ASSERT_EQUAL_INT_MESSAGE( expected[ i ], packed[ i ], "bad pack" );
-  }
 
 }
 
@@ -329,6 +275,12 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
 
   cetb_file_close( cetb );
+
+  status = cetb_file_check_consistency( "testing" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( -1, status, "checking consistency" );
+
+  status = cetb_file_check_consistency( test_filename );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "checking consistency" );
 
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
