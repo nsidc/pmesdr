@@ -12,7 +12,7 @@
 
 #include "unity.h"
 #include "calcalcs.h"
-#include "cetb_define.h"
+#include "cetb_ncatts.h"
 #include "cetb_file.h"
 
 /*
@@ -103,42 +103,42 @@ void test_cetb_file_consistency( void ) {
   size_t att_len;
   float *float_data;
   unsigned short *tb_data;
-  unsigned short fill_value=CETB_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_TB_MISSING_VALUE;
+  unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
-    CETB_TB_MIN,
-    CETB_TB_MAX
+    CETB_NCATTS_TB_MIN,
+    CETB_NCATTS_TB_MAX
   };
   unsigned short expected_tb_valid_range[ 2 ] = {
-    CETB_TB_MIN,
-    CETB_TB_MAX
+    CETB_NCATTS_TB_MIN,
+    CETB_NCATTS_TB_MAX
   };
   float scale_factor;
   float add_offset;
   unsigned char *ubyte_data;
-  unsigned char ubyte_fill_value=CETB_TB_NUM_SAMPLES_FILL_VALUE;
+  unsigned char ubyte_fill_value=CETB_NCATTS_TB_NUM_SAMPLES_FILL_VALUE;
   unsigned char ubyte_valid_range[ 2 ] = {
-    CETB_TB_NUM_SAMPLES_MIN,
-    CETB_TB_NUM_SAMPLES_MAX
+    CETB_NCATTS_TB_NUM_SAMPLES_MIN,
+    CETB_NCATTS_TB_NUM_SAMPLES_MAX
   };
   unsigned char ubyte_expected_tb_num_samples_valid_range[ 2 ] = {
-    CETB_TB_NUM_SAMPLES_MIN,
-    CETB_TB_NUM_SAMPLES_MAX
+    CETB_NCATTS_TB_NUM_SAMPLES_MIN,
+    CETB_NCATTS_TB_NUM_SAMPLES_MAX
   };
   short *time_data;
-  int int_fill_value=CETB_TB_FILL_VALUE;
+  int int_fill_value=CETB_NCATTS_TB_FILL_VALUE;
   int int_valid_range[ 2 ] = {
-    CETB_TB_MIN,
-    CETB_TB_MAX
+    CETB_NCATTS_TB_MIN,
+    CETB_NCATTS_TB_MAX
   };
-  short short_fill_value=CETB_TB_TIME_FILL_VALUE;
+  short short_fill_value=CETB_NCATTS_TB_TIME_FILL_VALUE;
   short short_valid_range[ 2 ] = {
-    CETB_TB_TIME_MIN,
-    CETB_TB_TIME_MAX
+    CETB_NCATTS_TB_TIME_MIN,
+    CETB_NCATTS_TB_TIME_MAX
   };
   int int_expected_tb_time_valid_range[ 2 ] = {
-    CETB_TB_TIME_MIN,
-    CETB_TB_TIME_MAX
+    CETB_NCATTS_TB_TIME_MIN,
+    CETB_NCATTS_TB_TIME_MAX
   };
   float sample_tb0 = 50.002;
   float sample_tb1 = 100.008;
@@ -170,18 +170,18 @@ void test_cetb_file_consistency( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_TB_SCALE_FACTOR,
-			      (float) CETB_TB_ADD_OFFSET,
+			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
+			      (float) CETB_NCATTS_TB_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
   
   float_data[ 0 ] = sample_tb_std_dev0;     // First element of array (row=0)
   float_data[ cols ] = sample_tb_std_dev1;  // First column of array (row=1)
   float_data[ (rows*cols) - 1 ] = sample_tb_std_dev2; // Last element of array 
-  fill_value = CETB_TB_STDDEV_FILL_VALUE;
-  missing_value = CETB_TB_STDDEV_MISSING_VALUE;
-  valid_range[ 0 ] = CETB_TB_STDDEV_MIN;
-  valid_range[ 1 ] = CETB_TB_STDDEV_MAX;
+  fill_value = CETB_NCATTS_TB_STDDEV_FILL_VALUE;
+  missing_value = CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
+  valid_range[ 0 ] = CETB_NCATTS_TB_STDDEV_MIN;
+  valid_range[ 1 ] = CETB_NCATTS_TB_STDDEV_MAX;
   status = cetb_file_add_var( cetb, "TB_std_dev",
 			      NC_USHORT,
 			      float_data,
@@ -193,8 +193,8 @@ void test_cetb_file_consistency( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_TB_STDDEV_SCALE_FACTOR,
-			      (float) CETB_TB_STDDEV_ADD_OFFSET,
+			      (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
+			      (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_std_dev" );
 
@@ -223,18 +223,18 @@ void test_cetb_file_consistency( void ) {
 
   status = nc_get_var_ushort( nc_fileid, tb_var_id, tb_data );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
-						      CETB_TB_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
+						      CETB_NCATTS_TB_ADD_OFFSET,
 						      sample_tb0 ),
 				 tb_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_data element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
-						      CETB_TB_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
+						      CETB_NCATTS_TB_ADD_OFFSET,
 						      sample_tb1 ),
 				 tb_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_data element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
-						      CETB_TB_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
+						      CETB_NCATTS_TB_ADD_OFFSET,
 						      600.0 ),
 				 tb_data[ cols-1 ],     // Last element of first row array
 				 "sample2 tb_data element" );
@@ -254,17 +254,17 @@ void test_cetb_file_consistency( void ) {
   }
   status = nc_get_var_ushort( nc_fileid, tb_stddev_var_id, tb_data );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb_std_dev data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_STDDEV_SCALE_FACTOR,
-						      CETB_TB_STDDEV_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
+						      CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 						      sample_tb_std_dev0 ),
 				 tb_data[ cols * ( rows - 1 ) ], // First element of last row
 				 "sample0 tb_std_dev element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_STDDEV_SCALE_FACTOR,
-						      CETB_TB_STDDEV_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
+						      CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 						      sample_tb_std_dev1 ),
 				 tb_data[ cols * (rows - 2 ) ], // First element of second-to-last row
 				 "sample1 tb_std_dev element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_STDDEV_MISSING_VALUE,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_STDDEV_MISSING_VALUE,
 				 tb_data[ cols-1 ], // Last element at end of first row
 				 "sample2 tb_std_dev element" );
 
