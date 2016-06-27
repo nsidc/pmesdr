@@ -11,6 +11,7 @@
 #include <udunits2.h>
 
 #include "unity.h"
+#include "utils.h"
 #include "calcalcs.h"
 #include "cetb_ncatts.h"
 #include "cetb_file.h"
@@ -36,7 +37,6 @@ cetb_swath_producer_id producer_id;
 
 
 /* Helper functions */
-static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *get_text_att( int fileid, int varid, const char *name );
 
 void setUp( void ) {
@@ -87,9 +87,9 @@ void test_cetb_tbs_unpacking( void ) {
 
   cetb_file_close( cetb );
 
-  status = allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
+  status = utils_allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for packed array" );
-  status = allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
+  status = utils_allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating mamory for unpacked array" );
 
   packed[ 0 ] = 5000;
@@ -114,9 +114,9 @@ void test_cetb_tbs_packing( void ) {
 
   cetb_file_close( cetb );
 
-  status = allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
+  status = utils_allocate_clean_aligned_memory( ( void * )&packed, sizeof( unsigned short ) * size );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for packed array" );
-  status = allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
+  status = utils_allocate_clean_aligned_memory( ( void * )&unpacked, sizeof( float ) * size );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating mamory for unpacked array" );
 
   unpacked[ 0 ] = 200.0049;
@@ -139,7 +139,7 @@ void test_cetb_tbs_wrong_dims( void ) {
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
   unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
-  status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
   
   status = cetb_file_add_var( cetb, "TB",
@@ -231,7 +231,7 @@ void test_cetb_tbs( void ) {
     10000.
   };
 
-  status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
 
   float_data[ 0 ] = sample_tb0;     // First element of array (row=0)
@@ -288,7 +288,7 @@ void test_cetb_tbs( void ) {
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_dump" );
 
-  status = allocate_clean_aligned_memory( ( void * )&ubyte_data, sizeof( unsigned char ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&ubyte_data, sizeof( unsigned char ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ubyte_data" );
   ubyte_data[ 0 ] = sample_num_samples0;
   ubyte_data[ cols ] = sample_num_samples1;
@@ -308,7 +308,7 @@ void test_cetb_tbs( void ) {
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_num_samples" );
 
-  status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for TB time float_data" );
   float_data[ 0 ] = sample_tb_time0;
   float_data[ cols ] = sample_tb_time1;
@@ -342,7 +342,7 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_USHORT, xtype, "unexpected TB data type" );
 
-  status = allocate_clean_aligned_memory( ( void * )&tb_data, sizeof( unsigned short ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_data, sizeof( unsigned short ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ushort_data" );
 
   status = nc_get_var_ushort( nc_fileid, tb_var_id, tb_data );
@@ -476,7 +476,7 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( int_expected_tb_time_valid_range[ 1 ], int_valid_range[ 1 ],
 				 "tb_time valid_range max" );
 
-  status = allocate_clean_aligned_memory( ( void * )&time_data, sizeof( short ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&time_data, sizeof( short ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for short_data" );
 
   status = nc_get_var_short( nc_fileid, tb_time_var_id, time_data );
@@ -493,31 +493,6 @@ void test_cetb_tbs( void ) {
 				 "sample1 tb_time element" );
 
   nc_close( nc_fileid );
-
-}
-
-
-/*
- * allocate_clean_aligned_memory - allocate aligned memory that is
- *                                 zeroed out.
- *
- * input:
- *   this : void ** address of pointer to new memory
- *   size : size_t size of memory to allocate
- *
- * output: n/a
- *
- * returns : STATUS_OK for success, or error message to stderr and STATUS_FAILURE
- * 
- */
-int allocate_clean_aligned_memory( void **this, size_t size ) {
-
-  if ( 0 != posix_memalign( this, CETB_FILE_ALIGNMENT, size ) ) {
-    perror( __FUNCTION__ );
-    return 1;
-  }
-  memset( *this, 0, size );
-  return 0;
 
 }
 

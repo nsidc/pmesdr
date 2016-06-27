@@ -11,6 +11,7 @@
 #include <udunits2.h>
 
 #include "unity.h"
+#include "utils.h"
 #include "calcalcs.h"
 #include "cetb_ncatts.h"
 #include "cetb_file.h"
@@ -36,7 +37,6 @@ cetb_swath_producer_id producer_id;
 
 
 /* Helper functions */
-static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *get_text_att( int fileid, int varid, const char *name );
 
 void setUp( void ) {
@@ -153,7 +153,7 @@ void test_cetb_file_consistency( void ) {
     10000.
   };
 
-  status = allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
 
   float_data[ 0 ] = sample_tb0;     // First element of array (row=0)
@@ -218,7 +218,7 @@ void test_cetb_file_consistency( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_USHORT, xtype, "unexpected TB data type" );
 
-  status = allocate_clean_aligned_memory( ( void * )&tb_data, sizeof( unsigned short ) * rows * cols );
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_data, sizeof( unsigned short ) * rows * cols );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "allocating memory for ushort_data" );
 
   status = nc_get_var_ushort( nc_fileid, tb_var_id, tb_data );
@@ -269,31 +269,6 @@ void test_cetb_file_consistency( void ) {
 				 "sample2 tb_std_dev element" );
 
   nc_close( nc_fileid );
-
-}
-
-
-/*
- * allocate_clean_aligned_memory - allocate aligned memory that is
- *                                 zeroed out.
- *
- * input:
- *   this : void ** address of pointer to new memory
- *   size : size_t size of memory to allocate
- *
- * output: n/a
- *
- * returns : STATUS_OK for success, or error message to stderr and STATUS_FAILURE
- * 
- */
-int allocate_clean_aligned_memory( void **this, size_t size ) {
-
-  if ( 0 != posix_memalign( this, CETB_FILE_ALIGNMENT, size ) ) {
-    perror( __FUNCTION__ );
-    return 1;
-  }
-  memset( *this, 0, size );
-  return 0;
 
 }
 

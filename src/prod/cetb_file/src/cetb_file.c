@@ -921,7 +921,7 @@ int cetb_file_check_consistency( char *file_name ) {
     return -1;
   }
 
-  for ( index=0; index<(int)rows*cols; index++ ) {
+  for ( index = 0; index < (int)( rows*cols ); index++ ) {
     if ( CETB_TB_FILL_VALUE != *(tb_ushort_data+index) ) {
       if ( ( CETB_TB_MIN > *(tb_ushort_data+index) ) || ( CETB_TB_MAX < *(tb_ushort_data+index) ) ) {
 	*(tb_ushort_data+index) = CETB_TB_MISSING_VALUE;
@@ -938,7 +938,7 @@ int cetb_file_check_consistency( char *file_name ) {
       return -1;
     }
     if ( ( status = nc_put_var_ushort( nc_fileid, tb_std_dev_varid, tb_std_dev_ushort_data ) ) ) {
-      fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
+      fprintf( stderr, "%s: error=%s re-writing TB std dev data to file=%s\n", __FUNCTION__,
 	       nc_strerror(status), file_name );
       return -1;
     }
