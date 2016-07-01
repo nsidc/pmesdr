@@ -80,7 +80,7 @@ endif
 #------------------------------------------------------------------------
 
 SUBDIRS = utils/src cetb_file/src gsx/src ../sirlib/c meas_meta_make \
-	meas_meta_setup meas_meta_sir meas_meta_bgi
+	meas_meta_setup meas_meta_sir
 
 all install clean:
 	for i in $(SUBDIRS); do			\
