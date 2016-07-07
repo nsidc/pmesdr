@@ -19,6 +19,7 @@
 #include "calcalcs.h"
 #include "cetb.h"
 #include "cetb_file.h"
+#include "cetb_ncatts.h"
 #include "utils.h"
 
 /*********************************************************************
@@ -305,7 +306,7 @@ int cetb_file_add_var( cetb_file_class *this,
   char *packing_convention_description;
   char *grid_mapping;
   char *coverage_content_type;
-  unsigned char num_samples_max = CETB_FILE_TB_NUM_SAMPLES_MAX;
+  unsigned char num_samples_max = CETB_NCATTS_TB_NUM_SAMPLES_MAX;
   char *flag_meanings = "num_samples GE 255";
   
   packing_convention = strdup( CETB_FILE_PACKING_CONVENTION );
@@ -546,7 +547,7 @@ int cetb_file_add_var( cetb_file_class *this,
       if ( ( status = nc_put_att( this->fid, var_id, "flag_values", NC_UBYTE,
 				  (size_t)1, &(num_samples_max) ) ) ) {
 	fprintf( stderr, "%s: Error setting %s %s %d: %s.\n",
-		 __FUNCTION__, var_name, "flag_values", CETB_FILE_TB_NUM_SAMPLES_MAX, nc_strerror( status ) );
+		 __FUNCTION__, var_name, "flag_values", CETB_NCATTS_TB_NUM_SAMPLES_MAX, nc_strerror( status ) );
 	return 1;
       }
   
@@ -847,19 +848,106 @@ void cetb_file_close( cetb_file_class *this ) {
  *
  *  result: OOR values are set to missing
  *
+ *  this function retrieves the TB values from the file and checks them all to make sure they are
+ *  within the required range.  Any values outside the required range, but != the fill value
+ *  should be set to missing.  IFF any TB values are set to missing, then the corresponding TB_std_dev
+ *  value should be set to missing.
+ *
  */
 int cetb_file_check_consistency( char *file_name ) {
   int status=0;
   int nc_fileid;
-  int varid;
-  float *float_data;
-  float *more_float_data;
-
+  int tb_varid, tb_std_dev_varid, rows_varid, cols_varid;
+  unsigned short *tb_ushort_data, *tb_std_dev_ushort_data;
+  size_t rows, cols;
+  int missing_flag=0;
+  unsigned int index;
+  
   if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
     return -1;
   }
 
+  if ( ( status = nc_inq_varid( nc_fileid, "TB", &tb_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_varid error=%s: TB\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  } 
+
+  if ( ( status = nc_inq_varid( nc_fileid, "TB_std_dev", &tb_std_dev_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_varid error=%s: TB_std_dev\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  } 
+
+  if ( ( status = nc_inq_dimid( nc_fileid, "rows", &rows_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: rows\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_dimlen( nc_fileid, rows_varid, &rows ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimlen error=%s: row length\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_dimid( nc_fileid, "cols", &cols_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: cols\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  if ( ( status = nc_inq_dimlen( nc_fileid, cols_varid, &cols ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: col length\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_ushort_data,
+						sizeof( short int ) * 1 * cols * rows );
+  if ( status != 0 ) {
+    fprintf( stderr, "%s: couldn't allocate memory for TB array\n", __FUNCTION__ );
+    return -1;
+  }
+
+  if ( ( status = nc_get_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve temperature data, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_ushort_data,
+						sizeof( short int ) * 1 * cols * rows );
+  if ( status != 0 ) {
+    fprintf( stderr, "%s: couldn't allocate memory for TB std dev array\n", __FUNCTION__ );
+    return -1;
+  }
+
+  if ( ( status = nc_get_var_ushort( nc_fileid, tb_std_dev_varid, tb_std_dev_ushort_data ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve temp std dev data, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    return -1;
+  }
+
+  for ( index=0; index<(int)rows*cols; index++ ) {
+    if ( CETB_NCATTS_TB_FILL_VALUE != *(tb_ushort_data+index) ) {
+      if ( ( CETB_NCATTS_TB_MIN > *(tb_ushort_data+index) ) || ( CETB_NCATTS_TB_MAX < *(tb_ushort_data+index) ) ) {
+	*(tb_ushort_data+index) = CETB_NCATTS_TB_MISSING_VALUE;
+	*(tb_std_dev_ushort_data+index) = CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
+	missing_flag = 1;
+      }
+    }
+  }
+
+  if ( 1 == missing_flag ) { // need to write out the modified data
+    if ( ( status = nc_put_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
+      fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
+	       nc_strerror(status), file_name );
+      return -1;
+    }
+    if ( ( status = nc_put_var_ushort( nc_fileid, tb_std_dev_varid, tb_std_dev_ushort_data ) ) ) {
+      fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
+	       nc_strerror(status), file_name );
+      return -1;
+    }
+  }
+
+  free ( tb_ushort_data );
+  free ( tb_std_dev_ushort_data );
+  
   if ( ( status = nc_close( nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_close error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
     return -1;

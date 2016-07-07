@@ -18,16 +18,6 @@
 /* Problem with AMSRE input data files requires this first measurement parameter to be used in setup */
 #define CETB_AMSRE_FIRST_MEASUREMENT 14
 
-/* TB values for output files */
-#define CETB_TB_FILL_VALUE 0
-#define CETB_TB_MISSING_VALUE 60000
-#define CETB_TB_SCALE_FACTOR 0.01
-#define CETB_TB_ADD_OFFSET 0.0
-#define CETB_TB_MIN 5000
-#define CETB_TB_MAX 35000
-#define CETB_TB_SCALED_MIN ( CETB_TB_MIN * CETB_TB_SCALE_FACTOR )
-#define CETB_TB_SCALED_MAX ( CETB_TB_MAX * CETB_TB_SCALE_FACTOR )
-
 typedef enum {
   CETB_NO_REGION=-1,
   CETB_EASE2_N,

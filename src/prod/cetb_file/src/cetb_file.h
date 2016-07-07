@@ -8,6 +8,7 @@
 #define cetb_file_H
 
 #include "cetb.h"
+#include "cetb_ncatts.h"
 
 #include <netcdf.h>
 
@@ -26,33 +27,6 @@
 #define CETB_FILE_TB_UNIT "kelvin"
 #define CETB_FILE_ANGULAR_UNIT "degree"
 
-/* TB std dev values for output files */
-#define CETB_FILE_TB_STDDEV_FILL_VALUE ( NC_MAX_USHORT )
-#define CETB_FILE_TB_STDDEV_MISSING_VALUE ( (NC_MAX_USHORT) - 1 )
-#define CETB_FILE_TB_STDDEV_SCALE_FACTOR 0.01
-#define CETB_FILE_TB_STDDEV_ADD_OFFSET 0.0
-#define CETB_FILE_TB_STDDEV_MIN 0
-#define CETB_FILE_TB_STDDEV_MAX ( (NC_MAX_USHORT) - 2 )
-
-/* TB number of samples values for output files */
-#define CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE 0
-#define CETB_FILE_TB_NUM_SAMPLES_MIN 1
-#define CETB_FILE_TB_NUM_SAMPLES_MAX NC_MAX_CHAR
-
-/* TB time values for output files */
-#define CETB_FILE_TB_TIME_FILL_VALUE NC_MIN_SHORT
-#define CETB_FILE_TB_TIME_SCALE_FACTOR 1.0
-#define CETB_FILE_TB_TIME_ADD_OFFSET 0.0
-#define CETB_FILE_TB_TIME_MIN ( (NC_MIN_SHORT) + 1 )
-#define CETB_FILE_TB_TIME_MAX NC_MAX_SHORT
-
-/* Incidence angle values for output files */
-#define CETB_FILE_THETA_FILL_VALUE -1
-#define CETB_FILE_THETA_SCALE_FACTOR 0.01
-#define CETB_FILE_THETA_ADD_OFFSET 0.0
-#define CETB_FILE_THETA_MIN 0
-#define CETB_FILE_THETA_MAX 9000
-
 /* Needs to hold "minutes since yyyy-dd-mm 00:00:00" */
 #define CETB_FILE_EPOCH_STRING_LENGTH 34
 
@@ -61,14 +35,6 @@
  * for the source of the data.
  */
 #define CETB_FILE_COVERAGE_CONTENT_TYPE "image"
-
-/*
- * These 2 functions are temporary, and should not be needed once
- * we start passing this information along to bgi/sir in setup files
- */
-cetb_direction_id cetb_get_direction_id_from_info_name( const char *info_name );
-cetb_swath_producer_id cetb_get_swath_producer_id_from_outpath( const char *outpath,
-								const cetb_reconstruction_id reconstruction_id );
 
 /*
  * The public interface definition of a cetb object

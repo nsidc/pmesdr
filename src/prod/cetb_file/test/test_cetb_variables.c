@@ -12,6 +12,7 @@
 
 #include "unity.h"
 #include "calcalcs.h"
+#include "cetb_ncatts.h"
 #include "cetb_file.h"
 
 /*
@@ -135,9 +136,9 @@ void test_cetb_tbs_wrong_dims( void ) {
   size_t rows=2;
   size_t cols=3;
   float *data;
-  unsigned short fill_value=CETB_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_TB_MISSING_VALUE;
-  unsigned short valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
+  unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
+  unsigned short valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
   status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
   
@@ -152,8 +153,8 @@ void test_cetb_tbs_wrong_dims( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_TB_SCALE_FACTOR,
-			      (float) CETB_TB_ADD_OFFSET,
+			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
+			      (float) CETB_NCATTS_TB_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 1, status, "bad dimensions" );
   cetb_file_close( cetb );
@@ -180,46 +181,46 @@ void test_cetb_tbs( void ) {
   size_t att_len;
   float *float_data;
   unsigned short *tb_data;
-  unsigned short fill_value=CETB_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_TB_MISSING_VALUE;
+  unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
+  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
-    CETB_TB_MIN,
-    CETB_TB_MAX
+    CETB_NCATTS_TB_MIN,
+    CETB_NCATTS_TB_MAX
   };
   unsigned short expected_tb_valid_range[ 2 ] = {
-    CETB_TB_MIN,
-    CETB_TB_MAX
+    CETB_NCATTS_TB_MIN,
+    CETB_NCATTS_TB_MAX
   };
   float scale_factor;
   float add_offset;
   unsigned char *ubyte_data;
-  unsigned char ubyte_fill_value=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
+  unsigned char ubyte_fill_value=CETB_NCATTS_TB_NUM_SAMPLES_FILL_VALUE;
   unsigned char ubyte_valid_range[ 2 ] = {
-    CETB_FILE_TB_NUM_SAMPLES_MIN,
-    CETB_FILE_TB_NUM_SAMPLES_MAX
+    CETB_NCATTS_TB_NUM_SAMPLES_MIN,
+    CETB_NCATTS_TB_NUM_SAMPLES_MAX
   };
   unsigned char ubyte_expected_tb_num_samples_valid_range[ 2 ] = {
-    CETB_FILE_TB_NUM_SAMPLES_MIN,
-    CETB_FILE_TB_NUM_SAMPLES_MAX
+    CETB_NCATTS_TB_NUM_SAMPLES_MIN,
+    CETB_NCATTS_TB_NUM_SAMPLES_MAX
   };
   short *time_data;
-  int int_fill_value=CETB_TB_FILL_VALUE;
+  int int_fill_value=CETB_NCATTS_TB_FILL_VALUE;
   int int_valid_range[ 2 ] = {
-    CETB_TB_MIN,
-    CETB_TB_MAX
+    CETB_NCATTS_TB_MIN,
+    CETB_NCATTS_TB_MAX
   };
-  short short_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
+  short short_fill_value=CETB_NCATTS_TB_TIME_FILL_VALUE;
   short short_valid_range[ 2 ] = {
-    CETB_FILE_TB_TIME_MIN,
-    CETB_FILE_TB_TIME_MAX
+    CETB_NCATTS_TB_TIME_MIN,
+    CETB_NCATTS_TB_TIME_MAX
   };
   int int_expected_tb_time_valid_range[ 2 ] = {
-    CETB_FILE_TB_TIME_MIN,
-    CETB_FILE_TB_TIME_MAX
+    CETB_NCATTS_TB_TIME_MIN,
+    CETB_NCATTS_TB_TIME_MAX
   };
   float sample_tb0 = 50.002;
   float sample_tb1 = 100.008;
-  float sample_tb_time0 = (float)(CETB_FILE_TB_TIME_FILL_VALUE*CETB_FILE_TB_TIME_SCALE_FACTOR);
+  float sample_tb_time0 = (float)(CETB_NCATTS_TB_TIME_FILL_VALUE*CETB_NCATTS_TB_TIME_SCALE_FACTOR);
   float sample_tb_time1 = 1440.0;
   float sample_num_samples0 = 254;
   float sample_num_samples1 = 100;
@@ -246,15 +247,15 @@ void test_cetb_tbs( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_TB_SCALE_FACTOR,
-			      (float) CETB_TB_ADD_OFFSET,
+			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
+			      (float) CETB_NCATTS_TB_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
   
-  fill_value = CETB_FILE_TB_STDDEV_FILL_VALUE;
-  missing_value = CETB_FILE_TB_STDDEV_MISSING_VALUE;
-  valid_range[ 0 ] = CETB_FILE_TB_STDDEV_MIN;
-  valid_range[ 1 ] = CETB_FILE_TB_STDDEV_MAX;
+  fill_value = CETB_NCATTS_TB_STDDEV_FILL_VALUE;
+  missing_value = CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
+  valid_range[ 0 ] = CETB_NCATTS_TB_STDDEV_MIN;
+  valid_range[ 1 ] = CETB_NCATTS_TB_STDDEV_MAX;
   status = cetb_file_add_var( cetb, "TB_std_dev",
 			      NC_USHORT,
 			      float_data,
@@ -266,8 +267,8 @@ void test_cetb_tbs( void ) {
 			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
-			      (float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
-			      (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
+			      (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
+			      (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_std_dev" );
 
@@ -322,18 +323,12 @@ void test_cetb_tbs( void ) {
 			      NULL,
 			      &short_valid_range,
 			      CETB_PACK,
-			      (float) CETB_FILE_TB_TIME_SCALE_FACTOR,
-			      (float) CETB_FILE_TB_TIME_ADD_OFFSET,
+			      (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
+			      (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
 			      "gregorian" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
 
   cetb_file_close( cetb );
-
-  status = cetb_file_check_consistency( "testing" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( -1, status, "checking consistency" );
-
-  status = cetb_file_check_consistency( test_filename );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "checking consistency" );
 
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
@@ -352,13 +347,13 @@ void test_cetb_tbs( void ) {
 
   status = nc_get_var_ushort( nc_fileid, tb_var_id, tb_data );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading tb data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
-						      CETB_TB_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
+						      CETB_NCATTS_TB_ADD_OFFSET,
 						      sample_tb0 ),
 				 tb_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_data element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_TB_SCALE_FACTOR,
-						      CETB_TB_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
+						      CETB_NCATTS_TB_ADD_OFFSET,
 						      sample_tb1 ),
 				 tb_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_data element" );
@@ -377,9 +372,9 @@ void test_cetb_tbs( void ) {
 
   /* _FillValue, missing_value and valid_range */
   status = nc_inq_var_fill( nc_fileid, tb_var_id, NULL, &fill_value );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_FILL_VALUE, fill_value, "TB _FillValue" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_FILL_VALUE, fill_value, "TB _FillValue" );
   status = nc_get_att_ushort( nc_fileid, tb_var_id, "missing_value", &missing_value );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_TB_MISSING_VALUE, missing_value,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_MISSING_VALUE, missing_value,
 				 "TB missing_value" );
   
 
@@ -401,11 +396,11 @@ void test_cetb_tbs( void ) {
   free( att_p );
   status = nc_get_att_float( nc_fileid, tb_var_id, "scale_factor", &scale_factor );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_TB_SCALE_FACTOR, scale_factor,
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_NCATTS_TB_SCALE_FACTOR, scale_factor,
 				   "tb scale_factor" );
   status = nc_get_att_float( nc_fileid, tb_var_id, "add_offset", &add_offset );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_TB_ADD_OFFSET, add_offset,
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE( CETB_NCATTS_TB_ADD_OFFSET, add_offset,
 				   "tb add_offset" );
 
   att_p = get_text_att( nc_fileid, tb_var_id, "grid_mapping" );
@@ -486,13 +481,13 @@ void test_cetb_tbs( void ) {
 
   status = nc_get_var_short( nc_fileid, tb_time_var_id, time_data );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "reading time data" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
-						      CETB_FILE_TB_TIME_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_TIME_SCALE_FACTOR,
+						      CETB_NCATTS_TB_TIME_ADD_OFFSET,
 						      NC_MIN_SHORT ),
 				 time_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_time element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_FILE_TB_TIME_SCALE_FACTOR,
-						      CETB_FILE_TB_TIME_ADD_OFFSET,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_TIME_SCALE_FACTOR,
+						      CETB_NCATTS_TB_TIME_ADD_OFFSET,
 						      sample_tb_time1 ),
 				 time_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_time element" );
