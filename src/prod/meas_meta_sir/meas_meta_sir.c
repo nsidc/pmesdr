@@ -22,6 +22,7 @@
 #include <netcdf.h>
 
 #include "utils.h"
+#include "cetb_ncatts.h"
 #include "cetb_file.h"
 
 #define VERSION 1.2
@@ -98,6 +99,7 @@ int main(int argc, char **argv)
 
   char *file_in;
   char outpath[FILENAME_MAX];
+  char cetb_sir_filename[FILENAME_MAX]; // Required to save the name for consistency checking at end
 
   float latl, lonl, lath, lonh;
   char regname[11];
@@ -113,12 +115,12 @@ int main(int argc, char **argv)
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
 
   /* define no-data values */
-  float anodata_A=CETB_TB_FILL_VALUE;
-  float anodata_C=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
-  float anodata_I=CETB_FILE_THETA_FILL_VALUE;
-  float anodata_Ia=CETB_FILE_THETA_FILL_VALUE;
-  float anodata_P=(float)(CETB_FILE_TB_TIME_FILL_VALUE*CETB_FILE_TB_TIME_SCALE_FACTOR);
-  float anodata_V=(float)(CETB_FILE_TB_STDDEV_FILL_VALUE*CETB_FILE_TB_STDDEV_SCALE_FACTOR);
+  float anodata_A=CETB_NCATTS_TB_FILL_VALUE;
+  float anodata_C=CETB_NCATTS_TB_NUM_SAMPLES_FILL_VALUE;
+  float anodata_I=CETB_NCATTS_THETA_FILL_VALUE;
+  float anodata_Ia=CETB_NCATTS_THETA_FILL_VALUE;
+  float anodata_P=(float)(CETB_NCATTS_TB_TIME_FILL_VALUE*CETB_NCATTS_TB_TIME_SCALE_FACTOR);
+  float anodata_V=(float)(CETB_NCATTS_TB_STDDEV_FILL_VALUE*CETB_NCATTS_TB_STDDEV_SCALE_FACTOR);
   float anodata_E=-15.0;
 
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
@@ -138,19 +140,19 @@ int main(int argc, char **argv)
   cetb_platform_id platform_id;
   cetb_sensor_id sensor_id;
   cetb_direction_id direction_id=CETB_NO_DIRECTION;
-  unsigned short tb_fill_value=CETB_TB_FILL_VALUE;
-  unsigned short tb_missing_value=CETB_TB_MISSING_VALUE;
-  unsigned short tb_valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
-  short tb_time_fill_value=CETB_FILE_TB_TIME_FILL_VALUE;
-  short tb_time_valid_range[ 2 ] = { CETB_FILE_TB_TIME_MIN, CETB_FILE_TB_TIME_MAX };
-  unsigned short tb_stddev_fill_value=CETB_FILE_TB_STDDEV_FILL_VALUE;
-  unsigned short tb_stddev_missing_value=CETB_FILE_TB_STDDEV_MISSING_VALUE;
-  unsigned short tb_stddev_valid_range[ 2 ] = { CETB_FILE_TB_STDDEV_MIN, CETB_FILE_TB_STDDEV_MAX };
-  unsigned char tb_num_samples_fill_value=CETB_FILE_TB_NUM_SAMPLES_FILL_VALUE;
-  unsigned char tb_num_samples_valid_range[ 2 ] = { CETB_FILE_TB_NUM_SAMPLES_MIN,
-						    CETB_FILE_TB_NUM_SAMPLES_MAX };
-  short theta_fill_value=CETB_FILE_THETA_FILL_VALUE;
-  short theta_valid_range[ 2 ] = { CETB_FILE_THETA_MIN, CETB_FILE_THETA_MAX };
+  unsigned short tb_fill_value=CETB_NCATTS_TB_FILL_VALUE;
+  unsigned short tb_missing_value=CETB_NCATTS_TB_MISSING_VALUE;
+  unsigned short tb_valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
+  short tb_time_fill_value=CETB_NCATTS_TB_TIME_FILL_VALUE;
+  short tb_time_valid_range[ 2 ] = { CETB_NCATTS_TB_TIME_MIN, CETB_NCATTS_TB_TIME_MAX };
+  unsigned short tb_stddev_fill_value=CETB_NCATTS_TB_STDDEV_FILL_VALUE;
+  unsigned short tb_stddev_missing_value=CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
+  unsigned short tb_stddev_valid_range[ 2 ] = { CETB_NCATTS_TB_STDDEV_MIN, CETB_NCATTS_TB_STDDEV_MAX };
+  unsigned char tb_num_samples_fill_value=CETB_NCATTS_TB_NUM_SAMPLES_FILL_VALUE;
+  unsigned char tb_num_samples_valid_range[ 2 ] = { CETB_NCATTS_TB_NUM_SAMPLES_MIN,
+						    CETB_NCATTS_TB_NUM_SAMPLES_MAX };
+  short theta_fill_value=CETB_NCATTS_THETA_FILL_VALUE;
+  short theta_valid_range[ 2 ] = { CETB_NCATTS_THETA_MIN, CETB_NCATTS_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
 
   long head_len;
@@ -521,7 +523,7 @@ int main(int argc, char **argv)
 	 if not, new values will be stored over old values */
 
       keep=0;
-      if (tbval < CETB_TB_SCALED_MAX && tbval > CETB_TB_SCALED_MIN) { 
+      if (tbval < CETB_NCATTS_TB_SCALED_MAX && tbval > CETB_NCATTS_TB_SCALED_MIN) { 
 	nbyte=nbyte+HS;
 	store=store+HS;
 	ncnt++;
@@ -714,8 +716,8 @@ int main(int argc, char **argv)
 				     &tb_missing_value,
 				     &tb_valid_range,
 				     CETB_PACK,
-				     (float) CETB_TB_SCALE_FACTOR,
-				     (float) CETB_TB_ADD_OFFSET,
+				     (float) CETB_NCATTS_TB_SCALE_FACTOR,
+				     (float) CETB_NCATTS_TB_ADD_OFFSET,
 				     NULL ) ) {
 	  errors++;
 	  fprintf( stderr, "%s: Error writing Tb (ave_image).\n", __FILE__ );
@@ -740,8 +742,8 @@ int main(int argc, char **argv)
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_TB_SCALE_FACTOR,
-			       (float) CETB_TB_ADD_OFFSET,
+			       (float) CETB_NCATTS_TB_SCALE_FACTOR,
+			       (float) CETB_NCATTS_TB_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
@@ -781,8 +783,8 @@ int main(int argc, char **argv)
 				 NULL,
 				 &theta_valid_range,
 				 CETB_PACK,
-				 (float) CETB_FILE_THETA_SCALE_FACTOR,
-				 (float) CETB_FILE_THETA_ADD_OFFSET,
+				 (float) CETB_NCATTS_THETA_SCALE_FACTOR,
+				 (float) CETB_NCATTS_THETA_ADD_OFFSET,
 				 NULL ) ) {
       errors++;
       fprintf( stderr, "%s: Error writing Tb (i_image).\n", __FILE__ );
@@ -802,8 +804,8 @@ int main(int argc, char **argv)
 			       NULL,
 			       &theta_valid_range,
 			       CETB_PACK,
-			       (float) CETB_FILE_THETA_SCALE_FACTOR,
-			       (float) CETB_FILE_THETA_ADD_OFFSET,
+			       (float) CETB_NCATTS_THETA_SCALE_FACTOR,
+			       (float) CETB_NCATTS_THETA_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb incidence angle (j_image).\n", __FILE__ );
@@ -889,8 +891,8 @@ int main(int argc, char **argv)
 			       &tb_stddev_missing_value,
 			       &tb_stddev_valid_range,
 			       CETB_PACK,
-			       (float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
-			       (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
+			       (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
+			       (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb stddev (V).\n", __FILE__ );
@@ -989,8 +991,8 @@ int main(int argc, char **argv)
   			       NULL,
   			       &tb_time_valid_range,
   			       CETB_PACK,
-  			       (float) CETB_FILE_TB_TIME_SCALE_FACTOR,
-  			       (float) CETB_FILE_TB_TIME_ADD_OFFSET,
+  			       (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
+  			       (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
   			       "gregorian" ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb time (P).\n", __FILE__ );
@@ -1064,7 +1066,7 @@ int main(int argc, char **argv)
       } else {
 	fn = *(tot + iadd);
 	*(tot +  iadd) = *(tot +   iadd) + 1;                    /* count */
-	if ( *(num_samples + iadd) < CETB_FILE_TB_NUM_SAMPLES_MAX ) {
+	if ( *(num_samples + iadd) < CETB_NCATTS_TB_NUM_SAMPLES_MAX ) {
 	  *(num_samples + iadd) = (unsigned char)(*(num_samples + iadd) + 1);         /* num_samples for each pixel */
 	}
 	ninv = 1/ *(tot + iadd);
@@ -1144,8 +1146,8 @@ int main(int argc, char **argv)
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_TB_SCALE_FACTOR,
-			       (float) CETB_TB_ADD_OFFSET,
+			       (float) CETB_NCATTS_TB_SCALE_FACTOR,
+			       (float) CETB_NCATTS_TB_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD Tb (A).\n", __FILE__ );
@@ -1183,8 +1185,8 @@ int main(int argc, char **argv)
 			       &tb_stddev_missing_value,
 			       &tb_stddev_valid_range,
 			       CETB_PACK,
-			       (float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
-			       (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
+			       (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
+			       (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD Tb stddev (V).\n", __FILE__ );
@@ -1202,8 +1204,8 @@ int main(int argc, char **argv)
 			       NULL,
 			       &theta_valid_range,
 			       CETB_PACK,
-			       (float) CETB_FILE_THETA_SCALE_FACTOR,
-			       (float) CETB_FILE_THETA_ADD_OFFSET,
+			       (float) CETB_NCATTS_THETA_SCALE_FACTOR,
+			       (float) CETB_NCATTS_THETA_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD incidence angle (j_image).\n", __FILE__ );
@@ -1224,8 +1226,8 @@ int main(int argc, char **argv)
 				 NULL,
 				 &theta_valid_range,
 				 CETB_PACK,
-				 (float) CETB_FILE_THETA_SCALE_FACTOR,
-				 (float) CETB_FILE_THETA_ADD_OFFSET,
+				 (float) CETB_NCATTS_THETA_SCALE_FACTOR,
+				 (float) CETB_NCATTS_THETA_ADD_OFFSET,
 				 NULL ) ) {
       errors++;
       fprintf( stderr, "%s: Error writing GRD Tb (i_image).\n", __FILE__ );
@@ -1245,8 +1247,8 @@ int main(int argc, char **argv)
   			       NULL,
   			       &tb_time_valid_range,
   			       CETB_PACK,
-  			       (float) CETB_FILE_TB_TIME_SCALE_FACTOR,
-  			       (float) CETB_FILE_TB_TIME_ADD_OFFSET,
+  			       (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
+  			       (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
   			       "gregorian" ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD Tb time (P).\n", __FILE__ );
@@ -1287,8 +1289,8 @@ int main(int argc, char **argv)
 				   &tb_missing_value,
 				   &tb_valid_range,
 				   CETB_PACK,
-				   (float) CETB_TB_SCALE_FACTOR,
-				   (float) CETB_TB_ADD_OFFSET,
+				   (float) CETB_NCATTS_TB_SCALE_FACTOR,
+				   (float) CETB_NCATTS_TB_ADD_OFFSET,
 				   NULL ) ) {
 	errors++;
 	fprintf( stderr, "%s: Error writing Non-enhanced Tb (A).\n", __FILE__ );
@@ -1306,8 +1308,8 @@ int main(int argc, char **argv)
 				   &tb_stddev_missing_value,
 				   &tb_stddev_valid_range,
 				   CETB_PACK,
-				   (float) CETB_FILE_TB_STDDEV_SCALE_FACTOR,
-				   (float) CETB_FILE_TB_STDDEV_ADD_OFFSET,
+				   (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
+				   (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 				   NULL ) ) {
 	errors++;
 	fprintf( stderr, "%s: Error writing Non-enhanced Tb stddev (V).\n", __FILE__ );
@@ -1329,7 +1331,16 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
+  strcpy( cetb_sir_filename, cetb_sir->filename );
+  
   cetb_file_close( cetb_sir );
+
+  /* Now check to make sure that there are no OOR temps and set to MISSING if so */
+  if ( 0 != cetb_file_check_consistency( cetb_sir_filename ) ) {
+    fprintf( stderr, "%s: Error running file consistency check file %s\n", __FILE__,
+	     cetb_sir_filename );
+    exit( -1 );
+  }
 
   if (errors == 0) {
     fprintf( stderr, "%s: No errors encountered\n", __FILE__ );
@@ -1398,7 +1409,7 @@ void get_updates(float tbval, int count, int fill_array[], short int response_ar
      * Because this variable is stored as a byte, we only increment up to NC_MAX_CHAR
      */
     if (its == 0) {
-      if ( *(num_samples+n-1) < CETB_FILE_TB_NUM_SAMPLES_MAX ) {
+      if ( *(num_samples+n-1) < CETB_NCATTS_TB_NUM_SAMPLES_MAX ) {
 	(*(num_samples+n-1))++;
       }
     }

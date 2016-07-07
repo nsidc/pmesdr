@@ -1,1 +1,0 @@
-gcc -m64 -I../../src/sirlib/c/include test_ease2.c ../../src/sirlib/c/lib/sir_geom.c -o test_ease2 -lm
