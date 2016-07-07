@@ -8,7 +8,7 @@
 #define cetb_file_H
 
 #include "cetb.h"
-#include "cetb_define.h"
+#include "cetb_ncatts.h"
 
 #include <netcdf.h>
 

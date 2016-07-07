@@ -716,8 +716,8 @@ int main(int argc, char **argv)
 				     &tb_missing_value,
 				     &tb_valid_range,
 				     CETB_PACK,
-				     (float) CETB_TB_SCALE_FACTOR,
-				     (float) CETB_TB_ADD_OFFSET,
+				     (float) CETB_NCATTS_TB_SCALE_FACTOR,
+				     (float) CETB_NCATTS_TB_ADD_OFFSET,
 				     NULL ) ) {
 	  errors++;
 	  fprintf( stderr, "%s: Error writing Tb (ave_image).\n", __FILE__ );
