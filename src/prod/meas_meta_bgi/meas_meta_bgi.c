@@ -23,6 +23,7 @@
 
 #include "utils.h"
 #include "cetb.h"
+#include "cetb_ncatts.h"
 #include "cetb_file.h"
 
 #define NRANSI
@@ -141,9 +142,9 @@ int main(int argc, char **argv)
   cetb_platform_id platform_id;
   cetb_sensor_id sensor_id;
   cetb_direction_id direction_id=CETB_NO_DIRECTION;
-  unsigned short tb_fill_value=CETB_TB_FILL_VALUE;
-  unsigned short tb_missing_value=CETB_TB_MISSING_VALUE;
-  unsigned short tb_valid_range[ 2 ] = { CETB_TB_MIN, CETB_TB_MAX };
+  unsigned short tb_fill_value=CETB_NCATTS_TB_FILL_VALUE;
+  unsigned short tb_missing_value=CETB_NCATTS_TB_MISSING_VALUE;
+  unsigned short tb_valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
 
   float tb_fill_value_float;
   float tb_missing_value_float;
@@ -164,10 +165,10 @@ int main(int argc, char **argv)
   short int *weight_array;
   double dsum, *aveweights, tbave;
 
-  tb_fill_value_float = (float)( CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
-							CETB_TB_ADD_OFFSET, tb_fill_value ) );
-  tb_missing_value_float = (float)( CETB_FILE_UNPACK_DATA( CETB_TB_SCALE_FACTOR,
-							   CETB_TB_ADD_OFFSET, tb_missing_value ) );
+  tb_fill_value_float = (float)( CETB_FILE_UNPACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
+							CETB_NCATTS_TB_ADD_OFFSET, tb_fill_value ) );
+  tb_missing_value_float = (float)( CETB_FILE_UNPACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
+							   CETB_NCATTS_TB_ADD_OFFSET, tb_missing_value ) );
 /* begin program */  
 
   fprintf( stderr, "%s: BYU SSM/I meta BG program: C version %f\n", __FILE__, VERSION);
@@ -476,7 +477,7 @@ int main(int argc, char **argv)
 	}
 
 	keep=0;
-	if (tbval < CETB_TB_SCALED_MAX && tbval > CETB_TB_SCALED_MIN) { 
+	if (tbval < CETB_NCATTS_TB_SCALED_MAX && tbval > CETB_NCATTS_TB_SCALED_MIN) { 
 	  nbyte=nbyte+HS;
 	  store=store+HS;
 	  ncnt++;
@@ -804,8 +805,8 @@ int main(int argc, char **argv)
         if (abs((int)(a_val[its] - tbave)) > difthres)
 	  a_val[its]=(float) tbave;	
 
-      /* set data to CETB_TB_MISSING_VALUE if it is OOR */
-       	if ( a_val[its] < CETB_TB_SCALED_MIN || a_val[its] > CETB_TB_SCALED_MAX ) {
+      /* set data to CETB_NCATTS_TB_MISSING_VALUE if it is OOR */
+       	if ( a_val[its] < CETB_NCATTS_TB_SCALED_MIN || a_val[its] > CETB_NCATTS_TB_SCALED_MAX ) {
 	  a_val[its] = tb_missing_value_float;
 	}
 	
@@ -832,8 +833,8 @@ int main(int argc, char **argv)
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_TB_SCALE_FACTOR,
-			       (float) CETB_TB_ADD_OFFSET,
+			       (float) CETB_NCATTS_TB_SCALE_FACTOR,
+			       (float) CETB_NCATTS_TB_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
@@ -975,7 +976,7 @@ void filter(float *val, int size, int mode, int nsx, int nsy,
   for (i=0; i < nsx*nsy; i++) {
     *(val+i) = *(temp+i);
     *(temp+i)=0.0;
-    if ( (*(val+i) > thres) && ( (*(val+i) < CETB_TB_SCALED_MIN) || (*(val+i) > CETB_TB_SCALED_MAX) ) ) *(val+i) = missing;
+    if ( (*(val+i) > thres) && ( (*(val+i) < CETB_NCATTS_TB_SCALED_MIN) || (*(val+i) > CETB_NCATTS_TB_SCALED_MAX) ) ) *(val+i) = missing;
   }
   return;
 }
