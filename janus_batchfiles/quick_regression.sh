@@ -74,27 +74,27 @@ if [ $? -ne 0 ]; then
   echo 'csu_quick SIR validate failed'
   exit -1
 fi
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
-make rss_quick
-if [ $? -ne 0 ]; then
-  echo 'rss_quick BGI failed'
-  exit -1
-fi
-make rss_quick_validate
-if [ $? -ne 0 ]; then
-  echo 'rss_quick BGI validate failed'
-  exit -1
-fi
-make csu_quick
-if [ $? -ne 0 ]; then
-  echo 'csu_quick BGI failed'
-  exit -1
-fi
-make csu_quick_validate
-if [ $? -ne 0 ]; then
-  echo 'csu_quick BGI validate failed'
-  exit -1
-fi
+#cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
+#make rss_quick
+#if [ $? -ne 0 ]; then
+#  echo 'rss_quick BGI failed'
+#  exit -1
+#fi
+#make rss_quick_validate
+#if [ $? -ne 0 ]; then
+#  echo 'rss_quick BGI validate failed'
+#  exit -1
+#fi
+#make csu_quick
+#if [ $? -ne 0 ]; then
+#  echo 'csu_quick BGI failed'
+#  exit -1
+#fi
+#make csu_quick_validate
+#if [ $? -ne 0 ]; then
+#  echo 'csu_quick BGI validate failed'
+#  exit -1
+#fi
 
 
 # End of example job shell script
