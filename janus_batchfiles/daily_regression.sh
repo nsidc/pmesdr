@@ -74,28 +74,28 @@ if [ $? -ne 0 ]; then
   echo 'csu_ease SIR validate failed'
   exit -1
 fi
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
-make rss_ease
-if [ $? -ne 0 ]; then
-  echo 'rss_ease BGI failed'
-  exit -1
-fi
-make rss_ease_validate
-if [ $? -ne 0 ]; then
-  echo 'rss_ease BGI validate failed'
-  exit -1
-fi
-make csu_ease
-if [ $? -ne 0 ]; then
-  echo 'csu_ease BGI failed'
-  exit -1
-fi
-make csu_ease_validate
-if [ $? -ne 0 ]; then
-  echo 'csu_ease BGI validate failed'
-  exit -1
-fi
+# cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
+# make rss_ease
+# if [ $? -ne 0 ]; then
+#  echo 'rss_ease BGI failed'
+#  exit -1
+# fi
+# make rss_ease_validate
+#if [ $? -ne 0 ]; then
+#  echo 'rss_ease BGI validate failed'
+#  exit -1
+#fi
+#make csu_ease
+#if [ $? -ne 0 ]; then
+#  echo 'csu_ease BGI failed'
+#  exit -1
+#fi
+#make csu_ease_validate
+#if [ $? -ne 0 ]; then
+#  echo 'csu_ease BGI validate failed'
+#  exit -1
+#fi
 
 
-# End of example job shell script
+# End of daily regression job shell script
 # 
