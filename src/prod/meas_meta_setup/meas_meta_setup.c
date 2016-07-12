@@ -35,7 +35,6 @@
  * In order to achieve that, the input source files must first be processed into GSX files
  */
 
-#define MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
 #define NSAVE 50            /* maximum number of regions to output */
 #define MAXFILL 2000        /* maximum number of pixels in response function */
 #define RESPONSEMULT 1000   /* response multiplier */
@@ -228,7 +227,7 @@ int main(int argc,char *argv[])
   int first_scan_loc;
   int last_scan_loc;
   int status;
-  char *gsx_fname[MAX_INPUT_FILES];
+  char *gsx_fname[CETB_MAX_INPUT_FILES];
   int infile;
   int loc;
   int imeas;
@@ -386,7 +385,7 @@ int main(int argc,char *argv[])
 	}
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
-	if ( nfile > MAX_INPUT_FILES ) {
+	if ( nfile > CETB_MAX_INPUT_FILES ) {
 	  flag = 0;
 	  gsx_close( gsx );
 	  gsx = NULL;
