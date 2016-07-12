@@ -1407,6 +1407,18 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
+		      sprintf(lin," Input metafile=%s", mname );
+		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+		      for(z=0;z<100;z++)lin[z]=' ';
+		      sprintf(lin," Setup output direcory=%s", outpath );
+		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+		      for(z=0;z<100;z++)lin[z]=' ';
 		      sprintf(lin," Beam_code=%d",ibeam);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
