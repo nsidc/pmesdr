@@ -1351,7 +1351,7 @@ int main(int argc, char **argv)
   }
   cetb_file_close( cetb_grd );
 
-  if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag ) ) {
+  if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag, rthreshold ) ) {
     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }

@@ -75,7 +75,7 @@ void test_cetb_populate_sir_parameters( void ) {
   int median_filter=1;
   int expected_nits=20;
   int expected_median_filter=1;
-  float *float_data;
+  float *float_data, rthreshold=-10.0;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
@@ -108,7 +108,7 @@ void test_cetb_populate_sir_parameters( void ) {
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
 
-  status = cetb_file_add_sir_parameters( cetb, nits, median_filter );
+  status = cetb_file_add_sir_parameters( cetb, nits, median_filter, rthreshold );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_sir_parameters" );
   cetb_file_close( cetb );
 
