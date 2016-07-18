@@ -234,6 +234,28 @@ int cetb_file_open( cetb_file_class *this ) {
 }
 
 /*
+ * cetb_file_add_globals - add additional information to the global attributes for this file
+ *                         specifically add in the number of input data swath files and
+ *                         the list of the names of those files and which version of GSX
+ *                         was used to generate them
+ *
+ * input :
+ *    this : pointer to the opened cetb_file_class object
+ *    input_file_number : the number of input swath files used
+ *    list_of_file_names : a list of all of the input swath file nams and GSX versions
+ *
+ * output :
+ *    0 on success
+ *    1 on failure
+ *
+ */
+int cetb_file_add_globals( cetb_file_class *this, int input_file_number, char **list_of_file_names ) {
+
+  int status;
+
+  
+}
+/*
  * cetb_file_add_var - Add a new variable to the output file
  *                     Float data will be packed as ushorts,
  *                     integer data will not be packed
@@ -711,6 +733,7 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
  *    this : pointer to initialized cetb_file_class object
  *    number_of_iterations : integer SIR nits
  *    median_filter : integer median_filtering flag: 0=off, 1=on
+ *    rthreshold : response threshold in dB
  *
  * output : n/a
  *
@@ -721,7 +744,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
  */
 int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int number_of_iterations,
-				  int median_filter ) {
+				  int median_filter,
+				  float rthreshold ) {
 
   int status;
   int var_id;
@@ -752,6 +776,13 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
   if ( ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				  NC_INT, 1, &median_filter ) ) ) {
     fprintf( stderr, "%s: Error setting sir_median_filter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( ( status = nc_put_att_float( this->fid, var_id, "response_threshold",
+				  NC_FLOAT, 1, &rthreshold ) ) ) {
+    fprintf( stderr, "%s: Error setting sir_response_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
