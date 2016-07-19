@@ -234,7 +234,7 @@ int cetb_file_open( cetb_file_class *this ) {
 }
 
 /*
- * cetb_file_add_globals - add additional information to the global attributes for this file
+ * cetb_file_add_filenames - add additional information to the global attributes for this file
  *                         specifically add in the number of input data swath files and
  *                         the list of the names of those files and which version of GSX
  *                         was used to generate them
@@ -249,10 +249,29 @@ int cetb_file_open( cetb_file_class *this ) {
  *    1 on failure
  *
  */
-int cetb_file_add_globals( cetb_file_class *this, int input_file_number, char **list_of_file_names ) {
+int cetb_file_add_filenames( cetb_file_class *this, int input_file_number, char **list_of_file_names ) {
 
-  int status;
+  int status=0;
+  int count;
+  char input_file[MAX_STR_LENGTH];
 
+  if ( ( status = nc_put_att_int( this->fid, NC_GLOBAL, "number_of_input_files", NC_INT, 1, &input_file_number ) ) ) {
+    fprintf( stderr, "%s: Error setting %s %d: %s.\n",
+	     __FUNCTION__, "number of input files", input_file_number, nc_strerror( status ) );
+    return 1;
+  }
+
+  for ( count = 0; count < input_file_number; count++ ) {
+    sprintf( input_file, "input_file%d\0", count+1 );
+    if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, input_file, strlen( *(list_of_file_names+count) ),
+				     *(list_of_file_names+count) ) ) ) {
+      fprintf( stderr, "%s: Error writing out file %d, named %s\n", __FUNCTION__, count, *(list_of_file_names+count) );
+      return 1;
+    }
+    //    free( list_of_file_names+count );
+  }
+
+  return status;
   
 }
 /*
@@ -780,8 +799,8 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
     return 1;
   }
 
-  if ( ( status = nc_put_att_float( this->fid, var_id, "response_threshold",
-				  NC_FLOAT, 1, &rthreshold ) ) ) {
+  if ( ( status = nc_put_att_float( this->fid, var_id, "measurement_response_threshold_dB",
+				    NC_FLOAT, 1, &rthreshold ) ) ) {
     fprintf( stderr, "%s: Error setting sir_response_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;

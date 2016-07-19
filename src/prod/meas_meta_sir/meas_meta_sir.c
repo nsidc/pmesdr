@@ -1349,10 +1349,18 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding GRD parameters to %s.\n", __FILE__, cetb_grd->filename );
     exit( -1 );
   }
+  if ( 0 != cetb_file_add_filenames( cetb_grd, input_file_total, list_of_input_files ) ) {
+    fprintf( stderr, "%s: Error adding list of files to %s.\n", __FILE__, cetb_grd->filename );
+    exit( -1 );
+  }
   cetb_file_close( cetb_grd );
 
   if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag, rthreshold ) ) {
     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
+    exit( -1 );
+  }
+  if ( 0 != cetb_file_add_filenames( cetb_sir, input_file_total, list_of_input_files ) ) {
+    fprintf( stderr, "%s: Error adding input file names to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
   strcpy( cetb_sir_filename, cetb_sir->filename );
