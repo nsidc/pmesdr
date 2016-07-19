@@ -69,7 +69,7 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_reconstruction_id reconstruction_id,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
-int cetb_file_add_globals( cetb_file_class *this,
+int cetb_file_add_filenames( cetb_file_class *this,
 			   int input_file_number,
 			   char **list_of_file_names );
 int cetb_file_add_var( cetb_file_class *this,
