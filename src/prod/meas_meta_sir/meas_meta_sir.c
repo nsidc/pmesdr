@@ -108,11 +108,13 @@ int main(int argc, char **argv)
   float ratio, fn, ninv;
   char *space, *store, *store2;
   float tbval, ang, azang;
-  int count, ktime, iadd, end_flag;
+  int count, ktime, iadd, end_flag, input_file_total;
+  char *list_of_input_files[CETB_MAX_INPUT_FILES];
   char *x;
   int irecords;
   int non_size_x, non_size_y, nsx2, nsy2, ix, iy, nsize2;
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
+  float rthreshold;
 
   /* define no-data values */
   float anodata_A=CETB_NCATTS_TB_FILL_VALUE;
@@ -157,6 +159,7 @@ int main(int argc, char **argv)
 
   long head_len;
   int errors = 0;
+  int status;
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
@@ -279,6 +282,7 @@ int main(int argc, char **argv)
    */
 
    end_flag = 0;
+   input_file_total = 0;
    do {
      
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) {
@@ -298,6 +302,12 @@ int main(int argc, char **argv)
        x = strchr(line,'=');
        a_init=(float)atof(++x);
        fprintf( stderr, "%s: A_initialization of %f\n", __FUNCTION__, a_init );
+     }
+
+     if (strstr(line,"Response_threshold") != NULL) {
+       x = strchr(line,'=');
+       rthreshold=(float)atof(++x);
+       fprintf( stderr, "%s: Response_threshold of %f\n", __FUNCTION__, rthreshold );
      }
 
      if (strstr(line,"Beam_code") != NULL) {
@@ -351,6 +361,20 @@ int main(int argc, char **argv)
        strncpy(sensor_in,++x,40);
        no_trailing_blanks(sensor_in);
        fprintf( stderr, "%s: Sensor '%s'\n", __FUNCTION__, sensor_in);
+     }
+
+     if (strstr(line,"Input_file") != NULL) {
+       x = strchr(line,'=');
+       status = utils_allocate_clean_aligned_memory( (void**)&list_of_input_files[input_file_total],
+						     FILENAME_MAX );
+       if ( 0 != status ) {
+	 fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
+	 exit (-1);
+       }
+       strcpy( list_of_input_files[input_file_total], ++x );
+       no_trailing_blanks( list_of_input_files[input_file_total] );
+       fprintf( stderr, "%s: Input file '%s'\n", __FUNCTION__, list_of_input_files[input_file_total] );
+       input_file_total++;
      }
 
      if ((x = strchr(line+4,' ')) != NULL) *x='\0'; /* truncate off any trailing spaces */
@@ -1325,10 +1349,18 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding GRD parameters to %s.\n", __FILE__, cetb_grd->filename );
     exit( -1 );
   }
+  if ( 0 != cetb_file_add_filenames( cetb_grd, input_file_total, list_of_input_files ) ) {
+    fprintf( stderr, "%s: Error adding list of files to %s.\n", __FILE__, cetb_grd->filename );
+    exit( -1 );
+  }
   cetb_file_close( cetb_grd );
 
-  if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag ) ) {
+  if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag, rthreshold ) ) {
     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
+    exit( -1 );
+  }
+  if ( 0 != cetb_file_add_filenames( cetb_sir, input_file_total, list_of_input_files ) ) {
+    fprintf( stderr, "%s: Error adding input file names to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
   strcpy( cetb_sir_filename, cetb_sir->filename );

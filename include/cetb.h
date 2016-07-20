@@ -18,6 +18,9 @@
 /* Problem with AMSRE input data files requires this first measurement parameter to be used in setup */
 #define CETB_AMSRE_FIRST_MEASUREMENT 14
 
+/* Max number of input files that could go into a daily output file */
+#define CETB_MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
+
 typedef enum {
   CETB_NO_REGION=-1,
   CETB_EASE2_N,

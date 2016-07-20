@@ -29,13 +29,12 @@
 #include "sir_geom.h"
 
 #define prog_version 0.3 /* program version */
-#define prog_name "meas_meta_setup"
+/* #define prog_name "meas_meta_setup" */
 
 /* This code can read and process several different data sets.
  * In order to achieve that, the input source files must first be processed into GSX files
  */
 
-#define MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
 #define NSAVE 50            /* maximum number of regions to output */
 #define MAXFILL 2000        /* maximum number of pixels in response function */
 #define RESPONSEMULT 1000   /* response multiplier */
@@ -156,6 +155,7 @@ int main(int argc,char *argv[])
 
   char fname[250], mname[250];
   char outpath[250];
+  char prog_name[250];
   char ftempname[250];
   char *option;
   
@@ -227,7 +227,7 @@ int main(int argc,char *argv[])
   int first_scan_loc;
   int last_scan_loc;
   int status;
-  char *gsx_fname[MAX_INPUT_FILES];
+  char *gsx_fname[CETB_MAX_INPUT_FILES];
   int infile;
   int loc;
   int imeas;
@@ -238,8 +238,9 @@ int main(int argc,char *argv[])
   gsx = NULL;
   for (n=0; n<NSAVE; n++)
     jrec2[n] = 0;  /* measurements for each output region */
-  
-  fprintf( stderr, "MEaSUREs Setup Program\nProgram: %s  Version: %f\n\n",prog_name,prog_version);
+
+  strcpy( prog_name, argv[0] );
+  fprintf( stderr, "MEaSUREs Setup Program\nProgram: %s \n\n",prog_name);
 
   /* optionally get the box size of pixels to use for calculating MRF for each */
   /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
@@ -384,7 +385,7 @@ int main(int argc,char *argv[])
 	}
 	strcpy( gsx_fname[nfile], fname );
 	nfile++;
-	if ( nfile > MAX_INPUT_FILES ) {
+	if ( nfile > CETB_MAX_INPUT_FILES ) {
 	  flag = 0;
 	  gsx_close( gsx );
 	  gsx = NULL;
@@ -1400,6 +1401,18 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
 		      sprintf(lin," Setup_program_name=%s version %f",prog_n,prog_v);
+		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+		      for(z=0;z<100;z++)lin[z]=' ';
+		      sprintf(lin," Input metafile=%s", mname );
+		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+		      for(z=0;z<100;z++)lin[z]=' ';
+		      sprintf(lin," Setup output direcory=%s", outpath );
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
