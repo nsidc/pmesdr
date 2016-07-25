@@ -322,7 +322,7 @@ int main(int argc,char *argv[])
 	     box_size, box_size_km, save_area.sav_ibeam[iregion] );
     fwrite( &cnt, 4, 1, save_area.reg_lu[iregion] );
     for( z=0; z < 100; z++ ) lin[z] = ' ';
-    sprintf( lin, " Search box in km=%f", box_size_km );
+    sprintf( lin, " Search_box_km=%f", box_size_km );
     fwrite( lin, 100, 1, save_area.reg_lu[iregion] );
     fwrite( &cnt, 4, 1, save_area.reg_lu[iregion] );
   }

@@ -114,7 +114,7 @@ int main(int argc, char **argv)
   int irecords;
   int non_size_x, non_size_y, nsx2, nsy2, ix, iy, nsize2;
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
-  float rthreshold;
+  float rthreshold, box_size_km;
 
   /* define no-data values */
   float anodata_A=CETB_NCATTS_TB_FILL_VALUE;
@@ -350,6 +350,12 @@ int main(int argc, char **argv)
        x = strchr( line,'=' );
        direction_id = ( cetb_direction_id )atoi(++x);
        fprintf( stderr,  "%s: Direction_id %s\n",  __FUNCTION__, cetb_direction_id_name[ direction_id ] );
+     }
+
+     if (strstr(line,"Search_box_km") != NULL) {
+       x = strchr(line,'=');
+       box_size_km=(float)atof(++x);
+       fprintf( stderr, "%s: Search_box_km %f\n", __FUNCTION__, box_size_km );
      }
 
      if (strstr(line,"Response_Multiplier") != NULL) {
@@ -1355,7 +1361,7 @@ int main(int argc, char **argv)
   }
   cetb_file_close( cetb_grd );
 
-  if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag, rthreshold ) ) {
+  if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag, rthreshold, box_size_km ) ) {
     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
