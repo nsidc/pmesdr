@@ -268,7 +268,7 @@ int cetb_file_add_filenames( cetb_file_class *this, int input_file_number, char 
       fprintf( stderr, "%s: Error writing out file %d, named %s\n", __FUNCTION__, count, *(list_of_file_names+count) );
       return 1;
     }
-    //    free( list_of_file_names+count );
+
   }
 
   return status;

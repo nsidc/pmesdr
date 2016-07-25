@@ -189,6 +189,22 @@ static const char *cetb_sensor_id_name[] = {
   "SSMIS"
 };
 
+/* need to be able to map platform ID to sensor ID in meas_meta_setup */
+static const cetb_sensor_id cetb_platform_to_sensor[] = {
+  CETB_NO_SENSOR,
+  CETB_SMMR,
+  CETB_AMSRE,
+  CETB_SSMI,
+  CETB_SSMI,
+  CETB_SSMI,
+  CETB_SSMI,
+  CETB_SSMIS,
+  CETB_SSMIS,
+  CETB_SSMIS,
+  CETB_SSMIS,
+  CETB_NUM_PLATFORMS
+};
+
 /*
  * GCMD sensor name keywords
  * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/instruments/instruments.csv

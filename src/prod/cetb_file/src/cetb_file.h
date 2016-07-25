@@ -70,8 +70,8 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
 int cetb_file_add_filenames( cetb_file_class *this,
-			   int input_file_number,
-			   char **list_of_file_names );
+			     int input_file_number,
+			     char **list_of_file_names );
 int cetb_file_add_var( cetb_file_class *this,
 		       char *var_name,
 		       nc_type xtype,
