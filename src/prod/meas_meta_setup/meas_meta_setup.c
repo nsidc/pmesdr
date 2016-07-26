@@ -235,7 +235,6 @@ int main(int argc,char *argv[])
   int first_measurement;
   cetb_region_id cetb_region;
   cetb_platform_id cetb_platform;
-  cetb_sensor_id cetb_sensor;
 
   gsx = NULL;
   for (n=0; n<NSAVE; n++)
