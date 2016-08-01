@@ -917,7 +917,7 @@ void cetb_file_close( cetb_file_class *this ) {
 int cetb_file_check_consistency( char *file_name ) {
   int status=0;
   int nc_fileid;
-  int tb_varid, tb_std_dev_varid, rows_varid, cols_varid;
+  int tb_varid, tb_std_dev_varid, y_varid, x_varid;
   unsigned short *tb_ushort_data, *tb_std_dev_ushort_data;
   size_t rows, cols;
   int missing_flag=0;
@@ -938,23 +938,23 @@ int cetb_file_check_consistency( char *file_name ) {
     return -1;
   } 
 
-  if ( ( status = nc_inq_dimid( nc_fileid, "rows", &rows_varid ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimid error=%s: rows\n", __FUNCTION__, nc_strerror(status) );
+  if ( ( status = nc_inq_dimid( nc_fileid, "y", &y_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: y\n", __FUNCTION__, nc_strerror(status) );
     return -1;
   }
 
-  if ( ( status = nc_inq_dimlen( nc_fileid, rows_varid, &rows ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimlen error=%s: row length\n", __FUNCTION__, nc_strerror(status) );
+  if ( ( status = nc_inq_dimlen( nc_fileid, y_varid, &rows ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimlen error=%s: y length\n", __FUNCTION__, nc_strerror(status) );
     return -1;
   }
 
-  if ( ( status = nc_inq_dimid( nc_fileid, "cols", &cols_varid ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimid error=%s: cols\n", __FUNCTION__, nc_strerror(status) );
+  if ( ( status = nc_inq_dimid( nc_fileid, "x", &x_varid ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: x\n", __FUNCTION__, nc_strerror(status) );
     return -1;
   }
 
-  if ( ( status = nc_inq_dimlen( nc_fileid, cols_varid, &cols ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimid error=%s: col length\n", __FUNCTION__, nc_strerror(status) );
+  if ( ( status = nc_inq_dimlen( nc_fileid, x_varid, &cols ) ) ) {
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: x length\n", __FUNCTION__, nc_strerror(status) );
     return -1;
   }
 
@@ -1366,7 +1366,7 @@ char *pmesdr_top_dir( void ) {
 }
 
 /*
- * set_all_dimensions - Sets dimension variables (time, rows, cols) in the output file
+ * set_all_dimensions - Sets dimension variables (time, y, x) in the output file
  *                      to the expected size for the grid that will be stored here
  *                      grid is determined by region_id and factor
  *
@@ -1376,9 +1376,9 @@ char *pmesdr_top_dir( void ) {
  *  output : n/a
  *
  *  result : STATUS_OK on success, otherwise STATUS_FAILURE and
- *           reason writtent to stderr
+ *           reason written to stderr
  *           Upon successful completion, the required dimension variables
- *           (time, rows, cols )
+ *           (time, y, x )
  *           will be populated in the output file.
  */
 int set_all_dimensions( cetb_file_class *this ) {
@@ -1398,8 +1398,8 @@ int set_all_dimensions( cetb_file_class *this ) {
   cols = cetb_grid_cols[ this->region_id ][ this->factor ];
 
   /*
-   * Allocate and populate the array of y-dimension values This
-   * is the coordinate in meters of the center of each cell
+   * Allocate and populate the array of y-dimension values.
+   * This is the coordinate in meters of the center of each cell
    * decreasing from a maximum at the top row to the bottom row.
    */
   if ( STATUS_OK
@@ -1415,7 +1415,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   
   valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ 0 ] + half_pixel_m;
-  status = set_dimension( this, "rows", rows, vals,
+  status = set_dimension( this, "y", rows, vals,
 			  "projection_y_coordinate", NULL,
 			  "meters",
 			  NULL,
@@ -1423,15 +1423,15 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  valid_range,
 			  &( this->rows_dim_id ) );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "rows" );
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "y" );
     return STATUS_FAILURE;
   }
   free( vals );
   this->rows = (long int) rows;
   
   /*
-   * Allocate and populate the array of x-dimension values. This
-   * is the coordinate in meters of the center of each cell
+   * Allocate and populate the array of x-dimension values.
+   * This is the coordinate in meters of the center of each cell
    * increasing from the minimum at the left to the maximum at
    * the right
    */
@@ -1447,7 +1447,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   
   valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ cols - 1 ] + half_pixel_m;
-  status = set_dimension( this, "cols", cols, vals,
+  status = set_dimension( this, "x", cols, vals,
 			  "projection_x_coordinate", NULL,
 			  "meters",
 			  NULL,
@@ -1455,7 +1455,7 @@ int set_all_dimensions( cetb_file_class *this ) {
 			  valid_range,
 			  &( this->cols_dim_id ) );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "cols" );
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "x" );
     return STATUS_FAILURE;
   }
   free( vals );
@@ -1492,7 +1492,7 @@ int set_all_dimensions( cetb_file_class *this ) {
 }
 
 /*
- * set_dimension - Sets a single dimension variable, time, rows, or cols in the output file
+ * set_dimension - Sets a single dimension variable, time, y, or x in the output file
  *
  *  input : 
  *    this : pointer to initialized/opened cetb_file_class object
