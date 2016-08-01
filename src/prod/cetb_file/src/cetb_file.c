@@ -268,7 +268,7 @@ int cetb_file_add_filenames( cetb_file_class *this, int input_file_number, char 
       fprintf( stderr, "%s: Error writing out file %d, named %s\n", __FUNCTION__, count, *(list_of_file_names+count) );
       return 1;
     }
-    //    free( list_of_file_names+count );
+
   }
 
   return status;
@@ -753,6 +753,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
  *    number_of_iterations : integer SIR nits
  *    median_filter : integer median_filtering flag: 0=off, 1=on
  *    rthreshold : response threshold in dB
+ *    box_size_km : size of box in km in which to search for measurements that
+ *                  meet the response threshold
  *
  * output : n/a
  *
@@ -764,7 +766,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
 int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int number_of_iterations,
 				  int median_filter,
-				  float rthreshold ) {
+				  float rthreshold,
+				  float box_size_km ) {
 
   int status;
   int var_id;
@@ -802,6 +805,13 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
   if ( ( status = nc_put_att_float( this->fid, var_id, "measurement_response_threshold_dB",
 				    NC_FLOAT, 1, &rthreshold ) ) ) {
     fprintf( stderr, "%s: Error setting sir_response_threshold: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( ( status = nc_put_att_float( this->fid, NC_GLOBAL, "measurement_search_bounding_box_km",
+				    NC_FLOAT, 1, &box_size_km ) ) ) {
+    fprintf( stderr, "%s: Error setting measurement_bounding_box: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
