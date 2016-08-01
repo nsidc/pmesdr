@@ -70,8 +70,8 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 cetb_swath_producer_id producer_id );
 int cetb_file_open( cetb_file_class *this );
 int cetb_file_add_filenames( cetb_file_class *this,
-			   int input_file_number,
-			   char **list_of_file_names );
+			     int input_file_number,
+			     char **list_of_file_names );
 int cetb_file_add_var( cetb_file_class *this,
 		       char *var_name,
 		       nc_type xtype,
@@ -98,7 +98,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
 int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int number_of_iterations,
 				  int median_flag,
-				  float rthreshold );
+				  float rthreshold,
+				  float box_size_km );
 int cetb_file_add_grd_parameters( cetb_file_class *this,
 				  int median_flag );
 void cetb_file_close( cetb_file_class *this );

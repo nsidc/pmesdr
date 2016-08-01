@@ -167,10 +167,11 @@ void test_cetb_populate_sir_parameters_on_bgi_file( void ) {
   int nits=20;
   int median_filter=1;
   float rthreshold=-8.0;
+  float box_size_km=1250.0;
   
   status = cetb_file_open( cetb );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_open" );
-  status = cetb_file_add_sir_parameters( cetb, nits, median_filter, rthreshold );
+  status = cetb_file_add_sir_parameters( cetb, nits, median_filter, rthreshold, box_size_km );
   TEST_ASSERT_TRUE_MESSAGE( 0 != status, "cetb_file_add_sir_parameters" );
   cetb_file_close( cetb );
 

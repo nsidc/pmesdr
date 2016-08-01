@@ -29,7 +29,6 @@
 #include "sir_geom.h"
 
 #define prog_version 0.3 /* program version */
-/* #define prog_name "meas_meta_setup" */
 
 /* This code can read and process several different data sets.
  * In order to achieve that, the input source files must first be processed into GSX files
@@ -190,7 +189,7 @@ int main(int argc,char *argv[])
   float tbmin=1.e10,tbmax=-1.e10; 
   
   int iadd1, box_size;
-  float b_correct, angle_ref;
+  float b_correct, angle_ref, box_size_km;
 
   /* file position pointers */
   unsigned long *position_filename;
@@ -217,6 +216,8 @@ int main(int argc,char *argv[])
   int jrec = 0; /* output record counter */
   int krec = 0; /* total scans considered */
   int mcnt=0;
+  int z;
+  char lin[100];
 
   /*
    * begin to add in GSX variables
@@ -233,7 +234,7 @@ int main(int argc,char *argv[])
   int imeas;
   int first_measurement;
   cetb_region_id cetb_region;
-  cetb_platform_id cetb_platform;  
+  cetb_platform_id cetb_platform;
 
   gsx = NULL;
   for (n=0; n<NSAVE; n++)
@@ -303,6 +304,7 @@ int main(int argc,char *argv[])
       ltdflag=1;
   
   /* compute approximate projection grid scale factors for later use */
+  cnt = 100;
   for (iregion=0; iregion<save_area.nregions; iregion++) {      
     save_area.sav_km[iregion]=km2pix(&dlon,&dlat,save_area.sav_projt[iregion],
 				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion], &ret_status);
@@ -311,6 +313,17 @@ int main(int argc,char *argv[])
       exit ( -1 );
     }
     fprintf( stderr, "Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
+  /* write out the search box size in km to each setup output file */
+
+    box_size = box_size_by_channel( save_area.sav_ibeam[iregion], cetb_platform_to_sensor[cetb_platform] );
+    box_size_km = box_size/save_area.sav_km[iregion];
+    fprintf( stderr, "%s: box size in pixels is %d and in km is %f for channel %d\n", __FILE__,
+	     box_size, box_size_km, save_area.sav_ibeam[iregion] );
+    fwrite( &cnt, 4, 1, save_area.reg_lu[iregion] );
+    for( z=0; z < 100; z++ ) lin[z] = ' ';
+    sprintf( lin, " Search_box_km=%f", box_size_km );
+    fwrite( lin, 100, 1, save_area.reg_lu[iregion] );
+    fwrite( &cnt, 4, 1, save_area.reg_lu[iregion] );
   }
   
   /* pre-compute pixel locations for each region */
@@ -389,6 +402,8 @@ int main(int argc,char *argv[])
 	  flag = 0;
 	  gsx_close( gsx );
 	  gsx = NULL;
+	  fprintf( stderr, "%s: too many input files, only the first %d processed\n",
+		   __FILE__, nfile-1 );
 	}
       }
     }
@@ -984,7 +999,7 @@ FILE * get_meta(char *mname, char *outpath,
       if (strstr(line,"Sensor") != NULL) {
 	x = strchr(line,'=');
 	strncpy(sensor,++x,40);
-	/* Here is where you can get the sensor ENUM */
+	/* Here is where you can get the platform ENUM */
 	for ( count=0; count < CETB_NUM_PLATFORMS; count++ ) {
 	  if ( strcmp( sensor, cetb_platform_id_name[count] ) == 0 ) {
 	    *cetb_platform = (cetb_platform_id) count;
@@ -1496,6 +1511,7 @@ FILE * get_meta(char *mname, char *outpath,
 		      sprintf(lin," Sensor=%s",sensor);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+
 
 		    }
 
