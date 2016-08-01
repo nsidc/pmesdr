@@ -262,7 +262,7 @@ int cetb_file_add_filenames( cetb_file_class *this, int input_file_number, char 
   }
 
   for ( count = 0; count < input_file_number; count++ ) {
-    sprintf( input_file, "input_file%d\0", count+1 );
+    sprintf( input_file, "input_file%d", count+1 );
     if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, input_file, strlen( *(list_of_file_names+count) ),
 				     *(list_of_file_names+count) ) ) ) {
       fprintf( stderr, "%s: Error writing out file %d, named %s\n", __FUNCTION__, count, *(list_of_file_names+count) );
