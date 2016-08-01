@@ -154,5 +154,44 @@ void test_cetb_populate_bgi_parameters_on_sir_file( void ) {
 
 }
 
+void test_populate_filenames( void ) {
+  factor = 0;
+  platform_id = CETB_F13;
+  sensor_id = CETB_SSMI;
+  year = 1991;
+  doy = 1;
+  direction_id = CETB_MORNING_PASSES;
+  producer_id = CETB_CSU;
+  int status;
+  int num_input_files = 1;
+  char *filenames[ num_input_files ];
+  char ret_filename[ FILENAME_MAX ];
+  int nc_fileid;
+
+  status = utils_allocate_clean_aligned_memory( (void**)&filenames[0], FILENAME_MAX );
+  strcpy( filenames[0], "my_test_file.txt");
+  
+  cetb = cetb_file_init( dirname,
+			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 direction_id, reconstruction_id, producer_id );
+  TEST_ASSERT_NOT_NULL( cetb );
+  TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
+  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
+			    cetb->filename );
+  status = cetb_file_open( cetb );
+  status = cetb_file_add_filenames( cetb, num_input_files, filenames );
+  cetb_file_close( cetb );
+
+  /* Reopen the file and make sure the filename we expect is a file attribute */
+  status = nc_open( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
+		    NC_NOWRITE, &nc_fileid );
+  status = nc_get_att_int( nc_fileid, NC_GLOBAL, "number_of_input_files", &num_input_files );
+  TEST_ASSERT_EQUAL_INT( 1, num_input_files );
+  status = nc_get_att_text( nc_fileid, NC_GLOBAL, "input_file1", ret_filename );
+  TEST_ASSERT_EQUAL_STRING( "my_test_file.txt", ret_filename );
+  nc_close( nc_fileid );
+  
+}
+
 
     
