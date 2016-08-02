@@ -752,9 +752,6 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
  *    this : pointer to initialized cetb_file_class object
  *    number_of_iterations : integer SIR nits
  *    median_filter : integer median_filtering flag: 0=off, 1=on
- *    rthreshold : response threshold in dB
- *    box_size_km : size of box in km in which to search for measurements that
- *                  meet the response threshold
  *
  * output : n/a
  *
@@ -765,9 +762,7 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
  */
 int cetb_file_add_sir_parameters( cetb_file_class *this,
 				  int number_of_iterations,
-				  int median_filter,
-				  float rthreshold,
-				  float box_size_km ) {
+				  int median_filter ) {
 
   int status;
   int var_id;
@@ -802,20 +797,6 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
     return 1;
   }
 
-  if ( ( status = nc_put_att_float( this->fid, var_id, "measurement_response_threshold_dB",
-				    NC_FLOAT, 1, &rthreshold ) ) ) {
-    fprintf( stderr, "%s: Error setting sir_response_threshold: %s.\n",
-	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-
-  if ( ( status = nc_put_att_float( this->fid, NC_GLOBAL, "measurement_search_bounding_box_km",
-				    NC_FLOAT, 1, &box_size_km ) ) ) {
-    fprintf( stderr, "%s: Error setting measurement_bounding_box: %s.\n",
-	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-
   return 0;
   
 }
@@ -846,7 +827,7 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
   }
 
   if ( CETB_GRD != this->reconstruction_id ) {
-    fprintf( stderr, "%s: Cannot set GRD parameters on non-SIR file.\n", __FUNCTION__ );
+    fprintf( stderr, "%s: Cannot set GRD parameters on non-GRD file.\n", __FUNCTION__ );
     return 1;
   }
   
@@ -859,6 +840,58 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
   if ( ( status = nc_put_att_int( this->fid, var_id, "median_filter",
 				  NC_INT, 1, &median_filter ) ) ) {
     fprintf( stderr, "%s: Error setting median_filter: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  return 0;
+  
+}
+
+/*
+ * cetb_file_add_TB_parameters - Add TB variable attributes
+ *
+ * input :
+ *    this : pointer to initialized cetb_file_class object
+ *    rthreshold : response threshold in dB
+ *    box_size_km : size of box in km in which to search for measurements that
+ *                  meet the response threshold
+ *
+ * output : n/a
+ *
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is populated with TB variable attributes
+ *
+ */
+int cetb_file_add_TB_parameters( cetb_file_class *this,
+				 float rthreshold,
+				 float box_size_km ) {
+
+  int status;
+  int var_id;
+  
+  if ( !this ) {
+    fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
+    return 1;
+  }
+
+  if ( ( status = nc_inq_varid( this->fid, "TB", &var_id ) ) ) {
+    fprintf( stderr, "%s: No 'TB' variable to attach attributes: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+    
+  if ( ( status = nc_put_att_float( this->fid, var_id, "measurement_response_threshold_dB",
+				    NC_FLOAT, 1, &rthreshold ) ) ) {
+    fprintf( stderr, "%s: Error setting sir_response_threshold: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( ( status = nc_put_att_float( this->fid, var_id, "measurement_search_bounding_box_km",
+				    NC_FLOAT, 1, &box_size_km ) ) ) {
+    fprintf( stderr, "%s: Error setting measurement_bounding_box: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
