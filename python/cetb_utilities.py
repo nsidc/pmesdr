@@ -85,6 +85,7 @@ def compare_cetb_directories( dir1, dir2,
 
     return all_files_OK
 
+
 def compare_cetb_files( file1, file2, exclude_out_of_range=False,
                         statistics=False, tolerance=0, max_diff_pixels=0,
                         verbose=False ):
@@ -165,11 +166,14 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     if statistics:
         dump_diff_statistics( image1, image2, diff, tolerance, exclude_out_of_range=exclude_out_of_range )
 
-    # If there is a cols dimension variable, compare first elements of it
+    # If there is an x dimension variable, compare first elements of it
+    # FIXME on next regression data replacement:
+    # The next time we make new regression data, we will need to change this to
+    # compare x to x (instead of cols to x)
     if ('cols' in keys):
-        sys.stderr.write( "> " + this_program + ": Comparing cols dimension variables..." )
-        if (f1.variables["cols"][0] != f2.variables["cols"][0]):
-            sys.stderr.write( "\n" + this_program + ": cols values differ\n" )
+        sys.stderr.write( "> " + this_program + ": Comparing x dimension variables..." )
+        if (f1.variables["cols"][0] != f2.variables["x"][0]):
+            sys.stderr.write( "\n" + this_program + ": cols/x values differ\n" )
             return False
         sys.stderr.write( "OK\n" )
 
