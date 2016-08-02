@@ -861,7 +861,7 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with SIR-specific TB variable attributes
+ *          The CETB file is populated with TB variable attributes
  *
  */
 int cetb_file_add_TB_parameters( cetb_file_class *this,
