@@ -76,7 +76,9 @@ void test_cetb_populate_sir_parameters( void ) {
   int expected_nits=20;
   int expected_median_filter=1;
   float *float_data, rthreshold=-10.0;
-  float box_size_km = 625.0;
+  float box_size_km=625.0;
+  float expected_rthreshold=-10.0;
+  float expected_box_size_km=625.0; 
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
@@ -109,8 +111,11 @@ void test_cetb_populate_sir_parameters( void ) {
 			      NULL );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
 
-  status = cetb_file_add_sir_parameters( cetb, nits, median_filter, rthreshold, box_size_km );
+  status = cetb_file_add_sir_parameters( cetb, nits, median_filter );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_sir_parameters" );
+
+  status = cetb_file_add_TB_parameters( cetb, rthreshold, box_size_km );
+  TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_TB_parameters" );
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
@@ -124,6 +129,16 @@ void test_cetb_populate_sir_parameters( void ) {
   status = nc_get_att_int( nc_fileid, varid, "sir_number_of_iterations", &nits );
   TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "Error on nits attribute."  );
   TEST_ASSERT_EQUAL_INT_MESSAGE( expected_nits, nits, "Wrong value for nits attribute." );
+
+  status = nc_get_att_float( nc_fileid, varid, "measurement_response_threshold_dB", &rthreshold );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "Error on response threshold attribute."  );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( expected_rthreshold, rthreshold,
+				 "Wrong value for response threshold attribute." );
+
+  status = nc_get_att_float( nc_fileid, varid, "measurement_search_bounding_box_km", &box_size_km );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "Error on bounding box attribute."  );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( expected_box_size_km, box_size_km,
+				 "Wrong value for measurement search bounding box attribute." );
 
   status = nc_get_att_int( nc_fileid, varid, "median_filter", &median_filter );
   TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status,
