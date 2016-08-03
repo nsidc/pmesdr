@@ -65,6 +65,15 @@ void test_init_with_bogus_region_number( void ) {
   TEST_ASSERT_NULL( cetb );
 }
 
+void test_init_with_bogus_direction_id( void ) {
+  
+  direction_id = CETB_NO_DIRECTION;
+  cetb = cetb_file_init( dirname,
+			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 direction_id, reconstruction_id, producer_id );
+  TEST_ASSERT_NULL( cetb );
+}
+
 void test_init_with_bogus_factor( void ) {
 
   factor = 5;
