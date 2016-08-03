@@ -29,12 +29,8 @@
 
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
-#define REL_BEGIN 0           /* fseek relative to end of file */
 
 #define CREATE_NON 1          /* set to 1 to create NON images, 0 to not create */
-
-#define INFOFILE 1            /* define to create info file, undefine to not create */
-#undef INFOFILE               /* do not create info file */
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
@@ -76,8 +72,6 @@ static void stat_updates(float tbval, int count, int *fill_array,
 static void filter(float *val, int size, int opt, int nsx, int nsy, float
 	    *temp, float thres);
 
-static void no_trailing_blanks(char *s);
-
 /****************************************************************************/
 
 /* global array variables used for storing images*/
@@ -87,7 +81,7 @@ unsigned char *num_samples;
 
 /* other global variables */
 
-FILE *imf, *omf;
+FILE *imf;
 long int nspace;
 
 /****************************************************************************/
@@ -262,16 +256,6 @@ int main(int argc, char **argv)
 
    /* file header read completed, summarize */
    fprintf( stderr, "\n%s:   Input file header info: '%s'\n", __FILE__, file_in );
-   fprintf( stderr, "%s:   Year, day range: %d %d - %d\n", __FILE__, iyear, isday, ieday);
-   fprintf( stderr, "%s:   Image size: %d x %d = %d   Projection: %d\n", __FILE__, nsx, nsy, nsx*nsy, iopt );
-   fprintf( stderr, "%s:   Origin: %f,%f  Span: %f,%f\n", __FILE__, a0, b0, xdeg, ydeg );
-   fprintf( stderr, "%s:   Scales: %f,%f  Pol: %d  Reg: %d\n", __FILE__, ascale, bscale, ipol, iregion );
-   fprintf( stderr, "%s:   Region: '%s'   Records: %d\n", __FILE__, regname, irecords );
-   fprintf( stderr, "%s:   Corners: LL %f,%f UR %f,%f\n", __FILE__, latl, lonl, lath, lonh );
-   fprintf( stderr, "%s:   Grid size: %d x %d = %d  Scales %d %d\n", __FILE__, nsx2, nsy2, nsx2*nsy2,
-	    non_size_x, non_size_y );
-   fprintf( stderr, "%s:   Grid Origin: %f,%f  Grid Span: %f,%f\n", __FILE__, a02, b02, xdeg2, ydeg2 );
-   fprintf( stderr, "%s:   Grid Scales: %f,%f\n", __FILE__, ascale2, bscale2 );
    fprintf( stderr, "\n" );
 
    /* read output file names and misc variables
@@ -365,7 +349,6 @@ int main(int argc, char **argv)
      if (strstr(line,"Sensor") != NULL) {
        x = strchr(line,'=');
        strncpy(sensor_in,++x,40);
-       no_trailing_blanks(sensor_in);
        fprintf( stderr, "%s: Sensor '%s'\n", __FUNCTION__, sensor_in);
      }
 
@@ -378,21 +361,11 @@ int main(int argc, char **argv)
 	 exit (-1);
        }
        strcpy( list_of_input_files[input_file_total], ++x );
-       no_trailing_blanks( list_of_input_files[input_file_total] );
        fprintf( stderr, "%s: Input file '%s'\n", __FUNCTION__, list_of_input_files[input_file_total] );
        input_file_total++;
      }
 
      if ((x = strchr(line+4,' ')) != NULL) *x='\0'; /* truncate off any trailing spaces */
-
-     if (strstr(line,"Median_flag") != NULL) {
-       x = strchr(line,'=')+1;
-       if (strstr(x,"T") != NULL || strstr(x,"t") != NULL)
-	 median_flag=1;
-       if (strstr(x,"F") != NULL || strstr(x,"f") != NULL)
-	 median_flag=0;
-       fprintf( stderr, "%s: Median flag: %d\n", __FUNCTION__, median_flag);       
-     }
 
      if (strstr(line,"Has_Azimuth_Angle") != NULL) {
        x = strchr(line,'=')+1;
@@ -423,7 +396,6 @@ int main(int argc, char **argv)
     *  - swath_producer_id (CSU or RSS)
     *  - list of actual gsx source files used as input
     *  - list of GSX version used to create each gsx file used as input
-    * and we need to stop specifying any output filenames in the .meta file
     *
     * Initialize 2 cetb_files one for SIR output, the other for GRD output.
     */
@@ -844,9 +816,6 @@ int main(int argc, char **argv)
   }
 
 /* create STD and Err images */
-
-  fprintf( stderr, "%s: \nBegin creation of STD images\n", __FILE__ );  
-
   /* initialize arrays */
 
   for (i=0; i < nsize; i++) {
@@ -952,9 +921,6 @@ int main(int argc, char **argv)
   }
 
 /* create time image */
-
-  fprintf( stderr, "%s: \nBegin creation of time image\n", __FILE__ );  
-
   /* initialize arrays */
 
   for (i=0; i < nsize; i++) {
@@ -1033,9 +999,6 @@ int main(int argc, char **argv)
 /* create non-enhanced images
    these are grd images pixel replicated to be at the same 
    resolution of the ave and sir images */
-
-  fprintf( stderr, "%s: \nBegin creation of non-enhanced GRD images\n", __FILE__ );
-
   /* note that this should be the case!: (grid*non_size = sir size)
      nsx2 = nsx/non_size_x;
      nsy2 = nsy/non_size_y; */
@@ -1389,7 +1352,7 @@ int main(int argc, char **argv)
   }
 
   if (errors == 0) {
-    fprintf( stderr, "%s: No errors encountered\n", __FILE__ );
+    fprintf( stderr, "%s: Processing successfully completed\n", __FILE__ );
   } else {
     fprintf( stderr, "%s: Processing errors encountered and azang set to %f\n", __FILE__, azang );
   }
@@ -1464,7 +1427,6 @@ void get_updates(float tbval, int count, int fill_array[], short int response_ar
   return;
 }
 
-
 /* compute contribution of measurement to AVE image */ 
 
 void compute_ave(float tbval, float ang, int count, int fill_array[],
@@ -1482,7 +1444,6 @@ void compute_ave(float tbval, float ang, int count, int fill_array[],
   }
   return;
 }
-
 
 /* modified median, circular median, or smoothing filter routine */
 
@@ -1589,8 +1550,6 @@ float median(float array[], int count)
   return(temp);
 }
 
-
-
 /* routine to compute the spatial response function weighted variance and error from measurements */
 
 void stat_updates(float tbval, int count, int fill_array[],
@@ -1625,7 +1584,6 @@ void stat_updates(float tbval, int count, int fill_array[],
   return;
 }
 
-
 /* routine to compute time estimates from measurements */
 
 void time_updates(float ktime, int count, int fill_array[])
@@ -1641,17 +1599,3 @@ void time_updates(float ktime, int count, int fill_array[])
   return;
 }
 
-
-void no_trailing_blanks(char *s)
-{  /* remove trailing blanks (spaces) from string */
-  int n=strlen(s);
-  
-  while (n > 0) {
-    if (s[n] != ' ' && s[n] != '\0') return;
-    if (s[n] == ' ') s[n] = '\0';
-    n--;
-  }
-  return;
-}
-
-  
