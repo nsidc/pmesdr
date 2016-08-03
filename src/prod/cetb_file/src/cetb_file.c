@@ -850,7 +850,9 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
 }
 
 /*
- * cetb_file_add_TB_parameters - Add TB variable attributes
+ * cetb_file_add_TB_parameters - Add remaining TB variable attributes
+ *                             - these attributes are independent of the processing method
+ *                             - that is they apply equally to bgi, sir or grd files
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
