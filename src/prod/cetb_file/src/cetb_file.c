@@ -908,7 +908,7 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
   /* Now write out LTOD information based on the projection, pass direction and the times in cetb.h */
   if ( CETB_EASE2_T == this->region_id ) {
     if ( ( status = nc_put_att_text( this->fid, var_id, "satellite_pass_direction",
-				     sizeof( cetb_direction_id_name_full[ this->direction_id ] )+1,
+				     strlen( cetb_direction_id_name_full[ this->direction_id ] )+1,
 				     cetb_direction_id_name_full[ this->direction_id ] ) ) ) {
       fprintf( stderr, "%s: Error setting satellite pass direction: %s\n",
 	       __FUNCTION__, nc_strerror( status ) );
