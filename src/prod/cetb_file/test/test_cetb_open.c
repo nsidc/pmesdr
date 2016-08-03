@@ -59,6 +59,7 @@ void setUp( void ) {
 			 direction_id, reconstruction_id, producer_id );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
+  TEST_ASSERT_EQUAL_INT( direction_id, cetb->direction_id );
   
 }
 
