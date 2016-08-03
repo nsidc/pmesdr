@@ -72,8 +72,6 @@ static void stat_updates(float tbval, int count, int *fill_array,
 static void filter(float *val, int size, int opt, int nsx, int nsy, float
 	    *temp, float thres);
 
-static void no_trailing_blanks(char *s);
-
 /****************************************************************************/
 
 /* global array variables used for storing images*/
@@ -351,7 +349,6 @@ int main(int argc, char **argv)
      if (strstr(line,"Sensor") != NULL) {
        x = strchr(line,'=');
        strncpy(sensor_in,++x,40);
-       no_trailing_blanks(sensor_in);
        fprintf( stderr, "%s: Sensor '%s'\n", __FUNCTION__, sensor_in);
      }
 
@@ -364,7 +361,6 @@ int main(int argc, char **argv)
 	 exit (-1);
        }
        strcpy( list_of_input_files[input_file_total], ++x );
-       no_trailing_blanks( list_of_input_files[input_file_total] );
        fprintf( stderr, "%s: Input file '%s'\n", __FUNCTION__, list_of_input_files[input_file_total] );
        input_file_total++;
      }
@@ -1603,15 +1599,3 @@ void time_updates(float ktime, int count, int fill_array[])
   return;
 }
 
-void no_trailing_blanks(char *s)
-{  /* remove trailing blanks (spaces) from string */
-  int n=strlen(s);
-  
-  while (n > 0) {
-    if (s[n] != ' ' && s[n] != '\0') return;
-    if (s[n] == ' ') s[n] = '\0';
-    n--;
-  }
-  return;
-}
-  
