@@ -202,7 +202,7 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
   CETB_SSMIS,
   CETB_SSMIS,
   CETB_SSMIS,
-  CETB_NUM_PLATFORMS
+  (cetb_sensor_id)CETB_NUM_PLATFORMS
 };
 
 /*
