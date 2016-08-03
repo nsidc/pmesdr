@@ -128,6 +128,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   }
   this->platform_id = platform_id;
   this->region_id = region_id;
+  this->direction_id = direction_id;
   this->factor = factor;
   this->sensor_id = sensor_id;
   this->reconstruction_id = reconstruction_id;
@@ -849,13 +850,20 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
 }
 
 /*
- * cetb_file_add_TB_parameters - Add TB variable attributes
+ * cetb_file_add_TB_parameters - Add remaining TB variable attributes
+ *                             - these attributes are independent of the processing method
+ *                             - that is they apply equally to bgi, sir or grd files
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
  *    rthreshold : response threshold in dB
  *    box_size_km : size of box in km in which to search for measurements that
  *                  meet the response threshold
+ *
+ * operation : the function writes out the input parameters as attributes
+ *             of the TB variable and then uses the information in the cetb_file_class
+ *             pointer to retrieve the appropriate LTOD information from cetb.h
+ *             and writes this out as a TB attribute
  *
  * output : n/a
  *
@@ -870,6 +878,9 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
 
   int status;
   int var_id;
+  char ltod_string[ MAX_STR_LENGTH ];
+  int ltod_0=0;
+  int ltod_1=1;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -895,6 +906,32 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
+
+  /* Now write out LTOD information based on the projection, pass direction and the times in cetb.h */
+  if ( CETB_EASE2_T == this->region_id ) {
+    if ( ( status = nc_put_att_text( this->fid, var_id, "satellite_pass_direction",
+				     strlen( cetb_direction_id_name_full[ this->direction_id ] )+1,
+				     cetb_direction_id_name_full[ this->direction_id ] ) ) ) {
+      fprintf( stderr, "%s: Error setting satellite pass direction: %s\n",
+	       __FUNCTION__, nc_strerror( status ) );
+      return 1;
+    }
+  } else { // this is either an N or an S grid
+    if ( CETB_EVENING_PASSES == this->direction_id ) {
+      ltod_0 = 1;
+      ltod_1 = 0;
+    }
+    sprintf( ltod_string, "%s: between %f and %f local time",
+	     cetb_direction_id_name_full[ this->direction_id ],
+	     cetb_ltod_split_times[ this->platform_id ][ this->region_id ][ ltod_0 ],
+	     cetb_ltod_split_times[ this->platform_id ][ this->region_id ][ ltod_1 ] );
+    if ( ( status = nc_put_att_text( this->fid, var_id, "local_time_of_day",
+				     strlen( ltod_string )+1, ltod_string ) ) ) {
+      fprintf( stderr, "%s: Error setting local time of day: %s\n",
+	       __FUNCTION__, nc_strerror( status ) );
+      return 1;
+    }
+  } 
 
   return 0;
   

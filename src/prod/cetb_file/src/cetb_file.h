@@ -47,6 +47,7 @@ typedef struct {
   char epoch_string[CETB_FILE_EPOCH_STRING_LENGTH];
   cetb_platform_id platform_id;
   cetb_region_id region_id;
+  cetb_direction_id direction_id;
   int factor;
   cetb_sensor_id sensor_id;
   cetb_reconstruction_id reconstruction_id;

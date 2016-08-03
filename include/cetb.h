@@ -202,7 +202,7 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
   CETB_SSMIS,
   CETB_SSMIS,
   CETB_SSMIS,
-  CETB_NUM_PLATFORMS
+  (cetb_sensor_id)CETB_NUM_PLATFORMS
 };
 
 /*
@@ -235,7 +235,7 @@ typedef enum {
 } cetb_direction_id;
 
 /*
- * Sensor names
+ * Direction names
  */
 static const char *cetb_direction_id_name[] = {
   "B",
@@ -243,6 +243,17 @@ static const char *cetb_direction_id_name[] = {
   "D",
   "M",
   "E"
+};
+
+/*
+ * Full Direction names
+ */
+static const char *cetb_direction_id_name_full[] = {
+  "Both",
+  "Ascending",
+  "Descending",
+  "Morning",
+  "Evening"
 };
 
 /*
