@@ -208,7 +208,7 @@ amsre_quick :
 	$(RM) $(TESTDIR)/amsre_e2n
 	$(MKDIR) $(TESTDIR)/amsre_e2n
 	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta AQUA \
-	         35 35 2003 $(TOPDIR)/ref/E2N_amsre_test.def $(TOPDIR)/testing/$(AMSRE_INPUT_FILES)
+	         35 35 2003 $(TOPDIR)/ref/E2N_amsre_quick.def $(TOPDIR)/testing/$(AMSRE_INPUT_FILES)
 
 
 

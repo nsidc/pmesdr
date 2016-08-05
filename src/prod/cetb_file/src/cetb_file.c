@@ -131,6 +131,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->direction_id = direction_id;
   this->factor = factor;
   this->sensor_id = sensor_id;
+  this->beam_id = beam_id;
   this->reconstruction_id = reconstruction_id;
   this->cols_dim_id = INT_MIN;
   this->rows_dim_id = INT_MIN;
@@ -862,8 +863,8 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
  *
  * operation : the function writes out the input parameters as attributes
  *             of the TB variable and then uses the information in the cetb_file_class
- *             pointer to retrieve the appropriate LTOD information from cetb.h
- *             and writes this out as a TB attribute
+ *             pointer to retrieve the appropriate frequency and polarization as well as
+ *             LTOD information from cetb.h and writes all of this out as TB attributes
  *
  * output : n/a
  *
@@ -878,9 +879,8 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
 
   int status;
   int var_id;
-  char ltod_string[ MAX_STR_LENGTH ];
-  int ltod_0=0;
-  int ltod_1=1;
+  float ltod_start, ltod_end;
+  char *channel_str;
   
   if ( !this ) {
     fprintf( stderr, "%s: Invalid cetb_file pointer.\n", __FUNCTION__ );
@@ -907,32 +907,47 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
     return 1;
   }
 
-  /* Now write out LTOD information based on the projection, pass direction and the times in cetb.h */
-  if ( CETB_EASE2_T == this->region_id ) {
-    if ( ( status = nc_put_att_text( this->fid, var_id, "satellite_pass_direction",
-				     strlen( cetb_direction_id_name_full[ this->direction_id ] )+1,
-				     cetb_direction_id_name_full[ this->direction_id ] ) ) ) {
-      fprintf( stderr, "%s: Error setting satellite pass direction: %s\n",
-	       __FUNCTION__, nc_strerror( status ) );
-      return 1;
-    }
-  } else { // this is either an N or an S grid
+  /* Now write out time division information based on the projection,
+     pass direction and the times in cetb.h */
+  if ( ( status = nc_put_att_text( this->fid, var_id, "temporal_division",
+				   strlen( cetb_direction_id_name_full[ this->direction_id ] )+1,
+				   cetb_direction_id_name_full[ this->direction_id ] ) ) ) {
+    fprintf( stderr, "%s: Error setting satellite pass direction: %s\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  
+  /* Only set the next 2 attributes for N and S projections */
+  if ( CETB_EASE2_T != this->region_id ) { 
     if ( CETB_EVENING_PASSES == this->direction_id ) {
-      ltod_0 = 1;
-      ltod_1 = 0;
-    }
-    sprintf( ltod_string, "%s: between %f and %f local time",
-	     cetb_direction_id_name_full[ this->direction_id ],
-	     cetb_ltod_split_times[ this->platform_id ][ this->region_id ][ ltod_0 ],
-	     cetb_ltod_split_times[ this->platform_id ][ this->region_id ][ ltod_1 ] );
-    if ( ( status = nc_put_att_text( this->fid, var_id, "local_time_of_day",
-				     strlen( ltod_string )+1, ltod_string ) ) ) {
-      fprintf( stderr, "%s: Error setting local time of day: %s\n",
+      ltod_start = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][1];
+      ltod_end = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][0];
+    } else {
+      ltod_start = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][0];
+      ltod_end = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][1];
+    }    
+    if ( ( status = nc_put_att_float( this->fid, var_id, "temporal_division_local_start_time",
+				      NC_FLOAT, 1, &ltod_start ) ) ) {
+      fprintf( stderr, "%s: Error setting start local time of day: %s\n",
 	       __FUNCTION__, nc_strerror( status ) );
       return 1;
     }
-  } 
+    if ( ( status = nc_put_att_float( this->fid, var_id, "temporal_division_local_end_time",
+				      NC_FLOAT, 1, &ltod_end ) ) ) {
+      fprintf( stderr, "%s: Error setting end local time of day: %s\n",
+	       __FUNCTION__, nc_strerror( status ) );
+      return 1;
+    }
+  }
 
+  /* Finally write out the channel for these TB values */
+  channel_str = channel_name( this->sensor_id, this->beam_id );
+  if ( ( status = nc_put_att_text( this->fid, var_id, "frequency_and_polarization",
+				   strlen( channel_str )+1, channel_str ) ) ) {
+    fprintf( stderr, "%s: Error setting channel: %s\n", __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  
   return 0;
   
 }
@@ -1096,7 +1111,6 @@ int cetb_file_check_consistency( char *file_name ) {
  *               the input sensor and beam_id
  *               Beam_id values must correspond to the values
  *               set in the meas_meta_make processing.
- *               THIS SHOULD CHANGE WHEN WE START USING GSX INPUT
  *
  *  input :
  *    sensor_id : sensor_id (determines which list of beam_ids to index)
