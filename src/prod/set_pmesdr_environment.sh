@@ -66,7 +66,7 @@ export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression
 
 # Determine the LOCALE, a function of host and compiler.
 # Janus needs to load compiler-specific modules before building
-if [[ "$HOSTNAME" == *[Jj]"anus"* || "$HOSTNAME" == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
+if [[ "$HOSTNAME" == *[Jj]"anus"* || `hostname --fqdn` == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
 
   ml slurm
   export PMESDR_COMPARE_TOLERANCE=0.25
