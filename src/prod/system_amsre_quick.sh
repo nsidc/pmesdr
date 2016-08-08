@@ -5,6 +5,4 @@ cd ../meas_meta_setup
 make amsre_quick
 cd ../meas_meta_sir
 make amsre_quick
-cd ../meas_meta_bgi
-make amsre_quick
 cd ..

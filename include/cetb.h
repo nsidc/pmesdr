@@ -191,7 +191,6 @@ static const char *cetb_sensor_id_name[] = {
 
 /* need to be able to map platform ID to sensor ID in meas_meta_setup */
 static const cetb_sensor_id cetb_platform_to_sensor[] = {
-  CETB_NO_SENSOR,
   CETB_SMMR,
   CETB_AMSRE,
   CETB_SSMI,
@@ -201,8 +200,7 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
   CETB_SSMIS,
   CETB_SSMIS,
   CETB_SSMIS,
-  CETB_SSMIS,
-  (cetb_sensor_id)CETB_NUM_PLATFORMS
+  CETB_SSMIS
 };
 
 /*
