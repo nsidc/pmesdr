@@ -2049,6 +2049,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     }
   } else {
     box_size = -1;
+    fprintf( stderr, "%s: bad sensor id %d\n", __FUNCTION__, id );
   }
     
   return box_size;

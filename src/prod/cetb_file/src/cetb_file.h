@@ -50,6 +50,7 @@ typedef struct {
   cetb_direction_id direction_id;
   int factor;
   cetb_sensor_id sensor_id;
+  int beam_id;
   cetb_reconstruction_id reconstruction_id;
   long int cols;
   long int rows;
