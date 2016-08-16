@@ -251,23 +251,28 @@ int cetb_file_open( cetb_file_class *this ) {
  *    1 on failure
  *
  */
-int cetb_file_add_filenames( cetb_file_class *this, int input_file_number, char **list_of_file_names ) {
+int cetb_file_add_filenames( cetb_file_class *this, int input_file_number,
+			     char **list_of_file_names ) {
 
   int status=0;
   int count;
   char input_file[MAX_STR_LENGTH];
 
-  if ( ( status = nc_put_att_int( this->fid, NC_GLOBAL, "number_of_input_files", NC_INT, 1, &input_file_number ) ) ) {
+  if ( ( status = nc_put_att_int( this->fid, NC_GLOBAL, "number_of_input_files",
+				  NC_INT, 1, &input_file_number ) ) ) {
     fprintf( stderr, "%s: Error setting %s %d: %s.\n",
-	     __FUNCTION__, "number of input files", input_file_number, nc_strerror( status ) );
+	     __FUNCTION__, "number of input files", input_file_number,
+	     nc_strerror( status ) );
     return 1;
   }
 
   for ( count = 0; count < input_file_number; count++ ) {
     sprintf( input_file, "input_file%d", count+1 );
-    if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, input_file, strlen( *(list_of_file_names+count) ),
+    if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, input_file,
+				     strlen( *(list_of_file_names+count) ),
 				     *(list_of_file_names+count) ) ) ) {
-      fprintf( stderr, "%s: Error writing out file %d, named %s\n", __FUNCTION__, count, *(list_of_file_names+count) );
+      fprintf( stderr, "%s: Error writing out file %d, named %s\n",
+	       __FUNCTION__, count, *(list_of_file_names+count) );
       return 1;
     }
 
@@ -1298,6 +1303,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char att_name[ MAX_STR_LENGTH ] = "";
   char crs_name[ MAX_STR_LENGTH ] = "crs_";
   char long_name[ MAX_STR_LENGTH ] = "";
+  char geospatial_resolution[ MAX_STR_LENGTH ] = "";
   
   /* Copy/set the coordinate reference system (crs) metadata */
   strcat( crs_name, cetb_region_id_name[ this->region_id ] );
@@ -1339,8 +1345,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   /*
    * Set the TBD placeholder items to values for this projection/resolution:
    * long_name = <region_id_name><resolution(km)> (basically the .gpd name)
-   * scale_factor_at_projection_origin = actual value (function of projection
-   *                                     and resolution/scale)
+   * geospatial_resolution = actual value (function of projection and resolution/scale)
    */
   strcat( long_name, cetb_region_id_name[ this->region_id ] );
   strcat( long_name, cetb_resolution_name[ this->factor ] );
@@ -1352,16 +1357,16 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
     return 1;
   }
   
-  strcpy( att_name, "scale_factor_at_projection_origin" );
-  if ( ( status = nc_put_att_double( this->fid, crs_id, att_name, 
-				     NC_DOUBLE, 1,
-				     &cetb_exact_scale_m[ this->region_id ][ this->factor ] ) ) ) {
+  sprintf( geospatial_resolution, "%.2f meters",
+	   cetb_exact_scale_m[ this->region_id ][ this->factor ] );
+  strcpy( att_name, "geospatial_resolution" );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, att_name, 
+				   strlen( geospatial_resolution ),
+				   geospatial_resolution ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
   }
-
-  
 
   return 0;
 
