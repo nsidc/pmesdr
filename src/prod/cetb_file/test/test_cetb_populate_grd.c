@@ -55,8 +55,9 @@ void setUp( void ) {
   producer_id = CETB_CSU;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
-			 direction_id, reconstruction_id, producer_id );
+			 region_number, factor, platform_id, sensor_id, year,
+			 doy, beam_id,
+			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL_MESSAGE( cetb, "Error calling cetb_file_init" );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   
