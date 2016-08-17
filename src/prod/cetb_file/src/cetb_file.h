@@ -42,6 +42,7 @@
 typedef struct {
   int fid;
   char *filename;
+  char *progname;
   int year;
   int doy;
   char epoch_string[CETB_FILE_EPOCH_STRING_LENGTH];
@@ -69,7 +70,8 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 int beam_id,
 				 cetb_direction_id direction_id,
 				 cetb_reconstruction_id reconstruction_id,
-				 cetb_swath_producer_id producer_id );
+				 cetb_swath_producer_id producer_id,
+				 char *progname );
 int cetb_file_open( cetb_file_class *this );
 int cetb_file_add_filenames( cetb_file_class *this,
 			     int input_file_number,

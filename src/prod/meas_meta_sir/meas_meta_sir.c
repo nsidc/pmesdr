@@ -17,6 +17,7 @@
 #include <math.h>
 #endif
 #include <float.h>
+#include <libgen.h>
 #include <string.h>
 #include <time.h>
 #include <netcdf.h>
@@ -404,7 +405,8 @@ int main(int argc, char **argv)
 			      iyear, isday, ibeam,
 			      direction_id,
 			      CETB_SIR,
-			      swath_producer_id );
+			      swath_producer_id,
+			      basename( argv[0] ) );
    if ( !cetb_sir ) {
      fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
 	      __FILE__, cetb_reconstruction_id_name[ CETB_SIR ] );
@@ -421,7 +423,8 @@ int main(int argc, char **argv)
 			      iyear, isday, ibeam,
 			      direction_id,
 			      CETB_GRD,
-			      swath_producer_id );
+			      swath_producer_id,
+			      basename( argv[0] ) );
    if ( !cetb_grd ) {
      fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
 	      __FILE__, cetb_reconstruction_id_name[ CETB_GRD ] );

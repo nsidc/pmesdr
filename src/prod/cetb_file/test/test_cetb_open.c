@@ -56,7 +56,7 @@ void setUp( void ) {
 
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
-			 direction_id, reconstruction_id, producer_id );
+			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   TEST_ASSERT_EQUAL_INT( direction_id, cetb->direction_id );
