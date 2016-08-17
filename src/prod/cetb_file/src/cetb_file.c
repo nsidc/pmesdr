@@ -57,6 +57,7 @@ static int valid_sensor_id( cetb_sensor_id sensor_id );
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
 static int yyyydoy_to_days_since_epoch( int year, int doy,
 					double *days_since_epoch );
+static int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day );
 
 /*********************************************************************
  * Public functions
@@ -77,6 +78,7 @@ static int yyyydoy_to_days_since_epoch( int year, int doy,
  *    direction_id : direction id for temporal subsetting
  *    reconstruction_id : image reconstruction method id
  *    producer_id : swath data producer id
+ *    progname : program name of caller, will be saved in cetb file history
  *
  *  output : n/a
  *
@@ -93,7 +95,8 @@ cetb_file_class *cetb_file_init( char *dirname,
 				 int beam_id,
 				 cetb_direction_id direction_id,
 				 cetb_reconstruction_id reconstruction_id,
-				 cetb_swath_producer_id producer_id ) {
+				 cetb_swath_producer_id producer_id,
+				 char *progname ) {
 
   cetb_file_class *this=NULL;
   char *channel_str=NULL;
@@ -110,13 +113,20 @@ cetb_file_class *cetb_file_init( char *dirname,
   if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
 
   if ( STATUS_OK
-       != utils_allocate_clean_aligned_memory( ( void * )&this, sizeof( cetb_file_class ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&this,
+					       sizeof( cetb_file_class ) ) ) {
     return NULL;
   }
   
   this->fid = 0;
   if ( STATUS_OK
-       != utils_allocate_clean_aligned_memory( ( void * )&(this->filename), FILENAME_MAX + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&(this->filename),
+					       FILENAME_MAX + 1 ) ) {
+    return NULL;
+  }
+  if ( STATUS_OK
+       != utils_allocate_clean_aligned_memory( ( void * )&(this->progname),
+					       MAX_STR_LENGTH + 1 ) ) {
     return NULL;
   }
   
@@ -151,6 +161,8 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    cetb_reconstruction_id_name[ reconstruction_id ],
   	    cetb_swath_producer_id_name[ producer_id ],
   	    CETB_FILE_FORMAT_VERSION );
+
+  snprintf( this->progname, MAX_STR_LENGTH, "%s", progname );
 
   free( channel_str );
   return this;
@@ -251,23 +263,28 @@ int cetb_file_open( cetb_file_class *this ) {
  *    1 on failure
  *
  */
-int cetb_file_add_filenames( cetb_file_class *this, int input_file_number, char **list_of_file_names ) {
+int cetb_file_add_filenames( cetb_file_class *this, int input_file_number,
+			     char **list_of_file_names ) {
 
   int status=0;
   int count;
   char input_file[MAX_STR_LENGTH];
 
-  if ( ( status = nc_put_att_int( this->fid, NC_GLOBAL, "number_of_input_files", NC_INT, 1, &input_file_number ) ) ) {
+  if ( ( status = nc_put_att_int( this->fid, NC_GLOBAL, "number_of_input_files",
+				  NC_INT, 1, &input_file_number ) ) ) {
     fprintf( stderr, "%s: Error setting %s %d: %s.\n",
-	     __FUNCTION__, "number of input files", input_file_number, nc_strerror( status ) );
+	     __FUNCTION__, "number of input files", input_file_number,
+	     nc_strerror( status ) );
     return 1;
   }
 
   for ( count = 0; count < input_file_number; count++ ) {
     sprintf( input_file, "input_file%d", count+1 );
-    if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, input_file, strlen( *(list_of_file_names+count) ),
+    if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, input_file,
+				     strlen( *(list_of_file_names+count) ),
 				     *(list_of_file_names+count) ) ) ) {
-      fprintf( stderr, "%s: Error writing out file %d, named %s\n", __FUNCTION__, count, *(list_of_file_names+count) );
+      fprintf( stderr, "%s: Error writing out file %d, named %s\n",
+	       __FUNCTION__, count, *(list_of_file_names+count) );
       return 1;
     }
 
@@ -1206,6 +1223,9 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   char attribute_name[ MAX_STR_LENGTH ];
   char *time_stamp;
   char *software_version;
+  char epoch_date_str[ MAX_STR_LENGTH ];
+  int month;
+  int day;
 
   if ( ( status = nc_inq_natts( template_fid, &num_attributes ) ) ) {
     fprintf( stderr, "%s: "
@@ -1271,6 +1291,29 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   }
   free( time_stamp );
 
+  if ( STATUS_OK !=
+       ( status = yyyydoy_to_yyyymmdd( this->year, this->doy, &month, &day ) ) ) {
+    fprintf( stderr, "%s: Error converting date to yyyymmdd.\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+  sprintf( epoch_date_str, "Epoch date for data in this file: %04d-%02d-%02d 00:00:00Z",
+	   this->year, month, day);
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "comment", 
+				   strlen( epoch_date_str ), 
+				   epoch_date_str ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "comment", nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "history", 
+				   strlen( this->progname ), 
+				   this->progname ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "history", nc_strerror( status ) );
+    return 1;
+  }
+
   return 0;
   
 }
@@ -1298,6 +1341,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char att_name[ MAX_STR_LENGTH ] = "";
   char crs_name[ MAX_STR_LENGTH ] = "crs_";
   char long_name[ MAX_STR_LENGTH ] = "";
+  char geospatial_resolution[ MAX_STR_LENGTH ] = "";
   
   /* Copy/set the coordinate reference system (crs) metadata */
   strcat( crs_name, cetb_region_id_name[ this->region_id ] );
@@ -1339,8 +1383,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   /*
    * Set the TBD placeholder items to values for this projection/resolution:
    * long_name = <region_id_name><resolution(km)> (basically the .gpd name)
-   * scale_factor_at_projection_origin = actual value (function of projection
-   *                                     and resolution/scale)
+   * geospatial_resolution = actual value (function of projection and resolution/scale)
    */
   strcat( long_name, cetb_region_id_name[ this->region_id ] );
   strcat( long_name, cetb_resolution_name[ this->factor ] );
@@ -1352,16 +1395,16 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
     return 1;
   }
   
-  strcpy( att_name, "scale_factor_at_projection_origin" );
-  if ( ( status = nc_put_att_double( this->fid, crs_id, att_name, 
-				     NC_DOUBLE, 1,
-				     &cetb_exact_scale_m[ this->region_id ][ this->factor ] ) ) ) {
+  sprintf( geospatial_resolution, "%.2f meters",
+	   cetb_exact_scale_m[ this->region_id ][ this->factor ] );
+  strcpy( att_name, "geospatial_resolution" );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, att_name, 
+				   strlen( geospatial_resolution ),
+				   geospatial_resolution ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
   }
-
-  
 
   return 0;
 
@@ -1990,6 +2033,43 @@ int yyyydoy_to_days_since_epoch( int year, int doy,
   }
 
   *days_since_epoch = (double) date_jday - (double) epoch_jday;
+
+  ccs_free_calendar( cal );
+
+  return STATUS_OK;
+  
+}
+
+/*
+ * yyyydoy_to_yyyymmdd - convert day-of-year to gregorian date
+ *
+ *  input :
+ *    year : year
+ *    doy  : day of year
+ *
+ *  output :
+ *    month : month (1-12)
+ *    day   : day of month (1-31)
+ *
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
+ *
+ */
+int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day ) {
+
+  int status;
+  char *calendar = "Standard";
+  calcalcs_cal *cal = NULL;
+
+  if ( NULL == ( cal = ccs_init_calendar( calendar ) ) ) {
+    fprintf( stderr, "%s: Error initializing calendar.\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+
+  if ( 0 != ( status = ccs_doy2date( cal, year, doy, month, day ) ) ) {
+    fprintf( stderr, "%s: Error in ccs_doy2date for year=%d, doy=%d: %d\n",
+  	     __FUNCTION__, year, doy, status );
+    return STATUS_FAILURE;
+  }
 
   ccs_free_calendar( cal );
 

@@ -5,6 +5,7 @@
  * Copyright (C) 2016 Regents of the University of Colorado and Brigham Young University
  */
 #include <float.h>
+#include <libgen.h>
 #include <netcdf.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@
 cetb_file_class *cetb;
 int status;
 char test_filename[ FILENAME_MAX ];
-char dirname[ FILENAME_MAX ];
+char dir[ FILENAME_MAX ];
 cetb_region_id region_id;
 int region_number;
 int factor;
@@ -29,6 +30,7 @@ cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
 int year;
 int doy;
+char epoch_date_str[ 256 ];
 int beam_id;
 cetb_direction_id direction_id;
 cetb_reconstruction_id reconstruction_id;
@@ -46,9 +48,9 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
-  strcat( dirname, "/src/prod/cetb_file/test" );
-  strcpy( test_filename, dirname );
+  strcpy( dir, getenv( "PMESDR_TOP_DIR" ) );
+  strcat( dir, "/src/prod/cetb_file/test" );
+  strcpy( test_filename, dir );
   strcat( test_filename, "/EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc" );
   region_id = CETB_EASE2_T;
   region_number = cetb_region_number[ region_id ];
@@ -56,15 +58,19 @@ void setUp( void ) {
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
   year = 1991;
-  doy = 153;
+  doy = 153; 
+  sprintf( epoch_date_str, "Epoch date for data in this file: %04d-%02d-%02d 00:00:00Z",
+	   1991, 6, 2);
   beam_id = 1;
   direction_id = CETB_ASC_PASSES;
   reconstruction_id = CETB_SIR;
   producer_id = CETB_CSU;
+  char progname[256] = "/my/path/test_program_name";
 
-  cetb = cetb_file_init( dirname,
+  cetb = cetb_file_init( dir,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
-			 direction_id, reconstruction_id, producer_id );
+			 direction_id, reconstruction_id, producer_id,
+			 basename( progname ) );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   status = cetb_file_open( cetb );
@@ -208,6 +214,16 @@ void test_cetb_file_consistency( void ) {
 
   status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
+
+  /* Confirm that the data date is the value of the comment attribute */
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "comment" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( epoch_date_str, att_p, "comment" );
+  free( att_p );
+
+  /* Confirm that the history is the name of the program used to create it */
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "history" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "test_program_name", att_p, "history" );
+  free( att_p );
 
   /* Confirm the expected TB variable is in the output file */
   status = nc_inq_varid( nc_fileid, "TB", &tb_var_id );

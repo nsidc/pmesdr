@@ -17,6 +17,7 @@
 #include <math.h>
 #endif
 
+#include <libgen.h>
 #include <string.h>
 #include <time.h>
 #include <netcdf.h>
@@ -394,7 +395,8 @@ int main(int argc, char **argv)
 			  iyear, isday, ibeam,
 			  direction_id,
 			  CETB_BGI,
-			  swath_producer_id );
+			  swath_producer_id,
+			  basename( argv[0] ) );
    if ( !cetb ) {
      fprintf( stderr, "%s: Error initializing cetb_file.\n", __FILE__ );
      exit( -1 );

@@ -71,7 +71,7 @@ void test_cetb_N_parameters( void ) {
 
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
-			 direction_id, reconstruction_id, producer_id );
+			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   
@@ -113,10 +113,11 @@ void test_cetb_N_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
 
-  strcpy( att_name, "scale_factor_at_projection_origin" );
-  expected_double = 3125.0;
-  status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
-  TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
+  strcpy( att_name, "geospatial_resolution" );
+  status = nc_inq_attlen( nc_fileid, NC_GLOBAL, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, NC_GLOBAL, att_name, att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "3125.00 meters", att_str, att_name );
   
   strcpy( att_name, "proj4text" );
   status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
@@ -152,7 +153,7 @@ void test_cetb_S_parameters( void ) {
 
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
-			 direction_id, reconstruction_id, producer_id );
+			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   
@@ -194,10 +195,11 @@ void test_cetb_S_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
 
-  strcpy( att_name, "scale_factor_at_projection_origin" );
-  expected_double = 6250.0;
-  status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
-  TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
+  strcpy( att_name, "geospatial_resolution" );
+  status = nc_inq_attlen( nc_fileid, NC_GLOBAL, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, NC_GLOBAL, att_name, att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "6250.00 meters", att_str, att_name );
   
   strcpy( att_name, "proj4text" );
   status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
@@ -234,7 +236,7 @@ void test_cetb_T_parameters( void ) {
 
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
-			 direction_id, reconstruction_id, producer_id );
+			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   
@@ -271,10 +273,11 @@ void test_cetb_T_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
 
-  strcpy( att_name, "scale_factor_at_projection_origin" );
-  expected_double = 12512.63;
-  status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
-  TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
+  strcpy( att_name, "geospatial_resolution" );
+  status = nc_inq_attlen( nc_fileid, NC_GLOBAL, att_name, &att_len );
+  status = nc_get_att_text( nc_fileid, NC_GLOBAL, att_name, att_str );
+  att_str[ att_len ] = '\0';
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "12512.63 meters", att_str, att_name );
   
   strcpy( att_name, "proj4text" );
   status = nc_inq_attlen( nc_fileid, crs_id, att_name, &att_len );
