@@ -113,7 +113,7 @@ void test_cetb_N_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
 
-  strcpy( att_name, "geospatial_resolution" );
+  strcpy( att_name, "geospatial_x_resolution" );
   status = nc_inq_attlen( nc_fileid, NC_GLOBAL, att_name, &att_len );
   status = nc_get_att_text( nc_fileid, NC_GLOBAL, att_name, att_str );
   att_str[ att_len ] = '\0';
@@ -195,7 +195,7 @@ void test_cetb_S_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
 
-  strcpy( att_name, "geospatial_resolution" );
+  strcpy( att_name, "geospatial_y_resolution" );
   status = nc_inq_attlen( nc_fileid, NC_GLOBAL, att_name, &att_len );
   status = nc_get_att_text( nc_fileid, NC_GLOBAL, att_name, att_str );
   att_str[ att_len ] = '\0';
@@ -273,7 +273,7 @@ void test_cetb_T_parameters( void ) {
   status = nc_get_att_double( nc_fileid, crs_id, att_name, &att_double );
   TEST_ASSERT_EQUAL_DOUBLE_MESSAGE( expected_double, att_double, att_name );
 
-  strcpy( att_name, "geospatial_resolution" );
+  strcpy( att_name, "geospatial_x_resolution" );
   status = nc_inq_attlen( nc_fileid, NC_GLOBAL, att_name, &att_len );
   status = nc_get_att_text( nc_fileid, NC_GLOBAL, att_name, att_str );
   att_str[ att_len ] = '\0';
