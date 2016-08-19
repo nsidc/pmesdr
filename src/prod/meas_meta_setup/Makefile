@@ -138,8 +138,18 @@ csu_ease :
 csu_quick :
 	$(RM) $(TESTDIR)/setupCSU/e2n
 	$(MKDIR) $(TESTDIR)/setupCSU/e2n
+	$(RM) $(TESTDIR)/setupCSU/e2s
+	$(MKDIR) $(TESTDIR)/setupCSU/e2s
+	$(RM) $(TESTDIR)/setupCSU/e2t
+	$(MKDIR) $(TESTDIR)/setupCSU/e2t
 	($(CD) $(TOPDIR)/sample_data;		\
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
 	)
 
 rss_ease :
@@ -165,8 +175,18 @@ rss_ease :
 rss_quick :
 	$(RM) $(TESTDIR)/setupRSS/e2n
 	$(MKDIR) $(TESTDIR)/setupRSS/e2n
+	$(RM) $(TESTDIR)/setupRSS/e2s
+	$(MKDIR) $(TESTDIR)/setupRSS/e2s
+	$(RM) $(TESTDIR)/setupRSS/e2t
+	$(MKDIR) $(TESTDIR)/setupRSS/e2t
 	($(CD) $(TOPDIR)/sample_data;		\
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 	\
 	)
 
 amsre_ease :

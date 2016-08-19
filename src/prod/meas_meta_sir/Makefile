@@ -145,10 +145,10 @@ rss_ease_validate :
 rss_quick :
 	$(RM) $(TESTDIR)/sirRSS
 	$(MKDIR) $(TESTDIR)/sirRSS
-ifeq ($(RSSE2NFILES),)
+ifeq ($(RSSFILES),)
 	$(error	No setup files found)
 else
-	for file in $(RSSE2NFILES); do \
+	for file in $(RSSFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS; \
 	done
@@ -179,10 +179,10 @@ csu_ease_validate :
 csu_quick :
 	$(RM) $(TESTDIR)/sirCSU
 	$(MKDIR) $(TESTDIR)/sirCSU
-ifeq ($(CSUE2NFILES),)
+ifeq ($(CSUFILES),)
 	$(error	No setup files found)
 else
-	for file in $(CSUE2NFILES); do \
+	for file in $(CSUFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU; \
 	done

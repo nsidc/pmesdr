@@ -133,9 +133,17 @@ rss_ten :
 rss_quick :
 	$(RM) $(TESTDIR)/rss_e2n
 	$(MKDIR) $(TESTDIR)/rss_e2n
+	$(RM) $(TESTDIR)/rss_e2s
+	$(MKDIR) $(TESTDIR)/rss_e2s
+	$(RM) $(TESTDIR)/rss_e2t
+	$(MKDIR) $(TESTDIR)/rss_e2t
 	$(CD) $(TOPDIR)/sample_data		 
 	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/RSS_regress_list		
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/RSS_regress_list		
+	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/RSS_regress_list		
 
 csu_ease :
 	$(RM) $(TESTDIR)/csu_e2n
@@ -185,9 +193,17 @@ csu_ten :
 csu_quick :
 	$(RM) $(TESTDIR)/csu_e2n
 	$(MKDIR) $(TESTDIR)/csu_e2n
+	$(RM) $(TESTDIR)/csu_e2s
+	$(MKDIR) $(TESTDIR)/csu_e2s
+	$(RM) $(TESTDIR)/csu_e2t
+	$(MKDIR) $(TESTDIR)/csu_e2t
 	$(CD) $(TOPDIR)/sample_data		 
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
 
 amsre_ease :
 	$(RM) $(TESTDIR)/amsre_e2s
