@@ -24,7 +24,7 @@
 #define CETB_FILE_PACK_DATA( factor, offset, unpacked ) ( ( (unpacked) >= 0. ) ? ( ( ( (unpacked) - (offset) ) / (factor) ) + 0.5 ) : ( ( ( (unpacked) - (offset) ) / (factor) ) - 0.5 ) )
 #define CETB_FILE_GRID_MAPPING "crs"
 #define CETB_FILE_TB_STANDARD_NAME "brightness_temperature"
-#define CETB_FILE_TB_UNIT "kelvin"
+#define CETB_FILE_TB_UNIT "K"
 #define CETB_FILE_ANGULAR_UNIT "degree"
 
 /* Needs to hold "minutes since yyyy-dd-mm 00:00:00" */
