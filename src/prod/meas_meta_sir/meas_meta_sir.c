@@ -95,6 +95,7 @@ int main(int argc, char **argv)
   char *file_in;
   char outpath[FILENAME_MAX];
   char cetb_sir_filename[FILENAME_MAX]; // Required to save the name for consistency checking at end
+  char cetb_grd_filename[FILENAME_MAX]; // Required to save the name for consistency checking at end
 
   float latl, lonl, lath, lonh;
   char regname[11];
@@ -998,6 +999,11 @@ int main(int argc, char **argv)
   } else {
     fprintf( stderr, "> %s: Wrote Tb time (P) to %s.\n", __FILE__, cetb_sir->filename );
   }
+
+  /* find and save TB_time min and max values for writing out into coverage attributes */
+  if ( 0 != cetb_file_set_time_coverage( cetb_sir, sxy, nsx, nsy ) ) {
+    errors++;
+  }
     
 /* create non-enhanced images
    these are grd images pixel replicated to be at the same 
@@ -1251,6 +1257,11 @@ int main(int argc, char **argv)
   } else {
     fprintf( stderr, "> %s: Wrote GRD Tb time (P) to %s.\n", __FILE__, cetb_grd->filename );
   }
+
+  /* find and save TB_time min and max values for writing out into coverage attributes */
+  if ( 0 != cetb_file_set_time_coverage( cetb_grd, a_temp, nsx2, nsy2 ) ) {
+    errors++;
+  }
     
   if ( output_debug ) {
     if (CREATE_NON) {
@@ -1329,7 +1340,15 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__, cetb_grd->filename );
     exit( -1 );
   }
+  strcpy( cetb_grd_filename, cetb_grd->filename );
   cetb_file_close( cetb_grd );
+
+  /* Now check to make sure that there are no OOR temps and set to MISSING if so */
+  if ( 0 != cetb_file_check_consistency( cetb_grd_filename ) ) {
+    fprintf( stderr, "%s: Error running file consistency check file %s\n", __FILE__,
+	     cetb_grd_filename );
+    exit( -1 );
+  }
 
   if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag ) ) {
     fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );

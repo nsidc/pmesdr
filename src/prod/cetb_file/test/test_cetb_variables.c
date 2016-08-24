@@ -327,6 +327,9 @@ void test_cetb_tbs( void ) {
 			      (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
 			      "gregorian" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
+  /* test for time coverage */
+  status = cetb_file_set_time_coverage( cetb, float_data, cols, rows );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "error setting time coverages" );
 
   cetb_file_close( cetb );
 
@@ -468,6 +471,15 @@ void test_cetb_tbs( void ) {
   /* There should not be a standard name for time */
   status = nc_inq_attlen( nc_fileid, tb_time_var_id, "standard_name", &att_len );
   TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_time standard_name" );
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_start" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-02T00:00:00.00Z", att_p, "time coverage start" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_end" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-03T00:00:00.00Z", att_p, "time coverage end" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_duration" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "0024:00:00.00", att_p, "time coverage duration" );
+  free( att_p );
 
   status = nc_get_att_int( nc_fileid, tb_time_var_id, "valid_range", int_valid_range );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );

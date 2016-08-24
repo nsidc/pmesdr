@@ -58,6 +58,8 @@ static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
 static int yyyydoy_to_days_since_epoch( int year, int doy,
 					double *days_since_epoch );
 static int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day );
+static char *iso_date_string( int year, int doy, float tb_minutes );
+static char *duration_time_string( float tb_time_min, float tb_time_max );
 
 /*********************************************************************
  * Public functions
@@ -1002,18 +1004,21 @@ void cetb_file_close( cetb_file_class *this ) {
 }
 
 /*
- * cetb_file_check_consistency - check to make sure the variables are within valid range
+ * cetb_file_check_consistency - check to make sure the variables are within
+ *                               valid range 
  *
  *  input: NETCDF file name
  *
  *  output: status variable
  *
- *  result: OOR values are set to missing
+ *  result: OOR values are set to missing 
  *
- *  this function retrieves the TB values from the file and checks them all to make sure they are
- *  within the required range.  Any values outside the required range, but != the fill value
- *  should be set to missing.  IFF any TB values are set to missing, then the corresponding TB_std_dev
- *  value should be set to missing.
+ *  this function retrieves the TB values from the file and
+ *  checks them all to make sure they are within the required
+ *  range.  Any values outside the required range, but != the
+ *  fill value should be set to missing.  IFF any TB values are
+ *  set to missing, then the corresponding TB_std_dev value
+ *  should be set to missing.
  *
  */
 int cetb_file_check_consistency( char *file_name ) {
@@ -1061,7 +1066,7 @@ int cetb_file_check_consistency( char *file_name ) {
   }
 
   status = utils_allocate_clean_aligned_memory( ( void * )&tb_ushort_data,
-						sizeof( short int ) * 1 * cols * rows );
+						sizeof( *tb_ushort_data ) * 1 * cols * rows );
   if ( status != 0 ) {
     fprintf( stderr, "%s: couldn't allocate memory for TB array\n", __FUNCTION__ );
     return -1;
@@ -1073,7 +1078,7 @@ int cetb_file_check_consistency( char *file_name ) {
   }
 
   status = utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_ushort_data,
-						sizeof( short int ) * 1 * cols * rows );
+						sizeof( *tb_std_dev_ushort_data ) * 1 * cols * rows );
   if ( status != 0 ) {
     fprintf( stderr, "%s: couldn't allocate memory for TB std dev array\n", __FUNCTION__ );
     return -1;
@@ -1107,8 +1112,8 @@ int cetb_file_check_consistency( char *file_name ) {
     }
   }
 
-  free ( tb_ushort_data );
-  free ( tb_std_dev_ushort_data );
+  free( tb_ushort_data );
+  free( tb_std_dev_ushort_data );
   
   if ( ( status = nc_close( nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_close error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
@@ -1118,7 +1123,77 @@ int cetb_file_check_consistency( char *file_name ) {
   return status;
 
 }
- 
+
+/*
+ * cetb_file_set_time_coverage - find the min and max minute values stored in the
+ *                               tb_time variable and save them to the netCDF
+ *                               file attributes for ACDD compliance
+ *
+ *  input :
+ *    cetb_file_pointer :
+ *    tb_data           : pointer to the recently calculated tb_time data
+ *    xdim              : x dimension of the data
+ *    ydim              : Y dimension
+ *
+ *  output :
+ *    status variable
+ *
+ *  result :
+ *    values are calculated for 3 ACDD required attributes, viz.
+ *                     time_coverage_start
+ *                     time_coverage_end
+ *                     time_coverage_duration
+ *
+ */
+int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
+				 int xdim, int ydim ) {
+
+  float tb_time_min=(float)CETB_NCATTS_TB_TIME_MAX;
+  float tb_time_max=(float)CETB_NCATTS_TB_TIME_MIN;
+  int index, status;
+  char *time_string;  
+
+  for ( index = 0; index < (xdim*ydim); index++ ) {
+    if ( CETB_NCATTS_TB_TIME_FILL_VALUE != *(tb_time_data+index) ) {
+      if ( *(tb_time_data+index) > tb_time_max ) {
+	tb_time_max = *(tb_time_data+index);
+      }
+      if ( *(tb_time_data+index) < tb_time_min ) {
+	tb_time_min = *(tb_time_data+index);
+      }
+    }
+  }
+
+  time_string = iso_date_string( this->year, this->doy, tb_time_min );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_start",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_start", time_string, nc_strerror( status ) );
+    return 1;
+  }
+
+  time_string = iso_date_string( this->year, this->doy, tb_time_max );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_end",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_end", time_string, nc_strerror( status ) );
+    return 1;
+  }
+
+  time_string = duration_time_string( tb_time_min, tb_time_max );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_duration",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_duration", time_string, nc_strerror( status ) );
+    return 1;
+  }
+
+  return STATUS_OK;
+  
+}
 /*********************************************************************
  * Internal function definitions
  *********************************************************************/
@@ -2082,5 +2157,71 @@ int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day ) {
   ccs_free_calendar( cal );
 
   return STATUS_OK;
+  
+}
+
+/*
+ * iso_date_string - convert doy + minutes offset to ISO date string
+ *
+ *  input :
+ *    year : year
+ *    doy  : day of year
+ *    tb_minutes : offset in minutes from midnight on doy
+ *
+ *  result : character string encoded with the ISO date string
+ *
+ */
+static char *iso_date_string( int year, int doy, float tb_minutes ) {
+
+  char *iso_string;
+  double my_time, second, resolution;
+  int month, day, hour, minute;
+
+  if ( STATUS_OK != yyyydoy_to_yyyymmdd( year, doy, &month, &day ) ) {
+    return NULL;
+  }
+
+  if ( STATUS_OK
+       != utils_allocate_clean_aligned_memory( ( void * )&iso_string, MAX_STR_LENGTH + 1 ) ) {
+    return NULL;
+  }
+
+  second = tb_minutes - (int)tb_minutes;
+  my_time = ut_encode_time( year, month, day, 0, (int)tb_minutes, second );
+  ut_decode_time( my_time, &year, &month, &day, &hour, &minute, &second, &resolution );
+  sprintf( iso_string, "%4d-%02d-%02dT%02d:%02d:%05.2lfZ",
+	   year, month, day, hour, minute, second );
+  return iso_string;
+  
+}
+
+/*
+ * duration_time_string - convert minutes offset to ISO duration string
+ *
+ *  input :
+ *    tb_time_min : minimum minute value in array
+ *    tb_time_max : maximum minute value in array
+ *
+ *  result : character string encoded with the ISO time duration string
+ *
+ */
+static char *duration_time_string( float tb_time_min, float tb_time_max ) {
+
+  char *iso_string;
+  int hours;
+  float tb_time_duration, minutes, seconds;
+
+  if ( STATUS_OK
+       != utils_allocate_clean_aligned_memory( ( void * )&iso_string, MAX_STR_LENGTH + 1 ) ) {
+    return NULL;
+  }
+
+  tb_time_duration = tb_time_max - tb_time_min;
+  hours = (int)( tb_time_duration/60 );
+  minutes = tb_time_duration - ( hours * 60. );
+  seconds = minutes - (int)minutes;
+  
+  sprintf( iso_string, "%04d:%02d:%05.2f", hours, (int)minutes, seconds );
+  return iso_string;
   
 }
