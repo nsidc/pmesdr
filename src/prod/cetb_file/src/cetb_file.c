@@ -2208,7 +2208,7 @@ static char *iso_date_string( int year, int doy, float tb_minutes ) {
 static char *duration_time_string( float tb_time_min, float tb_time_max ) {
 
   char *iso_string;
-  int hours;
+  int hours, days;
   float tb_time_duration, minutes, seconds;
 
   if ( STATUS_OK
@@ -2218,10 +2218,15 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
 
   tb_time_duration = tb_time_max - tb_time_min;
   hours = (int)( tb_time_duration/60 );
+  if ( 24 >= hours ) {
+    days = (int)( hours/24 );
+  } else {
+    days = 0;
+  }
   minutes = tb_time_duration - ( hours * 60. );
   seconds = minutes - (int)minutes;
   
-  sprintf( iso_string, "%04d:%02d:%05.2f", hours, (int)minutes, seconds );
+  sprintf( iso_string, "P%02dT%02d:%02d:%05.2f", days, hours, (int)minutes, seconds );
   return iso_string;
   
 }

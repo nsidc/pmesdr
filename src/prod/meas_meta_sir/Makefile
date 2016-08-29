@@ -93,11 +93,13 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
-	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS)
+LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
+	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable -Wno-unused-but-set-variable
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
+  LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
+	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
