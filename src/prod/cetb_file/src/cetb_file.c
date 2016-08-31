@@ -1154,7 +1154,7 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
   char *time_string;  
 
   for ( index = 0; index < (xdim*ydim); index++ ) {
-    if ( CETB_NCATTS_TB_TIME_FILL_VALUE != *(tb_time_data+index) ) {
+    if ( CETB_NCATTS_TB_TIME_FILL_VALUE < *(tb_time_data+index) ) {
       if ( *(tb_time_data+index) > tb_time_max ) {
 	tb_time_max = *(tb_time_data+index);
       }
@@ -2223,7 +2223,7 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
   } else {
     days = 0;
   }
-  minutes = tb_time_duration - ( hours * 60. );
+  minutes = tb_time_duration - ( hours * 60.f );
   seconds = minutes - (int)minutes;
   
   sprintf( iso_string, "P%02dT%02d:%02d:%05.2f", days, hours, (int)minutes, seconds );
