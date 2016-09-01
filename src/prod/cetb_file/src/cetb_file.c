@@ -374,7 +374,12 @@ int cetb_file_add_var( cetb_file_class *this,
   packing_convention = strdup( CETB_FILE_PACKING_CONVENTION );
   packing_convention_description = strdup( CETB_FILE_PACKING_CONVENTION_DESC );
   grid_mapping = strdup( CETB_FILE_GRID_MAPPING );
-  coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE );
+  /* set the coverage content type depending on the variable - test against var name */
+  if ( !strcmp( "TB", var_name ) ) {
+    coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_IMAGE );
+  } else {
+    coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_AUX );
+  }
   
   /* Check that dimensions match what's expected for this file */
   if ( this->cols != cols || this->rows != rows ) {
@@ -632,7 +637,7 @@ int cetb_file_add_var( cetb_file_class *this,
   }
 
   if ( ( status = nc_put_att_text( this->fid, var_id, "grid_mapping",
-  				 strlen(grid_mapping),
+				   strlen(grid_mapping),
 				   grid_mapping ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
   	     __FUNCTION__, var_name, "grid_mapping", grid_mapping, nc_strerror( status ) );
@@ -640,7 +645,7 @@ int cetb_file_add_var( cetb_file_class *this,
   }
   
   if ( ( status = nc_put_att_text( this->fid, var_id, "coverage_content_type",
-  				 strlen(coverage_content_type),
+				   strlen(coverage_content_type),
 				   coverage_content_type ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
   	     __FUNCTION__, var_name, "coverage_content_type",
@@ -657,6 +662,10 @@ int cetb_file_add_var( cetb_file_class *this,
     }
   }
 
+  free( packing_convention );
+  free( packing_convention_description );
+  free( grid_mapping );
+  free( coverage_content_type );
   return 0;
 
 }
@@ -1647,7 +1656,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ 0 ] + half_pixel_m;
   status = set_dimension( this, "y", rows, vals,
-			  "projection_y_coordinate", NULL,
+			  "projection_y_coordinate", "y",
 			  "meters",
 			  NULL,
 			  "Y",
@@ -1679,7 +1688,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ cols - 1 ] + half_pixel_m;
   status = set_dimension( this, "x", cols, vals,
-			  "projection_x_coordinate", NULL,
+			  "projection_x_coordinate", "x",
 			  "meters",
 			  NULL,
 			  "X",
@@ -1731,7 +1740,7 @@ int set_all_dimensions( cetb_file_class *this ) {
  *    size : size of dimension variable
  *    vals : pointer to values for this variable
  *    standard_name : CF standard name
- *    long_name : only needed for time dimension
+ *    long_name : needed for all dimensions per ACDD-1.3
  *    units : dimension CF units
  *    calendar : only needed for time dimension
  *    axis : dimension axis
@@ -1760,7 +1769,9 @@ int set_dimension( cetb_file_class *this,
   int status;
   int var_id;
   int dim_ids[ 1 ];
+  char *coverage_content_type;
 
+  coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_COORD );
   if ( ( status = nc_def_dim( this->fid, name, size, dim_id ) ) ) {
     fprintf( stderr, "%s: Error setting %s dim: %s.\n",
   	     __FUNCTION__, name, nc_strerror( status ) );
@@ -1781,6 +1792,12 @@ int set_dimension( cetb_file_class *this,
 				   strlen(standard_name), standard_name ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
   	     __FUNCTION__, name, standard_name, nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, var_id, "coverage_content_type",
+				   strlen(coverage_content_type), coverage_content_type ) ) ) {
+    fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+  	     __FUNCTION__, name, coverage_content_type, nc_strerror( status ) );
     return 1;
   }
   
