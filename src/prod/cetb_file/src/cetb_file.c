@@ -1371,14 +1371,14 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   	     __FUNCTION__, "date_modified", nc_strerror( status ) );
     return 1;
   }
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_issued", 
-				   strlen( time_stamp ), 
-				   time_stamp ) ) ) {
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_issued",
+  				   strlen( time_stamp ),
+  				   time_stamp ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "date_issued", nc_strerror( status ) );
     return 1;
   }
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_metadata_modified", 
+ if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_metadata_modified", 
 				   strlen( time_stamp ), 
 				   time_stamp ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
