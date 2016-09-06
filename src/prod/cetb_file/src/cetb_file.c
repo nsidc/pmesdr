@@ -138,6 +138,7 @@ cetb_file_class *cetb_file_init( char *dirname,
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "epoch_string" );
     return NULL;
   }
+  this->producer_id = producer_id;
   this->platform_id = platform_id;
   this->region_id = region_id;
   this->direction_id = direction_id;
@@ -1364,6 +1365,14 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   	     __FUNCTION__, "instrument", nc_strerror( status ) );
     return 1;
   }
+  
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "source",
+				   strlen( cetb_swath_producer_id_name[ this->producer_id ] ),
+				   cetb_swath_producer_id_name[ this->producer_id ] ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "source", nc_strerror( status ) );
+    return 1;
+  }
 
   time_stamp = current_time_stamp();
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
@@ -1447,12 +1456,35 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char crs_name[ MAX_STR_LENGTH ] = "crs_";
   char long_name[ MAX_STR_LENGTH ] = "";
   char geospatial_resolution[ MAX_STR_LENGTH ] = "";
+  char EPSG_code[ MAX_STR_LENGTH ];
+  char *EPSG = "EPSG";
+  char *epsg_ptr;
+  size_t srid_len;
   
   /* Copy/set the coordinate reference system (crs) metadata */
   strcat( crs_name, cetb_region_id_name[ this->region_id ] );
   if ( ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) ) {
     fprintf( stderr, "%s: Error getting template file crs variable_id: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  
+  /* now get the EPSG code from the correct projection in the template file */
+  if ( ( status = nc_inq_attlen( template_fid, crs_id, "srid", &srid_len ) ) ) {
+    fprintf( stderr, "%s: Error getting srid attribute length: %s \n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_get_att_text( template_fid, crs_id, "srid", EPSG_code ) ) ) {
+    fprintf( stderr, "%s: Error getting template file crs srid: %s.\n",
+	     __FUNCTION__, nc_strerror( status ) );
+    return 1;
+  }
+  EPSG_code[srid_len] = '\0';
+  epsg_ptr = strstr( EPSG_code, EPSG );
+  if ( NULL == epsg_ptr ) {
+    fprintf( stderr, "%s: No EPSG code found in srid attribute \n",
+	     __FUNCTION__ );
     return 1;
   }
   
@@ -1514,6 +1546,42 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, att_name, 
 				   strlen( geospatial_resolution ),
 				   geospatial_resolution ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, att_name, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_min", 
+				     NC_DOUBLE, 1,
+				     &( cetb_latitude_extent[ this->region_id ][0] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lat_min", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_max", 
+				     NC_DOUBLE, 1,
+				     &( cetb_latitude_extent[ this->region_id ][1] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lat_max", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_min", 
+				     NC_DOUBLE, 1,
+				     &( cetb_longitude_extent[ this->region_id ][0] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lon_min", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_max", 
+				     NC_DOUBLE, 1,
+				     &( cetb_longitude_extent[ this->region_id ][1] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lon_max", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds_crs", 
+				   strlen( epsg_ptr ),
+				   epsg_ptr ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;

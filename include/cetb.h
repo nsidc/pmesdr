@@ -50,6 +50,21 @@ static const char *cetb_region_id_name[] = {
 };
 
 /*
+ * lat and lon extents are determined by the region number - use the region ID
+ * number to index into the array
+ */
+static double cetb_latitude_extent[CETB_NUM_REGIONS][2] = {
+  { 0.00000, 90.00000 }, /* latitude min and max indexed by EASE2_N */
+  { -90.00000, 0.00000 }, /* latitude min and max indexed by EASE2_S */
+  { -67.00000, 67.00000 }  /* latitude min and max indexed by EASE2_T */
+};
+static double cetb_longitude_extent[CETB_NUM_REGIONS][2] = {
+  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_N */
+  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_S */
+  { -180.00000, 180.00000 }  /* longitude min and max indexed by EASE2_T */
+};
+
+/*
  * Grid resolution factor: power of 2 to divide into base resolution of 25 km
  * factor = 0 : 25/2**0 = 25
  *          1 : 25/2**1 = 12.5

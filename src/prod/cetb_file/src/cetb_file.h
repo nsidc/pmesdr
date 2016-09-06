@@ -50,6 +50,7 @@ typedef struct {
   int year;
   int doy;
   char epoch_string[CETB_FILE_EPOCH_STRING_LENGTH];
+  cetb_swath_producer_id producer_id;
   cetb_platform_id platform_id;
   cetb_region_id region_id;
   cetb_direction_id direction_id;

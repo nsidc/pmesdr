@@ -72,6 +72,7 @@ void test_cetb_open_with_bad_filename( void ) {
 
   cetb->filename = NULL;
   status = cetb_file_open( cetb );
+  fprintf( stderr, "%s: status return with NULL filename %d\n", __FUNCTION__, status );
   TEST_ASSERT_TRUE( 0 != status  );
   
 }

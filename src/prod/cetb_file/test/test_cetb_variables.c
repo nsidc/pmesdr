@@ -411,7 +411,7 @@ void test_cetb_tbs( void ) {
   free( att_p );
   
   att_p = get_text_att( nc_fileid, tb_var_id, "coverage_content_type" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_COVERAGE_CONTENT_TYPE, att_p,
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_COVERAGE_CONTENT_TYPE_IMAGE, att_p,
 				    "TB coverage_content_type" );
   free( att_p );
   
@@ -478,7 +478,7 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-03T00:00:00.00Z", att_p, "time coverage end" );
   free( att_p );
   att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_duration" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "0024:00:00.00", att_p, "time coverage duration" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "P01T24:00:00.00", att_p, "time coverage duration" );
   free( att_p );
 
   status = nc_get_att_int( nc_fileid, tb_time_var_id, "valid_range", int_valid_range );
