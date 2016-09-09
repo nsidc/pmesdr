@@ -51,7 +51,7 @@ void setUp( void ) {
   strcpy( dir, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dir, "/src/prod/cetb_file/test" );
   strcpy( test_filename, dir );
-  strcat( test_filename, "/EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc" );
+  strcat( test_filename, "/NSIDC-0630_EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc" );
   region_id = CETB_EASE2_T;
   region_number = cetb_region_number[ region_id ];
   factor = 0;
@@ -94,7 +94,7 @@ void test_cetb_file_consistency( void ) {
   int i;
   int nc_fileid=0;
   int dim_id;
-  int tb_var_id, tb_stddev_var_id, tb_num_samples_var_id, tb_time_var_id;
+  int tb_var_id, tb_stddev_var_id, tb_num_samples_var_id;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   size_t dim_len;
@@ -131,12 +131,13 @@ void test_cetb_file_consistency( void ) {
     CETB_NCATTS_TB_NUM_SAMPLES_MIN,
     CETB_NCATTS_TB_NUM_SAMPLES_MAX
   };
-  short *time_data;
   int int_fill_value=CETB_NCATTS_TB_FILL_VALUE;
   int int_valid_range[ 2 ] = {
     CETB_NCATTS_TB_MIN,
     CETB_NCATTS_TB_MAX
   };
+  float sample_tb_time0 = (float)(CETB_NCATTS_TB_TIME_FILL_VALUE*CETB_NCATTS_TB_TIME_SCALE_FACTOR);
+  float sample_tb_time1 = 1440.0;
   short short_fill_value=CETB_NCATTS_TB_TIME_FILL_VALUE;
   short short_valid_range[ 2 ] = {
     CETB_NCATTS_TB_TIME_MIN,
@@ -283,7 +284,7 @@ void test_cetb_file_consistency( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_STDDEV_MISSING_VALUE,
 				 tb_data[ cols-1 ], // Last element at end of first row
 				 "sample2 tb_std_dev element" );
-
+  
   nc_close( nc_fileid );
 
 }
@@ -327,6 +328,19 @@ static char *get_text_att( int fileid, int varid, const char *name ) {
   p[ att_len ] = '\0';
 
   return p;
+  
+}
+
+/* Test function for udunits date conversions */
+void test_time_functions( void ) {
+
+  double my_time, second, resolution;
+  int year, month, day, hour, minute;
+
+  my_time = ut_encode_time( 2016, 8, 23, 0, -5, 0 );
+  ut_decode_time( my_time, &year, &month, &day, &hour, &minute, &second, &resolution );
+  fprintf( stderr, "%s: %4d-%02d-%02dT%02d:%02d:%05.2lfZ\n",
+	  __FUNCTION__, year, month, day, hour, minute, second );
   
 }
     

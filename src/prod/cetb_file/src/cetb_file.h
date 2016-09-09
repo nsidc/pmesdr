@@ -24,6 +24,8 @@
 #define CETB_FILE_PACK_DATA( factor, offset, unpacked ) ( ( (unpacked) >= 0. ) ? ( ( ( (unpacked) - (offset) ) / (factor) ) + 0.5 ) : ( ( ( (unpacked) - (offset) ) / (factor) ) - 0.5 ) )
 #define CETB_FILE_GRID_MAPPING "crs"
 #define CETB_FILE_TB_STANDARD_NAME "brightness_temperature"
+#define CETB_FILE_INCIDENCE_ANGLE_STANDARD_NAME "angle_of_incidence"
+#define CETB_FILE_TB_TIME_STANDARD_NAME "time"
 #define CETB_FILE_TB_UNIT "K"
 #define CETB_FILE_ANGULAR_UNIT "degree"
 
@@ -34,7 +36,9 @@
  * ESIP-recommended attribute to assist with mapping to ISO code
  * for the source of the data.
  */
-#define CETB_FILE_COVERAGE_CONTENT_TYPE "image"
+#define CETB_FILE_COVERAGE_CONTENT_TYPE_IMAGE "image"
+#define CETB_FILE_COVERAGE_CONTENT_TYPE_AUX "auxiliaryInformation"
+#define CETB_FILE_COVERAGE_CONTENT_TYPE_COORD "coordinate"
 
 /*
  * The public interface definition of a cetb object
@@ -46,6 +50,7 @@ typedef struct {
   int year;
   int doy;
   char epoch_string[CETB_FILE_EPOCH_STRING_LENGTH];
+  cetb_swath_producer_id producer_id;
   cetb_platform_id platform_id;
   cetb_region_id region_id;
   cetb_direction_id direction_id;
@@ -109,5 +114,6 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
 				 float box_size_km );
 void cetb_file_close( cetb_file_class *this );
 int cetb_file_check_consistency( char *file_name );
+
 
 #endif // cetb_file_H

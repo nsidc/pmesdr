@@ -42,7 +42,7 @@ void setUp( void ) {
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
   strcpy( test_filename, dirname );
-  strcat( test_filename, "/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc" );
+  strcat( test_filename, "/NSIDC-0630_EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
   factor = 0;
   platform_id = CETB_F13;
@@ -72,6 +72,7 @@ void test_cetb_open_with_bad_filename( void ) {
 
   cetb->filename = NULL;
   status = cetb_file_open( cetb );
+  fprintf( stderr, "%s: status return with NULL filename %d\n", __FUNCTION__, status );
   TEST_ASSERT_TRUE( 0 != status  );
   
 }

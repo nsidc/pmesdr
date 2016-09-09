@@ -49,7 +49,7 @@ void setUp( void ) {
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
   strcpy( test_filename, dirname );
-  strcat( test_filename, "/EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc" );
+  strcat( test_filename, "/NSIDC-0630_EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc" );
   region_id = CETB_EASE2_T;
   region_number = cetb_region_number[ region_id ];
   factor = 0;
@@ -327,6 +327,9 @@ void test_cetb_tbs( void ) {
 			      (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
 			      "gregorian" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
+  /* test for time coverage */
+  status = cetb_file_set_time_coverage( cetb, float_data, cols, rows );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "error setting time coverages" );
 
   cetb_file_close( cetb );
 
@@ -408,7 +411,7 @@ void test_cetb_tbs( void ) {
   free( att_p );
   
   att_p = get_text_att( nc_fileid, tb_var_id, "coverage_content_type" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_COVERAGE_CONTENT_TYPE, att_p,
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_COVERAGE_CONTENT_TYPE_IMAGE, att_p,
 				    "TB coverage_content_type" );
   free( att_p );
   
@@ -468,6 +471,15 @@ void test_cetb_tbs( void ) {
   /* There should not be a standard name for time */
   status = nc_inq_attlen( nc_fileid, tb_time_var_id, "standard_name", &att_len );
   TEST_ASSERT_TRUE_MESSAGE( NC_NOERR != status, "unexpected TB_time standard_name" );
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_start" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-02T00:00:00.00Z", att_p, "time coverage start" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_end" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-03T00:00:00.00Z", att_p, "time coverage end" );
+  free( att_p );
+  att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_duration" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "P01T24:00:00.00", att_p, "time coverage duration" );
+  free( att_p );
 
   status = nc_get_att_int( nc_fileid, tb_time_var_id, "valid_range", int_valid_range );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );

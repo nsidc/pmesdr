@@ -74,12 +74,16 @@ else ifeq ($(LOCALE),JANUSicc)
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+  UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+  UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else
   $(warning Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
@@ -90,14 +94,16 @@ endif
 # end configuration section
 #------------------------------------------------------------------------
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
-	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
+	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable -Wno-unused-but-set-variable
 ifeq ($(LOCALE),JANUSicc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
+  LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
+	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 else ifeq ($(LOCALE),JANUSgcc)
   $(warning Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -g
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) -g
 endif
 DEPEND_LIBS = $(LIBDIR)/libcetb.a 
 

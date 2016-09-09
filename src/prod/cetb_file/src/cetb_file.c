@@ -31,6 +31,7 @@
 #define MAX_STR_LENGTH 256
 #define DEFLATE_LEVEL 9
 
+static int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_data, int xdim, int ydim ); 
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -58,6 +59,8 @@ static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
 static int yyyydoy_to_days_since_epoch( int year, int doy,
 					double *days_since_epoch );
 static int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day );
+static char *iso_date_string( int year, int doy, float tb_minutes );
+static char *duration_time_string( float tb_time_min, float tb_time_max );
 
 /*********************************************************************
  * Public functions
@@ -136,6 +139,7 @@ cetb_file_class *cetb_file_init( char *dirname,
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "epoch_string" );
     return NULL;
   }
+  this->producer_id = producer_id;
   this->platform_id = platform_id;
   this->region_id = region_id;
   this->direction_id = direction_id;
@@ -148,8 +152,9 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->time_dim_id = INT_MIN;
 
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
+  	    "%s/%s_%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
   	    dirname,
+	    cetb_NSIDC_dataset_id[ sensor_id ],
   	    cetb_region_id_name[ region_id ],
   	    cetb_resolution_name[ factor ],
   	    cetb_platform_id_name[ platform_id ],
@@ -372,7 +377,13 @@ int cetb_file_add_var( cetb_file_class *this,
   packing_convention = strdup( CETB_FILE_PACKING_CONVENTION );
   packing_convention_description = strdup( CETB_FILE_PACKING_CONVENTION_DESC );
   grid_mapping = strdup( CETB_FILE_GRID_MAPPING );
-  coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE );
+
+  /* set the coverage content type depending on the variable - test against var name */
+  if ( !strcmp( "TB", var_name ) ) {
+    coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_IMAGE );
+  } else {
+    coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_AUX );
+  }
   
   /* Check that dimensions match what's expected for this file */
   if ( this->cols != cols || this->rows != rows ) {
@@ -394,6 +405,15 @@ int cetb_file_add_var( cetb_file_class *this,
     return 1;
   }
 
+  /* Check to see if you're setting the TB_time variable and then set the coverage */
+  if ( 0 == strcmp( "TB_time", var_name ) ) {
+    fprintf( stderr, "%s: setting time limits for %s variable\n",
+	     __FUNCTION__, var_name );
+    if ( 0 != cetb_file_set_time_coverage( this, (float*)data, cols, rows ) ) {
+      fprintf( stderr, "%s: couldn't set time coverage\n", __FUNCTION__ );
+      return 1;
+    }
+  }
   /*
    * Set compression level for this variable
    * We may need to make this controllable at the caller's level
@@ -630,7 +650,7 @@ int cetb_file_add_var( cetb_file_class *this,
   }
 
   if ( ( status = nc_put_att_text( this->fid, var_id, "grid_mapping",
-  				 strlen(grid_mapping),
+				   strlen(grid_mapping),
 				   grid_mapping ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
   	     __FUNCTION__, var_name, "grid_mapping", grid_mapping, nc_strerror( status ) );
@@ -638,7 +658,7 @@ int cetb_file_add_var( cetb_file_class *this,
   }
   
   if ( ( status = nc_put_att_text( this->fid, var_id, "coverage_content_type",
-  				 strlen(coverage_content_type),
+				   strlen(coverage_content_type),
 				   coverage_content_type ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
   	     __FUNCTION__, var_name, "coverage_content_type",
@@ -655,6 +675,10 @@ int cetb_file_add_var( cetb_file_class *this,
     }
   }
 
+  free( packing_convention );
+  free( packing_convention_description );
+  free( grid_mapping );
+  free( coverage_content_type );
   return 0;
 
 }
@@ -1002,18 +1026,21 @@ void cetb_file_close( cetb_file_class *this ) {
 }
 
 /*
- * cetb_file_check_consistency - check to make sure the variables are within valid range
+ * cetb_file_check_consistency - check to make sure the variables are within
+ *                               valid range 
  *
  *  input: NETCDF file name
  *
  *  output: status variable
  *
- *  result: OOR values are set to missing
+ *  result: OOR values are set to missing 
  *
- *  this function retrieves the TB values from the file and checks them all to make sure they are
- *  within the required range.  Any values outside the required range, but != the fill value
- *  should be set to missing.  IFF any TB values are set to missing, then the corresponding TB_std_dev
- *  value should be set to missing.
+ *  this function retrieves the TB values from the file and
+ *  checks them all to make sure they are within the required
+ *  range.  Any values outside the required range, but != the
+ *  fill value should be set to missing.  IFF any TB values are
+ *  set to missing, then the corresponding TB_std_dev value
+ *  should be set to missing.
  *
  */
 int cetb_file_check_consistency( char *file_name ) {
@@ -1061,7 +1088,7 @@ int cetb_file_check_consistency( char *file_name ) {
   }
 
   status = utils_allocate_clean_aligned_memory( ( void * )&tb_ushort_data,
-						sizeof( short int ) * 1 * cols * rows );
+						sizeof( *tb_ushort_data ) * 1 * cols * rows );
   if ( status != 0 ) {
     fprintf( stderr, "%s: couldn't allocate memory for TB array\n", __FUNCTION__ );
     return -1;
@@ -1073,7 +1100,7 @@ int cetb_file_check_consistency( char *file_name ) {
   }
 
   status = utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_ushort_data,
-						sizeof( short int ) * 1 * cols * rows );
+						sizeof( *tb_std_dev_ushort_data ) * 1 * cols * rows );
   if ( status != 0 ) {
     fprintf( stderr, "%s: couldn't allocate memory for TB std dev array\n", __FUNCTION__ );
     return -1;
@@ -1107,8 +1134,8 @@ int cetb_file_check_consistency( char *file_name ) {
     }
   }
 
-  free ( tb_ushort_data );
-  free ( tb_std_dev_ushort_data );
+  free( tb_ushort_data );
+  free( tb_std_dev_ushort_data );
   
   if ( ( status = nc_close( nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_close error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
@@ -1118,7 +1145,7 @@ int cetb_file_check_consistency( char *file_name ) {
   return status;
 
 }
- 
+
 /*********************************************************************
  * Internal function definitions
  *********************************************************************/
@@ -1161,6 +1188,79 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
 
   return channel_str;
 
+}
+/*
+ * cetb_file_set_time_coverage - find the min and max minute values stored in the
+ *                               tb_time variable and save them to the netCDF
+ *                               file attributes for ACDD compliance
+ *
+ *  input :
+ *    cetb_file_pointer : pointer to the cetb file object
+ *    tb_time_data      : pointer to the recently calculated tb_time_data
+ *    xdim              : x dimension of the data
+ *    ydim              : y dimension
+ *
+ *  output :
+ *    status variable
+ *
+ *  result :
+ *    values are calculated for 3 ACDD required attributes, viz.
+ *                     time_coverage_start
+ *                     time_coverage_end
+ *                     time_coverage_duration
+ *
+ */
+int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
+				 int xdim, int ydim ) {
+
+  float tb_time_min=(float)CETB_NCATTS_TB_TIME_MAX;
+  float tb_time_max=(float)CETB_NCATTS_TB_TIME_MIN;
+  int index, status;
+  char *time_string;  
+
+  for ( index = 0; index < (xdim*ydim); index++ ) {
+    if ( CETB_NCATTS_TB_TIME_FILL_VALUE < *(tb_time_data+index) ) {
+      if ( *(tb_time_data+index) > tb_time_max ) {
+	tb_time_max = *(tb_time_data+index);
+      }
+      if ( *(tb_time_data+index) < tb_time_min ) {
+	tb_time_min = *(tb_time_data+index);
+      }
+    }
+  }
+
+  time_string = iso_date_string( this->year, this->doy, tb_time_min );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_start",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_start", time_string, nc_strerror( status ) );
+    return 1;
+  }
+  free( time_string );
+
+  time_string = iso_date_string( this->year, this->doy, tb_time_max );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_end",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_end", time_string, nc_strerror( status ) );
+    return 1;
+  }
+  free( time_string );
+
+  time_string = duration_time_string( tb_time_min, tb_time_max );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_duration",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_duration", time_string, nc_strerror( status ) );
+    return 1;
+  }
+  free( time_string );
+
+  return STATUS_OK;
+  
 }
 
 /*
@@ -1273,11 +1373,19 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
      return 1;
    }
 
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "sensor",
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "instrument",
 				   strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
 				   cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
-  	     __FUNCTION__, "sensor", nc_strerror( status ) );
+  	     __FUNCTION__, "instrument", nc_strerror( status ) );
+    return 1;
+  }
+  
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "source",
+				   strlen( cetb_swath_producer_id_name[ this->producer_id ] ),
+				   cetb_swath_producer_id_name[ this->producer_id ] ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "source", nc_strerror( status ) );
     return 1;
   }
 
@@ -1287,6 +1395,27 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
 				   time_stamp ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "date_created", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_modified", 
+				   strlen( time_stamp ), 
+				   time_stamp ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "date_modified", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_issued",
+  				   strlen( time_stamp ),
+  				   time_stamp ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "date_issued", nc_strerror( status ) );
+    return 1;
+  }
+ if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_metadata_modified", 
+				   strlen( time_stamp ), 
+				   time_stamp ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "date_metadata_modified", nc_strerror( status ) );
     return 1;
   }
   free( time_stamp );
@@ -1330,8 +1459,9 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
  *
  *  result : 0 success, otherwise error
  *           Upon successful completion, the projection metadata
- *           in variable crs
- *           will be populated in the output file
+ *           in variable crs will be populated in the output file
+ *           Additionally the GLOBAL attributes related to the projection
+ *           are set in the function rather than in fetch_global_attributes
  *
  */
 int fetch_crs( cetb_file_class *this, int template_fid ) {
@@ -1409,6 +1539,49 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, att_name, 
 				   strlen( geospatial_resolution ),
 				   geospatial_resolution ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, att_name, nc_strerror( status ) );
+    return 1;
+  }
+
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_min", 
+				     NC_DOUBLE, 1,
+				     &( cetb_latitude_extent[ this->region_id ][0] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lat_min", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_max", 
+				     NC_DOUBLE, 1,
+				     &( cetb_latitude_extent[ this->region_id ][1] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lat_max", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_min", 
+				     NC_DOUBLE, 1,
+				     &( cetb_longitude_extent[ this->region_id ][0] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lon_min", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_max", 
+				     NC_DOUBLE, 1,
+				     &( cetb_longitude_extent[ this->region_id ][1] ) ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, "geospatial_lon_max", nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds_crs", 
+				   strlen( cetb_geospatial_bounds_crs[ this->region_id ] ),
+				   cetb_geospatial_bounds_crs[ this->region_id ] ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, att_name, nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds", 
+				   strlen( cetb_geospatial_bounds[ this->region_id ] ),
+				   cetb_geospatial_bounds[ this->region_id ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
@@ -1551,7 +1724,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ 0 ] + half_pixel_m;
   status = set_dimension( this, "y", rows, vals,
-			  "projection_y_coordinate", NULL,
+			  "projection_y_coordinate", "y",
 			  "meters",
 			  NULL,
 			  "Y",
@@ -1583,7 +1756,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
   valid_range[ 1 ] = vals[ cols - 1 ] + half_pixel_m;
   status = set_dimension( this, "x", cols, vals,
-			  "projection_x_coordinate", NULL,
+			  "projection_x_coordinate", "x",
 			  "meters",
 			  NULL,
 			  "X",
@@ -1635,7 +1808,7 @@ int set_all_dimensions( cetb_file_class *this ) {
  *    size : size of dimension variable
  *    vals : pointer to values for this variable
  *    standard_name : CF standard name
- *    long_name : only needed for time dimension
+ *    long_name : needed for all dimensions per ACDD-1.3
  *    units : dimension CF units
  *    calendar : only needed for time dimension
  *    axis : dimension axis
@@ -1664,7 +1837,9 @@ int set_dimension( cetb_file_class *this,
   int status;
   int var_id;
   int dim_ids[ 1 ];
+  char *coverage_content_type;
 
+  coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_COORD );
   if ( ( status = nc_def_dim( this->fid, name, size, dim_id ) ) ) {
     fprintf( stderr, "%s: Error setting %s dim: %s.\n",
   	     __FUNCTION__, name, nc_strerror( status ) );
@@ -1685,6 +1860,12 @@ int set_dimension( cetb_file_class *this,
 				   strlen(standard_name), standard_name ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",
   	     __FUNCTION__, name, standard_name, nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, var_id, "coverage_content_type",
+				   strlen(coverage_content_type), coverage_content_type ) ) ) {
+    fprintf( stderr, "%s: Error setting %s %s: %s.\n",
+  	     __FUNCTION__, name, coverage_content_type, nc_strerror( status ) );
     return 1;
   }
   
@@ -1727,6 +1908,8 @@ int set_dimension( cetb_file_class *this,
   	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
   }
+
+  free( coverage_content_type );
 
   return 0;
   
@@ -2082,5 +2265,76 @@ int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day ) {
   ccs_free_calendar( cal );
 
   return STATUS_OK;
+  
+}
+
+/*
+ * iso_date_string - convert doy + minutes offset to ISO date string
+ *
+ *  input :
+ *    year : year
+ *    doy  : day of year
+ *    tb_minutes : offset in minutes from midnight on doy
+ *
+ *  result : character string encoded with the ISO date string
+ *
+ */
+static char *iso_date_string( int year, int doy, float tb_minutes ) {
+
+  char *iso_string;
+  double my_time, second, resolution;
+  int month, day, hour, minute;
+
+  if ( STATUS_OK != yyyydoy_to_yyyymmdd( year, doy, &month, &day ) ) {
+    return NULL;
+  }
+
+  if ( STATUS_OK
+       != utils_allocate_clean_aligned_memory( ( void * )&iso_string, MAX_STR_LENGTH + 1 ) ) {
+    return NULL;
+  }
+
+  second = tb_minutes - (int)tb_minutes;
+  my_time = ut_encode_time( year, month, day, 0, (int)tb_minutes, second );
+  ut_decode_time( my_time, &year, &month, &day, &hour, &minute, &second, &resolution );
+  sprintf( iso_string, "%4d-%02d-%02dT%02d:%02d:%05.2lfZ",
+	   year, month, day, hour, minute, second );
+  return iso_string;
+  
+}
+
+/*
+ * duration_time_string - convert minutes offset to ISO duration string
+ *
+ *  input :
+ *    tb_time_min : minimum minute value in array
+ *    tb_time_max : maximum minute value in array
+ *
+ *  result : character string encoded with the ISO time duration string
+ *
+ */
+static char *duration_time_string( float tb_time_min, float tb_time_max ) {
+
+  char *iso_string;
+  int hours, days;
+  float tb_time_duration, minutes, seconds;
+
+  if ( STATUS_OK
+       != utils_allocate_clean_aligned_memory( ( void * )&iso_string, MAX_STR_LENGTH + 1 ) ) {
+    return NULL;
+  }
+
+  tb_time_duration = tb_time_max - tb_time_min;
+  hours = (int)( tb_time_duration/60 );
+  if ( 24 >= hours ) {
+    days = (int)( hours/24 );
+  } else {
+    days = 0;
+  }
+  minutes = tb_time_duration - ( hours * 60.f );
+  seconds = minutes - (int)minutes;
+  
+  sprintf( iso_string, "P%02dT%02d:%02d:%05.2f", days, hours, (int)minutes, seconds );
+  return iso_string;
   
 }
