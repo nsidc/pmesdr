@@ -327,9 +327,6 @@ void test_cetb_tbs( void ) {
 			      (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
 			      "gregorian" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB_time" );
-  /* test for time coverage */
-  status = cetb_file_set_time_coverage( cetb, float_data, cols, rows );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "error setting time coverages" );
 
   cetb_file_close( cetb );
 
