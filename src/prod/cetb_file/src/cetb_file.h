@@ -114,6 +114,6 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
 				 float box_size_km );
 void cetb_file_close( cetb_file_class *this );
 int cetb_file_check_consistency( char *file_name );
-int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_data, int xdim, int ydim ); 
+
 
 #endif // cetb_file_H

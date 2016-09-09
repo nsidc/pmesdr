@@ -58,7 +58,7 @@ void setUp( void ) {
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
+  TEST_ASSERT_EQUAL_STRING( "./test/NSIDC-0630_EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
 			    cetb->filename );
   
 }
@@ -119,7 +119,7 @@ void test_cetb_populate_sir_parameters( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  status = nc_open( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
+  status = nc_open( "./test/NSIDC-0630_EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
 		    NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
@@ -191,7 +191,7 @@ void test_populate_filenames( void ) {
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
-  TEST_ASSERT_EQUAL_STRING( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
+  TEST_ASSERT_EQUAL_STRING( "./test/NSIDC-0630_EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
 			    cetb->filename );
   status = cetb_file_open( cetb );
   status = cetb_file_add_filenames( cetb, num_input_files, filenames );

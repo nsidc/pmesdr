@@ -1000,11 +1000,6 @@ int main(int argc, char **argv)
     fprintf( stderr, "> %s: Wrote Tb time (P) to %s.\n", __FILE__, cetb_sir->filename );
   }
 
-  /* find and save TB_time min and max values for writing out into coverage attributes */
-  if ( 0 != cetb_file_set_time_coverage( cetb_sir, sxy, nsx, nsy ) ) {
-    errors++;
-  }
-    
 /* create non-enhanced images
    these are grd images pixel replicated to be at the same 
    resolution of the ave and sir images */
@@ -1258,11 +1253,6 @@ int main(int argc, char **argv)
     fprintf( stderr, "> %s: Wrote GRD Tb time (P) to %s.\n", __FILE__, cetb_grd->filename );
   }
 
-  /* find and save TB_time min and max values for writing out into coverage attributes */
-  if ( 0 != cetb_file_set_time_coverage( cetb_grd, a_temp, nsx2, nsy2 ) ) {
-    errors++;
-  }
-    
   if ( output_debug ) {
     if (CREATE_NON) {
 

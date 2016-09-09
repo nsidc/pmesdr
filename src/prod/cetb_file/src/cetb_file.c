@@ -31,6 +31,7 @@
 #define MAX_STR_LENGTH 256
 #define DEFLATE_LEVEL 9
 
+static int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_data, int xdim, int ydim ); 
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -151,8 +152,9 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->time_dim_id = INT_MIN;
 
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
+  	    "%s/%s_%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
   	    dirname,
+	    cetb_NSIDC_dataset_id[ sensor_id ],
   	    cetb_region_id_name[ region_id ],
   	    cetb_resolution_name[ factor ],
   	    cetb_platform_id_name[ platform_id ],
@@ -375,6 +377,7 @@ int cetb_file_add_var( cetb_file_class *this,
   packing_convention = strdup( CETB_FILE_PACKING_CONVENTION );
   packing_convention_description = strdup( CETB_FILE_PACKING_CONVENTION_DESC );
   grid_mapping = strdup( CETB_FILE_GRID_MAPPING );
+
   /* set the coverage content type depending on the variable - test against var name */
   if ( !strcmp( "TB", var_name ) ) {
     coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_IMAGE );
@@ -402,6 +405,15 @@ int cetb_file_add_var( cetb_file_class *this,
     return 1;
   }
 
+  /* Check to see if you're setting the TB_time variable and then set the coverage */
+  if ( 0 == strcmp( "TB_time", var_name ) ) {
+    fprintf( stderr, "%s: setting time limits for %s variable\n",
+	     __FUNCTION__, var_name );
+    if ( 0 != cetb_file_set_time_coverage( this, (float*)data, cols, rows ) ) {
+      fprintf( stderr, "%s: couldn't set time coverage\n", __FUNCTION__ );
+      return 1;
+    }
+  }
   /*
    * Set compression level for this variable
    * We may need to make this controllable at the caller's level
@@ -1134,76 +1146,6 @@ int cetb_file_check_consistency( char *file_name ) {
 
 }
 
-/*
- * cetb_file_set_time_coverage - find the min and max minute values stored in the
- *                               tb_time variable and save them to the netCDF
- *                               file attributes for ACDD compliance
- *
- *  input :
- *    cetb_file_pointer :
- *    tb_data           : pointer to the recently calculated tb_time data
- *    xdim              : x dimension of the data
- *    ydim              : Y dimension
- *
- *  output :
- *    status variable
- *
- *  result :
- *    values are calculated for 3 ACDD required attributes, viz.
- *                     time_coverage_start
- *                     time_coverage_end
- *                     time_coverage_duration
- *
- */
-int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
-				 int xdim, int ydim ) {
-
-  float tb_time_min=(float)CETB_NCATTS_TB_TIME_MAX;
-  float tb_time_max=(float)CETB_NCATTS_TB_TIME_MIN;
-  int index, status;
-  char *time_string;  
-
-  for ( index = 0; index < (xdim*ydim); index++ ) {
-    if ( CETB_NCATTS_TB_TIME_FILL_VALUE < *(tb_time_data+index) ) {
-      if ( *(tb_time_data+index) > tb_time_max ) {
-	tb_time_max = *(tb_time_data+index);
-      }
-      if ( *(tb_time_data+index) < tb_time_min ) {
-	tb_time_min = *(tb_time_data+index);
-      }
-    }
-  }
-
-  time_string = iso_date_string( this->year, this->doy, tb_time_min );
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_start",
-				   strlen( time_string ),
-				   time_string ) ) ) {
-    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "time_coverage_start", time_string, nc_strerror( status ) );
-    return 1;
-  }
-
-  time_string = iso_date_string( this->year, this->doy, tb_time_max );
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_end",
-				   strlen( time_string ),
-				   time_string ) ) ) {
-    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "time_coverage_end", time_string, nc_strerror( status ) );
-    return 1;
-  }
-
-  time_string = duration_time_string( tb_time_min, tb_time_max );
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_duration",
-				   strlen( time_string ),
-				   time_string ) ) ) {
-    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "time_coverage_duration", time_string, nc_strerror( status ) );
-    return 1;
-  }
-
-  return STATUS_OK;
-  
-}
 /*********************************************************************
  * Internal function definitions
  *********************************************************************/
@@ -1246,6 +1188,79 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
 
   return channel_str;
 
+}
+/*
+ * cetb_file_set_time_coverage - find the min and max minute values stored in the
+ *                               tb_time variable and save them to the netCDF
+ *                               file attributes for ACDD compliance
+ *
+ *  input :
+ *    cetb_file_pointer : pointer to the cetb file object
+ *    tb_time_data      : pointer to the recently calculated tb_time_data
+ *    xdim              : x dimension of the data
+ *    ydim              : y dimension
+ *
+ *  output :
+ *    status variable
+ *
+ *  result :
+ *    values are calculated for 3 ACDD required attributes, viz.
+ *                     time_coverage_start
+ *                     time_coverage_end
+ *                     time_coverage_duration
+ *
+ */
+int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
+				 int xdim, int ydim ) {
+
+  float tb_time_min=(float)CETB_NCATTS_TB_TIME_MAX;
+  float tb_time_max=(float)CETB_NCATTS_TB_TIME_MIN;
+  int index, status;
+  char *time_string;  
+
+  for ( index = 0; index < (xdim*ydim); index++ ) {
+    if ( CETB_NCATTS_TB_TIME_FILL_VALUE < *(tb_time_data+index) ) {
+      if ( *(tb_time_data+index) > tb_time_max ) {
+	tb_time_max = *(tb_time_data+index);
+      }
+      if ( *(tb_time_data+index) < tb_time_min ) {
+	tb_time_min = *(tb_time_data+index);
+      }
+    }
+  }
+
+  time_string = iso_date_string( this->year, this->doy, tb_time_min );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_start",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_start", time_string, nc_strerror( status ) );
+    return 1;
+  }
+  free( time_string );
+
+  time_string = iso_date_string( this->year, this->doy, tb_time_max );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_end",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_end", time_string, nc_strerror( status ) );
+    return 1;
+  }
+  free( time_string );
+
+  time_string = duration_time_string( tb_time_min, tb_time_max );
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_duration",
+				   strlen( time_string ),
+				   time_string ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "time_coverage_duration", time_string, nc_strerror( status ) );
+    return 1;
+  }
+  free( time_string );
+
+  return STATUS_OK;
+  
 }
 
 /*
@@ -1444,8 +1459,9 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
  *
  *  result : 0 success, otherwise error
  *           Upon successful completion, the projection metadata
- *           in variable crs
- *           will be populated in the output file
+ *           in variable crs will be populated in the output file
+ *           Additionally the GLOBAL attributes related to the projection
+ *           are set in the function rather than in fetch_global_attributes
  *
  */
 int fetch_crs( cetb_file_class *this, int template_fid ) {
@@ -1456,35 +1472,12 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char crs_name[ MAX_STR_LENGTH ] = "crs_";
   char long_name[ MAX_STR_LENGTH ] = "";
   char geospatial_resolution[ MAX_STR_LENGTH ] = "";
-  char EPSG_code[ MAX_STR_LENGTH ];
-  char *EPSG = "EPSG";
-  char *epsg_ptr;
-  size_t srid_len;
   
   /* Copy/set the coordinate reference system (crs) metadata */
   strcat( crs_name, cetb_region_id_name[ this->region_id ] );
   if ( ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) ) {
     fprintf( stderr, "%s: Error getting template file crs variable_id: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-  
-  /* now get the EPSG code from the correct projection in the template file */
-  if ( ( status = nc_inq_attlen( template_fid, crs_id, "srid", &srid_len ) ) ) {
-    fprintf( stderr, "%s: Error getting srid attribute length: %s \n",
-	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-  if ( ( status = nc_get_att_text( template_fid, crs_id, "srid", EPSG_code ) ) ) {
-    fprintf( stderr, "%s: Error getting template file crs srid: %s.\n",
-	     __FUNCTION__, nc_strerror( status ) );
-    return 1;
-  }
-  EPSG_code[srid_len] = '\0';
-  epsg_ptr = strstr( EPSG_code, EPSG );
-  if ( NULL == epsg_ptr ) {
-    fprintf( stderr, "%s: No EPSG code found in srid attribute \n",
-	     __FUNCTION__ );
     return 1;
   }
   
@@ -1580,8 +1573,15 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
     return 1;
   }
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds_crs", 
-				   strlen( epsg_ptr ),
-				   epsg_ptr ) ) ) {
+				   strlen( cetb_geospatial_bounds_crs[ this->region_id ] ),
+				   cetb_geospatial_bounds_crs[ this->region_id ] ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, att_name, nc_strerror( status ) );
+    return 1;
+  }
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds", 
+				   strlen( cetb_geospatial_bounds[ this->region_id ] ),
+				   cetb_geospatial_bounds[ this->region_id ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
@@ -1908,6 +1908,8 @@ int set_dimension( cetb_file_class *this,
   	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
   }
+
+  free( coverage_content_type );
 
   return 0;
   
