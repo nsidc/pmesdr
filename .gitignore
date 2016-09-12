@@ -25,8 +25,12 @@ lib*.a
 /src/prod/meas_undump/meas_undump
 /src/sirlib/c/csirexample
 src/prod/cetb_file/test/EASE*nc
+src/prod/cetb_file/test/NSIDC-0630*nc
 /include/cetb_file.h
 /include/gsx.h
+/include/utils.h
+/include/calcalcs.h
+/include/sir_geom.h
 /testing/AMSRE200*
 /testing/CSU200*
 /testing/RSS200*
