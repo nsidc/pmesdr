@@ -61,6 +61,7 @@ static int yyyydoy_to_days_since_epoch( int year, int doy,
 static int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day );
 static char *iso_date_string( int year, int doy, float tb_minutes );
 static char *duration_time_string( float tb_time_min, float tb_time_max );
+static char *set_source_value( cetb_file_class *this );
 
 /*********************************************************************
  * Public functions
@@ -152,7 +153,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->time_dim_id = INT_MIN;
 
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s_%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
+  	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
   	    dirname,
 	    cetb_NSIDC_dataset_id[ sensor_id ],
   	    cetb_region_id_name[ region_id ],
@@ -1323,6 +1324,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   char attribute_name[ MAX_STR_LENGTH ];
   char *time_stamp;
   char *software_version;
+  char *source_value;
   char epoch_date_str[ MAX_STR_LENGTH ];
   int month;
   int day;
@@ -1380,14 +1382,15 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   	     __FUNCTION__, "instrument", nc_strerror( status ) );
     return 1;
   }
-  
+
+  source_value = set_source_value( this );
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "source",
-				   strlen( cetb_swath_producer_id_name[ this->producer_id ] ),
-				   cetb_swath_producer_id_name[ this->producer_id ] ) ) ) {
+				   strlen( source_value ), source_value ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "source", nc_strerror( status ) );
     return 1;
   }
+  free( source_value );
 
   time_stamp = current_time_stamp();
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
@@ -1706,6 +1709,32 @@ int set_all_dimensions( cetb_file_class *this ) {
   cols = cetb_grid_cols[ this->region_id ][ this->factor ];
 
   /*
+   * Work on the time dimension:
+   * convert the date to "days since 1972" and save that in the time dimension
+   * and save the formatted date string in its own variable
+   */
+  if ( STATUS_OK !=
+       ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
+  					       &days_since_epoch ) ) ) {
+    fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+
+  valid_range[ 0 ] = 0.0;
+  valid_range[ 1 ] = DBL_MAX;
+  status = set_dimension( this, "time", 1, &days_since_epoch,
+			  "time", "ANSI date",
+			  units,
+			  "gregorian",
+			  "T",
+			  valid_range,
+			  &( this->time_dim_id ) );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
+    return STATUS_FAILURE;
+  }
+
+  /*
    * Allocate and populate the array of y-dimension values.
    * This is the coordinate in meters of the center of each cell
    * decreasing from a maximum at the top row to the bottom row.
@@ -1768,32 +1797,6 @@ int set_all_dimensions( cetb_file_class *this ) {
   }
   free( vals );
   this->cols = (long int) cols;
-
-  /*
-   * Work on the time dimension:
-   * convert the date to "days since 1972" and save that in the time dimension
-   * and save the formatted date string in its own variable
-   */
-  if ( STATUS_OK !=
-       ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
-  					       &days_since_epoch ) ) ) {
-    fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
-    return STATUS_FAILURE;
-  }
-
-  valid_range[ 0 ] = 0.0;
-  valid_range[ 1 ] = DBL_MAX;
-  status = set_dimension( this, "time", 1, &days_since_epoch,
-			  "time", "ANSI date",
-			  units,
-			  "gregorian",
-			  "T",
-			  valid_range,
-			  &( this->time_dim_id ) );
-  if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
-    return STATUS_FAILURE;
-  }
 
   return STATUS_OK;
   
@@ -2338,3 +2341,40 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
   return iso_string;
   
 }
+
+/*
+ * set_source_value - sets the value of the source file level metadata attribute
+ *
+ *                    for now the value of the source attribute is hard-coded
+ *                    in this function because the necessary information is not
+ *                    passed through into the GSX files
+ *
+ *   input:  pointer to cetb_file structure
+ *
+ *   return:  pointer to string that will be written into the source variable
+ *
+ */
+static char *set_source_value( cetb_file_class *this ) {
+
+  char *source_value=NULL;
+  
+  if ( CETB_AMSRE == this->sensor_id ) {
+    source_value = strdup( "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+  }
+
+  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
+    source_value = strdup( "CSU SSM/I FCDR V01R00" );
+  }
+
+  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_RSS == this->producer_id ) ) {
+    source_value = strdup( "RSS SSM/I V7" );
+  }
+
+  return source_value;
+  
+}
+  
+  
+    
+  
+  
