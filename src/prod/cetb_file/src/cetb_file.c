@@ -61,6 +61,7 @@ static int yyyydoy_to_days_since_epoch( int year, int doy,
 static int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day );
 static char *iso_date_string( int year, int doy, float tb_minutes );
 static char *duration_time_string( float tb_time_min, float tb_time_max );
+static char *set_source_value( cetb_file_class *this );
 
 /*********************************************************************
  * Public functions
@@ -104,6 +105,11 @@ cetb_file_class *cetb_file_init( char *dirname,
   cetb_file_class *this=NULL;
   char *channel_str=NULL;
   cetb_region_id region_id;
+  char *ptr_path, template_filename[FILENAME_MAX];
+  int template_fid;
+  int status;
+  char *file_version=NULL;
+  size_t len_version;
 
   if ( CETB_NO_REGION == ( region_id = valid_region_id( region_number ) ) ) return NULL;
   if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
@@ -151,8 +157,42 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->rows_dim_id = INT_MIN;
   this->time_dim_id = INT_MIN;
 
+  /*
+   * Find and open the CETB template file with the global attribute data
+   * - all we need here is the file format version
+   */
+  if ( !( ptr_path = pmesdr_top_dir( ) ) ) return 0;
+  strncpy( template_filename, ptr_path, FILENAME_MAX );
+  strcat( template_filename,
+  	  "/src/prod/cetb_file/templates/cetb_global_template.nc" );
+  if ( ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) ) {
+    fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
+  	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    return 0;
+  }
+
+  if ( ( status = nc_inq_attlen( template_fid, NC_GLOBAL, "product_version", &len_version ) ) ) {
+    fprintf( stderr, "%s: Error getting file version length=%s\n",
+	     __FUNCTION__, nc_strerror( status ) );
+  }
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&file_version,
+						( sizeof( char ) * len_version ) + 1 );
+  
+  if ( ( status = nc_get_att_text( template_fid, NC_GLOBAL, "product_version",
+				   file_version ) ) ) {
+    fprintf( stderr, "%s: Error retrieving file version string=%s\n",
+	     __FUNCTION__, nc_strerror( status ) );
+  }
+  file_version[ len_version ] = '\0';
+  
+  if ( ( status = nc_close( template_fid ) ) ) {
+    fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
+	     __FUNCTION__, template_filename, nc_strerror( status ) );
+  }
+
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s_%s%s.%s_%s.%4.4d%3.3d.%s.%s.%s.%s.%s.nc",
+  	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
   	    dirname,
 	    cetb_NSIDC_dataset_id[ sensor_id ],
   	    cetb_region_id_name[ region_id ],
@@ -165,10 +205,11 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    cetb_direction_id_name[ direction_id ],
   	    cetb_reconstruction_id_name[ reconstruction_id ],
   	    cetb_swath_producer_id_name[ producer_id ],
-  	    CETB_FILE_FORMAT_VERSION );
+  	    file_version );
 
   snprintf( this->progname, MAX_STR_LENGTH, "%s", progname );
 
+  free( file_version );
   free( channel_str );
   return this;
   
@@ -1323,6 +1364,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   char attribute_name[ MAX_STR_LENGTH ];
   char *time_stamp;
   char *software_version;
+  char *source_value;
   char epoch_date_str[ MAX_STR_LENGTH ];
   int month;
   int day;
@@ -1380,14 +1422,15 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   	     __FUNCTION__, "instrument", nc_strerror( status ) );
     return 1;
   }
-  
+
+  source_value = set_source_value( this );
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "source",
-				   strlen( cetb_swath_producer_id_name[ this->producer_id ] ),
-				   cetb_swath_producer_id_name[ this->producer_id ] ) ) ) {
+				   strlen( source_value ), source_value ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "source", nc_strerror( status ) );
     return 1;
   }
+  free( source_value );
 
   time_stamp = current_time_stamp();
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
@@ -1706,6 +1749,32 @@ int set_all_dimensions( cetb_file_class *this ) {
   cols = cetb_grid_cols[ this->region_id ][ this->factor ];
 
   /*
+   * Work on the time dimension:
+   * convert the date to "days since 1972" and save that in the time dimension
+   * and save the formatted date string in its own variable
+   */
+  if ( STATUS_OK !=
+       ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
+  					       &days_since_epoch ) ) ) {
+    fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
+
+  valid_range[ 0 ] = 0.0;
+  valid_range[ 1 ] = DBL_MAX;
+  status = set_dimension( this, "time", 1, &days_since_epoch,
+			  "time", "ANSI date",
+			  units,
+			  "gregorian",
+			  "T",
+			  valid_range,
+			  &( this->time_dim_id ) );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
+    return STATUS_FAILURE;
+  }
+
+  /*
    * Allocate and populate the array of y-dimension values.
    * This is the coordinate in meters of the center of each cell
    * decreasing from a maximum at the top row to the bottom row.
@@ -1768,32 +1837,6 @@ int set_all_dimensions( cetb_file_class *this ) {
   }
   free( vals );
   this->cols = (long int) cols;
-
-  /*
-   * Work on the time dimension:
-   * convert the date to "days since 1972" and save that in the time dimension
-   * and save the formatted date string in its own variable
-   */
-  if ( STATUS_OK !=
-       ( status = yyyydoy_to_days_since_epoch( this->year, this->doy,
-  					       &days_since_epoch ) ) ) {
-    fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
-    return STATUS_FAILURE;
-  }
-
-  valid_range[ 0 ] = 0.0;
-  valid_range[ 1 ] = DBL_MAX;
-  status = set_dimension( this, "time", 1, &days_since_epoch,
-			  "time", "ANSI date",
-			  units,
-			  "gregorian",
-			  "T",
-			  valid_range,
-			  &( this->time_dim_id ) );
-  if ( 0 != status ) {
-    fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "time" );
-    return STATUS_FAILURE;
-  }
 
   return STATUS_OK;
   
@@ -2316,7 +2359,7 @@ static char *iso_date_string( int year, int doy, float tb_minutes ) {
 static char *duration_time_string( float tb_time_min, float tb_time_max ) {
 
   char *iso_string;
-  int hours, days;
+  int hours, rhours, days;
   float tb_time_duration, minutes, seconds;
 
   if ( STATUS_OK
@@ -2328,13 +2371,51 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
   hours = (int)( tb_time_duration/60 );
   if ( 24 >= hours ) {
     days = (int)( hours/24 );
+    rhours = hours - 24;
   } else {
     days = 0;
   }
   minutes = tb_time_duration - ( hours * 60.f );
   seconds = minutes - (int)minutes;
   
-  sprintf( iso_string, "P%02dT%02d:%02d:%05.2f", days, hours, (int)minutes, seconds );
+  sprintf( iso_string, "P%02dT%02d:%02d:%05.2f", days, rhours, (int)minutes, seconds );
   return iso_string;
   
 }
+
+/*
+ * set_source_value - sets the value of the source file level metadata attribute
+ *
+ *                    for now the value of the source attribute is hard-coded
+ *                    in this function because the necessary information is not
+ *                    passed through into the GSX files
+ *
+ *   input:  pointer to cetb_file structure
+ *
+ *   return:  pointer to string that will be written into the source variable
+ *
+ */
+static char *set_source_value( cetb_file_class *this ) {
+
+  char *source_value=NULL;
+  
+  if ( CETB_AMSRE == this->sensor_id ) {
+    source_value = strdup( "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+  }
+
+  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
+    source_value = strdup( "CSU SSM/I FCDR V01R00" );
+  }
+
+  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_RSS == this->producer_id ) ) {
+    source_value = strdup( "RSS SSM/I V7" );
+  }
+
+  return source_value;
+  
+}
+  
+  
+    
+  
+  

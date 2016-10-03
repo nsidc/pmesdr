@@ -12,7 +12,6 @@
 
 #include <netcdf.h>
 
-#define CETB_FILE_FORMAT_VERSION "v0.1"
 #define CETB_FILE_ALIGNMENT 64
 #define CETB_PACK 1
 #define CETB_NO_PACK 0

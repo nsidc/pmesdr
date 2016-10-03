@@ -49,7 +49,7 @@ void setUp( void ) {
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
   strcpy( test_filename, dirname );
-  strcat( test_filename, "/NSIDC-0630_EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc" );
+  strcat( test_filename, "/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.0.nc" );
   region_id = CETB_EASE2_T;
   region_number = cetb_region_number[ region_id ];
   factor = 0;
@@ -475,7 +475,7 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-03T00:00:00.00Z", att_p, "time coverage end" );
   free( att_p );
   att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_duration" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "P01T24:00:00.00", att_p, "time coverage duration" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "P01T00:00:00.00", att_p, "time coverage duration" );
   free( att_p );
 
   status = nc_get_att_int( nc_fileid, tb_time_var_id, "valid_range", int_valid_range );
