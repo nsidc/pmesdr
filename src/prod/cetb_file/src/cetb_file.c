@@ -2368,11 +2368,13 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
   }
 
   tb_time_duration = tb_time_max - tb_time_min;
+
   hours = (int)( tb_time_duration/60 );
-  if ( 24 >= hours ) {
+  if ( hours >= 24 ) {
     days = (int)( hours/24 );
     rhours = hours - 24;
   } else {
+    rhours = hours;
     days = 0;
   }
   minutes = tb_time_duration - ( hours * 60.f );

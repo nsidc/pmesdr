@@ -221,7 +221,7 @@ void test_cetb_tbs( void ) {
   float sample_tb0 = 50.002;
   float sample_tb1 = 100.008;
   float sample_tb_time0 = (float)(CETB_NCATTS_TB_TIME_FILL_VALUE*CETB_NCATTS_TB_TIME_SCALE_FACTOR);
-  float sample_tb_time1 = 1440.0;
+  float sample_tb_time1 = 1490.0;
   float sample_num_samples0 = 254;
   float sample_num_samples1 = 100;
   float float_fill_value=-1.;
@@ -472,10 +472,10 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-02T00:00:00.00Z", att_p, "time coverage start" );
   free( att_p );
   att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_end" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-03T00:00:00.00Z", att_p, "time coverage end" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "1991-06-03T00:50:00.00Z", att_p, "time coverage end" );
   free( att_p );
   att_p = get_text_att( nc_fileid, NC_GLOBAL, "time_coverage_duration" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "P01T00:00:00.00", att_p, "time coverage duration" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "P01T00:50:00.00", att_p, "time coverage duration" );
   free( att_p );
 
   status = nc_get_att_int( nc_fileid, tb_time_var_id, "valid_range", int_valid_range );
