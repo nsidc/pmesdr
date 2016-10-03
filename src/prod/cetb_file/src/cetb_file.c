@@ -105,6 +105,11 @@ cetb_file_class *cetb_file_init( char *dirname,
   cetb_file_class *this=NULL;
   char *channel_str=NULL;
   cetb_region_id region_id;
+  char *ptr_path, template_filename[FILENAME_MAX];
+  int template_fid;
+  int status;
+  char *file_version=NULL;
+  size_t len_version;
 
   if ( CETB_NO_REGION == ( region_id = valid_region_id( region_number ) ) ) return NULL;
   if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
@@ -152,6 +157,40 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->rows_dim_id = INT_MIN;
   this->time_dim_id = INT_MIN;
 
+  /*
+   * Find and open the CETB template file with the global attribute data
+   * - all we need here is the file format version
+   */
+  if ( !( ptr_path = pmesdr_top_dir( ) ) ) return 0;
+  strncpy( template_filename, ptr_path, FILENAME_MAX );
+  strcat( template_filename,
+  	  "/src/prod/cetb_file/templates/cetb_global_template.nc" );
+  if ( ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) ) {
+    fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
+  	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    return 0;
+  }
+
+  if ( ( status = nc_inq_attlen( template_fid, NC_GLOBAL, "product_version", &len_version ) ) ) {
+    fprintf( stderr, "%s: Error getting file version length=%s\n",
+	     __FUNCTION__, nc_strerror( status ) );
+  }
+
+  status = utils_allocate_clean_aligned_memory( ( void * )&file_version,
+						( sizeof( char ) * len_version ) + 1 );
+  
+  if ( ( status = nc_get_att_text( template_fid, NC_GLOBAL, "product_version",
+				   file_version ) ) ) {
+    fprintf( stderr, "%s: Error retrieving file version string=%s\n",
+	     __FUNCTION__, nc_strerror( status ) );
+  }
+  file_version[ len_version ] = '\0';
+  
+  if ( ( status = nc_close( template_fid ) ) ) {
+    fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
+	     __FUNCTION__, template_filename, nc_strerror( status ) );
+  }
+
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
   	    dirname,
@@ -166,10 +205,11 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    cetb_direction_id_name[ direction_id ],
   	    cetb_reconstruction_id_name[ reconstruction_id ],
   	    cetb_swath_producer_id_name[ producer_id ],
-  	    CETB_FILE_FORMAT_VERSION );
+  	    file_version );
 
   snprintf( this->progname, MAX_STR_LENGTH, "%s", progname );
 
+  free( file_version );
   free( channel_str );
   return this;
   
