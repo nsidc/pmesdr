@@ -198,7 +198,7 @@ void test_populate_filenames( void ) {
   cetb_file_close( cetb );
 
   /* Reopen the file and make sure the filename we expect is a file attribute */
-  status = nc_open( "./test/EASE2_N25km.F13_SSMI.1991001.19H.M.SIR.CSU.v0.1.nc",
+  status = nc_open( "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.0.nc",
 		    NC_NOWRITE, &nc_fileid );
   status = nc_get_att_int( nc_fileid, NC_GLOBAL, "number_of_input_files", &num_input_files );
   TEST_ASSERT_EQUAL_INT( 1, num_input_files );

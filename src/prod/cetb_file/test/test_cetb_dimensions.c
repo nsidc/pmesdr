@@ -113,7 +113,7 @@ void test_cetb_dimensions( void ) {
   char *att_p;
   double valid_range[ 2 ];
 
-  status = nc_open( "./test/NSIDC-0630_EASE2_T25km.F13_SSMI.1991153.19H.A.SIR.CSU.v0.1.nc",
+  status = nc_open( "./test/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.0.nc",
 		    NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
