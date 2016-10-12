@@ -41,7 +41,7 @@ void test_gsx_literal_file ( void )
 {
   gsx_class *gsx;
 
-  gsx = gsx_init( "/home/vagrant/measures-byu/python/test_cetb_utilities_data/bgi_data/test_bgi.nc" );
+  gsx = gsx_init(get_pathname("PMESDR_TOP_DIR", "python/test_cetb_utilities_data/bgi_data/test_bgi.nc"));
   TEST_ASSERT_FALSE( gsx );
   fprintf( stderr, "\n%s: netcdf file 'test_bgi.nc' is not a gsx file \n", __FUNCTION__ );
   gsx_close( gsx );
