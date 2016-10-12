@@ -41,9 +41,10 @@ void test_gsx_literal_file ( void )
 {
   gsx_class *gsx;
 
-  gsx = gsx_init(get_pathname("PMESDR_TOP_DIR", "python/test_cetb_utilities_data/bgi_data/test_bgi.nc"));
+  char *fn = get_pathname("PMESDR_TOP_DIR", "python/test_cetb_utilities_data/bgi_data/test_bgi.nc");
+  gsx = gsx_init(fn);
   TEST_ASSERT_FALSE( gsx );
-  fprintf( stderr, "\n%s: netcdf file 'test_bgi.nc' is not a gsx file \n", __FUNCTION__ );
+  fprintf( stderr, "\n%s: netcdf file '%s' is not a gsx file \n", __FUNCTION__, fn );
   gsx_close( gsx );
 }
 
