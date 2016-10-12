@@ -7,7 +7,7 @@
 
 char *file_name;
 
-const char *get_pathname(const char *envvar, const char *filename) {
+char *get_pathname(const char *envvar, const char *filename) {
   char *dirname, *pathname;
   if (!(dirname = getenv(envvar))) {
     fprintf(stderr, "%s%s%s\n", "Environment variable '", envvar, "' is not set");
