@@ -50,9 +50,6 @@ fi
 
 export PMESDR_COMPILER=$compiler
 
-# Set the directory where test data can be found.
-export PMESDR_TESTDATA_DIR="/projects/PMESDR/vagrant/mhardman"
-
 # Grab the full path to this script, regardless of where it is called from.
 export PMESDR_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -115,11 +112,12 @@ elif [[ "$HOSTNAME" == "snow"* ]]; then
 
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
-  export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
   export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
+  export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
+  export PMESDR_TESTDATA_DIR="/projects/PMESDR/vagrant/mhardman"
 
 else
 
