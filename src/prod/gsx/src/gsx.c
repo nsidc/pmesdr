@@ -783,7 +783,7 @@ gsx_class *get_gsx_file( char *filename ){
   int status;
   int nc_fileid;
   gsx_class *this;
-  int att_len;
+  size_t att_len;
   
   if ( ( status = nc_open( filename, NC_NOWRITE, &nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s \n",
