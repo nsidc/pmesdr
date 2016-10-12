@@ -1,16 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "unity.h"
 #include "cetb.h"
 #include "gsx.h"
-
+#include "unity.h"
 
 char *file_name;
 
+const char *get_pathname(const char *envvar, const char *filename) {
+  char *dirname, *pathname;
+  if (!(dirname = getenv(envvar))) {
+    fprintf(stderr, "%s%s%s\n", "Environment variable '", envvar, "' is not set");
+    exit(1);
+  }
+  pathname = malloc(strlen(dirname) + strlen(filename) + 2);
+  sprintf(pathname, "%s/%s", dirname, filename);
+  return pathname;
+}
+
 void setUp(void)
 {
-  file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc" );
-  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_RSS_SSMI_FCDR_V07R00_F13_D19970302_S0321_E0513_R10006.nc" );
-  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200308080121_D.nc" );
+  const char *fn = "GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc";
+  file_name = get_pathname("PMESDR_TESTDATA_DIR", fn);
 }
 
 void tearDown(void)

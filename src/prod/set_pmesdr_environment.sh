@@ -50,6 +50,9 @@ fi
 
 export PMESDR_COMPILER=$compiler
 
+# Set the directory where test data can be found.
+export PMESDR_TESTDATA_DIR="/projects/PMESDR/vagrant/mhardman"
+
 # Grab the full path to this script, regardless of where it is called from.
 export PMESDR_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
