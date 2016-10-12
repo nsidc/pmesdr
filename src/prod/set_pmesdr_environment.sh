@@ -71,6 +71,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || `hostname --fqdn` == *"rc.colorado.edu" || 
   ml slurm
   export PMESDR_COMPARE_TOLERANCE=0.25
   export PMESDR_MAX_DIFF_PIXELS=100
+  export PMESDR_TESTDATA_DIR="/projects/maddenp/pmesdr_testdata"
 
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
