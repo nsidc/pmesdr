@@ -29,7 +29,7 @@ LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CC = icc
 endif
 #
@@ -48,33 +48,33 @@ SYSLIBS = -lm
 #	system libraries and include directories
 #
 ifeq ($(LOCALE),NSIDCsnow)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),int.nsidc.org)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else
-  $(warning Assuming default LOCALE=BYU)
+  $(info Assuming default LOCALE=BYU)
   NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
   NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
   HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
@@ -90,10 +90,10 @@ LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(MEAS_LIBDIR) \
 	-lgsx -lutils -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 else ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -g -Wall
 endif
 DEPEND_LIBS = $(LIBDIR)/libutils.a $(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a

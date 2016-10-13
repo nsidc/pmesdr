@@ -34,7 +34,7 @@ MKDIR = mkdir -p
 PYTHON = python
 RM = rm -fr
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CC = icc
 endif
 
@@ -44,7 +44,7 @@ endif
 #
 CONFIG_CFLAGS = -m64 -O3
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CONFIG_FLAGS = 
 endif
 
@@ -57,19 +57,19 @@ SYSLIBS = -lm
 #	system libraries and include directories
 #
 ifeq ($(LOCALE),NSIDCsnow)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),NSIDCdev)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),int.nsidc.org)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib
   HDF5_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
@@ -77,7 +77,7 @@ else ifeq ($(LOCALE),JANUSicc)
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
@@ -85,7 +85,7 @@ else ifeq ($(LOCALE),JANUSgcc)
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else
-  $(warning Assuming default LOCALE=BYU)
+  $(info Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
 endif
@@ -97,12 +97,12 @@ LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
 	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable -Wno-unused-but-set-variable
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
 	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 else ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) -g
 endif
 DEPEND_LIBS = $(LIBDIR)/libcetb.a 
