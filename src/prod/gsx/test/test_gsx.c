@@ -1,16 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "unity.h"
 #include "cetb.h"
 #include "gsx.h"
-
+#include "unity.h"
 
 char *file_name;
 
+char *get_pathname(const char *envvar, const char *filename) {
+  char *dirname, *pathname;
+  if (!(dirname = getenv(envvar))) {
+    fprintf(stderr, "%s%s%s\n", "Environment variable '", envvar, "' is not set");
+    exit(1);
+  }
+  pathname = malloc(strlen(dirname) + strlen(filename) + 2);
+  sprintf(pathname, "%s/%s", dirname, filename);
+  return pathname;
+}
+
 void setUp(void)
 {
-  file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc" );
-  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_RSS_SSMI_FCDR_V07R00_F13_D19970302_S0321_E0513_R10006.nc" );
-  //file_name = strdup( "/projects/PMESDR/vagrant/mhardman/GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200308080121_D.nc" );
+  const char *fn = "GSX_CSU_SSMI_FCDR_V01R00_F13_D19970302_S0351_E0533_R10006.nc";
+  file_name = get_pathname("PMESDR_TESTDATA_DIR", fn);
 }
 
 void tearDown(void)
@@ -30,9 +41,10 @@ void test_gsx_literal_file ( void )
 {
   gsx_class *gsx;
 
-  gsx = gsx_init( "/home/vagrant/measures-byu/python/test_cetb_utilities_data/bgi_data/test_bgi.nc" );
+  char *fn = get_pathname("PMESDR_TOP_DIR", "python/test_cetb_utilities_data/bgi_data/test_bgi.nc");
+  gsx = gsx_init(fn);
   TEST_ASSERT_FALSE( gsx );
-  fprintf( stderr, "\n%s: netcdf file 'test_bgi.nc' is not a gsx file \n", __FUNCTION__ );
+  fprintf( stderr, "\n%s: netcdf file '%s' is not a gsx file \n", __FUNCTION__, fn );
   gsx_close( gsx );
 }
 

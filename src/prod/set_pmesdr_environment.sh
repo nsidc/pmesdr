@@ -71,6 +71,7 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || `hostname --fqdn` == *"rc.colorado.edu" || 
   ml slurm
   export PMESDR_COMPARE_TOLERANCE=0.25
   export PMESDR_MAX_DIFF_PIXELS=100
+  export PMESDR_TESTDATA_DIR="/projects/maddenp/pmesdr_testdata"
 
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
@@ -112,11 +113,12 @@ elif [[ "$HOSTNAME" == "snow"* ]]; then
 
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
-  export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
   export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
+  export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
+  export PMESDR_TESTDATA_DIR="/projects/PMESDR/vagrant/mhardman"
 
 else
 
