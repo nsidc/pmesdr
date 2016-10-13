@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#recipients=mhardman@nsidc.org brodzik@nsidc.org
-recipients=maddenp@colorado.edu
+recipients=mhardman@nsidc.org brodzik@nsidc.org
 
 source /etc/profile.d/modules.sh
 set -ex
