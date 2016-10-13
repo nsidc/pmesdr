@@ -33,7 +33,7 @@ MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CC = icc
 endif
 
@@ -56,11 +56,11 @@ MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
 endif
 ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g -Wall
 endif
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a

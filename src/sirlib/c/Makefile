@@ -24,12 +24,12 @@ CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS)
 LDFLAGS = -L. -lcsir -lm
 
 ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -Iinclude $(CONFIG_CFLAGS) -g
 endif
 
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
   CFLAGS = -Iinclude  $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8

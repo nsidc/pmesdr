@@ -29,7 +29,7 @@ MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
 endif
@@ -52,33 +52,33 @@ SYSLIBS = -lm
 #	system libraries and include directories
 #
 ifeq ($(LOCALE),NSIDCsnow)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),NSIDCdev)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
 else ifeq ($(LOCALE),int.nsidc.org)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib
   HDF5_LIBDIR = /usr/lib
   ZLIB_LIBDIR = /usr/lib
 else ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_LIB}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else
-  $(warning Assuming default LOCALE=BYU)
+  $(info Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
@@ -90,12 +90,12 @@ endif
 CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)
-  $(warning Build location: $(LOCALE))
+  $(info Build location: $(LOCALE))
   CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -g -Wall
 endif
 DEPEND_LIBS = 
