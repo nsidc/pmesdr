@@ -7,7 +7,7 @@ ruby_version=2.2.3
 
 source /etc/profile.d/modules.sh
 repo=$(readlink -f $(dirname $(readlink -f $0))/..)
-source $repo/src/prod/set_pmesdr_environment.sh -a -c gcc
+source $repo/src/prod/set_pmesdr_environment.sh -a -c gcc >/dev/null 2>&1
 module load ruby/$ruby_version
 set -ex
 export C_INCLUDE_PATH=$CURC_NETCDF_INC:$CURC_UDUNITS_INC:$repo/src/prod/utils/src:$repo/include
