@@ -16,9 +16,7 @@ export LIBRARY_PATH=$CURC_HDF5_LIB:$CURC_NETCDF_LIB:$CURC_UDUNITS_LIB
 # Build.
 
 cd $repo/src/prod
-make clean
-make all
-make install
+(make clean && make all && make install) >/dev/null
 
 # Python tests.
 
