@@ -2,6 +2,7 @@
 
 # Set up the environment.
 
+source /etc/profile.d/modules.sh
 repo=$(readlink -f $(dirname $(readlink -f $0))/..)
 source $repo/src/prod/set_pmesdr_environment.sh -a -c gcc
 module load ruby/2.2.3
