@@ -376,6 +376,49 @@ static const cetb_ssmi_channel_id cetb_ibeam_to_cetb_ssmi_channel[] = {
 };
 
 /*
+ * SSMIS channel IDs
+ */
+typedef enum {
+  SSMIS_NO_CHANNEL=-1,
+  SSMIS_19H,
+  SSMIS_19V,
+  SSMIS_22V,
+  SSMIS_37H,
+  SSMIS_37V,
+  SSMIS_91H,
+  SSMIS_91V,
+  SSMIS_NUM_CHANNELS
+} cetb_ssmis_channel_id;
+  
+static const char *cetb_ssmis_channel_name[] = {
+  "19H",
+  "19V",
+  "22V",
+  "37H",
+  "37V",
+  "91H",
+  "91V"
+};
+
+/*
+ * this mapping is set to match the way SSMIS beams are defined in meas_meta_setup and
+ * in meas_meta_make
+ *
+ * see explanation above
+ *
+ */
+static const cetb_ssmis_channel_id cetb_ibeam_to_cetb_ssmis_channel[] = {
+  SSMIS_NO_CHANNEL,
+  SSMIS_19H,
+  SSMIS_19V,
+  SSMIS_22V,
+  SSMIS_37H,
+  SSMIS_37V,
+  SSMIS_91H,
+  SSMIS_91V
+};
+
+/*
  * AMSR-E channel IDs
  */
 typedef enum {

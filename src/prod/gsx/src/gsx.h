@@ -79,6 +79,16 @@ static const char *gsx_ssmi_channel_name[] = {
   "brightness_temperature_85V"
 };
 
+static const char *gsx_ssmis_channel_name[] = {
+  "brightness_temperature_19H",
+  "brightness_temperature_19V",
+  "brightness_temperature_22V",
+  "brightness_temperature_37H",
+  "brightness_temperature_37V",
+  "brightness_temperature_91H",
+  "brightness_temperature_91V"
+};
+
 static const char *gsx_amsre_channel_name[] = {
   "brightness_temperature_7H",
   "brightness_temperature_7V",
