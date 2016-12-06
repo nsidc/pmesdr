@@ -37,6 +37,7 @@ static int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans,
 static int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements );
 static int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements );
 static int get_gsx_byscan_variables( gsx_class *this, int count, int scans );
+static int populate_gsx_byscan_variables( gsx_class *this, int i, int scans );
 
 /*
  * this function takes a gsx file name and opens it as a netCDF4
@@ -535,7 +536,13 @@ int get_gsx_positions( gsx_class *this ) {
 	       __FUNCTION__, this->fileid, gsx_latitudes[i], nc_strerror( status ) );
       return -1;
     }
-    status = get_gsx_byscan_variables( this, i, scans );
+    
+    /* Note that the SSMIS instruments only have 1 set of scan times and spacecraft positions */
+    if ( this->short_sensor == CETB_SSMIS && i > 0 ) {
+      status = populate_gsx_byscan_variables( this, i, scans );
+    } else {
+      status = get_gsx_byscan_variables( this, i, scans );
+    }
       
   }    
 
@@ -1060,6 +1067,62 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
   return status;
 }
 
+/*
+ * function to fill the extra spacecraft lat/lon and time arrays for SSMIS
+ *
+ * Input:
+ *   gsx_class *this - pointer to gsx structure
+ *   int count 1 or 2, corresponding to loc2 or loc3
+ *   int scans - number of scan lines in the file
+ *
+ * Result:
+ *   status == 0 on success, != 0 on failure
+ *
+ */
+int populate_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
+  int status=0;
+  int i;
+
+  if ( this->short_sensor != CETB_SSMIS ) {
+    return -1;
+  }
+
+  status = utils_allocate_clean_aligned_memory( (void**)&this->sc_latitude[count],
+						  sizeof(float)*scans );
+  if ( 0 == status ) {
+    memcpy( (void*)this->sc_latitude[count], (void*)this->sc_latitude[0], sizeof(float)*scans );
+  } else {
+    fprintf( stderr, "%s: couldn't allocate latitude mem\n", __FUNCTION__ );
+    return -1;
+  }
+  
+  status = utils_allocate_clean_aligned_memory( (void**)&this->sc_longitude[count],
+						  sizeof(float)*scans );
+  if ( status == 0 ) {
+    memcpy( (void*)this->sc_longitude[count], (void*)this->sc_longitude[0], sizeof(float)*scans );
+  } else {
+    fprintf( stderr, "%s: couldn't allocate longitude mem\n", __FUNCTION__ );
+    return -1;
+  }
+  
+  status = utils_allocate_clean_aligned_memory( (void**)&this->scantime[count],
+						    sizeof(double)*scans );
+  if ( 0 == status ) {
+    memcpy( (void*)this->scantime[count], (void*)this->scantime[0], sizeof(double)*scans );
+  } else {
+    fprintf( stderr, "%s: couldn't allocate scantime mem\n", __FUNCTION__ );
+    return -1;
+  }
+  /*  for ( i = 0; i < scans; i++ ) {
+    *(this->sc_latitude[count]+i) = *(this->sc_latitude[0]+i);
+    *(this->sc_longitude[count]+i) = *(this->sc_longitude[0]+i);
+    *(this->scantime[count]+i) = *(this->scantime[0]+i);
+    }*/
+
+  return 0;
+}
+
+  
 
 
 

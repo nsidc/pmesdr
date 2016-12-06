@@ -493,21 +493,36 @@ void test_gsx_loc2_variables ( void ) {
   if ( NULL != gsx ) { 
     fprintf( stderr, "\n%s: netcdf file '%s' has these loc2 variables\n", __FUNCTION__, gsx->source_file ); 
     fprintf( stderr, "\t on latitude_loc2, longitude_loc2 eia_loc2, eaz_loc2\n" ); 
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \n",	
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t",	
 	     *(gsx->latitude[i]+1000), 
 	     *(gsx->longitude[i]+1000), 
 	     *(gsx->eia[i]+1000),
-	     *(gsx->eaz[i]+1000) );
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \n", 
+	     *(gsx->eaz[i]+1000),
+	     *(gsx->scantime[i]+(1000/gsx->measurements[i])) ); 
+    if ( CETB_AQUA != gsx->short_sensor ) 
+      fprintf( stderr, "%f \t %f\n", 
+	       *(gsx->sc_latitude[i]+(1000/gsx->measurements[i])), 
+	       *(gsx->sc_longitude[i]+(1000/gsx->measurements[i])) );
+    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t", 
 	     *(gsx->latitude[i]+1001), 
 	     *(gsx->longitude[i]+1001), 
 	     *(gsx->eia[i]+1001),	
-	     *(gsx->eaz[i]+1001) );
+	     *(gsx->eaz[i]+1001),
+    	     *(gsx->scantime[i]+(1001/gsx->measurements[i])) ); 
+      if ( CETB_AQUA != gsx->short_sensor ) 
+      fprintf( stderr, "%f \t %f \n", 
+	       *(gsx->sc_latitude[i]+(1001/gsx->measurements[i])), 
+	       *(gsx->sc_longitude[i]+(1001/gsx->measurements[i])) );
 
     TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
     TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
     TEST_ASSERT_TRUE( NULL != gsx->eia[i] ); 
     TEST_ASSERT_TRUE( NULL != gsx->eaz[i] ); 
+    if ( CETB_AQUA != gsx->short_sensor ) { 
+      TEST_ASSERT_TRUE( NULL != gsx->sc_latitude[i] ); 
+      TEST_ASSERT_TRUE( NULL != gsx->sc_longitude[i] ); 
+    } 
+    TEST_ASSERT_TRUE( NULL != gsx->scantime[i] ); 
   }
   
   gsx_close( gsx );
@@ -537,6 +552,11 @@ void test_gsx_loc3_variables ( void ) {
       TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
       TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
       TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
+    if ( CETB_AQUA != gsx->short_sensor ) { 
+      TEST_ASSERT_TRUE( NULL != gsx->sc_latitude[i] ); 
+      TEST_ASSERT_TRUE( NULL != gsx->sc_longitude[i] ); 
+    } 
+    TEST_ASSERT_TRUE( NULL != gsx->scantime[i] ); 
     } else { 
       fprintf( stderr, "%s: There are no loc3 variables in this file %s\n",
 	       __FUNCTION__, gsx->source_file ); 
