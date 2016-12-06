@@ -634,6 +634,7 @@ int main(int argc,char *argv[])
 		      
 	      if ( CETB_SSMI == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
 	      if ( CETB_AMSRE == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
+	      if ( CETB_SSMIS == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmis_channel[ibeam];
 	      
 	      /* only get Tb's for channels that use the current set of position coordinates */
 
@@ -2042,6 +2043,25 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     case AMSRE_89H_B:
     case AMSRE_89V_B:
       box_size = 12;
+      break;
+    default:
+      box_size = -1;
+      fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
+    }
+  } else if ( CETB_SSMIS == id ) {
+    switch ( cetb_ibeam_to_cetb_ssmis_channel[ibeam] ) {
+    case SSMIS_19H:
+    case SSMIS_19V:
+    case SSMIS_22V:
+      box_size = 100;
+      break;
+    case SSMIS_37H:
+    case SSMIS_37V:
+      box_size = 60;
+      break;
+    case SSMIS_91H:
+    case SSMIS_91V:
+      box_size = 20;
       break;
     default:
       box_size = -1;
