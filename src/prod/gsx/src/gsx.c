@@ -245,7 +245,7 @@ int get_gsx_global_attributes( gsx_class *this ) {
     
   temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
   if ( NULL == temp ) {
-    fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
+    fprintf( stderr, "%s: no short_platform\n", __FUNCTION__ );
     return -1;
   }
   this->short_platform = CETB_NO_PLATFORM;
@@ -341,6 +341,9 @@ int get_gsx_global_variables( gsx_class *this ) {
     break;
   case CETB_AMSRE:
     this->channel_number = AMSRE_NUM_CHANNELS;
+    break;
+  case CETB_SSMIS:
+    this->channel_number = SSMIS_NUM_CHANNELS;
     break;
   default:
     fprintf( stderr, "%s: sensor not implemented yet \n", __FUNCTION__ );
@@ -834,7 +837,7 @@ gsx_class *get_gsx_file( char *filename ){
  */
 char *get_att_text( int fileid, int varid, const char* varname ) {
   int status=0;
-  int att_len;
+  size_t att_len;
   char *att_text;
 
   if ( ( status = nc_inq_attlen( fileid, varid, varname, (size_t*)&att_len ) ) ) {
@@ -893,6 +896,14 @@ int assign_channels( gsx_class *this, char *channel ) {
     while ( ( 0 != strcmp( gsx_amsre_channel_name[count], channel ) ) &&
 	    ( count < (int) AMSRE_NUM_CHANNELS ) ) count++;
     if ( AMSRE_NUM_CHANNELS == count ) {
+      status = -1;
+    }
+    break;
+  case CETB_SSMIS:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_ssmis_channel_name[count], channel ) ) &&
+	    ( count < (int) SSMIS_NUM_CHANNELS ) ) count++;
+    if ( SSMIS_NUM_CHANNELS == count ) {
       status = -1;
     }
     break;
