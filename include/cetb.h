@@ -313,6 +313,7 @@ typedef enum {
   CETB_NO_PRODUCER=-1,
   CETB_CSU,
   CETB_RSS,
+  CETB_JPL,
   CETB_NUM_PRODUCERS
 } cetb_swath_producer_id;
 
@@ -321,7 +322,8 @@ typedef enum {
  */
 static const char *cetb_swath_producer_id_name[] = {
   "CSU",
-  "RSS"
+  "RSS",
+  "JPL"
 };
 
 /*
@@ -481,6 +483,58 @@ static const cetb_amsre_channel_id cetb_ibeam_to_cetb_amsre_channel[] = {
   AMSRE_89V_A,
   AMSRE_89H_B,
   AMSRE_89V_B
+};
+
+/*
+ * SMMR channel IDs
+ */
+typedef enum {
+  SMMR_NO_CHANNEL=-1,
+  SMMR_06H,
+  SMMR_06V,
+  SMMR_10H,
+  SMMR_10V,
+  SMMR_18H,
+  SMMR_18V,
+  SMMR_21H,
+  SMMR_21V,
+  SMMR_37H,
+  SMMR_37V,
+  SMMR_NUM_CHANNELS
+} cetb_smmr_channel_id;
+  
+/*
+ * SMMR channel ID names
+ * these are only used for file naming  
+ */
+static const char *cetb_smmr_channel_name[] = {
+  "06H",
+  "06V",
+  "10H",
+  "10V",
+  "18H",
+  "18V",
+  "21H",
+  "21V",
+  "37H",
+  "37V"
+};
+
+/*
+ * See notes for using cetb_ibeam_to_cetb_ssmi_channel, above.
+ */
+static const cetb_smmr_channel_id cetb_ibeam_to_cetb_smmr_channel[] = {
+  SMMR_NO_CHANNEL,
+  SMMR_06H,
+  SMMR_06V,
+  SMMR_10H,
+  SMMR_10V,
+  SMMR_18H,
+  SMMR_18V,
+  SMMR_21H,
+  SMMR_21V,
+  SMMR_37H,
+  SMMR_37V
 };
 
 #endif // cetb_H
