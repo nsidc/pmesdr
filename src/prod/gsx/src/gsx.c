@@ -1014,7 +1014,6 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
   } else {
     location = count;
   }
-  fprintf( stderr, "%s: location variable is set to %d and count is %d\n", __FUNCTION__, location, count );
   
   if ( this->short_sensor != CETB_AMSRE ) { // because there is no sc lat and lon in AMSRE
     if ( ( status = nc_inq_varid( this->fileid, gsx_sc_latitudes[location], &varid ) ) ) {
