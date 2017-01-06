@@ -226,5 +226,33 @@ amsre_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta AQUA \
 	         35 35 2003 $(TOPDIR)/ref/E2N_amsre_quick.def $(TOPDIR)/testing/$(AMSRE_INPUT_FILES)
 
+ssmis_quick :
+	$(RM) $(TESTDIR)/ssmis_e2n
+	$(MKDIR) $(TESTDIR)/ssmis_e2n
+	$(RM) $(TESTDIR)/ssmis_e2s
+	$(MKDIR) $(TESTDIR)/ssmis_e2s
+	$(RM) $(TESTDIR)/ssmis_e2t
+	$(MKDIR) $(TESTDIR)/ssmis_e2t
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS.meta F16 	\
+	         81 81 2006 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/SSMIS_regress_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS.meta F16 	\
+	         81 81 2006 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/SSMIS_regress_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta F16 	\
+	         81 81 2006 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/SSMIS_regress_list
 
+ssmis_ease :
+	$(RM) $(TESTDIR)/ssmis_e2n
+	$(MKDIR) $(TESTDIR)/ssmis_e2n
+	$(RM) $(TESTDIR)/ssmis_e2s
+	$(MKDIR) $(TESTDIR)/ssmis_e2s
+	$(RM) $(TESTDIR)/ssmis_e2t
+	$(MKDIR) $(TESTDIR)/ssmis_e2t
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS.meta F16 	\
+	         81 81 2006 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/SSMIS_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS.meta F16 	\
+	         81 81 2006 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/SSMIS_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta F16 	\
+	         81 81 2006 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/SSMIS_regress_list_full
 

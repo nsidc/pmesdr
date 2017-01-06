@@ -37,7 +37,6 @@ static int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans,
 static int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurements );
 static int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurements );
 static int get_gsx_byscan_variables( gsx_class *this, int count, int scans );
-static int populate_gsx_byscan_variables( gsx_class *this, int i, int scans );
 
 /*
  * this function takes a gsx file name and opens it as a netCDF4
