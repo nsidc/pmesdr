@@ -1221,6 +1221,12 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
     }
+  } else if ( CETB_SSMIS == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SSMIS_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_ssmis_channel_name[ cetb_ibeam_to_cetb_ssmis_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
@@ -2411,6 +2417,10 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_RSS == this->producer_id ) ) {
     source_value = strdup( "RSS SSM/I V7" );
+  }
+
+  if ( ( CETB_SSMIS == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
+    source_value = strdup( "CSU SSMIS FCDR V01R00" );
   }
 
   return source_value;
