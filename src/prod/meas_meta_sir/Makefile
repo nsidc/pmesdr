@@ -118,6 +118,8 @@ CSUFILES = $(wildcard $(TESTDIR)/setupCSU/e2*/F*E2*.setup)
 CSUE2NFILES = $(wildcard $(TESTDIR)/setupCSU/e2n/F*E2N*.setup)
 AMSREFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2*/A*E2*.setup)
 AMSRE2NFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2n/A*E2N*.setup)
+SSMISFILES = $(wildcard $(TESTDIR)/setupSSMIS/e2*/I*E2*.setup)
+SSMISE2NFILES = $(wildcard $(TESTDIR)/setupSSMIS/e2n/I*E2N*.setup)
 
 all : $(BIN)
 
@@ -223,4 +225,14 @@ else
 	done
 endif
 
-
+ssmis_quick :
+	$(RM) $(TESTDIR)/sirSSMIS
+	$(MKDIR) $(TESTDIR)/sirSSMIS
+ifeq ($(SSMISFILES),)
+	$(error	No setup files found)
+else
+	for file in $(SSMISFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSSMIS; \
+	done
+endif

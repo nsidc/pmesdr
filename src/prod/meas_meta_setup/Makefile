@@ -213,4 +213,20 @@ amsre_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2n 	\
 	)
 
+ssmis_quick :
+	$(RM) $(TESTDIR)/setupSSMIS/e2n
+	$(MKDIR) $(TESTDIR)/setupSSMIS/e2n
+	$(RM) $(TESTDIR)/setupSSMIS/e2s
+	$(MKDIR) $(TESTDIR)/setupSSMIS/e2s
+	$(RM) $(TESTDIR)/setuSSMIS/e2t
+	$(MKDIR) $(TESTDIR)/setupSSMIS/e2t
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2n 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2s 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2t 	\
+	)
 

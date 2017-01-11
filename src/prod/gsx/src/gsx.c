@@ -245,7 +245,7 @@ int get_gsx_global_attributes( gsx_class *this ) {
     
   temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
   if ( NULL == temp ) {
-    fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
+    fprintf( stderr, "%s: no short_platform\n", __FUNCTION__ );
     return -1;
   }
   this->short_platform = CETB_NO_PLATFORM;
@@ -284,10 +284,12 @@ int get_gsx_global_attributes( gsx_class *this ) {
     }
   }
   free( temp );
+  temp = NULL;
 
   if ( this->short_platform == CETB_NO_PLATFORM || \
        this->short_sensor == CETB_NO_SENSOR || \
        this->input_provider == CETB_NO_PRODUCER ) {
+    fprintf( stderr, "%s: missing platform, sensor or producer\n", __FUNCTION__ );
     if ( NULL != temp ) free( temp );
     return -1;
   }
@@ -341,6 +343,12 @@ int get_gsx_global_variables( gsx_class *this ) {
     break;
   case CETB_AMSRE:
     this->channel_number = AMSRE_NUM_CHANNELS;
+    break;
+  case CETB_SSMIS:
+    this->channel_number = SSMIS_NUM_CHANNELS;
+    break;
+  case CETB_SMMR:
+    this->channel_number = SMMR_NUM_CHANNELS;
     break;
   default:
     fprintf( stderr, "%s: sensor not implemented yet \n", __FUNCTION__ );
@@ -532,8 +540,8 @@ int get_gsx_positions( gsx_class *this ) {
 	       __FUNCTION__, this->fileid, gsx_latitudes[i], nc_strerror( status ) );
       return -1;
     }
+    
     status = get_gsx_byscan_variables( this, i, scans );
-      
   }    
 
   return status;
@@ -834,7 +842,7 @@ gsx_class *get_gsx_file( char *filename ){
  */
 char *get_att_text( int fileid, int varid, const char* varname ) {
   int status=0;
-  int att_len;
+  size_t att_len;
   char *att_text;
 
   if ( ( status = nc_inq_attlen( fileid, varid, varname, (size_t*)&att_len ) ) ) {
@@ -893,6 +901,22 @@ int assign_channels( gsx_class *this, char *channel ) {
     while ( ( 0 != strcmp( gsx_amsre_channel_name[count], channel ) ) &&
 	    ( count < (int) AMSRE_NUM_CHANNELS ) ) count++;
     if ( AMSRE_NUM_CHANNELS == count ) {
+      status = -1;
+    }
+    break;
+  case CETB_SSMIS:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_ssmis_channel_name[count], channel ) ) &&
+	    ( count < (int) SSMIS_NUM_CHANNELS ) ) count++;
+    if ( SSMIS_NUM_CHANNELS == count ) {
+      status = -1;
+    }
+    break;
+  case CETB_SMMR:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_smmr_channel_name[count], channel ) ) &&
+	    ( count < (int) SMMR_NUM_CHANNELS ) ) count++;
+    if ( SMMR_NUM_CHANNELS == count ) {
       status = -1;
     }
     break;
@@ -970,6 +994,11 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
  *    int count - 0, 1, 2 corresponding to loc1, loc2 or loc3
  *    int scans - number of scan lines in the file
  *
+ *  Note that the SSMIS sensor only has 1 set of byscn variables, even though
+ *  it has 3 different sets of location parameters - therefore the use of the
+ *  location variable in this function allows you to fill a set of byscn arrays
+ *  whether they are present for multiple locations or not
+ *
  *  Result:
  *    status == 0 on success, != 0 on failure
  *
@@ -977,11 +1006,18 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
 int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
   int status=0;
   int varid;
+  int location;
 
+  if ( this->short_sensor == CETB_SSMIS ) {
+    location = 0;
+  } else {
+    location = count;
+  }
+  
   if ( this->short_sensor != CETB_AMSRE ) { // because there is no sc lat and lon in AMSRE
-    if ( ( status = nc_inq_varid( this->fileid, gsx_sc_latitudes[count], &varid ) ) ) {
+    if ( ( status = nc_inq_varid( this->fileid, gsx_sc_latitudes[location], &varid ) ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
-	       __FUNCTION__, this->fileid, gsx_sc_latitudes[count], nc_strerror( status ) );
+	       __FUNCTION__, this->fileid, gsx_sc_latitudes[location], nc_strerror( status ) );
       return -1;
     }
     status = utils_allocate_clean_aligned_memory( (void**)&this->sc_latitude[count],
@@ -1004,9 +1040,9 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
       status = -1;
     }
 
-    if ( ( status = nc_inq_varid( this->fileid, gsx_sc_longitudes[count], &varid ) ) ) {
+    if ( ( status = nc_inq_varid( this->fileid, gsx_sc_longitudes[location], &varid ) ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
-	       __FUNCTION__, this->fileid, gsx_sc_longitudes[count], nc_strerror( status ) );
+	       __FUNCTION__, this->fileid, gsx_sc_longitudes[location], nc_strerror( status ) );
       return -1;
     }
     status = utils_allocate_clean_aligned_memory( (void**)&this->sc_longitude[count],
@@ -1023,9 +1059,9 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
     }
   }
   
-  if ( ( status = nc_inq_varid( this->fileid, gsx_scantime[count], &varid ) ) ) {
+  if ( ( status = nc_inq_varid( this->fileid, gsx_scantime[location], &varid ) ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
-	       __FUNCTION__, this->fileid, gsx_scantime[count], nc_strerror( status ) );
+	       __FUNCTION__, this->fileid, gsx_scantime[location], nc_strerror( status ) );
       return -1;
   }
   status = utils_allocate_clean_aligned_memory( (void**)&this->scantime[count], sizeof(double)*scans );
@@ -1049,6 +1085,7 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
   return status;
 }
 
+  
 
 
 
