@@ -326,21 +326,15 @@ int get_gsx_global_variables( gsx_class *this ) {
     return -1;
   }
   channel_ptr = channel_list;
-  fprintf( stderr, "%s: list of channels %s\n", __FUNCTION__,
-	   channel_ptr );
 
   while ( NULL != channel_ptr ) {
     token = strsep( &channel_ptr, delim );
     if ( 0 == strncmp( space, token, 1 ) ) token++;
     /* now match the channel name to the channel enum */
-    fprintf( stderr, "%s: Checking for this channel name %s\n", __FUNCTION__,
-	     token );
     status = assign_channels( this, token );
     if ( 0 != status ) {
       return -1;
-    } else {
-      fprintf( stderr, "%s: matched %s\n", __FUNCTION__, token );
-    }
+    } 
   }
 
   switch ( this->short_sensor ) {
