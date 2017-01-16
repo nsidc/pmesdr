@@ -107,8 +107,8 @@ static const char *gsx_amsre_channel_name[] = {
 };
 
 static const char *gsx_smmr_channel_name[] = {
-  "brightness_temperature_7H",
-  "brightness_temperature_7V",
+  "brightness_temperature_06H",
+  "brightness_temperature_06V",
   "brightness_temperature_10H",
   "brightness_temperature_10V",
   "brightness_temperature_18H",
