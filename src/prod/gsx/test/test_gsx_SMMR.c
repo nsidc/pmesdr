@@ -20,8 +20,8 @@ char *get_pathname(const char *envvar, const char *filename) {
 
 void setUp(void)
 {
-  const char *fn = "c.nc";
-  //  const char *fn = "GSX_84.30830439.nc";
+  //const char *fn = "c.nc";
+  const char *fn = "gsx_84.30830439.nc";
   file_name = get_pathname("PMESDR_TESTDATA_DIR", fn);
 }
 
@@ -67,7 +67,7 @@ void test_gsx_ndims ( void )
   fflush( stderr );
   fprintf( stderr, "\n%s: netcdf file %s with id %d :\n\t: ndims=%d\n\t: nvars=%d\n\t: natts=%d\n\t: nunlim=%d\n\n", \
 	   __FUNCTION__, file_name, gsx->fileid, gsx->dims, gsx->vars, gsx->atts, gsx->unlimdims );
-  TEST_ASSERT_TRUE( 5 == gsx->dims );
+  TEST_ASSERT_TRUE( 3 == gsx->dims );
   gsx_close( gsx );
 }
 
@@ -123,45 +123,6 @@ void test_gsx_dim_scans_loc1 ( void ) {
   gsx_close( gsx );
 }
 
-void test_gsx_dim_scans_loc2 ( void ) {
-  gsx_class *gsx;
-  int loc=1;
-
-  gsx = gsx_init( file_name );
-  if ( NULL != gsx ){
-    fprintf( stderr, "\n%s: netcdf file %s with id %d has %d hi/loc2 res scans\n", \
-	     __FUNCTION__, file_name, gsx->fileid, gsx->scans[loc] );
-  } 
-  switch (gsx->short_sensor) {
-  case CETB_SSMI:
-    TEST_ASSERT_TRUE( gsx->scans[loc] > 3000 );
-    break;
-  case CETB_AMSRE:
-    TEST_ASSERT_TRUE( gsx->scans[loc] > 1000 );
-    break;
-  }
-  gsx_close( gsx );
-}
-
-void test_gsx_dim_scans_loc3 ( void ) {
-  gsx_class *gsx;
-  int loc=2;
-
-  gsx = gsx_init( file_name );
-  if ( NULL != gsx ){
-    fprintf( stderr, "\n%s: netcdf file %s with id %d has %d hi/loc3 res scans\n", \
-	     __FUNCTION__, file_name, gsx->fileid, gsx->scans[loc] );
-  }
-  switch (gsx->short_sensor) {
-  case CETB_SSMI:
-    TEST_ASSERT_TRUE( gsx->scans[loc] == 0 );
-    break;
-  case CETB_AMSRE:
-    TEST_ASSERT_TRUE( gsx->scans[loc] > 1000 );
-    break;
-  }
-  gsx_close( gsx );
-}
 void test_gsx_dim_measurements_loc1 ( void ) {
   gsx_class *gsx;
   int loc=0;
@@ -182,46 +143,6 @@ void test_gsx_dim_measurements_loc1 ( void ) {
   gsx_close( gsx );
 }
   
-void test_gsx_dim_measurements_loc3 ( void ) {
-  gsx_class *gsx;
-  int loc=2;
-
-  gsx = gsx_init( file_name );
-  if ( NULL != gsx ){
-    fprintf( stderr, "\n%s: netcdf file %s with id %d has %d loc3 res measurements per scans\n", \
-	   __FUNCTION__, file_name, gsx->fileid, gsx->measurements[loc] );
-  } 
-  switch (gsx->short_sensor) {
-  case CETB_SSMI:
-    TEST_ASSERT_TRUE( gsx->measurements[loc] == 0 );
-    break;
-  case CETB_AMSRE:
-    TEST_ASSERT_TRUE( gsx->measurements[loc] > 200 );
-    break;
-  }
-  gsx_close( gsx );
-}
-
-void test_gsx_dim_measurements_loc2 ( void ) {
-  gsx_class *gsx;
-  int loc=1;
-
-  gsx = gsx_init( file_name );
-  if ( NULL != gsx ){
-    fprintf( stderr, "\n%s: netcdf file %s with id %d has %d loc2 res measurements per scans\n", \
-	   __FUNCTION__, file_name, gsx->fileid, gsx->measurements[loc] );
-  } 
-  switch (gsx->short_sensor) {
-  case CETB_SSMI:
-    TEST_ASSERT_TRUE( gsx->measurements[loc] == 128 );
-    break;
-  case CETB_AMSRE:
-    TEST_ASSERT_TRUE( gsx->measurements[loc] > 200 );
-    break;
-  }
-  gsx_close( gsx );
-}
-
 void test_gsx_source_file ( void ) {
   gsx_class *gsx;
   int status;
@@ -283,7 +204,7 @@ void test_gsx_channel_number ( void ) {
     fprintf( stderr, "\n%s: netcdf file '%s' has %d channels\n",	\
 	     __FUNCTION__, gsx->source_file, gsx->channel_number );
   }
-  TEST_ASSERT_TRUE( 7 == gsx->channel_number );
+  TEST_ASSERT_TRUE( 10 == gsx->channel_number );
   gsx_close( gsx );
 }
 
@@ -386,36 +307,6 @@ void test_gsx_fill_values_loc1 ( void ) {
   gsx_close( gsx );
 }
 
-void test_gsx_fill_values_loc2 ( void ) {
-  gsx_class *gsx;
-  int i=1;
-
-  gsx = gsx_init( file_name );
-  if ( ( NULL != gsx ) && ( gsx->scans[i] != 0 ) ) {
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_latitude[i] );
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_longitude[i] );
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eia[i] );
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eaz[i] );
-    TEST_ASSERT_TRUE( -1.e+30 == gsx->fill_scantime[i] );
-  }
-  gsx_close( gsx );
-}
-
-void test_gsx_fill_values_loc3 ( void ) {
-  gsx_class *gsx;
-  int i=2;
-
-  gsx = gsx_init( file_name );
-  if ( ( NULL != gsx ) && ( gsx->scans[i] != 0 ) ) {
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_latitude[i] );
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_longitude[i] );
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eia[i] );
-    TEST_ASSERT_TRUE( -9999.0 == gsx->fill_eaz[i] );
-    TEST_ASSERT_TRUE( -1.e+30 == gsx->fill_scantime[i] );
-  }
-  gsx_close( gsx );
-}
-
 void test_gsx_loc1_variables ( void ) {
   gsx_class *gsx;
   int i=0;
@@ -459,67 +350,6 @@ void test_gsx_loc1_variables ( void ) {
     TEST_ASSERT_TRUE( NULL != gsx->sc_latitude[i] );
     TEST_ASSERT_TRUE( NULL != gsx->sc_longitude[i] );
     TEST_ASSERT_TRUE( NULL != gsx->scantime[i] );
-  }
-
-  gsx_close( gsx );
-}
-
-void test_gsx_loc2_variables ( void ) {
-  gsx_class *gsx;
-  int i=1;
-
-  gsx = gsx_init( file_name );
-  if ( NULL != gsx ) {
-    fprintf( stderr, "\n%s: netcdf file '%s' has these loc2 variables\n", __FUNCTION__, gsx->source_file ); 
-    fprintf( stderr, "\t on latitude_loc2, longitude_loc2 eia_loc2, eaz_loc2\n" );
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \n",	\
-	     *(gsx->latitude[i]+1000), \
-	     *(gsx->longitude[i]+1000), \
-	     *(gsx->eia[i]+1000),	\
-	     *(gsx->eaz[i]+1000) );
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \n", \
-	     *(gsx->latitude[i]+1001), \
-	     *(gsx->longitude[i]+1001), \
-	     *(gsx->eia[i]+1001),	\
-	     *(gsx->eaz[i]+1001) );
-
-    TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
-  }
-
-  gsx_close( gsx );
-}
-
-void test_gsx_loc3_variables ( void ) {
-  gsx_class *gsx;
-  int i=2;
-
-  gsx = gsx_init( file_name );
-  if ( NULL != gsx ) {
-    if ( 0 != gsx->scans[i] ) {
-      fprintf( stderr, "\n%s: netcdf file '%s' has these loc3 variables\n", __FUNCTION__, gsx->source_file ); 
-      fprintf( stderr, "\t on latitude_loc3, longitude_loc3 eia_loc3, eaz_loc3\n" );
-      fprintf( stderr, "\t %f \t %f \t %f \t %f \n",	\
-	       *(gsx->latitude[i]+1000), \
-	       *(gsx->longitude[i]+1000), \
-	       *(gsx->eia[i]+1000),	\
-	       *(gsx->eaz[i]+1000) );
-      fprintf( stderr, "\t %f \t %f \t %f \t %f \n", \
-	       *(gsx->latitude[i]+1001), \
-	       *(gsx->longitude[i]+1001), \
-	       *(gsx->eia[i]+1001),	\
-	       *(gsx->eaz[i]+1001) );
-
-      TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
-      TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
-      TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
-      TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
-    } else {
-      fprintf( stderr, "%s: There are no loc3 variables in this file %s\n", \
-	       __FUNCTION__, gsx->source_file );
-    }
   }
 
   gsx_close( gsx );

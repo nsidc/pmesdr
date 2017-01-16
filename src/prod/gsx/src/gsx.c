@@ -334,7 +334,7 @@ int get_gsx_global_variables( gsx_class *this ) {
     status = assign_channels( this, token );
     if ( 0 != status ) {
       return -1;
-    }
+    } 
   }
 
   switch ( this->short_sensor ) {
@@ -931,6 +931,8 @@ int assign_channels( gsx_class *this, char *channel ) {
     }
     strcpy( this->channel_names[count], channel );
     *(this->channel_names[count]+strlen(channel)) = '\0';
+  } else {
+    fprintf( stderr, "%s: channel name not found in list\n", __FUNCTION__ );
   }
 
   return status;
