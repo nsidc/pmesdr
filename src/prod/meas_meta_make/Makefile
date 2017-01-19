@@ -256,3 +256,33 @@ ssmis_ease :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta F16 	\
 	         81 81 2006 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/SSMIS_regress_list_full
 
+smmr_quick :
+	$(RM) $(TESTDIR)/smmr_e2n
+	$(MKDIR) $(TESTDIR)/smmr_e2n
+	$(RM) $(TESTDIR)/smmr_e2s
+	$(MKDIR) $(TESTDIR)/smmr_e2s
+	$(RM) $(TESTDIR)/smmr_e2t
+	$(MKDIR) $(TESTDIR)/smmr_e2t
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2n/e2ntest_SMMR.meta NIMBUS7 	\
+	         360 360 1984 $(TOPDIR)/ref/E2N_smmr_quick.def $(TOPDIR)/testing/SMMR_regress_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2s/e2stest_SMMR.meta NIMBUS7 	\
+	         360 360 1984 $(TOPDIR)/ref/E2S_smmr_quick.def $(TOPDIR)/testing/SMMR_regress_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2t/e2ttest_SMMR.meta NIMBUS7 	\
+	         360 360 1984 $(TOPDIR)/ref/E2T_smmr_quick.def $(TOPDIR)/testing/SMMR_regress_list
+
+smmr_ease :
+	$(RM) $(TESTDIR)/smmr_e2n
+	$(MKDIR) $(TESTDIR)/smmr_e2n
+	$(RM) $(TESTDIR)/smmr_e2s
+	$(MKDIR) $(TESTDIR)/smmr_e2s
+	$(RM) $(TESTDIR)/smmr_e2t
+	$(MKDIR) $(TESTDIR)/smmr_e2t
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2n/e2ntest_SMMR.meta NIMBUS7 	\
+	         360 360 1984 $(TOPDIR)/ref/E2N_smmr_test.def $(TOPDIR)/testing/SMMR_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2s/e2stest_SMMR.meta NIMBUS7 	\
+	         360 360 1984 $(TOPDIR)/ref/E2S_smmr_test.def $(TOPDIR)/testing/SMMR_regress_list_full
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2t/e2ttest_SMMR.meta NIMBUS7 	\
+	         360 360 1984 $(TOPDIR)/ref/E2T_smmr_test.def $(TOPDIR)/testing/SMMR_regress_list_full
+

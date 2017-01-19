@@ -230,3 +230,20 @@ ssmis_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2t 	\
 	)
 
+smmr_quick :
+	$(RM) $(TESTDIR)/setupSMMR/e2n
+	$(MKDIR) $(TESTDIR)/setupSMMR/e2n
+	$(RM) $(TESTDIR)/setupSMMR/e2s
+	$(MKDIR) $(TESTDIR)/setupSMMR/e2s
+	$(RM) $(TESTDIR)/setuSMMR/e2t
+	$(MKDIR) $(TESTDIR)/setupSMMR/e2t
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2n/e2ntest_SMMR.meta  $(TESTDIR)/setupSMMR/e2n 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2s/e2stest_SMMR.meta  $(TESTDIR)/setupSMMR/e2s 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2t/e2ttest_SMMR.meta  $(TESTDIR)/setupSMMR/e2t 	\
+	)
+

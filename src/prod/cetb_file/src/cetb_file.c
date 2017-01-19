@@ -1227,6 +1227,12 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
     }
+  } else if ( CETB_SMMR == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SMMR_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_smmr_channel_name[ cetb_ibeam_to_cetb_smmr_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
@@ -2216,7 +2222,8 @@ int valid_sensor_id( cetb_sensor_id sensor_id ) {
 int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
 
   if ( CETB_CSU == producer_id
-       || CETB_RSS == producer_id ) {
+       || CETB_RSS == producer_id
+       || CETB_JPL == producer_id ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
