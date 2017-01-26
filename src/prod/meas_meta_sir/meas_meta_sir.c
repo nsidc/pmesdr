@@ -412,15 +412,12 @@ int main(int argc, char **argv)
      fprintf( stderr, "%s: Error initializing cetb_file for %s.\n",
 	      __FILE__, cetb_reconstruction_id_name[ CETB_SIR ] );
      exit( -1 );
-   } else {
-     fprintf( stderr, "%s: File opened %s.\n", __FILE__,
-	      cetb_reconstruction_id_name[ CETB_SIR ] );
-   }
+   } 
 
    if ( 0 != cetb_file_open( cetb_sir ) ) {
      fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__, cetb_sir->filename );
      exit( -1 );
-   }
+   } 
      
    cetb_grd = cetb_file_init( outpath,
 			      iregion, CETB_MIN_RESOLUTION_FACTOR, platform_id, sensor_id,
