@@ -1982,7 +1982,6 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
  *   box size in pixels for that channel/sensor combination
  *   returns -1 in case of error - e.g. out of range channel or unknown sensor
  *
- * the function only expects SSMI or AMSRE channel data for now and fails otherwise
  *
  * a discussion of the process by which the optimum box_size was chosen can be
  * found in the project on bitbucket.org in the directory docs/internal
@@ -2062,6 +2061,32 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     case SSMIS_91H:
     case SSMIS_91V:
       box_size = 20;
+      break;
+    default:
+      box_size = -1;
+      fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
+    }
+  } else if ( CETB_SMMR == id ) {
+    switch ( cetb_ibeam_to_cetb_smmr_channel[ibeam] ) {
+    case SMMR_06H:
+    case SMMR_06V:
+      box_size = 120;
+      break;
+    case SMMR_10H:
+    case SMMR_10V:
+      box_size = 100;
+      break;
+    case SMMR_18H:
+    case SMMR_18V:
+      box_size = 100;
+      break;
+    case SMMR_21H:
+    case SMMR_21V:
+      box_size = 100;
+      break;
+    case SMMR_37H:
+    case SMMR_37V:
+      box_size = 60;
       break;
     default:
       box_size = -1;

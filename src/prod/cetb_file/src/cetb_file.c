@@ -251,12 +251,12 @@ int cetb_file_open( cetb_file_class *this ) {
   	     __FUNCTION__, this->filename, nc_strerror( status ) );
     return 1;
   }
-
+  
   if ( STATUS_OK != set_all_dimensions( this ) ) {
     fprintf( stderr, "%s: Error setting dimensions on cetb_filename=%s.\n",
   	     __FUNCTION__, this->filename );
     return 1;
-  }
+  } 
 
   /*
    * Find and open the CETB template file with the global attribute data
@@ -269,7 +269,7 @@ int cetb_file_open( cetb_file_class *this ) {
     fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
   	     __FUNCTION__, template_filename, nc_strerror( status ) );
     return 0;
-  }
+  } 
 
   status = fetch_global_atts( this, template_fid );
   if ( 0 != status ) {
@@ -1227,6 +1227,12 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
     }
+  } else if ( CETB_SMMR == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SMMR_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_smmr_channel_name[ cetb_ibeam_to_cetb_smmr_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
@@ -1380,7 +1386,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   	     "Error getting num attributes from cetb template file: %s.\n",
   	     __FUNCTION__, nc_strerror( status ) );
     return 1;
-  }
+  } 
 
   /*
    * Copy all global attributes from template file to CETB file
@@ -1419,7 +1425,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
      fprintf( stderr, "%s: Error setting %s: %s.\n",
    	     __FUNCTION__, "platform", nc_strerror( status ) );
      return 1;
-   }
+  } 
 
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "instrument",
 				   strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
@@ -1427,7 +1433,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "instrument", nc_strerror( status ) );
     return 1;
-  }
+  } 
 
   source_value = set_source_value( this );
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "source",
@@ -1435,7 +1441,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "source", nc_strerror( status ) );
     return 1;
-  }
+  } 
   free( source_value );
 
   time_stamp = current_time_stamp();
@@ -1764,7 +1770,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   					       &days_since_epoch ) ) ) {
     fprintf( stderr, "%s: Error converting date to epoch..\n", __FUNCTION__ );
     return STATUS_FAILURE;
-  }
+  } 
 
   valid_range[ 0 ] = 0.0;
   valid_range[ 1 ] = DBL_MAX;
@@ -2216,7 +2222,8 @@ int valid_sensor_id( cetb_sensor_id sensor_id ) {
 int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
 
   if ( CETB_CSU == producer_id
-       || CETB_RSS == producer_id ) {
+       || CETB_RSS == producer_id
+       || CETB_JPL == producer_id ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
@@ -2421,6 +2428,10 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_SSMIS == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
     source_value = strdup( "CSU SSMIS FCDR V01R00" );
+  }
+
+  if ( ( CETB_SMMR == this->sensor_id ) ) {
+    source_value = strdup( "JPL SMMR" );
   }
 
   return source_value;
