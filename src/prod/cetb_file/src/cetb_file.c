@@ -401,6 +401,8 @@ int cetb_file_add_var( cetb_file_class *this,
 
   int status;
   int dim_ids[ ] = { this->time_dim_id, this->rows_dim_id, this->cols_dim_id };
+  size_t count[ ] = { 1, rows, cols };
+  size_t start[ ] = { 0, 0, 0 };
   long int row;
   float *float_data;
   unsigned char *uchar_data;
@@ -559,11 +561,13 @@ int cetb_file_add_var( cetb_file_class *this,
       /*
        * Meas_meta_ processing stores gridded array data from bottom to top.
        * NetCDF conventions expect it to be stored from top to bottom
-       * Using nc_put_vara_xtype was too slow, especially for non-square (i.e. T) grids
-       * Changed this to copy the data across in the correct order and use nc_put_var_xtype
-       * to write all the data at once
+       * Using nc_put_vara_xtype was too slow to write the data out in chunks,
+       * especially for non-square (i.e. T) grids
+       * Changed this to copy the data across in the correct order but still use
+       * nc_put_vara_xtype, because it allows you to write the first of the unlimited time dimensions
+       * and the data are still written in one chunk
        */
-      
+
       for ( row=0; row<rows; row++ ) {
 	for ( i=0;i <cols; i++ ) {
 	  *( ushort_data + ((row*cols)+i) ) = (unsigned short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
@@ -571,7 +575,7 @@ int cetb_file_add_var( cetb_file_class *this,
 	}
       }
 
-      if ( ( status = nc_put_var_ushort( this->fid, var_id, ushort_data ) ) ) {
+      if ( ( status = nc_put_vara_ushort( this->fid, var_id, start, count, ushort_data ) ) ) {
 	  fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
 	  return 1;
 	}
@@ -603,7 +607,7 @@ int cetb_file_add_var( cetb_file_class *this,
 	}
       }
 
-      if ( ( status = nc_put_var_short( this->fid, var_id, short_data ) ) ) {
+      if ( ( status = nc_put_vara_short( this->fid, var_id, start, count, short_data ) ) ) {
 	fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
 	return 1;
       }
@@ -638,7 +642,7 @@ int cetb_file_add_var( cetb_file_class *this,
 		sizeof( float ) * cols );
       }
 	
-      if ( ( status = nc_put_var( this->fid, var_id, ( void * )float_data ) ) ) {
+      if ( ( status = nc_put_vara( this->fid, var_id, start, count, ( void * )float_data ) ) ) {
 	fprintf( stderr, "%s: Error putting float variable: %s.\n",
 		 __FUNCTION__, nc_strerror( status ) );
 	return 1;
@@ -660,7 +664,7 @@ int cetb_file_add_var( cetb_file_class *this,
 		sizeof( unsigned char ) * cols );
       }
 	
-      if ( ( status = nc_put_var( this->fid, var_id, ( void * )uchar_data ) ) ) {
+      if ( ( status = nc_put_vara( this->fid, var_id, start, count, ( void * )uchar_data ) ) ) {
 	fprintf( stderr, "%s: Error putting uchar variable: %s.\n",
 		 __FUNCTION__, nc_strerror( status ) );
 	return 1;
@@ -1092,6 +1096,8 @@ int cetb_file_check_consistency( char *file_name ) {
   size_t rows, cols;
   int missing_flag=0;
   unsigned int index;
+  size_t count[ ] = { 1, rows, cols };
+  size_t start[ ] = { 0, 0, 0 };
   
   if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
@@ -1163,12 +1169,12 @@ int cetb_file_check_consistency( char *file_name ) {
   }
 
   if ( 1 == missing_flag ) { // need to write out the modified data
-    if ( ( status = nc_put_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
+    if ( ( status = nc_put_vara_ushort( nc_fileid, tb_varid, start, count, tb_ushort_data ) ) ) {
       fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
 	       nc_strerror(status), file_name );
       return -1;
     }
-    if ( ( status = nc_put_var_ushort( nc_fileid, tb_std_dev_varid, tb_std_dev_ushort_data ) ) ) {
+    if ( ( status = nc_put_vara_ushort( nc_fileid, tb_std_dev_varid, start, count, tb_std_dev_ushort_data ) ) ) {
       fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
 	       nc_strerror(status), file_name );
       return -1;
@@ -1774,7 +1780,7 @@ int set_all_dimensions( cetb_file_class *this ) {
 
   valid_range[ 0 ] = 0.0;
   valid_range[ 1 ] = DBL_MAX;
-  status = set_dimension( this, "time", 1, &days_since_epoch,
+  status = set_dimension( this, "time", NC_UNLIMITED, &days_since_epoch,
 			  "time", "ANSI date",
 			  units,
 			  "gregorian",
