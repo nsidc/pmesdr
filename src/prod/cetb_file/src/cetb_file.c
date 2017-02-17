@@ -1899,6 +1899,7 @@ int set_dimension( cetb_file_class *this,
   int var_id;
   int dim_ids[ 1 ];
   char *coverage_content_type;
+  size_t index[ ] = { 0 };
 
   coverage_content_type = strdup( CETB_FILE_COVERAGE_CONTENT_TYPE_COORD );
   if ( ( status = nc_def_dim( this->fid, name, size, dim_id ) ) ) {
@@ -1912,10 +1913,19 @@ int set_dimension( cetb_file_class *this,
   	     __FUNCTION__, name, nc_strerror( status ) );
     return 1;
   }
-  if ( ( status = nc_put_var_double( this->fid, var_id, vals ) ) ) {
-    fprintf( stderr, "%s: Error setting %s values: %s.\n",
-	     __FUNCTION__, name, nc_strerror( status ) );
-    return 1;
+  if ( size == NC_UNLIMITED ) { // for unlimited dimension use put var1
+    if ( ( status = nc_put_var1_double( this->fid, var_id, index, vals ) ) ) {
+      fprintf( stderr, "%s: Error setting %s values: %s.\n",
+	       __FUNCTION__, name, nc_strerror( status ) );
+      return 1;
+    }
+  } else {
+    
+    if ( ( status = nc_put_var_double( this->fid, var_id, vals ) ) ) {
+      fprintf( stderr, "%s: Error setting %s values: %s.\n",
+	       __FUNCTION__, name, nc_strerror( status ) );
+      return 1;
+    }
   }
   if ( ( status = nc_put_att_text( this->fid, var_id, "standard_name",
 				   strlen(standard_name), standard_name ) ) ) {
