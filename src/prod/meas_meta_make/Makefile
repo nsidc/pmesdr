@@ -199,11 +199,11 @@ csu_quick :
 	$(MKDIR) $(TESTDIR)/csu_e2t
 	$(CD) $(TOPDIR)/sample_data		 
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta F13 	\
-	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
+	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta F13 	\
-	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
+	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta F13 	\
-	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list		
+	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 
 amsre_ease :
 	$(RM) $(TESTDIR)/amsre_e2s
