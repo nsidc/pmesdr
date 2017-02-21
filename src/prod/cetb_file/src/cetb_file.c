@@ -1141,8 +1141,6 @@ int cetb_file_check_consistency( char *file_name ) {
     return -1;
   }
 
-  fprintf( stderr, "%s: rows %d and cols %d retrieved for TB array\n", __FUNCTION__, rows, cols );
-  
   if ( ( status = nc_get_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
     fprintf( stderr, "%s: couldn't retrieve temperature data, error=%s\n", __FUNCTION__, nc_strerror(status) );
     return -1;
