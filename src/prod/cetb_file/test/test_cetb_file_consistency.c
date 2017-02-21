@@ -245,16 +245,19 @@ void test_cetb_file_consistency( void ) {
 						      sample_tb0 ),
 				 tb_data[ cols * ( rows - 1 ) ],     // First element of last row
 				 "sample0 tb_data element" );
+  fprintf( stderr, "%s: This is the data value %d\n", __FUNCTION__, tb_data[cols * (rows - 1)] );
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
 						      CETB_NCATTS_TB_ADD_OFFSET,
 						      sample_tb1 ),
 				 tb_data[ cols * ( rows - 2 ) ],  // First element of second-to-last row
 				 "sample1 tb_data element" );
+  fprintf( stderr, "%s: This is the data value %d\n", __FUNCTION__, tb_data[cols * (rows - 2)] );
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
 						      CETB_NCATTS_TB_ADD_OFFSET,
 						      600.0 ),
 				 tb_data[ cols-1 ],     // Last element of first row array
 				 "sample2 tb_data element" );
+  fprintf( stderr, "%s: This is the data value %d\n", __FUNCTION__, tb_data[cols-1] );
   
   /* Confirm the expected TB_std_dev variable is in the output file */
   status = nc_inq_varid( nc_fileid, "TB_std_dev", &tb_stddev_var_id );
@@ -265,6 +268,7 @@ void test_cetb_file_consistency( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, nc_strerror( status ) );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_USHORT, xtype, "unexpected TB_std_dev data type" );
   
+  fprintf( stderr, "%s:, just before zero out short rows\n", __FUNCTION__ );
   /* Zero out the ushort_data values */
   for ( i = 0; i < ( rows * cols ); i++ ) {
     *( tb_data + i ) = 0;
@@ -284,6 +288,8 @@ void test_cetb_file_consistency( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_STDDEV_MISSING_VALUE,
 				 tb_data[ cols-1 ], // Last element at end of first row
 				 "sample2 tb_std_dev element" );
+
+  fprintf( stderr, "%s: fileid %d and file_name %s to be closed\n", __FUNCTION__, nc_fileid, test_filename );
   
   nc_close( nc_fileid );
 
