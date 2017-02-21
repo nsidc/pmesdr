@@ -401,7 +401,7 @@ int cetb_file_add_var( cetb_file_class *this,
 
   int status;
   int dim_ids[ ] = { this->time_dim_id, this->rows_dim_id, this->cols_dim_id };
-  size_t count[ ] = { 1, rows, cols };
+  size_t count[3];
   size_t start[ ] = { 0, 0, 0 };
   long int row;
   float *float_data;
@@ -416,7 +416,10 @@ int cetb_file_add_var( cetb_file_class *this,
   char *coverage_content_type;
   unsigned char num_samples_max = CETB_NCATTS_TB_NUM_SAMPLES_MAX;
   char *flag_meanings = "num_samples GE 255";
-  
+
+  count[0] = 1;
+  count[1] = rows;
+  count[2] = cols;
   packing_convention = strdup( CETB_FILE_PACKING_CONVENTION );
   packing_convention_description = strdup( CETB_FILE_PACKING_CONVENTION_DESC );
   grid_mapping = strdup( CETB_FILE_GRID_MAPPING );
@@ -1096,8 +1099,6 @@ int cetb_file_check_consistency( char *file_name ) {
   size_t rows, cols;
   int missing_flag=0;
   unsigned int index;
-  size_t count[ ] = { 1, rows, cols };
-  size_t start[ ] = { 0, 0, 0 };
   
   if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
     fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
