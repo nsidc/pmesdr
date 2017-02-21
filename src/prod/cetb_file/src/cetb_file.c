@@ -1141,6 +1141,8 @@ int cetb_file_check_consistency( char *file_name ) {
     return -1;
   }
 
+  fprintf( stderr, "%s: rows %d and cols %d retrieved for TB array\n", __FUNCTION__, rows, cols );
+  
   if ( ( status = nc_get_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
     fprintf( stderr, "%s: couldn't retrieve temperature data, error=%s\n", __FUNCTION__, nc_strerror(status) );
     return -1;
@@ -1169,13 +1171,13 @@ int cetb_file_check_consistency( char *file_name ) {
   }
 
   if ( 1 == missing_flag ) { // need to write out the modified data
-    if ( ( status = nc_put_vara_ushort( nc_fileid, tb_varid, start, count, tb_ushort_data ) ) ) {
+    if ( ( status = nc_put_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
       fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
 	       nc_strerror(status), file_name );
       return -1;
     }
-    if ( ( status = nc_put_vara_ushort( nc_fileid, tb_std_dev_varid, start, count, tb_std_dev_ushort_data ) ) ) {
-      fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
+    if ( ( status = nc_put_var_ushort( nc_fileid, tb_std_dev_varid, tb_std_dev_ushort_data ) ) ) {
+      fprintf( stderr, "%s: error=%s re-writing TB std dev data to file=%s\n", __FUNCTION__,
 	       nc_strerror(status), file_name );
       return -1;
     }
