@@ -51,7 +51,7 @@ void setUp( void ) {
   strcpy( dir, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dir, "/src/prod/cetb_file/test" );
   strcpy( test_filename, dir );
-  strcat( test_filename, "/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.0.nc" );
+  strcat( test_filename, "/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.1.nc" );
   region_id = CETB_EASE2_T;
   region_number = cetb_region_number[ region_id ];
   factor = 0;

@@ -40,7 +40,7 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( test_filename, "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-GRD-CSU-v1.0.nc" );
+  strcpy( test_filename, "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-GRD-CSU-v1.1.nc" );
   strcpy( dirname, "./test" );
   region_id = CETB_EASE2_N;
   region_number = cetb_region_number[ region_id ];
