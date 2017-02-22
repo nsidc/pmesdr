@@ -22,6 +22,9 @@ AMSRE_INPUT_FILES = AMSRE_regress_list_VM
 ifeq ($(LOCALE),JANUSicc)
   AMSRE_INPUT_FILES = AMSRE_regress_list_JANUS
 endif
+ifeq ($(LOCALE),SUMMITicc)
+  AMSRE_INPUT_FILES = AMSRE_regress_list_SUMMIT
+endif
 #
 #	commands
 #
@@ -33,6 +36,10 @@ MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
 ifeq ($(LOCALE),JANUSicc)
+  $(info Build location: $(LOCALE))
+  CC = icc
+endif
+ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
@@ -63,6 +70,15 @@ ifeq ($(LOCALE),JANUSgcc)
   $(info Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g -Wall
 endif
+ifeq ($(LOCALE),SUMMITicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
+endif
+ifeq ($(LOCALE),SUMMITgcc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -g -Wall
+endif
+
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_make.c

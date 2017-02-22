@@ -32,6 +32,10 @@ ifeq ($(LOCALE),JANUSicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
+ifeq ($(LOCALE),SUMMITicc)
+  $(info Build location: $(LOCALE))
+  CC = icc
+endif
 #
 #       debug or optimization settings
 #       these may be things that are machine-specific
@@ -73,6 +77,20 @@ else ifeq ($(LOCALE),JANUSgcc)
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+else ifeq ($(LOCALE),SUMMITicc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
+  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_INCDIR = ${CURC_HDF5_INC}
+  HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+else ifeq ($(LOCALE),SUMMITgcc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
+  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_INCDIR = ${CURC_HDF5_INC}
+  HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else
   $(info Assuming default LOCALE=BYU)
   NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
@@ -96,6 +114,14 @@ else ifeq ($(LOCALE),JANUSgcc)
   $(info Build location: $(LOCALE))
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -g -Wall
 endif
+ifeq ($(LOCALE),SUMMITicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
+else ifeq ($(LOCALE),SUMMITgcc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -g -Wall
+endif
+
 DEPEND_LIBS = $(LIBDIR)/libutils.a $(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a
 
 SRCS = meas_meta_setup.c
