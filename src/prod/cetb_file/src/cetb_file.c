@@ -1276,19 +1276,26 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
   float tb_time_min=(float)CETB_NCATTS_TB_TIME_MAX;
   float tb_time_max=(float)CETB_NCATTS_TB_TIME_MIN;
   int index, status;
-  char *time_string;  
+  char *time_string;
+  int flag=0;
 
   for ( index = 0; index < (xdim*ydim); index++ ) {
     if ( CETB_NCATTS_TB_TIME_FILL_VALUE < *(tb_time_data+index) ) {
       if ( *(tb_time_data+index) > tb_time_max ) {
+	flag = 1;
 	tb_time_max = *(tb_time_data+index);
       }
       if ( *(tb_time_data+index) < tb_time_min ) {
+	flag = 1;
 	tb_time_min = *(tb_time_data+index);
       }
     }
   }
 
+  if ( flag == 0 ) {  // Time is set to fill value so set coverage to midnight
+    tb_time_min = 0;
+    tb_time_max = 0;
+  }
   time_string = iso_date_string( this->year, this->doy, tb_time_min );
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "time_coverage_start",
 				   strlen( time_string ),
