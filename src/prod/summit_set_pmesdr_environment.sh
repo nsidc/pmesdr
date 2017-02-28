@@ -61,7 +61,7 @@ export meas_home=$PMESDR_TOP_DIR
 export SIR_areas=$PMESDR_TOP_DIR/ref/locs
 export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
 export RSS_path=$PMESDR_TOP_DIR/ref
-regression_yyyymmdd=20160112
+regression_yyyymmdd=20170221
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
 # Determine the LOCALE, a function of host and compiler.
@@ -107,7 +107,7 @@ elif [[ "$HOSTNAME" == *"shas"* ]]; then
   export PMESDR_COMPARE_TOLERANCE=0.25
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_TESTDATA_DIR="/projects/maddenp/pmesdr_testdata"
-
+  export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../../pmesdr_regression_data/${regression_yyyymmdd}
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
     ml -intel
