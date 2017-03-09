@@ -107,21 +107,21 @@ CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unuse
 ARFLAGS = ruv
 ifeq ($(LOCALE),JANUSicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
+  CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),JANUSgcc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -g -Wall
+  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
 endif
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -D'SUMMITicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
+  CFLAGS = -D'SUMMITicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),SUMMITgcc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -g -Wall
+  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
 endif
 DEPEND_LIBS = 
 
