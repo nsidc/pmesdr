@@ -78,7 +78,9 @@ void test_cetb_populate_sir_parameters( void ) {
   float *float_data, rthreshold=-10.0;
   float box_size_km=625.0;
   float expected_rthreshold=-10.0;
-  float expected_box_size_km=625.0; 
+  float expected_box_size_km=625.0;
+  float ltod_start = 0.0;
+  float ltod_end = 12.0;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
@@ -114,7 +116,7 @@ void test_cetb_populate_sir_parameters( void ) {
   status = cetb_file_add_sir_parameters( cetb, nits, median_filter );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_sir_parameters" );
 
-  status = cetb_file_add_TB_parameters( cetb, rthreshold, box_size_km );
+  status = cetb_file_add_TB_parameters( cetb, rthreshold, box_size_km, ltod_start, ltod_end );
   TEST_ASSERT_TRUE_MESSAGE( 0 == status, "cetb_file_add_TB_parameters" );
   cetb_file_close( cetb );
 
