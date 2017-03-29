@@ -130,6 +130,8 @@ int main(int argc, char **argv)
   float amin, amax, bmin, bmax, temp, old_amin, old_amax;
   float old_bmin, old_bmax, denom;
 
+  float ltod_start, ltod_end;
+
   char line[100];
 
   cetb_file_class *cetb_sir;
@@ -336,6 +338,18 @@ int main(int argc, char **argv)
        x = strchr( line,'=' );
        direction_id = ( cetb_direction_id )atoi(++x);
        fprintf( stderr,  "%s: Direction_id %s\n",  __FUNCTION__, cetb_direction_id_name[ direction_id ] );
+     }
+
+     if ( strstr( line, "  Ltod_start" ) != NULL ) {
+       x = strchr( line,'=' );
+       ltod_start = atof(++x);
+       fprintf( stderr,  "%s: Ltod_start %f\n",  __FUNCTION__, ltod_start );
+     }
+
+     if ( strstr( line, " Ltod_end" ) != NULL ) {
+       x = strchr( line,'=' );
+       ltod_end = atof(++x);
+       fprintf( stderr,  "%s: Ltod_end %f\n",  __FUNCTION__, ltod_end );
      }
 
      if (strstr(line,"Search_box_km") != NULL) {
@@ -1326,7 +1340,7 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding list of files to %s.\n", __FILE__, cetb_grd->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_TB_parameters( cetb_grd, rthreshold, box_size_km ) ) {
+  if ( 0 != cetb_file_add_TB_parameters( cetb_grd, rthreshold, box_size_km, ltod_start, ltod_end ) ) {
     fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__, cetb_grd->filename );
     exit( -1 );
   }
@@ -1348,7 +1362,7 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding input file names to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_TB_parameters( cetb_sir, rthreshold, box_size_km ) ) {
+  if ( 0 != cetb_file_add_TB_parameters( cetb_sir, rthreshold, box_size_km, ltod_start, ltod_end ) ) {
     fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }

@@ -964,11 +964,13 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
  */
 int cetb_file_add_TB_parameters( cetb_file_class *this,
 				 float rthreshold,
-				 float box_size_km ) {
+				 float box_size_km,
+				 float ltod_start,
+				 float ltod_end ) {
 
   int status;
   int var_id;
-  float ltod_start, ltod_end;
+  float ltod_tmp;
   char *channel_str;
   
   if ( !this ) {
@@ -1009,12 +1011,10 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
   /* Only set the next 2 attributes for N and S projections */
   if ( CETB_EASE2_T != this->region_id ) { 
     if ( CETB_EVENING_PASSES == this->direction_id ) {
-      ltod_start = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][1];
-      ltod_end = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][0];
-    } else {
-      ltod_start = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][0];
-      ltod_end = cetb_ltod_split_times[ this->platform_id ][ this->region_id ][1];
-    }    
+      ltod_tmp = ltod_start;
+      ltod_start = ltod_end;
+      ltod_end = ltod_tmp;
+    } 
     if ( ( status = nc_put_att_float( this->fid, var_id, "temporal_division_local_start_time",
 				      NC_FLOAT, 1, &ltod_start ) ) ) {
       fprintf( stderr, "%s: Error setting start local time of day: %s\n",

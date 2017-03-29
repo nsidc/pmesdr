@@ -118,7 +118,7 @@ static int write_blanklines_to_header( region_save *save_area );
 static int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
 				       unsigned long *position_filename, unsigned long *position_data );
 static int write_end_header( region_save *save_area );
-static int write_header_info( gsx_class *gsx, region_save *save_area );
+static int write_header_info( gsx_class *gsx, region_save *save_area, int year );
 static FILE * get_meta(char *mname, char *outpath, int *dstart, 
                 int *dend, int *mstart, int *mend, 
 		int *year, char *prog_n, float prog_v,
@@ -141,6 +141,7 @@ static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 static void combine_setup_files( region_save *a, int execution_flag );
 static int julday(int mm, int id, int iyyy);
 static void caldat(int julian, int *mm, int *id, int *iyyy);
+static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id, int am_or_pm, int year );
 
 /****************************************************************************/
 
@@ -456,7 +457,7 @@ int main(int argc,char *argv[])
     /* if this is the first file to be read, then write out the final header info for downstream processing */
     if ( 0 == first_file ) {
       first_file++;
-      status = write_header_info( gsx, &save_area );
+      status = write_header_info( gsx, &save_area, year );
       if ( 0 != status ) {
 	fprintf( stderr, "%s: *** couldn't write out remaining header information\n", __FILE__ );
 	exit (-1);
@@ -670,8 +671,8 @@ int main(int argc,char *argv[])
 
 		/* extract local-time-of-day split values  - these are sensor and projection dependent */
 
-		tsplit1_mins=(cetb_ltod_split_times[gsx->short_platform][cetb_region][0])*MINUTES_PER_HOUR;
-		tsplit2_mins=(cetb_ltod_split_times[gsx->short_platform][cetb_region][1])*MINUTES_PER_HOUR;
+		tsplit1_mins=(ltod_split_time(gsx->short_platform, cetb_region, 0, year))*MINUTES_PER_HOUR;
+		tsplit2_mins=(ltod_split_time(gsx->short_platform, cetb_region, 1, year))*MINUTES_PER_HOUR;
 
 		cy=cen_lat;
 		cx=cen_lon;
@@ -2106,16 +2107,18 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
  * Input:
  *   gsx - pointer to gsx_class struct
  *   save_area - contains info on open output setup files
+ *   year - the year of the date being processed - used to determine ltod times
  *
  * Return:
  *   none
  *
  */
-int write_header_info( gsx_class *gsx, region_save *save_area ) {
+int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
   int cnt=100;
   char lin[100];
   int z;
   int iregion;
+  float ltod_start, ltod_end;
   
   /* Writing out CETB required information to setup file */
   if ( gsx != NULL ) {
@@ -2141,6 +2144,24 @@ int write_header_info( gsx_class *gsx, region_save *save_area ) {
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
       for(z=0;z<100;z++)lin[z]=' ';
       sprintf(lin," Pass_direction=%d ", save_area->sav_ascdes[iregion-1]);
+      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+      for(z=0;z<100;z++)lin[z]=' ';
+      ltod_start = ltod_split_time(gsx->short_sensor,
+				   (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
+				   0, year);
+      sprintf(lin," Ltod_start=%f ", ltod_start);
+      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+
+      fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
+      for(z=0;z<100;z++)lin[z]=' ';
+      ltod_end = ltod_split_time(gsx->short_sensor,
+				 (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
+				 1, year);
+      sprintf(lin," Ltod_end=%f ", ltod_end);
       fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
@@ -2307,3 +2328,94 @@ void combine_setup_files( region_save *a, int execution_flag ) {
 }
 
 /* *********************************************************************** */
+/* ltod_split_time - used to look up the ltod split times by platform, hemisphere and year
+ *
+ *  Input:
+ *    platform_id
+ *    region_id
+ *    int am_or_pm - flag is 0 for morning and 1 for evening
+ *
+ *  Output:
+ *    ltod start or end time
+ *
+ */
+static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id, int am_or_pm, int year ) {
+
+  float cetb_ltod_split_times[CETB_NUM_PLATFORMS][2][2] = {
+    { {6.0, 18.0}, {6.0, 18.0} }, /* CETB_NIMBUS7 platform, N or S projection */
+    { {5.0, 17.0}, {8.0, 20.0} }, /* CETB_AQUA platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F08 platform,  N or S projection */
+    { {2.0, 14.0}, {2.0, 14.0} }, /* CETB_F10 platform, 1991-1993, 1994 + 1 hour, 1995-1997 + 2 hours, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F11 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F13 platform, N or S projection */
+    { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F14 platform, N or S projection */
+    { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F15 platform, N or S projection */
+    { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F16 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F18 platform, N or S projection */
+  };
+  float split_time;
+
+  if ( region_id == CETB_EASE2_T ) {
+    split_time = -1.0;
+  } else if ( platform_id == CETB_F10 ) {
+    switch ( year ) {
+    case 1991:
+    case 1992:
+    case 1993:
+      if ( am_or_pm == 0 ) {
+	split_time = 2.0;
+      } else {
+	split_time = 14.0;
+      }
+    case 1994:
+      if ( am_or_pm == 0 ) {
+	split_time = 3.0;
+      } else {
+	split_time = 15.0;
+      }
+    case 1995:
+    case 1996:
+    case 1997:
+      if ( am_or_pm == 0 ) {
+	split_time = 4.0;
+      } else {
+	split_time = 16.0;
+      }
+    default:
+      split_time = -1;
+    }
+  } else if ( platform_id == CETB_F14 ) {
+    switch ( year ) {
+    case 1997:
+    case 1998:
+    case 1999:
+    case 2000:
+    case 2001:
+    case 2002:
+    case 2003:
+      if ( am_or_pm == 0 ) {
+	split_time = 2.0;
+      } else {
+	split_time = 14.0;
+      }
+    case 2004:
+    case 2005:
+    case 2006:
+    case 2007:
+    case 2008:
+    case 2009:
+      if ( am_or_pm == 0 ) {
+	split_time = 0.0;
+      } else {
+	split_time = 12.0;
+      }
+    default:
+      split_time = -1;
+    }
+  } else {
+    split_time = cetb_ltod_split_times[platform_id][region_id][am_or_pm];
+  }
+
+  return split_time;
+} 

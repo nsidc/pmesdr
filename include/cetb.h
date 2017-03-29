@@ -135,6 +135,7 @@ typedef enum {
   CETB_F10,
   CETB_F11,
   CETB_F13,
+  CETB_F14,
   CETB_F15,
   CETB_F16,
   CETB_F17,
@@ -152,6 +153,7 @@ static const char *cetb_platform_id_name[] = {
   "F10",
   "F11",
   "F13",
+  "F14",
   "F15",
   "F16",
   "F17",
@@ -169,27 +171,12 @@ static const char *cetb_gcmd_platform_keyword[] = {
   "DMSP 5D-2/F10 > Defense Meteorological Satellite Program-F10",
   "DMSP 5D-2/F11 > Defense Meteorological Satellite Program-F11",
   "DMSP 5D-2/F13 > Defense Meteorological Satellite Program-F13",
+  "DMSP 5D-2/F14 > Defense Meteorological Satellite Program-F14",
   "DMSP 5D-2/F15 > Defense Meteorological Satellite Program-F15",
   "DMSP 5D-3/F16 > Defense Meteorological Satellite Program-F16",
   "DMSP 5D-3/F17 > Defense Meteorological Satellite Program-F17",
   "DMSP 5D-3/F18 > Defense Meteorological Satellite Program-F18"
 };
-
-/* LTOD split times are a function of sensor and projection
- * the projection list is as described in the variable above */
-static float cetb_ltod_split_times[CETB_NUM_PLATFORMS][CETB_NUM_REGIONS][2] = {
-  { {6.0, 18.0}, {6.0, 18.0}, {-1.0, -1.0} }, /* CETB_NIMBUS7 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {5.0, 17.0}, {8.0, 20.0}, {-1.0, -1.0} }, /* CETB_AQUA platform, 3 regions, -1.0 for undefined (T projection) */
-  { {0.0, 12.0}, {0.0, 12.0}, {-1.0, -1.0} }, /* CETB_F08 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {4.0, 16.0}, {4.0, 16.0}, {-1.0, -1.0} }, /* CETB_F10 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {2.0, 14.0}, {2.0, 14.0}, {-1.0, -1.0} }, /* CETB_F11 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {0.0, 12.0}, {0.0, 12.0}, {-1.0, -1.0} }, /* CETB_F13 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {3.0, 15.0}, {3.0, 15.0}, {-1.0, -1.0} }, /* CETB_F15 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {3.0, 15.0}, {3.0, 15.0}, {-1.0, -1.0} }, /* CETB_F16 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {0.0, 12.0}, {0.0, 12.0}, {-1.0, -1.0} }, /* CETB_F17 platform, 3 regions, -1.0 for undefined (T projection) */
-  { {0.0, 12.0}, {0.0, 12.0}, {-1.0, -1.0} }  /* CETB_F18 platform, 3 regions, -1.0 for undefined (T projection) */  
-};
-
 
 /*
  * Sensor IDs
