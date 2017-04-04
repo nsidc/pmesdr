@@ -2161,7 +2161,7 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
 
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
       for(z=0;z<100;z++)lin[z]=' ';
-      ltod_morning = ltod_split_time(gsx->short_sensor,
+      ltod_morning = ltod_split_time(gsx->short_platform,
 				     (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
 				     CETB_MORNING_PASSES, year);
       sprintf(lin," Ltod_morning=%f ", ltod_morning);
@@ -2170,7 +2170,7 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
 
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
       for(z=0;z<100;z++)lin[z]=' ';
-      ltod_evening = ltod_split_time(gsx->short_sensor,
+      ltod_evening = ltod_split_time(gsx->short_platform,
 				     (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
 				     CETB_EVENING_PASSES, year);
       sprintf(lin," Ltod_evening=%f ", ltod_evening);
