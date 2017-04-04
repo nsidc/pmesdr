@@ -111,8 +111,8 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
 int cetb_file_add_TB_parameters( cetb_file_class *this,
 				 float rthreshold,
 				 float box_size_km,
-				 float ltod_start,
-				 float ltod_end );
+				 float ltod_morning,
+				 float ltod_evening );
 void cetb_file_close( cetb_file_class *this );
 int cetb_file_check_consistency( char *file_name );
 

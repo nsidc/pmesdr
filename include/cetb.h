@@ -208,6 +208,7 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
   CETB_SSMI,
   CETB_SSMI,
   CETB_SSMI,
+  CETB_SSMI,
   CETB_SSMIS,
   CETB_SSMIS,
   CETB_SSMIS,

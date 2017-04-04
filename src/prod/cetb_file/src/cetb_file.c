@@ -965,12 +965,12 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
 int cetb_file_add_TB_parameters( cetb_file_class *this,
 				 float rthreshold,
 				 float box_size_km,
-				 float ltod_start,
-				 float ltod_end ) {
+				 float ltod_morning,
+				 float ltod_evening ) {
 
   int status;
   int var_id;
-  float ltod_tmp;
+  float ltod_tmp_morning, ltod_tmp_evening;
   char *channel_str;
   
   if ( !this ) {
@@ -1011,18 +1011,22 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
   /* Only set the next 2 attributes for N and S projections */
   if ( CETB_EASE2_T != this->region_id ) { 
     if ( CETB_EVENING_PASSES == this->direction_id ) {
-      ltod_tmp = ltod_start;
-      ltod_start = ltod_end;
-      ltod_end = ltod_tmp;
-    } 
+      ltod_tmp_morning = ltod_evening;
+      ltod_tmp_evening = ltod_morning;
+    } else {
+      ltod_tmp_morning = ltod_morning;
+      ltod_tmp_evening = ltod_evening;
+    }
+    fprintf( stderr, "%s: morning time %f and evening time %f\n", __FUNCTION__,
+	     ltod_tmp_morning, ltod_tmp_evening );
     if ( ( status = nc_put_att_float( this->fid, var_id, "temporal_division_local_start_time",
-				      NC_FLOAT, 1, &ltod_start ) ) ) {
+				      NC_FLOAT, 1, &ltod_tmp_morning ) ) ) {
       fprintf( stderr, "%s: Error setting start local time of day: %s\n",
 	       __FUNCTION__, nc_strerror( status ) );
       return 1;
     }
     if ( ( status = nc_put_att_float( this->fid, var_id, "temporal_division_local_end_time",
-				      NC_FLOAT, 1, &ltod_end ) ) ) {
+				      NC_FLOAT, 1, &ltod_tmp_evening ) ) ) {
       fprintf( stderr, "%s: Error setting end local time of day: %s\n",
 	       __FUNCTION__, nc_strerror( status ) );
       return 1;

@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   float tbval, ang, azang;
   int count, ktime, iadd, end_flag, input_file_total;
   char *list_of_input_files[CETB_MAX_INPUT_FILES];
-  char *x;
+  char *x, *stopstring;
   int irecords;
   int non_size_x, non_size_y, nsx2, nsy2, ix, iy, nsize2;
   float xdeg2, ydeg2, ascale2, bscale2, a02, b02;
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
   float amin, amax, bmin, bmax, temp, old_amin, old_amax;
   float old_bmin, old_bmax, denom;
 
-  float ltod_start, ltod_end;
+  float ltod_morning, ltod_evening;
 
   char line[100];
 
@@ -288,73 +288,73 @@ int main(int argc, char **argv)
 
      if (strstr(line,"A_initialization") != NULL) {
        x = strchr(line,'=');
-       a_init=(float)atof(++x);
+       a_init=strtof(++x, &stopstring);
        fprintf( stderr, "%s: A_initialization of %f\n", __FUNCTION__, a_init );
      }
 
      if (strstr(line,"Response_threshold") != NULL) {
        x = strchr(line,'=');
-       rthreshold=(float)atof(++x);
+       rthreshold=strtof(++x, &stopstring);
        fprintf( stderr, "%s: Response_threshold of %f\n", __FUNCTION__, rthreshold );
      }
 
      if (strstr(line,"Beam_code") != NULL) {
        x = strchr(line,'=');
-       ibeam=atoi(++x);
+       ibeam=strtol(++x, NULL, 10);
        fprintf( stderr, "%s: Beam code %d\n", __FUNCTION__, ibeam );
      }
 
      if (strstr(line,"Max_iterations") != NULL) {
        x = strchr(line,'=');
-       nits=atoi(++x);
+       nits=strtol(++x, NULL, 10);
        fprintf( stderr, "%s: Max iterations of %d\n", __FUNCTION__, nits );
      }
 
      if (strstr(line,"Max_Fill") != NULL) {
        x = strchr(line,'=');
-       MAXFILL=atoi(++x);
+       MAXFILL=strtol(++x, NULL, 10);
        fprintf( stderr, "%s: Max fill %d\n", __FUNCTION__, MAXFILL);
      }
 
      if ( strstr( line, " Producer_id" ) != NULL ) {
        x = strchr( line,'=' );
-       swath_producer_id = ( cetb_swath_producer_id )atoi(++x);
+       swath_producer_id = ( cetb_swath_producer_id )strtol(++x, NULL, 10);
        fprintf( stderr,  "%s: Producer_id %s\n",  __FUNCTION__, cetb_swath_producer_id_name[ swath_producer_id ] );
      }
 
      if ( strstr( line, " Platform_id" ) != NULL ) {
        x = strchr( line,'=' );
-       platform_id = ( cetb_platform_id )atoi(++x);
+       platform_id = ( cetb_platform_id )strtol(++x, NULL, 10);
        fprintf( stderr,  "%s: Platform_id %s\n",  __FUNCTION__, cetb_platform_id_name[ platform_id ] );
      }
 
      if ( strstr( line, " Sensor_id" ) != NULL ) {
        x = strchr( line,'=' );
-       sensor_id = ( cetb_sensor_id )atoi(++x);
+       sensor_id = ( cetb_sensor_id )strtol(++x, NULL, 10);
        fprintf( stderr,  "%s: Sensor_id %s\n",  __FUNCTION__, cetb_sensor_id_name[ sensor_id ] );
      }
 
      if ( strstr( line, " Pass_direction" ) != NULL ) {
        x = strchr( line,'=' );
-       direction_id = ( cetb_direction_id )atoi(++x);
+       direction_id = ( cetb_direction_id )strtol(++x, NULL, 10);
        fprintf( stderr,  "%s: Direction_id %s\n",  __FUNCTION__, cetb_direction_id_name[ direction_id ] );
      }
 
-     if ( strstr( line, "  Ltod_start" ) != NULL ) {
+     if ( strstr( line, "  Ltod_morning" ) != NULL ) {
        x = strchr( line,'=' );
-       ltod_start = atof(++x);
-       fprintf( stderr,  "%s: Ltod_start %f\n",  __FUNCTION__, ltod_start );
+       ltod_morning = strtof(++x, &stopstring);
+       fprintf( stderr,  "%s: Ltod_morning %f\n",  __FUNCTION__, ltod_morning );
      }
 
-     if ( strstr( line, " Ltod_end" ) != NULL ) {
+     if ( strstr( line, " Ltod_evening" ) != NULL ) {
        x = strchr( line,'=' );
-       ltod_end = atof(++x);
-       fprintf( stderr,  "%s: Ltod_end %f\n",  __FUNCTION__, ltod_end );
+       ltod_evening = strtof(++x, &stopstring);
+       fprintf( stderr,  "%s: Ltod_evening %f\n",  __FUNCTION__, ltod_evening );
      }
 
      if (strstr(line,"Search_box_km") != NULL) {
        x = strchr(line,'=');
-       box_size_km=(float)atof(++x);
+       box_size_km=strtof(++x, &stopstring);
        fprintf( stderr, "%s: Search_box_km %f\n", __FUNCTION__, box_size_km );
      }
 
@@ -1340,7 +1340,7 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding list of files to %s.\n", __FILE__, cetb_grd->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_TB_parameters( cetb_grd, rthreshold, box_size_km, ltod_start, ltod_end ) ) {
+  if ( 0 != cetb_file_add_TB_parameters( cetb_grd, rthreshold, box_size_km, ltod_morning, ltod_evening ) ) {
     fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__, cetb_grd->filename );
     exit( -1 );
   }
@@ -1362,7 +1362,7 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error adding input file names to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_TB_parameters( cetb_sir, rthreshold, box_size_km, ltod_start, ltod_end ) ) {
+  if ( 0 != cetb_file_add_TB_parameters( cetb_sir, rthreshold, box_size_km, ltod_morning, ltod_evening ) ) {
     fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__, cetb_sir->filename );
     exit( -1 );
   }
