@@ -637,6 +637,7 @@ int main(int argc,char *argv[])
 	      if ( CETB_SSMI == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
 	      if ( CETB_AMSRE == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
 	      if ( CETB_SSMIS == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmis_channel[ibeam];
+	      if ( CETB_SMMR == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_smmr_channel[ibeam];
 	      
 	      /* only get Tb's for channels that use the current set of position coordinates */
 
@@ -670,17 +671,18 @@ int main(int argc,char *argv[])
 		  }
 		}
 
+		/* only for N and S projections */
 		/* extract local-time-of-day split values  - these are sensor, year and projection dependent */
 		/* a negative return from ltod_split_time function will indicate an incorrect year/satellite combination*/
 
 		tsplit = (ltod_split_time(gsx->short_platform, cetb_region, CETB_MORNING_PASSES, year));
-		if ( (tsplit + 1.0) < FLT_EPSILON ) {
+		if ( ((tsplit + 1.0) < FLT_EPSILON) && (cetb_region != CETB_EASE2_T) ) {
 		  exit(-1);
 		} else {
 		  tsplit1_mins = tsplit * MINUTES_PER_HOUR;
 		}
 		tsplit = (ltod_split_time(gsx->short_platform, cetb_region, CETB_EVENING_PASSES, year));
-		if ( (tsplit + 1.0) < FLT_EPSILON ) {
+		if ( ((tsplit + 1.0) < FLT_EPSILON) && (cetb_region != CETB_EASE2_T) ) {
 		  exit(-1);
 		} else {
 		  tsplit2_mins = tsplit * MINUTES_PER_HOUR;
