@@ -2423,20 +2423,25 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     case 1999:
     case 2000:
     case 2001:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	split_time = 3.0;
+      } else {
+	split_time = 15.0;
+      }
+      break;
     case 2002:
     case 2003:
+    case 2004:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	split_time = 2.0;
       } else {
 	split_time = 14.0;
       }
       break;
-    case 2004:
     case 2005:
     case 2006:
     case 2007:
     case 2008:
-    case 2009:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	split_time = 0.0;
       } else {
