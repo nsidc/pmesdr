@@ -2451,6 +2451,58 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     default:
       split_time = -1;
     }
+  } else if ( platform_id == CETB_F15 ) {
+    switch ( year ) {
+    case 2000:
+    case 2001:
+    case 2002:
+    case 2003:
+    case 2004:
+    case 2005:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	split_time = 3.0;
+      } else {
+	split_time = 15.0;
+      }
+      break;
+    case 2006:
+    case 2007:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	split_time = 2.0;
+      } else {
+	split_time = 14.0;
+      }
+      break;
+    case 2008:
+    case 2009:
+    case 2010:
+    case 2011:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	split_time = 0.0;
+      } else {
+	split_time = 12.0;
+      }
+      break;
+    case 2012:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	split_time = 10.0;
+      } else {
+	split_time = 22.0;
+      }
+      break;
+    case 2013:
+    case 2014:
+    case 2015:
+    case 2016:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	split_time = 9.0;
+      } else {
+	split_time = 21.0;
+      }
+      break;
+    default:
+      split_time = -1;
+    }
   } else {
     split_time =
       cetb_ltod_split_times[platform_id][region_id][direction_id-CETB_MORNING_PASSES];
