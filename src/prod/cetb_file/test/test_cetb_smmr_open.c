@@ -42,7 +42,7 @@ void setUp( void ) {
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
   strcpy( test_filename, dirname );
-  strcat( test_filename, "/NSIDC-0630-EASE2_N12.5km-NIMBUS7_SMMR-1984001-06H-M-SIR-JPL-v1.1.nc" );
+  strcat( test_filename, "/NSIDC-0630-EASE2_N12.5km-NIMBUS7_SMMR-1984001-06H-M-SIR-JPL-v1.2.nc" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
   factor = 1;
   platform_id = CETB_NIMBUS7;
