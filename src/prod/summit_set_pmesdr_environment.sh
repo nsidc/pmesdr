@@ -124,7 +124,7 @@ elif [[ "$HOSTNAME" == *"shas"* ]]; then
     module purge all
     ml intel
     ml netcdf/4.3.3.1
-    ml udunits/2.2.20
+    ml udunits
     export LOCALE=SUMMITicc
   fi
 
