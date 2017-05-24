@@ -28,7 +28,7 @@ source ${PMESDR_TOP_DIR}/src/prod/summit_set_pmesdr_environment.sh -a
 ml intel
 ml impi
 ml netcdf/4.3.3.1
-ml udunits/2.2.20
+ml udunits
 ml loadbalance
 ml
 date
