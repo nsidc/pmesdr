@@ -140,6 +140,7 @@ typedef enum {
   CETB_F16,
   CETB_F17,
   CETB_F18,
+  CETB_F19,
   CETB_NUM_PLATFORMS
 } cetb_platform_id;
 
@@ -157,7 +158,8 @@ static const char *cetb_platform_id_name[] = {
   "F15",
   "F16",
   "F17",
-  "F18"
+  "F18",
+  "F19"
 };
 
 /*
@@ -172,10 +174,11 @@ static const char *cetb_gcmd_platform_keyword[] = {
   "DMSP 5D-2/F11 > Defense Meteorological Satellite Program-F11",
   "DMSP 5D-2/F13 > Defense Meteorological Satellite Program-F13",
   "DMSP 5D-2/F14 > Defense Meteorological Satellite Program-F14",
-  "DMSP 5D-2/F15 > Defense Meteorological Satellite Program-F15",
+  "DMSP 5D-3/F15 > Defense Meteorological Satellite Program-F15",
   "DMSP 5D-3/F16 > Defense Meteorological Satellite Program-F16",
   "DMSP 5D-3/F17 > Defense Meteorological Satellite Program-F17",
-  "DMSP 5D-3/F18 > Defense Meteorological Satellite Program-F18"
+  "DMSP 5D-3/F18 > Defense Meteorological Satellite Program-F18",
+  "DMSP 5D-3/F19 > Defense Meteorological Satellite Program-F19"
 };
 
 /*
@@ -204,6 +207,7 @@ static const char *cetb_sensor_id_name[] = {
 static const cetb_sensor_id cetb_platform_to_sensor[] = {
   CETB_SMMR,
   CETB_AMSRE,
+  CETB_SSMI,
   CETB_SSMI,
   CETB_SSMI,
   CETB_SSMI,
