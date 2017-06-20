@@ -2377,7 +2377,8 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F15 platform, N or S projection */
     { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F16 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
-    { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F18 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F19 platform, N or S projection */
   };
   float split_time;
 
