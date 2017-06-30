@@ -1,0 +1,40 @@
+1.  Transfer all of the input files to summit
+2.  Take note of the start doy, end doy, total doys, total number of input files
+    	 Copy the requisite shell scripts from /projects/moha2290/CETB_process/scripts
+3.  Run nc_to_gsx.sh to create script to convert input to gsx - arguments SSMIS-CSU and source (F18 e.g.)
+4.  Verify contents of generated file with head, tail and wc -l (should have same number of lines as files)
+5.  use sbatch run_gsx.sh Fxx to create gsx files files and verfiy file count in xxx_GSX directory
+6.  run daily_file_lists.sh to create list of input files for each day in series - these are stored in xxx_lists
+    	arguments are year, start_doy, end_doy, platform i.e. yyy ddd ddd Fxx
+7.  run file_3day.sh to create list of input files for NS projections for each day in series
+    	arguments are yyyy ddd ddd Fxx
+8.  count to confirm the correct number of files created
+9.  use grep to check for no "such" messages in files created - should ony be in NS files for first and last doys -
+    this is useful because it will also show if there are missing days of files
+10. use sed to edit files to remove missing file messages
+    	grep -l such ../Fxx_lists/* | xargs sed -i '/such/d'
+11. run SSMIS_make.sh to create lists for make process
+12. combine all make files by "catting" them into a files called Fxx_make_list
+13. count number of lines in input file to run_make
+14. run_make.sh, takes 1 argument F18 or whichever platform - to generate make files for setup process - files are stored in xxx_make
+15. from this point processing should proceed by year
+16. execute SSMIS_setup_year.sh with arguments of 4-digit year and platform to generate list of commands for loadbalancer
+17. sbatch run_setup_year.sh with arguments of yyyy Fxx to run 1 year
+18. after completion, execute SSMIS_sir_year.sh to create list of sir commands for loadbalancer
+19. sbatch run_sir_year.sh with yy and Fxx as arguments (note 2 digit year)
+20. execute SSMIS_setup_rm_year.sh with yy Fxx arguments to create list of setup files to remove
+21. sbatch run_setup_rm_year.sh yy Fxx, with dependency as follows:-
+    	   sbatch --dependency=afterok:{jobid_from_sir} run_setup_rm_year.sh yy Fxx
+22. at this point I usually edit the list of sir commands using sed to create the lists for further years
+23. also edit the list of setup rm commands with sed to change year
+24. Now you can proceed to chain setup, sir and setup_rm jobs with dependencies.
+25. Note that 1 year of SSMIS setup files is around 15 - 17 TB, so plan accordingly.
+
+Once the processing has completed, you have to move the files around and run the premet and spatial file generation
+1.  Edit the script file_create_dirs.sh to correspond to the years of data - takes the platform as argument
+2.  Execute the script file_move_dir_SSMIS.sh (yyyy and Fxx as arguments) to create a list of mv commands
+3.  run the resulting list from the command line
+4.  repeat for each year of data
+5.  execute premetandspatial.sh with Fxx as argument to generate list for loadbalancer
+6.  sbatch run_premet_cetb.sh with Fxx as the argument
+7.  run manifest.sh to create the manifest list for OPS
