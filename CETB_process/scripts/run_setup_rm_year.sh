@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #SBATCH --qos normal
-#SBATCH --job-name SSMIS_rm
+#SBATCH --job-name CETB_rm
 #SBATCH --partition=shas
 #SBATCH --time=00:15:00
 #SBATCH --account=ucb13_summit1

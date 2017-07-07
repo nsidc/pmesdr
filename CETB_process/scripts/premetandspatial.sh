@@ -14,7 +14,7 @@ source /projects/moha2290/summit/measures-byu/src/prod/summit_set_pmesdr_environ
 date
 for FILE in `find ../${src}_sir -name "*.nc"`
 do
-    echo "/projects/moha2290/miniconda3/envs/cetbtools/bin/generate_premetandspatial.py $FILE" >> ${src}_premet_list_cetb
+    echo "generate_premetandspatial.py $FILE" >> ${src}_premet_list_cetb
 done
 date
    

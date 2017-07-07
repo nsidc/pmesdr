@@ -2,9 +2,11 @@
 # script to move SSMIS files from the src_sir directory into year_month directories
 # script creates list of mv commands by year
 # edit and run file_move.sh first to create monthly directories
+# arguments are 4 digit year, src i.e. F18, F10 etc and type eg SSMI, SSMIS, AMSRE
 year=$1
 SRC=$2
-for file in `find /scratch/summit/moha2290/${SRC}_sir/${year}/*-${SRC}_SSMIS-${year}*.nc*`
+type=$3
+for file in `find /scratch/summit/moha2290/${SRC}_sir/${year}/*-${SRC}_${type}-${year}*.nc*`
 do
     basen=`basename $file`
     index=`echo $basen | grep -bo $year | sed 's/:.*$//'`

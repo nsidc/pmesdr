@@ -44,13 +44,13 @@ do
     DOYA=$( printf "%03g" $DOY )
 #    echo $DOYA
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.19-22.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi19-22hv_NS.def \
-	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list_19-22_NS
+	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.19-22.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi19-22hv_T.def \
-	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY" >> ${SRC}_make_list_19-22_T
+	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY" >> ${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37-91.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37-85hv_NS.def \
-	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list_37-91_NS
+	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37-91.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37-85hv_T.def \
-	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY" >> ${SRC}_make_list_37-91_T
+	    /scratch/summit/moha2290/${SRC}_lists/$SRC.$YEAR$MONTH$DAY" >> ${SRC}_make_list
 #    echo " done with day ${DOY} "
 done
 #

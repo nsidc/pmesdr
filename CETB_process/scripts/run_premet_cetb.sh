@@ -12,8 +12,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mhardman@nsidc.org
 SRC=$1
+condaenv=$2
 file=/scratch/summit/moha2290/${SRC}_scripts/${SRC}_premet_list_cetb
-source /projects/moha2290/summit/measures-byu/src/prod/summit_set_pmesdr_environment.sh
+source activate $condaenv
 ml intel
 ml impi
 ml netcdf/4.3.3.1
