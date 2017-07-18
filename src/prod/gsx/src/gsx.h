@@ -119,6 +119,12 @@ static const char *gsx_smmr_channel_name[] = {
   "brightness_temperature_37V"
 };
 
+static const char *gsx_smap_channel_name[] = {
+  "brightness_temperature_1.41GHzH",
+  "brightness_temperature_1.41GHzV",
+  "brightness_temperature_1.41GHz3",
+  "brightness_temperature_1.41GHz4"
+};
 
 typedef enum {
   CETB_NOLOC=-1,

@@ -350,6 +350,9 @@ int get_gsx_global_variables( gsx_class *this ) {
   case CETB_SMMR:
     this->channel_number = SMMR_NUM_CHANNELS;
     break;
+  case CETB_SMAP_RADIOMETER:
+    this->channel_number = SMAP_NUM_CHANNELS;
+    break;
   default:
     fprintf( stderr, "%s: sensor not implemented yet \n", __FUNCTION__ );
   }
@@ -917,6 +920,14 @@ int assign_channels( gsx_class *this, char *channel ) {
     while ( ( 0 != strcmp( gsx_smmr_channel_name[count], channel ) ) &&
 	    ( count < (int) SMMR_NUM_CHANNELS ) ) count++;
     if ( SMMR_NUM_CHANNELS == count ) {
+      status = -1;
+    }
+    break;
+  case CETB_SMAP_RADIOMETER:
+    count = 0;
+    while ( ( 0 != strcmp( gsx_smap_channel_name[count], channel ) ) &&
+	    ( count < (int) SMAP_NUM_CHANNELS ) ) count++;
+    if ( SMAP_NUM_CHANNELS == count ) {
       status = -1;
     }
     break;

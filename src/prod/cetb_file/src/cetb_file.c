@@ -1244,6 +1244,12 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
     }
+  } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SMAP_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_smap_channel_name[ cetb_ibeam_to_cetb_smap_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
@@ -2462,6 +2468,10 @@ static char *set_source_value( cetb_file_class *this ) {
     source_value = strdup( "JPL SMMR" );
   }
 
+  if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
+    source_value = strdup( "JPL SMMR" );
+  }
+  
   return source_value;
   
 }

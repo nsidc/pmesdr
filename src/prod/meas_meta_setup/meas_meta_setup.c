@@ -450,6 +450,7 @@ int main(int argc,char *argv[])
 
     if ( NULL == gsx ) {
       fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
+      fprintf( stderr, "%s: infile is %d and gsx name is %s\n", __FUNCTION__, infile, gsx_fname[infile] );
       free( gsx_fname[infile] );
       infile++;
       goto label_330;  // skip reading file on error
@@ -638,6 +639,8 @@ int main(int argc,char *argv[])
 	      if ( CETB_AMSRE == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
 	      if ( CETB_SSMIS == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmis_channel[ibeam];
 	      if ( CETB_SMMR == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_smmr_channel[ibeam];
+	      if ( CETB_SMAP_RADIOMETER == gsx->short_sensor )
+		gsx_count = cetb_ibeam_to_cetb_smap_channel[ibeam];
 	      
 	      /* only get Tb's for channels that use the current set of position coordinates */
 
@@ -2107,6 +2110,9 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
       box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
+  }
+  else if ( CETB_SMAP_RADIOMETER == id ) {
+    box_size = 120;
   } else {
     box_size = -1;
     fprintf( stderr, "%s: bad sensor id %d\n", __FUNCTION__, id );
@@ -2378,7 +2384,8 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F16 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
-    { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F19 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F19 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_SMAP platform, N or S projection */
   };
   float split_time;
 
