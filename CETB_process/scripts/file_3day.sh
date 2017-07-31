@@ -4,8 +4,10 @@
 # $Id$
 # $Log$
 #
-# this little script will take a year, start and stop days and satellite as arguments and then create new input files for
-#   the NS lists of 3 days of files
+# this little script will take a year, start and stop days and satellite
+# as arguments and then create new input files for
+# the NS lists of 3 days of files
+#
 year=$1
 for doy in `seq $2 $3`
 do
@@ -45,10 +47,10 @@ do
     fi
 #    echo $yearp$monthp1$dayplus1
            
-    cat /scratch/summit/moha2290/$4_lists/$4.$yearm1$monthm1$dayminus1 \
-	/scratch/summit/moha2290/$4_lists/$4.$year$month$day \
-	/scratch/summit/moha2290/$4_lists/$4.$yearp$monthp1$dayplus1 \
-	>& /scratch/summit/moha2290/$4_lists/$4.$year$month$day.NS
+    cat /scratch/summit/${USER}/$4_lists/$4.$yearm1$monthm1$dayminus1 \
+	/scratch/summit/${USER}/$4_lists/$4.$year$month$day \
+	/scratch/summit/${USER}/$4_lists/$4.$yearp$monthp1$dayplus1 \
+	>& /scratch/summit/${USER}/$4_lists/$4.$year$month$day.NS
 done
 
 

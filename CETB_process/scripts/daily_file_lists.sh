@@ -19,7 +19,7 @@ do
 #    echo $day
     month=`date -d "$year-01-01 + $realdoy days" +%m`
 #    echo $month
-    ls /scratch/summit/moha2290/$4_GSX/*$year$month$day* >& /scratch/summit/moha2290/$4_lists/$4.$year$month$day
+    ls /scratch/summit/${USER}/$4_GSX/*$year$month$day* >& /scratch/summit/${USER}/$4_lists/$4.$year$month$day
 done
 
 echo $year$month$day
