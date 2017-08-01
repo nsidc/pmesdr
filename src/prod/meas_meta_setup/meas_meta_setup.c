@@ -2370,7 +2370,10 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     { {6.0, 18.0}, {6.0, 18.0} }, /* CETB_NIMBUS7 platform, N or S projection */
     { {5.0, 17.0}, {8.0, 20.0} }, /* CETB_AQUA platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F08 platform,  N or S projection */
-    { {2.0, 14.0}, {2.0, 14.0} }, /* CETB_F10 platform, 1991-1993, 1994 + 1 hour, 1995-1997 + 2 hours, N or S projection */
+    { {2.0, 14.0}, {2.0, 14.0} }, /* CETB_F10 platform,
+				     1990-1993,
+				     1994 + 1 hour,
+				     1995-1997 + 2 hours, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F11 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F13 platform, N or S projection */
     { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F14 platform, N or S projection */
@@ -2389,6 +2392,7 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
 
   if ( platform_id == CETB_F10 ) {
     switch ( year ) {
+    case 1990:
     case 1991:
     case 1992:
     case 1993:
