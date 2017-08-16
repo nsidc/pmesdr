@@ -141,8 +141,8 @@ static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 static void combine_setup_files( region_save *a, int execution_flag );
 static int julday(int mm, int id, int iyyy);
 static void caldat(int julian, int *mm, int *id, int *iyyy);
-static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id,
-			      cetb_direction_id direction_id, int year );
+static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id,
+			    cetb_direction_id direction_id, int year, float *split_time );
 
 /****************************************************************************/
 
@@ -673,16 +673,16 @@ int main(int argc,char *argv[])
 
 		/* only for N and S projections */
 		/* extract local-time-of-day split values  - these are sensor, year and projection dependent */
-		/* a negative return from ltod_split_time function will indicate an incorrect year/satellite combination*/
+		/* a status return of non-zero indicates invalid satellite/year combination */
 
-		tsplit = (ltod_split_time(gsx->short_platform, cetb_region, CETB_MORNING_PASSES, year));
-		if ( ((tsplit + 1.0) < FLT_EPSILON) && (cetb_region != CETB_EASE2_T) ) {
+		status = ltod_split_time(gsx->short_platform, cetb_region, CETB_MORNING_PASSES, year, &tsplit);
+		if ( status != 0 ) {
 		  exit(-1);
 		} else {
 		  tsplit1_mins = tsplit * MINUTES_PER_HOUR;
 		}
-		tsplit = (ltod_split_time(gsx->short_platform, cetb_region, CETB_EVENING_PASSES, year));
-		if ( ((tsplit + 1.0) < FLT_EPSILON) && (cetb_region != CETB_EASE2_T) ) {
+	      status = ltod_split_time(gsx->short_platform, cetb_region, CETB_EVENING_PASSES, year, &tsplit);
+		if ( status != 0 ) {
 		  exit(-1);
 		} else {
 		  tsplit2_mins = tsplit * MINUTES_PER_HOUR;
@@ -2131,7 +2131,7 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
   int cnt=100;
   char lin[100];
   int z;
-  int iregion;
+  int iregion, status;
   float ltod_morning, ltod_evening;
   
   /* Writing out CETB required information to setup file */
@@ -2164,18 +2164,24 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
       if ( (save_area->sav_regnum[iregion-1]-cetb_region_number[0]) != (int)CETB_EASE2_T ) {
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 	for(z=0;z<100;z++)lin[z]=' ';
-	ltod_morning = ltod_split_time(gsx->short_platform,
-				       (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
-				       CETB_MORNING_PASSES, year);
+	status = ltod_split_time(gsx->short_platform,
+				 (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
+				 CETB_MORNING_PASSES, year, &ltod_morning);
+	if ( status != 0 ) {
+	  ltod_morning = -1.;
+	}
 	sprintf(lin," Ltod_morning=%f ", ltod_morning);
 	fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 	for(z=0;z<100;z++)lin[z]=' ';
-	ltod_evening = ltod_split_time(gsx->short_platform,
-				       (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
-				       CETB_EVENING_PASSES, year);
+	status = ltod_split_time(gsx->short_platform,
+				 (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
+				 CETB_EVENING_PASSES, year, &ltod_evening);
+	if ( status != 0 ) {
+	  ltod_evening = -1.;
+	}
 	sprintf(lin," Ltod_evening=%f ", ltod_evening);
 	fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
@@ -2352,6 +2358,7 @@ void combine_setup_files( region_save *a, int execution_flag ) {
  *    direction_id - from cetb.h is CETB_MORNING_PASSES etc
  *
  *  Output:
+ *    status variable indicating success of failure
  *    ltod start or end time in decimal UTC hours (0.0 - 24.0)
  *
  *  Method:
@@ -2363,8 +2370,8 @@ void combine_setup_files( region_save *a, int execution_flag ) {
  *   LTOD calculations.ipynb that is in the ipython directory of this project
  *
  */
-static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id,
-			      cetb_direction_id direction_id, int year ) {
+static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id,
+			    cetb_direction_id direction_id, int year, float *split_time ) {
 
   float cetb_ltod_split_times[CETB_NUM_PLATFORMS][2][2] = {
     { {6.0, 18.0}, {6.0, 18.0} }, /* CETB_NIMBUS7 platform, N or S projection */
@@ -2383,11 +2390,11 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F19 platform, N or S projection */
   };
-  float split_time;
+  int negative_flag = 0; // This flag is set to 1 in the special case of F15 years > 2012
 
   if ( region_id == CETB_EASE2_T ) {
-    split_time = -1.0;
-    return split_time;
+    *split_time = -1.0;
+    return (0);
   }
 
   if ( platform_id == CETB_F10 ) {
@@ -2397,29 +2404,29 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     case 1992:
     case 1993:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 2.0;
+	*split_time = 2.0;
       } else {
-	split_time = 14.0;
+	*split_time = 14.0;
       }
       break;
     case 1994:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 3.0;
+	*split_time = 3.0;
       } else {
-	split_time = 15.0;
+	*split_time = 15.0;
       }
       break;
     case 1995:
     case 1996:
     case 1997:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 4.0;
+	*split_time = 4.0;
       } else {
-	split_time = 16.0;
+	*split_time = 16.0;
       }
       break;
     default:
-      split_time = -1;
+      *split_time = -1;
     }
   } else if ( platform_id == CETB_F14 ) {
     switch ( year ) {
@@ -2429,18 +2436,18 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     case 2000:
     case 2001:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 3.0;
+	*split_time = 3.0;
       } else {
-	split_time = 15.0;
+	*split_time = 15.0;
       }
       break;
     case 2002:
     case 2003:
     case 2004:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 2.0;
+	*split_time = 2.0;
       } else {
-	split_time = 14.0;
+	*split_time = 14.0;
       }
       break;
     case 2005:
@@ -2448,13 +2455,13 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     case 2007:
     case 2008:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 0.0;
+	*split_time = 0.0;
       } else {
-	split_time = 12.0;
+	*split_time = 12.0;
       }
       break;
     default:
-      split_time = -1;
+      *split_time = -1;
     }
   } else if ( platform_id == CETB_F15 ) {
     switch ( year ) {
@@ -2465,17 +2472,17 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     case 2004:
     case 2005:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 3.0;
+	*split_time = 3.0;
       } else {
-	split_time = 15.0;
+	*split_time = 15.0;
       }
       break;
     case 2006:
     case 2007:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 2.0;
+	*split_time = 2.0;
       } else {
-	split_time = 14.0;
+	*split_time = 14.0;
       }
       break;
     case 2008:
@@ -2483,40 +2490,44 @@ static float ltod_split_time( cetb_platform_id platform_id, cetb_region_id regio
     case 2010:
     case 2011:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 0.0;
+	*split_time = 0.0;
       } else {
-	split_time = 12.0;
+	*split_time = 12.0;
       }
       break;
     case 2012:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 10.0;
+	*split_time = -2.0; 
       } else {
-	split_time = 22.0;
+	*split_time = 10.0; 
       }
+      negative_flag = 1;
       break;
     case 2013:
     case 2014:
     case 2015:
     case 2016:
       if ( direction_id == CETB_MORNING_PASSES ) {
-	split_time = 9.0;
+	*split_time = -3.0;
       } else {
-	split_time = 21.0;
+	*split_time = 9.0;
       }
+      negative_flag = 1;
       break;
     default:
-      split_time = -1;
+      *split_time = -1;
     }
   } else {
-    split_time =
+    *split_time =
       cetb_ltod_split_times[platform_id][region_id][direction_id-CETB_MORNING_PASSES];
   }
 
-  if ( (split_time + 1.0) < FLT_EPSILON ) {
+  if ( ((*split_time + 1.0) < FLT_EPSILON) && (negative_flag == 0) ) {
     fprintf( stderr, "%s: Bad satellite, year combination for platform %d and year %d\n",
 	     __FUNCTION__, platform_id, year );
+    return (1);
+  } else {
+    return (0);
   }
 
-  return split_time;
 } 
