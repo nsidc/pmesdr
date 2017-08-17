@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #SBATCH --qos normal
-#SBATCH --job-name F17_sir
+#SBATCH --job-name run_sir_year
 #SBATCH --partition=shas
 #SBATCH --account=ucb13_summit1
 #SBATCH --time=04:00:00
