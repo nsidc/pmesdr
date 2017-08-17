@@ -681,7 +681,7 @@ int main(int argc,char *argv[])
 		} else {
 		  tsplit1_mins = tsplit * MINUTES_PER_HOUR;
 		}
-	      status = ltod_split_time(gsx->short_platform, cetb_region, CETB_EVENING_PASSES, year, &tsplit);
+		status = ltod_split_time(gsx->short_platform, cetb_region, CETB_EVENING_PASSES, year, &tsplit);
 		if ( status != 0 ) {
 		  exit(-1);
 		} else {
