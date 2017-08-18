@@ -2390,7 +2390,13 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F19 platform, N or S projection */
   };
-  int negative_flag = 0; // This flag is set to 1 in the special case of F15 years > 2012
+  /* note that the degenerative case of the satellite/year combination for ltod not being
+     set results in the split time being set to -1.0
+     However, there are some cases where, because of drift of the equator crossing time, the ltod
+     start time needs to be set to hours before midnight, i.e. a negative value.  In those
+     cases, the negative_flag is set to 1 and the negative ltod time is NOT flagged as an error
+  */
+  int negative_flag = 0; 
 
   if ( region_id == CETB_EASE2_T ) {
     *split_time = -1.0;
