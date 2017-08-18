@@ -2358,8 +2358,10 @@ void combine_setup_files( region_save *a, int execution_flag ) {
  *    direction_id - from cetb.h is CETB_MORNING_PASSES etc
  *
  *  Output:
- *    status variable indicating success of failure
+ *    status variable indicating success (0) or failure (1)
  *    ltod start or end time in decimal UTC hours (0.0 - 24.0)
+ *         - note that there are special cases where ltod times
+ *           might start before midnight - see eg F15, 2012-2016
  *
  *  Method:
  *    LTOD = Local Time of Day and is the method by which measurements are
