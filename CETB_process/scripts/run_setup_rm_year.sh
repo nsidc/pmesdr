@@ -13,8 +13,9 @@
 #SBATCH --mail-user=mhardman@nsidc.org
 year=$1
 src=$2
-FILE=/scratch/summit/moha2290/${src}_scripts/${src}_setup_rm_${year}
-source /projects/moha2290/summit/measures-byu/src/prod/summit_set_pmesdr_environment.sh
+envpath=$3
+FILE=/scratch/summit/${USER}/${src}_scripts/${src}_setup_rm_${year}
+source ${envpath}/summit_set_pmesdr_environment.sh
 ml intel
 ml impi
 ml netcdf/4.3.3.1

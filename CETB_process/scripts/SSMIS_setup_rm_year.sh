@@ -4,13 +4,22 @@
 # $Id$
 # $Log$
 #
+# Arguments to this script are
+# 4 digit year
+# platform
+# path to summit_set_pmesdr_environment.sh script
+#
+# This script creates a list of commands to remove the large setup files for this
+# sensor and year
+#
 longyear=$1
 shortyear=${longyear:2:2}
 src=$2
-source /projects/moha2290/summit/measures-byu/src/prod/summit_set_pmesdr_environment.sh
+envpath=$3
+source ${envpath}/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/moha2290/${src}_setup
+OUTDIR=/scratch/summit/${USER}/${src}_setup
 #
 #
 # find used setup files to remove - by year
