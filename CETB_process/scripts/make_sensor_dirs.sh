@@ -1,13 +1,17 @@
 #!/bin/sh
-# make_sensor_dirs.sh
-# Created Jul 2017 by M. J. Brodzik
-#
-# This script will create all the required sensor directories for running
-# the system on summit in the current directory.
-#
-# If any of the required directories already exist, this script will
-# do nothing for that directory.
-#
+if [ "$1" == "-h" ] || [ "$#" -ne 1 ] ; then
+    echo ""
+    echo "Usage: `basename $0` [-h] SRC"
+    echo "  Creates all the required sensor directories for running"
+    echo "  the system on summit in the current /scratch/summit directory."
+    echo "  If any of the required directories exist, this script will"
+    echo "  do nothing for that directory."
+    echo "Arguments:"
+    echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo ""
+    exit 1
+fi
+
 SRC=$1
 scratchdir=/scratch/summit/${USER}
 echo "Making ${scratchdir} processing directories for ${SRC}..."
@@ -31,4 +35,5 @@ do
 
 done
 echo "Done"
+exit 0
 

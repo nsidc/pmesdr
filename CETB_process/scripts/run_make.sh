@@ -1,5 +1,9 @@
 #!/bin/bash
 #
+# Arguments:
+#  src : sensor source (F08, F10, etc)
+#  envpath : location of summit_set_pmesdr_environment.sh script
+#
 #SBATCH --qos normal
 #SBATCH --job-name F17_make
 #SBATCH --partition=shas

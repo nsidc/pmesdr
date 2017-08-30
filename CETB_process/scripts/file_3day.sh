@@ -1,24 +1,27 @@
 #!/bin/sh
-# file_lists.sh
-# Created May 2017 by mhardman <mhardman@nsidc-mhardman.local>
-# $Id$
-# $Log$
-#
-# this little script will take a year, start and stop days and satellite
-# as arguments and then create new input files for
-# the NS lists of 3 days of files
-#
+if [ "$1" == "-h" ] || [ "$#" -ne 4 ] ; then
+    echo ""
+    echo "Usage: `basename $0` [-h] YEAR DOY_START DOY_STOP SRC"
+    echo "  Make a new list of input files for the NS lists, "
+    echo "  which need 3 days of input files for each day processed."
+    echo "Arguments:"
+    echo "  YEAR: 4-digit year"
+    echo "  DOY_START: start day of year"
+    echo "  DOY_STOP: stop day of year"
+    echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo ""
+    exit 1
+fi
+
 year=$1
 for doy in `seq $2 $3`
 do
-#    echo $doy
+
     realdoy=$(( $doy - 1 ))
     day=`date -d "$year-01-01 + $realdoy days" +%d`
     doyminus1=$(( $realdoy - 1 ))
     doyplus1=$(( $realdoy + 1 ))
-#    echo $doyminus1
-#    echo $realdoy
-#    echo $doyplus1
+
     dayminus1=`date -d "$year-01-01 + $doyminus1 days" +%d`
     dayplus1=`date -d "$year-01-01 + $doyplus1 days" +%d`
     monthm1=`date -d "$year-01-01 + $doyminus1 days" +%m`
@@ -28,24 +31,16 @@ do
     yearp=$year
     if [ $day == 01 -a $month == 01 ]
     then
-#        echo "1st of the year"
 	dayminus1=31
         monthm1=12
 	yearm1=$(( $year - 1 ))
     fi
-#    echo $month
-#    echo $year$monthm1$dayminus1
-#    echo $year$month$day
-#    echo $yearp$monthp1$dayplus1
-#    echo $month$day
     if [ $day == 31 -a $month == 12 ]
     then
 	yearp=$(( $year + 1 ))
 	dayplus1=01
 	monthp1=01
-#	echo $yearp$monthp1$dayplus1
     fi
-#    echo $yearp$monthp1$dayplus1
            
     cat /scratch/summit/${USER}/$4_lists/$4.$yearm1$monthm1$dayminus1 \
 	/scratch/summit/${USER}/$4_lists/$4.$year$month$day \

@@ -1,16 +1,17 @@
 #!/bin/sh
-# SSMIS_sir.sh
-# Created May 2017 by Molly Hardman <mhardman@nsidc-driftice.ad.int.nsidc.org>
-# $Id$
-# $Log$
-#
-# Arguments to this script are
-# 4 digit year
-# platform
-# path to summit_set_pmesdr_environment.sh script
-#
-# This script creates the relevant directory for the year of processing in the sir directory
-#
+if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
+    echo ""
+    echo "Usage: `basename $0` [-h] YEAR SRC ENVPATH"
+    echo "  Creates an sbatch script to run meas_meta_sir processing"
+    echo "  for this sensor and year."
+    echo "Arguments:"
+    echo "  YEAR: 4-digit year"
+    echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo ""
+    exit 1
+fi
+
 longyear=$1
 src=$2
 envpath=$3
@@ -19,10 +20,8 @@ source ${envpath}/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
 OUTDIR=/scratch/summit/${USER}/${src}_setup/
-#
-#
+
 # run meas_meta_sir with specific parameters
-#
 rm -f ${src}_sir_list_${longyear}
 mkdir ../${src}_sir/${longyear}
 date

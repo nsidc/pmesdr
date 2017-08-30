@@ -1,8 +1,4 @@
 #!/bin/sh
-# file_move.sh
-# Created Apr 2017 by mhardman <mhardman@nsidc-mhardman.local>
-# $Id$
-# $Log$
 if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] SRC YYYYMM_START YYYYMM_STOP"

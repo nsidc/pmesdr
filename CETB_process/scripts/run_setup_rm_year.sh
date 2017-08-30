@@ -1,5 +1,10 @@
 #!/bin/bash
 #
+# Arguments:
+#  year: 4-digit year
+#  src : sensor source (F08, F10, etc)
+#  envpath : location of summit_set_pmesdr_environment.sh script
+#
 #SBATCH --qos normal
 #SBATCH --job-name CETB_rm
 #SBATCH --partition=shas

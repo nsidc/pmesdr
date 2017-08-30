@@ -1,16 +1,16 @@
 #!/bin/sh
-# SSMIS_setup_year.sh
-# Created May 2017 by Molly Hardman <mhardman@nsidc-driftice.ad.int.nsidc.org>
-# $Id$
-# $Log$
-#
-# Takes 3 arguments,
-# year
-# input src - i.e. F16, F17, F18, F19
-# path to summit_set_pmesdr_environment.sh
-#
-# creates a file suitable to run the loadbalancer for 1 year of setup files
-#
+if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
+    echo ""
+    echo "Usage: `basename $0` [-h] YEAR SRC ENVPATH"
+    echo "  Creates an sbatch script to run meas_meta_setup for 1 year of data"
+    echo "Arguments:"
+    echo "  YEAR: 4-digit year"
+    echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo ""
+    exit 1
+fi
+
 YEAR=$1
 SRC=$2
 envpath=$3
