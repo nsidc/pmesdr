@@ -340,7 +340,7 @@ int main(int argc, char **argv)
        fprintf( stderr,  "%s: Direction_id %s\n",  __FUNCTION__, cetb_direction_id_name[ direction_id ] );
      }
 
-     if ( strstr( line, "  Ltod_morning" ) != NULL ) {
+     if ( strstr( line, " Ltod_morning" ) != NULL ) {
        x = strchr( line,'=' );
        ltod_morning = strtof(++x, &stopstring);
        fprintf( stderr,  "%s: Ltod_morning %f\n",  __FUNCTION__, ltod_morning );
