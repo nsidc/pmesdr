@@ -1,5 +1,9 @@
 #!/bin/bash
 #
+# Arguments:
+#  src : sensor source (F08, F10, etc)
+#  envpath : location of summit_set_pmesdr_environment.sh script
+#
 #SBATCH --qos normal
 #SBATCH --job-name F17_make
 #SBATCH --partition=shas
@@ -12,8 +16,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mhardman@nsidc.org
 src=$1
-file=/scratch/summit/moha2290/${src}_scripts/${src}_make_list
-source /projects/moha2290/summit/measures-byu/src/prod/summit_set_pmesdr_environment.sh
+envpath=$2
+file=/scratch/summit/${USER}/${src}_scripts/${src}_make_list
+source ${envpath}/summit_set_pmesdr_environment.sh
 ml intel
 ml impi
 ml netcdf/4.3.3.1
