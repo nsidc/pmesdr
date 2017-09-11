@@ -5,7 +5,7 @@
 #  envpath : location of summit_set_pmesdr_environment.sh script
 #
 #SBATCH --qos normal
-#SBATCH --job-name mv_files
+#SBATCH --job-name CETB_mv_files
 #SBATCH --partition=shas
 #SBATCH --time=01:15:00
 #SBATCH --account=ucb13_summit1

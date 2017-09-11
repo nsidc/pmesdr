@@ -5,7 +5,7 @@
 #  condaenv : name of conda env where gsx is installed
 #
 #SBATCH --qos normal
-#SBATCH --job-name platform_premet
+#SBATCH --job-name CETB_platform_premet
 #SBATCH --partition=shas
 #SBATCH --time=01:20:00
 #SBATCH --nodes 5
