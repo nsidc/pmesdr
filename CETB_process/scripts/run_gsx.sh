@@ -1,6 +1,9 @@
 #!/bin/bash
 #
-# script to run the translation from nc to gsx - takes src as argument
+# script to run the translation from nc to gsx -
+# Arguments:
+#  src : sensor source (F08, F10, etc)
+#  condaenv : name of conda env where gsx is installed
 #
 #SBATCH --qos normal
 #SBATCH --job-name GSX
@@ -15,7 +18,7 @@
 #SBATCH --mail-user=mhardman@nsidc.org
 src=$1
 condaenv=$2
-file=/scratch/summit/moha2290/${src}_scripts/gsx_lb_list_summit
+file=/scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
 source activate $condaenv
 ml intel
 ml impi

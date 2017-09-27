@@ -1,23 +1,39 @@
 #!/bin/sh
-# manifest.sh
-# Created Dec 5 2016 by Molly Hardman <mhardman@nsidc-driftice.ad.int.nsidc.org>
-# $Id$
-# $Log$
-#
-# Takes src as argument and creates manifest for output sir files
-# Only run this once you have verified that you have the correct number of expected files
+if [ "$1" == "-h" ] || [ "$#" -ne 2 ] ; then
+    echo ""
+    echo "Usage: `basename $0` [-h] SRC ENVPATH"
+    echo "  Make a manifest for deliver of data to DAAC."
+    echo "  Run this script once you have confirmed you have the expected"
+    echo "  number of files."
+    echo "  Run this script from the \$SRC_scripts directory."
+    echo "Arguments:"
+    echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo ""
+    exit 1
+fi
+
 src=$1
-source /projects/moha2290/summit/measures-byu/src/prod/summit_set_pmesdr_environment.sh
-#
+envpath=$2
+source ${envpath}/summit_set_pmesdr_environment.sh
+
+# Clean up any prior sbatch file with same name
+outfile=${src}_manifest
+if [ -f $outfile ] ; then
+    echo "Removing old $outfile"
+    rm $outfile
+fi
+
 date
 cd ../${src}_sir
 for FILE in `find . -name "*.nc"`
 do
     basen=`basename $FILE`
-    echo $basen >> ../${src}_manifest
+    echo $basen >> ../${outfile}
 done
-cd /scratch/summit/moha2290/${src}_scripts
 date
-   
+cd /scratch/summit/${USER}/${src}_scripts
+
+exit 0
 	
 

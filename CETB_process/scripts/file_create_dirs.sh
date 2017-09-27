@@ -1,41 +1,40 @@
 #!/bin/sh
-# file_move.sh
-# Created Apr 2017 by mhardman <mhardman@nsidc-mhardman.local>
-# $Id$
-# $Log$
-#
-# this little script will takes a source as argument and then creates the required 
-# monthly directories
-#
-# edit as appropriate for the years in the dataset
-#
-#
-SRC=$1
-for year in  2008 2009 2010 2011 2012 2013 2014 2015 
-do
-    echo $year
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_01`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_02`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_03`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_04`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_05`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_06`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_07`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_08`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_09`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_10`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_11`
-    `mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_12`
+if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
+    echo ""
+    echo "Usage: `basename $0` [-h] SRC YYYYMM_START YYYYMM_STOP"
+    echo "  Create a set of year and month subdirs in the \$SRC_sir"
+    echo "    directory in user's scratch location.  Dates are"
+    echo "    inclusive."
+    echo "Arguments:"
+    echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  YYYYMM_START: 4-digit year and 2-digit month to start"
+    echo "  YYYYMM_STOP: 4-digit year and 2-digit month to stop"
+    echo ""
+    exit 1
+fi
 
+SRC=$1
+YYYYMM_START=$2
+YYYYMM_STOP=$3
+
+yyyy_start=${YYYYMM_START:0:4}
+mm_start=${YYYYMM_START:4:2}
+yyyy_stop=${YYYYMM_STOP:0:4}
+mm_stop=${YYYYMM_STOP:4:2}
+
+for year in $(seq $yyyy_start $yyyy_stop) ; do
+    for month in $(seq 1 12) ; do 
+	if ((year == yyyy_start)) ; then
+	    if ((month < mm_start)) ; then continue ; fi
+	elif ((year == yyyy_stop)) ; then
+	    if ((month > mm_stop)) ; then continue ; fi
+	fi
+	mm=$(printf "%02d" $month)
+	dir=/scratch/summit/${USER}/${SRC}_sir/${year}_${mm}
+	mkdir -pv $dir
+    done
 done
 
-year=2016
-echo $year
-`mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_05`
-`mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_06`
-`mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_01`
-`mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_02`
-`mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_03`
-`mkdir /scratch/summit/moha2290/${SRC}_sir/${year}_04`
+exit 0
 
 
