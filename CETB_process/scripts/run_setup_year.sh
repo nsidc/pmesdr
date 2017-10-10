@@ -6,7 +6,7 @@
 #  envpath : location of summit_set_pmesdr_environment.sh script
 #
 #SBATCH --qos normal
-#SBATCH --job-name platform_setup
+#SBATCH --job-name CETB_platform_setup
 #SBATCH --partition=shas
 #SBATCH --time=04:00:00
 #SBATCH --ntasks-per-node=24
