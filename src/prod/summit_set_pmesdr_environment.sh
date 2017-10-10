@@ -125,7 +125,10 @@ elif [[ "$HOSTNAME" == *"shas"* ]]; then
     #ml -impi
     module purge all
     ml intel
-    ml netcdf/4.3.3.1
+    #ml netcdf/4.3.3.1
+    # netcdf/4.3.3.1 is apparently not available for intel/17.4 compiler?
+    # no netcdf version yields 4.4.1.1
+    ml netcdf/4.4.1.1
     ml udunits
     export LOCALE=SUMMITicc
   fi

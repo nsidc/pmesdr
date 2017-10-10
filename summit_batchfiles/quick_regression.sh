@@ -24,10 +24,10 @@
 #
 # The following commands will be executed when this script is run.
 
-source ${PMESDR_TOP_DIR}/src/prod/summit_set_pmesdr_environment.sh -a
+source ${PMESDR_TOP_DIR}/src/prod/summit_set_pmesdr_environment.sh
 ml intel
 ml impi
-ml netcdf/4.3.3.1
+ml netcdf/4.4.1.1
 ml udunits
 ml loadbalance
 ml
