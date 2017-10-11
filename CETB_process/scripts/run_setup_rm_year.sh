@@ -21,10 +21,7 @@ src=$2
 envpath=$3
 FILE=/scratch/summit/${USER}/${src}_scripts/${src}_setup_rm_${year}
 source ${envpath}/summit_set_pmesdr_environment.sh
-ml intel
 ml impi
-ml netcdf/4.3.3.1
-ml udunits
 ml loadbalance
 ml
 date

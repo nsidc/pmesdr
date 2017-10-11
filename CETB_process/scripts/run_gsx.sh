@@ -22,8 +22,6 @@ file=/scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
 source activate $condaenv
 ml intel
 ml impi
-ml netcdf/4.3.3.1
-ml udunits
 ml loadbalance
 ml
 date
