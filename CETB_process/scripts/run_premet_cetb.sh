@@ -19,10 +19,7 @@ SRC=$1
 condaenv=$2
 file=/scratch/summit/${USER}/${SRC}_scripts/${SRC}_premet_list_cetb
 source activate $condaenv
-ml intel
 ml impi
-ml netcdf/4.3.3.1
-ml udunits
 ml loadbalance
 ml
 date

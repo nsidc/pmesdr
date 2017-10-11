@@ -1,8 +1,7 @@
 #!/bin/bash -l
 # set_pmesdr_environment.sh
 #
-# usage: set_pmesdr_environment.sh or set_pmesdr_environment.sh [-a][-c gcc]
-#   -a : For janus gcc compiler only, load anaconda python (default is do not load)
+# usage: set_pmesdr_environment.sh or set_pmesdr_environment.sh [-c gcc]
 #   -c gcc : Sets environment up for gcc compiler
 #   -c icc : Sets environment up for icc compiler
 #
@@ -20,7 +19,6 @@
 # First check for compiler environment variable - cmd line args will override
 #
 compiler=icc
-do_anaconda=0
 
 if [[ "$PMESDR_COMPILER" != "" ]]; then
     compiler="$PMESDR_COMPILER"
@@ -34,8 +32,6 @@ do
     case "$1" in
     (-c)
 	    compiler="$2";;
-    (-a)
-	    do_anaconda=1;;
     (*) break;;
     esac
     shift
@@ -65,45 +61,8 @@ regression_yyyymmdd=20170516
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
 # Determine the LOCALE, a function of host and compiler.
-# Janus needs to load compiler-specific modules before building
-if [[ "$HOSTNAME" == *[Jj]"anus"* || `hostname --fqdn` == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
+if [[ "$HOSTNAME" == *"shas"* ]]; then
 
-  ml slurm
-  export PMESDR_COMPARE_TOLERANCE=0.25
-  export PMESDR_MAX_DIFF_PIXELS=100
-  export PMESDR_TESTDATA_DIR="/projects/maddenp/pmesdr_testdata"
-
-  if [[ "$compiler" == "gcc" ]]; then
-    echo "Setting netcdf for the gcc compiler"
-    ml -intel
-    ml gcc
-    ml netcdf
-    export LOCALE=JANUSgcc
-  fi
-
-  if [[ "$compiler" == "icc" ]]; then
-    echo "Setting netcdf for the icc compiler"
-    ml -gcc
-    ml intel
-    ml netcdf
-    export LOCALE=JANUSicc
-  fi
-
-  ml udunits
-  
-  if [[ $do_anaconda == 1 ]]; then
-    ml python
-    ml netcdf4-python
-  else
-    ml -python
-  fi
-
-  module list
-  echo "Janus Compiler set to $COMPILER" 
-
-elif [[ "$HOSTNAME" == *"shas"* ]]; then
-
-  ##ml slurm
   echo "Setting environment for shas..."
   export PMESDR_RUN=${PMESDR_TOP_DIR}/CETB_process/scripts
   export PMESDR_COMPARE_TOLERANCE=0.25
@@ -116,49 +75,27 @@ elif [[ "$HOSTNAME" == *"shas"* ]]; then
     ml -impi
     ml gcc
     ml netcdf
+    ml udunits
     export LOCALE=SUMMITgcc
   fi
 
   if [[ "$compiler" == "icc" ]]; then
     echo "Setting netcdf for the icc compiler"
-    #ml -gcc
-    #ml -impi
     module purge all
     ml intel
-    #ml netcdf/4.3.3.1
-    # netcdf/4.3.3.1 is apparently not available for intel/17.4 compiler?
-    # no netcdf version yields 4.4.1.1
     ml netcdf/4.4.1.1
     ml udunits
     export LOCALE=SUMMITicc
   fi
 
-  ml udunits
-  
-  if [[ $do_anaconda == 1 ]]; then
-    ml python
-    ml netcdf4-python
-  else
-    ml -python
-  fi
-
   module list
-  echo "Summit Compiler set to $COMPILER" 
-
-
-
-elif [[ "$HOSTNAME" == "snow"* ]]; then
-
-  export LOCALE=NSIDCsnow
-  # Initialize the virtualenv that was built for running on snow
-  . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
-  export PMESDR_COMPARE_TOLERANCE=0.01
-  export PMESDR_MAX_DIFF_PIXELS=100
+  echo "Summit Compiler set to $COMPILER"
+  echo "It is expected that you will use conda environments for specific versions of python"
 
 elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
   export LOCALE=int.nsidc.org
-  export PATH=/opt/anaconda/bin:$PATH
+  export PATH=/opt/miniconda3/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
@@ -168,6 +105,6 @@ else
 
   export LOCALE=BYU
 
-fi # endif janus
+fi
 
 echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."
