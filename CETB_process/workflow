@@ -147,8 +147,8 @@ accordingly.)
 Once the processing has completed, you have to move the files
 around and run the premet and spatial file generation
 
-1.  Edit the script file_create_dirs.sh to correspond to the
-    years of data - takes the platform and start/stop yyyymm as arguments
+1.  Run the script file_create_dirs.sh - takes the platform and
+    start/stop yyyymm as arguments
 
 2.  Execute the script file_move_dir.sh (yyyy, Fxx and
     type as arguments) to create a list of mv commands by year
