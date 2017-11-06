@@ -1,5 +1,6 @@
 Base directory for the BYU MEASURES project
 
+CETB_process/ scripts for running this system on summit supercomputer
 docs/     documentation
 ease2/    sample EASE2 grid software and test data files
 janus_batchfiles/ batchfile scripts for running on CU janus system

@@ -104,10 +104,12 @@ if [[ "$HOSTNAME" == *[Jj]"anus"* || `hostname --fqdn` == *"rc.colorado.edu" || 
 elif [[ "$HOSTNAME" == *"shas"* ]]; then
 
   ##ml slurm
+  echo "Setting environment for shas..."
+  export PMESDR_RUN=${PMESDR_TOP_DIR}/CETB_process/scripts
   export PMESDR_COMPARE_TOLERANCE=0.25
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_TESTDATA_DIR="/projects/maddenp/pmesdr_testdata"
-  export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../../pmesdr_regression_data/${regression_yyyymmdd}
+  export PMESDR_REGRESS_DIR=/projects/moha2290/pmesdr_regression_data/${regression_yyyymmdd}
   if [[ "$compiler" == "gcc" ]]; then
     echo "Setting netcdf for the gcc compiler"
     ml -intel

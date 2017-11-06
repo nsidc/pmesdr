@@ -1,5 +1,10 @@
 #!/bin/bash
 #
+# Arguments:
+#  year : 4-digit year
+#  src : sensor source (F08, F10, etc)
+#  envpath : location of summit_set_pmesdr_environment.sh script
+#
 #SBATCH --qos normal
 #SBATCH --job-name platform_setup
 #SBATCH --partition=shas
@@ -13,8 +18,9 @@
 #SBATCH --mail-user=mhardman@nsidc.org
 year=$1
 src=$2
-file=/scratch/summit/moha2290/${src}_scripts/${src}_setup_list_${year}
-source /projects/moha2290/summit/measures-byu/src/prod/summit_set_pmesdr_environment.sh
+envpath=$3
+file=/scratch/summit/${USER}/${src}_scripts/${src}_setup_list_${year}
+source ${envpath}/summit_set_pmesdr_environment.sh
 ml intel
 ml impi
 ml netcdf/4.3.3.1
