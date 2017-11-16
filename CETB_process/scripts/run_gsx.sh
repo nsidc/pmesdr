@@ -6,7 +6,7 @@
 #  condaenv : name of conda env where gsx is installed
 #
 #SBATCH --qos normal
-#SBATCH --job-name GSX
+#SBATCH --job-name CETB_GSX
 #SBATCH --partition=shas
 #SBATCH --time=01:30:00
 #SBATCH --ntasks-per-node=24
@@ -22,8 +22,6 @@ file=/scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
 source activate $condaenv
 ml intel
 ml impi
-ml netcdf/4.3.3.1
-ml udunits
 ml loadbalance
 ml
 date

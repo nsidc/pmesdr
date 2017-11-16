@@ -6,7 +6,7 @@
 #  envpath : location of summit_set_pmesdr_environment.sh script
 #
 #SBATCH --qos normal
-#SBATCH --job-name platform_setup
+#SBATCH --job-name CETB_platform_setup
 #SBATCH --partition=shas
 #SBATCH --time=04:00:00
 #SBATCH --ntasks-per-node=24
@@ -21,10 +21,7 @@ src=$2
 envpath=$3
 file=/scratch/summit/${USER}/${src}_scripts/${src}_setup_list_${year}
 source ${envpath}/summit_set_pmesdr_environment.sh
-ml intel
 ml impi
-ml netcdf/4.3.3.1
-ml udunits
 ml loadbalance
 ml
 date

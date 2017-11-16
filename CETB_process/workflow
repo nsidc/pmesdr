@@ -101,7 +101,9 @@ accordingly.)
 
     sbatch --mail-user=yourname@nsidc.org run_setup_year.sh YYYY Fxx /path/to/set_env
 
-    Check batch stderr output for (WHAT IS THE BEST STRING TO SEARCH FOR? "WARNING"?)
+    Use "grep -i error" and "grep -i warning" on batch stderr output.
+    Setup currently reports warnings about precompute files, this can be ignored.
+    (We will be removing this misleading message.)
     
 16. after completion, from $SENSOR_scripts dir, execute SSMIS_sir_year.sh to create list of
     sir commands for loadbalancer:
@@ -112,7 +114,8 @@ accordingly.)
 
     sbatch --mail-user=yourname@nsidc.org run_sir_year.sh YYYY Fxx /path/to/set_env
 
-    Check batch stderr output for (WHAT IS THE BEST STRING TO SEARCH FOR? "WARNING"?)
+    Use "grep -i error" and "grep -i warning" on batch stderr output.
+    A successful sir batch should return no warnings or errors.
     
 18. Once setup has been completed for a given year (but before sir is completed),
     you can set up a batch job that will remove the very large setup files, contingent on the     success of the sbatch that runs the sir commands.  To do this:
@@ -144,8 +147,8 @@ accordingly.)
 Once the processing has completed, you have to move the files
 around and run the premet and spatial file generation
 
-1.  Edit the script file_create_dirs.sh to correspond to the
-    years of data - takes the platform and start/stop yyyymm as arguments
+1.  Run the script file_create_dirs.sh - takes the platform and
+    start/stop yyyymm as arguments
 
 2.  Execute the script file_move_dir.sh (yyyy, Fxx and
     type as arguments) to create a list of mv commands by year
@@ -171,6 +174,15 @@ around and run the premet and spatial file generation
     
 6.  run manifest.sh to create the manifest list for OPS
 
-7.  Send email to DAAC about new batch of processing, wait for
+7.  Make sure that group read permissions are set recursively on
+    Fxx_sir, and on /scratch/summit/$USER/ and on the
+    Fxx_manifest file for the DAAC operator's user name.  At this
+    point, the operators are not in any shared groups on summit, so
+    this requires setting dirs to o+r, o+x and all files to o+r.
+
+    At some point, my workflow created .tramp_history files,
+    remove these so they don't get transferred over.
+
+    Send email to DAAC about new batch of processing, wait for
     DAAC confirmation of ingest before deleting Fxx_sir.  Save
     the Fxx_scripts directory to someplace off scratch.
