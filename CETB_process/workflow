@@ -3,7 +3,12 @@ Note:  You can set the email notification address on the line with the sbatch co
 
 For multiple users, you can include a double-quoted, comma-separated list.
        
-1.  Transfer all of the input files to summit
+1.  Transfer all of the input files to summit, see notes, here:
+
+    https://nsidc.org/confluence/display/PMESDR/Running+processing+on+summit
+
+    for installation, and notes on transferring input files to summit.
+    
     1a. Start a processing info file, e.g. /projects/moha2290/F16_info to
     keep track of notes on files and days processed.
 
@@ -19,6 +24,12 @@ For multiple users, you can include a double-quoted, comma-separated list.
     
     Note that for SMM/I and SSMIS, you will generate 42 setup
     files per day and 84 *.nc CETB data files per day
+
+x.  Make the set of required directories needed.
+    Run make_sensor_dirs.sh to just do them all
+
+    cd /scratch/summit/$USER/
+    make_sensor_dirs.sh $SENSOR
 
 3.  cd to your location of $SENSOR_scripts
     Run nc_to_gsx.sh to create script in the scripts directory
