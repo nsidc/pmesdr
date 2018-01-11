@@ -39,8 +39,6 @@
 #define RESPONSEMULT 1000   /* response multiplier */
 #define HASAZIMUTHANGLE 1   /* include azimuth angle in output setup file if 1, 
 			       set to 0 to not include az ang (smaller file) */
-#define USE_PRECOMPUTE_FILES 1 /* use files to store precomputed locations when 1, 
-				  use 0 to not use pre compute files*/ 
 #define DTR ((2.0*(M_PI))/360.0)       /* degrees to radians */
 
 #define AEARTH 6378.1363              /* SEMI-MAJOR AXIS OF EARTH, a, KM */
@@ -1598,21 +1596,29 @@ FILE * get_meta(char *mname, char *outpath,
 
 void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store) 
 {  
-  /* compute the lat,lon of each pixel in the image regions and store in
-     global arrays.  This reduces the computational load */
+  /*
+   *   compute the lat,lon of each pixel in the image regions and store in
+   *  global arrays.  This reduces the computational load
+   *  Additionally save the value of the previous projection and resolution
+   *  which will save recalculating them if they're the same
+   *  eg if 3 of the projections are N2ES at 6.25 km then you only need
+   *  to calculate those positions once
+   */
 
   int iregion, nspace;
   char *p, local[]="./";
   int iadd,ix,iy,nsize,iadd0;
   float x,y,clat,clon;
   FILE *f;
-  char tempname[180],lastname[180]="\0",line[1024];
+  int projection, resolution;
   int dumb;
 
   p=getenv("SIR_areas");
   if (p==NULL) p=local;
 
   *nregions=a->nregions;
+  projection = 0;
+  resolution = 0;
 
   /* determine how much memory is required */
   nspace=0;
@@ -1647,14 +1653,10 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 		    a->sav_ascale[iregion], a->sav_bscale[iregion],
 		    a->sav_a0[iregion],     a->sav_b0[iregion]);
 
-    /* hash file name */
-    sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
-	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    (int)abs(round(a->sav_a0[iregion])), (int)abs(round(a->sav_b0[iregion])),
-	    (int)abs(round(a->sav_xdeg[iregion])), (int)abs(round(a->sav_ydeg[iregion])));
+    if (( projection == a->sav_projt[iregion] ) &&
+	( resolution == a->sav_nsx[iregion] )) {
 
-    if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
-      /* so save time and I/O re-use prior load or computation */
+      /* save time and I/O re-use prior load or computation */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {	  
 	  iadd=a->sav_nsx[iregion]*iy+ix; /* zero-based lexicographic pixel address */
@@ -1665,31 +1667,11 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	}
       }      
 
-    } else {  /* new name differs from last name */
+    } else {  /* different projection and resolution */
 
-      /* keep last name */
-      strncpy(lastname,tempname,180);
-    
-      if (USE_PRECOMPUTE_FILES) {     /* check to see if pre-computed array 
-                                         is available in file */
-	sprintf(line,"%s/%s",p,tempname);
-	fprintf( stderr, "Reading pixel locations file: %s\n",line);
-	f=fopen(line,"r");
-	if (f==NULL) {
-	  fprintf( stderr, "... could not open precompute file %s will recompute\n",line);	
-	  goto label_skip;
-	}
-
-	if (fread(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
-	  fprintf( stderr, "*** error reading precompute file %s\n",line);	
-	  fclose(f);
-	  goto label_skip;
-	}
-	fclose(f);
-	goto label_read;
-      }
-
-    label_skip:;
+      /* reset values for projection and resolution */
+      projection = a->sav_projt[iregion];
+      resolution = a->sav_nsx[iregion];
 
       /* compute pixel locations */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
@@ -1709,27 +1691,7 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	  (*latlon_store)[iadd+1] = (short int)nint(clon*175.f);
 	}
       }
-
-      /* write out array to file for next time to save computation*/
-      if (USE_PRECOMPUTE_FILES) {
-	sprintf(line,"%s/%s",p,tempname);
-	fprintf( stderr, "Writing pixel locations file: %s\n",line);
-	f=fopen(line,"wx");
-	if (f==NULL) {
-	  fprintf( stderr, "	*** error opening output precompute file %s\n",line);	
-	  goto label_read;
-	}      
-
-	if (fwrite(&(*latlon_store)[(*noffset)[iregion]], 2, nsize*2, f)!=2*nsize) {
-	  fprintf(stderr,"*** error writing location file -- file is now invald\n");
-	  fclose(f);
-	  exit(-1);
-	}
-	fclose(f);
-      }
     }    
-
-    label_read:;
   }
 }
 
