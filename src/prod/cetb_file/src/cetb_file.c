@@ -30,6 +30,7 @@
 #define STATUS_FAILURE 1
 #define MAX_STR_LENGTH 256
 #define DEFLATE_LEVEL 9
+#define HOURS_PER_DAY 24
 
 static int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_data, int xdim, int ydim ); 
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
@@ -1008,11 +1009,16 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
     return 1;
   }
   
-  /* Only set the next 2 attributes for N and S projections */
+  /*
+   * Only set the next 2 attributes for N and S projections.
+   * The 24-hour addition to the evening pass end time is done
+   * to agree with the same offset actually used in the
+   * setup processing when it does the temporal filtering.
+   */
   if ( CETB_EASE2_T != this->region_id ) { 
     if ( CETB_EVENING_PASSES == this->direction_id ) {
       ltod_tmp_morning = ltod_evening;
-      ltod_tmp_evening = ltod_morning;
+      ltod_tmp_evening = ltod_morning + HOURS_PER_DAY;
     } else {
       ltod_tmp_morning = ltod_morning;
       ltod_tmp_evening = ltod_evening;
