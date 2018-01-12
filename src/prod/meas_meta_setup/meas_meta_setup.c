@@ -1599,21 +1599,29 @@ FILE * get_meta(char *mname, char *outpath,
 
 void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store) 
 {  
-  /* compute the lat,lon of each pixel in the image regions and store in
-     global arrays.  This reduces the computational load */
+  /*
+   *   compute the lat,lon of each pixel in the image regions and store in
+   *  global arrays.  This reduces the computational load
+   *  Additionally save the value of the previous projection and resolution
+   *  which will save recalculating them if they're the same
+   *  eg if 3 of the projections are N2ES at 6.25 km then you only need
+   *  to calculate those positions once
+   */
 
   int iregion, nspace;
   char *p, local[]="./";
   int iadd,ix,iy,nsize,iadd0;
   float x,y,clat,clon;
   FILE *f;
-  char tempname[180],lastname[180]="\0",line[1024];
+  int projection, resolution;
   int dumb;
 
   p=getenv("SIR_areas");
   if (p==NULL) p=local;
 
   *nregions=a->nregions;
+  projection = 0;
+  resolution = 0;
 
   /* determine how much memory is required */
   nspace=0;
@@ -1648,13 +1656,9 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 		    a->sav_ascale[iregion], a->sav_bscale[iregion],
 		    a->sav_a0[iregion],     a->sav_b0[iregion]);
 
-    /* hash file name */
-    sprintf(tempname,"%4.4d-%4.4d-%2.2d-%4.4d-%4.4d-%4.4d-%4.4d.loc",
-	    a->sav_nsx[iregion], a->sav_nsy[iregion], a->sav_projt[iregion],
-	    (int)abs(round(a->sav_a0[iregion])), (int)abs(round(a->sav_b0[iregion])),
-	    (int)abs(round(a->sav_xdeg[iregion])), (int)abs(round(a->sav_ydeg[iregion])));
+    if (( projection == a->sav_projt[iregion] ) &&
+	( resolution == a->sav_nsx[iregion] )) {
 
-    if (strncmp(lastname,tempname,180)==0) {  /* new file name is same as last */
       /* so save time and I/O re-use prior load or computation */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {	  
@@ -1666,11 +1670,12 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	}
       }      
 
-    } else {  /* new name differs from last name */
+    } else {  /* different projection and resolution */
 
-      /* keep last name */
-      strncpy(lastname,tempname,180);
-
+      /* reset values for projection and resolution */
+      projection = a->sav_projt[iregion];
+      resolution = a->sav_nsx[iregion];
+      
       /* compute pixel locations */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
 	y=(iy+1.5f); /* center of pixel, 1-based */
