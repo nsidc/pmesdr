@@ -1659,7 +1659,7 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     if (( projection == a->sav_projt[iregion] ) &&
 	( resolution == a->sav_nsx[iregion] )) {
 
-      /* so save time and I/O re-use prior load or computation */
+      /* save time and I/O re-use prior load or computation */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {	  
 	  iadd=a->sav_nsx[iregion]*iy+ix; /* zero-based lexicographic pixel address */
@@ -1671,7 +1671,6 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
       }      
 
     } else {  /* different projection and resolution */
-
       /* reset values for projection and resolution */
       projection = a->sav_projt[iregion];
       resolution = a->sav_nsx[iregion];
