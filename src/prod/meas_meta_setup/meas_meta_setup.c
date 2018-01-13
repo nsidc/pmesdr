@@ -2377,7 +2377,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
 
   float cetb_ltod_split_times[CETB_NUM_PLATFORMS][2][2] = {
     { {6.0, 18.0}, {6.0, 18.0} }, /* CETB_NIMBUS7 platform, N or S projection */
-    { {5.0, 17.0}, {8.0, 20.0} }, /* CETB_AQUA platform, N or S projection */
+    { {7.0, 19.0}, {8.0, 20.0} }, /* CETB_AQUA platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F08 platform,  N or S projection */
     { {2.0, 14.0}, {2.0, 14.0} }, /* CETB_F10 platform,
 				     1990-1993,
