@@ -256,6 +256,36 @@ ssmis_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2t 	\
 	)
 
+ssmis_test :
+	$(RM) $(TESTDIR)/setupSSMIS/e2n
+	$(MKDIR) $(TESTDIR)/setupSSMIS/e2n
+	$(RM) $(TESTDIR)/setupSSMIS/e2s
+	$(MKDIR) $(TESTDIR)/setupSSMIS/e2s
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2005.meta $(TESTDIR)/setupSSMIS/e2n)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2005.meta $(TESTDIR)/setupSSMIS/e2s)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2008.meta $(TESTDIR)/setupSSMIS/e2n)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2008.meta $(TESTDIR)/setupSSMIS/e2s)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2010.meta $(TESTDIR)/setupSSMIS/e2n)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2010.meta $(TESTDIR)/setupSSMIS/e2s)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2012.meta $(TESTDIR)/setupSSMIS/e2n)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2012.meta $(TESTDIR)/setupSSMIS/e2s)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2014.meta $(TESTDIR)/setupSSMIS/e2n)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2014.meta $(TESTDIR)/setupSSMIS/e2s)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2015.meta $(TESTDIR)/setupSSMIS/e2n)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2015.meta $(TESTDIR)/setupSSMIS/e2s)
+
 smmr_quick :
 	$(RM) $(TESTDIR)/setupSMMR/e2n
 	$(MKDIR) $(TESTDIR)/setupSMMR/e2n
