@@ -2350,7 +2350,8 @@ void combine_setup_files( region_save *a, int execution_flag ) {
 }
 
 /* *********************************************************************** */
-/* ltod_split_time - used to look up the ltod split times by platform, hemisphere and year
+/* ltod_split_time - used to look up the ltod split times by platform,
+ * hemisphere and year
  *
  *  Input:
  *    platform_id - from cetb.h is CETB_F08, CETB_AMSRE etc
@@ -2368,8 +2369,9 @@ void combine_setup_files( region_save *a, int execution_flag ) {
  *           separated into morning and evening images for the N and S
  *           projections
  *
- *   The actual times used in this function are derived from the Jupyter notebook
- *   LTOD calculations.ipynb that is in the ipython directory of this project
+ *   The actual times used in this function are derived from the
+ *   Jupyter notebook LTOD calculations.ipynb that is in the
+ *   ipython directory of this project
  *
  */
 static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id,
@@ -2387,16 +2389,25 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F13 platform, N or S projection */
     { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F14 platform, N or S projection */
     { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F15 platform, N or S projection */
-    { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F16 platform, N or S projection */
+    { {3.0, 15.0}, {3.0, 15.0} }, /* CETB_F16 platform,
+				     2005-2007,
+				     2008-2009 -1 hour,
+				     2010-2011 -1 hour,
+				     2012-2013 -1 hour,
+				     2014      -1 hour,
+				     2015-2016 -1 hour, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F19 platform, N or S projection */
   };
-  /* note that the degenerative case of the satellite/year combination for ltod not being
-     set results in the split time being set to -1.0
-     However, there are some cases where, because of drift of the equator crossing time, the ltod
-     start time needs to be set to hours before midnight, i.e. a negative value.  In those
-     cases, the negative_flag is set to 1 and the negative ltod time is NOT flagged as an error
+
+  /* note that the degenerative case of the satellite/year
+     combination for ltod not being set results in the split time
+     being set to -1.0 However, there are some cases where,
+     because of drift of the equator crossing time, the ltod
+     start time needs to be set to hours before midnight, i.e. a
+     negative value.  In those cases, the negative_flag is set to
+     1 and the negative ltod time is NOT flagged as an error
   */
   int negative_flag = 0; 
 
@@ -2519,6 +2530,61 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
 	*split_time = -3.0;
       } else {
 	*split_time = 9.0;
+      }
+      negative_flag = 1;
+      break;
+    default:
+      *split_time = -1;
+    }
+  } else if ( platform_id == CETB_F16 ) {
+    switch ( year ) {
+    case 2005:
+    case 2006:
+    case 2007:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = 3.0;
+      } else {
+	*split_time = 15.0;
+      }
+      break;
+    case 2008:
+    case 2009:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = 2.0;
+      } else {
+	*split_time = 14.0;
+      }
+      break;
+    case 2010:
+    case 2011:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = 1.0;
+      } else {
+	*split_time = 13.0;
+      }
+      break;
+    case 2012:
+    case 2013:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = 0.0;
+      } else {
+	*split_time = 12.0;
+      }
+      break;
+    case 2014:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = -1.0;
+      } else {
+	*split_time = 11.0;
+      }
+      negative_flag = 1;
+      break;
+    case 2015:
+    case 2016:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = -2.0;
+      } else {
+	*split_time = 10.0;
       }
       negative_flag = 1;
       break;
