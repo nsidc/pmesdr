@@ -15,6 +15,7 @@ import inspect
 import numpy as np
 import glob
 import os
+import re
 import sys
 
 
@@ -64,12 +65,33 @@ def compare_cetb_directories( dir1, dir2,
         sys.stderr.write( "\n" + this_program + ": Empty directories.\n" )
         return False
 
+    p = re.compile('(.+)-v[0-9]+\.[0-9]+\.nc')
+    
     all_files_OK = True
     for i in np.arange( len( list1 ) ):
 
-        if not ( os.path.basename( list1[ i ] ) == os.path.basename( list2[ i ] ) ):
-            sys.stderr.write( "\n" + this_program + ": Filenames differ: " + list1[ i ] + " " + list2[ i ] + "\n" )
-            return False
+        base1 = os.path.basename( list1[ i ] )
+        base2 = os.path.basename( list2[ i ] )
+        if not ( base1 == base2 ):
+            
+            # if filenames don't match exactly, try a relaxed test to
+            # see if they only differ by version number at end of filename
+            m1 = p.match( base1 )
+            m2 = p.match( base2 )
+            if m1 and m2:
+                if not ( m1.group(1) == m2.group(1) ):
+                    sys.stderr.write(
+                        "\n" + this_program + ": Filenames differ: " + \
+                        list1[ i ] + " " + list2[ i ] + "\n" )
+                    return False
+                else:
+                    if verbose:
+                        sys.stderr.write(
+                            "\n> " + this_program + \
+                            ": Filenames differ by version number only: " + \
+                            list1[ i ] + " " + list2[ i ] + "\n" )
+            else: # There is no version number in the filename
+                return False
 
         if not compare_cetb_files( list1[ i ], list2[ i ],
                                    exclude_out_of_range=exclude_out_of_range,
