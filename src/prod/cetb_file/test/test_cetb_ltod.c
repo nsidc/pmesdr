@@ -90,7 +90,8 @@ void test_cetb_morning_ltod( void ) {
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.2.nc",
+  TEST_ASSERT_EQUAL_STRING( "./test/"
+			    "NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.3.nc",
 			    cetb->filename );
   
   status = cetb_file_open( cetb );
@@ -124,7 +125,8 @@ void test_cetb_morning_ltod( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  status = nc_open( "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.2.nc",
+  status = nc_open( "./test/"
+		    "NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.3.nc",
 		    NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
@@ -156,7 +158,8 @@ void test_cetb_evening_ltod( void ) {
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-E-SIR-CSU-v1.2.nc",
+  TEST_ASSERT_EQUAL_STRING( "./test/"
+			    "NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-E-SIR-CSU-v1.3.nc",
 			    cetb->filename );
   
   status = cetb_file_open( cetb );
@@ -190,7 +193,8 @@ void test_cetb_evening_ltod( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  status = nc_open( "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-E-SIR-CSU-v1.2.nc",
+  status = nc_open( "./test/"
+		    "NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-E-SIR-CSU-v1.3.nc",
 		    NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
