@@ -272,6 +272,36 @@ ssmis_ease :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta F16 	\
 	         81 81 2006 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/SSMIS_regress_list_full
 
+ssmis_test :
+	$(RM) $(TESTDIR)/ssmis_e2n
+	$(MKDIR) $(TESTDIR)/ssmis_e2n
+	$(RM) $(TESTDIR)/ssmis_e2s
+	$(MKDIR) $(TESTDIR)/ssmis_e2s
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2005.meta F16 	\
+	         306 306 2005 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2005.meta F16 	\
+	         306 306 2005 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2008.meta F16 	\
+	         2 2 2008 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2008.meta F16 	\
+	         2 2 2008 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2010.meta F16 	\
+	         2 2 2010 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2010.meta F16 	\
+	         2 2 2010 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2012.meta F16 	\
+	         2 2 2012 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2012.meta F16 	\
+	         2 2 2012 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2014.meta F16 	\
+	         2 2 2014 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2014.meta F16 	\
+	         2 2 2014 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2015.meta F16 	\
+	         2 2 2015 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/F16_list
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2015.meta F16 	\
+	         2 2 2015 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/F16_list
+
 smmr_quick :
 	$(RM) $(TESTDIR)/smmr_e2n
 	$(MKDIR) $(TESTDIR)/smmr_e2n
