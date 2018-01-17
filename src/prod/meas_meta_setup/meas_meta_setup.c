@@ -1671,10 +1671,11 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
       }      
 
     } else {  /* different projection and resolution */
+
       /* reset values for projection and resolution */
       projection = a->sav_projt[iregion];
       resolution = a->sav_nsx[iregion];
-      
+
       /* compute pixel locations */
       for (iy=0; iy<a->sav_nsy[iregion]; iy++) {
 	y=(iy+1.5f); /* center of pixel, 1-based */
