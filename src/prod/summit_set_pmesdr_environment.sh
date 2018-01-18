@@ -60,9 +60,9 @@ if [[ "$thisHostname" == *"shas"* \
       ml udunits
       export LOCALE=SUMMITicc
       echo "Summit Compiler set to $PMESDR_COMPILER"
+      module list
   fi
 
-  module list
   echo "It is expected that you will use conda environments for specific versions of python"
 
 fi
