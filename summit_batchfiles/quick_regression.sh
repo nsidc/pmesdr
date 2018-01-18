@@ -17,61 +17,42 @@
 # Select the summit QOS
 #SBATCH --qos normal
 #SBATCH --partition=shas
+##SBATCH --account=ucb13_summit1
+##SBATCH --ntasks-per-node=1
+##SBATCH --nodes=1
+
 #
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=mhardman@nsidc.org
+#SBATCH --mail-user=mhardman@nsidc.org,brodzik@nsidc.org
 #
 # The following commands will be executed when this script is run.
+# It is assumed that the caller has executed
+condaenv=$1
 
 source ${PMESDR_TOP_DIR}/src/prod/summit_set_pmesdr_environment.sh
-ml intel
-ml impi
-ml netcdf/4.4.1.1
-ml udunits
-ml loadbalance
-ml
+source activate ${condaenv}
 date
+
+echo 'running make'
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_make
 pwd
-echo 'running make'
-make rss_quick
-if [ $? -ne 0 ]; then
-  echo 'rss_quick make failed'
-  exit -1
-fi
 make csu_quick
 if [ $? -ne 0 ]; then
   echo 'csu_quick make failed'
   exit -1
 fi
+echo 'running setup'
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
 pwd
-echo 'running setup'
-make rss_quick
-if [ $? -ne 0 ]; then
-  echo 'rss_quick setup failed'
-  exit -1
-fi
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
-pwd
-echo 'running setup'
 make csu_quick
 if [ $? -ne 0 ]; then
   echo 'csu_quick setup failed'
   exit -1
 fi
+echo 'running sir'
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_sir
-make rss_quick
-if [ $? -ne 0 ]; then
-  echo 'rss_quick SIR failed'
-  exit -1
-fi
-make rss_quick_validate
-if [ $? -ne 0 ]; then
-  echo 'rss_quick SIR validate failed'
-  exit -1
-fi
+pwd
 make csu_quick
 if [ $? -ne 0 ]; then
   echo 'csu_quick SIR failed'
@@ -82,28 +63,4 @@ if [ $? -ne 0 ]; then
   echo 'csu_quick SIR validate failed'
   exit -1
 fi
-#cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_bgi
-#make rss_quick
-#if [ $? -ne 0 ]; then
-#  echo 'rss_quick BGI failed'
-#  exit -1
-#fi
-#make rss_quick_validate
-#if [ $? -ne 0 ]; then
-#  echo 'rss_quick BGI validate failed'
-#  exit -1
-#fi
-#make csu_quick
-#if [ $? -ne 0 ]; then
-#  echo 'csu_quick BGI failed'
-#  exit -1
-#fi
-#make csu_quick_validate
-#if [ $? -ne 0 ]; then
-#  echo 'csu_quick BGI validate failed'
-#  exit -1
-#fi
-
-
-# End of example job shell script
-# 
+echo 'end of quick_regression'
