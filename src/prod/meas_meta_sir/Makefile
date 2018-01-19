@@ -251,10 +251,10 @@ endif
 amsre_quick :
 	$(RM) $(TESTDIR)/sirAMSRE
 	$(MKDIR) $(TESTDIR)/sirAMSRE
-ifeq ($(AMSRE2NFILES),)
+ifeq ($(AMSREFILES),)
 	$(error	No setup files found)
 else
-	for file in $(AMSRE2NFILES); do \
+	for file in $(AMSREFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirAMSRE; \
 	done
