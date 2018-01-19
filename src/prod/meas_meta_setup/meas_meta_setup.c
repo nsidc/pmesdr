@@ -2339,9 +2339,10 @@ void combine_setup_files( region_save *a, int execution_flag ) {
 static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id,
 			    cetb_direction_id direction_id, int year, float *split_time ) {
 
+  int negative_flag;
   float cetb_ltod_split_times[CETB_NUM_PLATFORMS][2][2] = {
-    { {6.0, 18.0}, {6.0, 18.0} }, /* CETB_NIMBUS7 platform, N or S projection */
-    { {7.0, 19.0}, {8.0, 20.0} }, /* CETB_AQUA platform, N or S projection */
+    { {-6.0, 6.0}, {-6.0, 6.0} }, /* CETB_NIMBUS7 platform, N or S projection */
+    { {-5.0, 7.0}, {-4.0, 8.0} }, /* CETB_AQUA platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F08 platform,  N or S projection */
     { {2.0, 14.0}, {2.0, 14.0} }, /* CETB_F10 platform,
 				     1990-1993,
@@ -2371,7 +2372,15 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
      negative value.  In those cases, the negative_flag is set to
      1 and the negative ltod time is NOT flagged as an error
   */
-  int negative_flag = 0; 
+  if ( platform_id == CETB_NIMBUS7 || platform_id == CETB_AQUA ) {
+    negative_flag = 1;
+  } else {
+    /*
+     * the remaining cases for this also depend on year and hemisphere,
+     * and will be handled in the following case statement
+     */
+    negative_flag = 0;
+  }
 
   if ( region_id == CETB_EASE2_T ) {
     *split_time = -1.0;
