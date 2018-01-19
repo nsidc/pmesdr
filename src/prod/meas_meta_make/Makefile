@@ -239,8 +239,17 @@ amsre_ease :
 amsre_quick :
 	$(RM) $(TESTDIR)/amsre_e2n
 	$(MKDIR) $(TESTDIR)/amsre_e2n
+	$(RM) $(TESTDIR)/amsre_e2s
+	$(MKDIR) $(TESTDIR)/amsre_e2s
+	$(RM) $(TESTDIR)/amsre_e2t
+	$(MKDIR) $(TESTDIR)/amsre_e2t
+	$(CD) $(TOPDIR)/sample_data		 
 	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta AQUA \
 	         35 35 2003 $(TOPDIR)/ref/E2N_amsre_quick.def $(TOPDIR)/testing/$(AMSRE_INPUT_FILES)
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2s/e2stest_AMSRE.meta AQUA \
+	         35 35 2003 $(TOPDIR)/ref/E2S_amsre_quick.def $(TOPDIR)/testing/$(AMSRE_INPUT_FILES)
+	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2t/e2ttest_AMSRE.meta AQUA \
+	         35 35 2003 $(TOPDIR)/ref/E2T_amsre_quick.def $(TOPDIR)/testing/$(AMSRE_INPUT_FILES)
 
 ssmis_quick :
 	$(RM) $(TESTDIR)/ssmis_e2n
