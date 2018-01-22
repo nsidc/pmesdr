@@ -102,5 +102,5 @@ variables:
 		:creator_institution = "National Snow and Ice Data Center\nCooperative Institute for Research in Environmental Sciences\nUniversity of Colorado at Boulder\nBoulder, CO" ;
 		:contributor_name = "Mary J. Brodzik, David G. Long, Richard L. Armstrong, Molly A. Hardman, Aaron C. Paget" ;
 		:contributor_role = "Principal Investigator, Co-Investigator, Co-Investigator, Developer, Contributor" ;
-		:citation = "Brodzik, M. J., D. G. Long, M. A. Hardman, A. C. Paget, R. L. Armstrong. 2016.\nMEaSUREs Calibrated Passive Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR.\nVersion 1.3.\n[Indicate subset used].\nBoulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
+		:citation = "Brodzik, M. J., D. G. Long, M. A. Hardman, A. C. Paget, R. L. Armstrong. 2016, updated 2018.\nMEaSUREs Calibrated Passive Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR.\nVersion 1.3.\n[Indicate subset used].\nBoulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
 }
