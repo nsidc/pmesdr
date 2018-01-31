@@ -54,6 +54,8 @@ x.  Make the set of required directories needed.
 
     run all_lists_for_sensor.sh to create the list of input files for each day in series,
 
+    Arguments are start_year start_doy end_year end_doy sensor
+
     these are stored in directory $SENSOR_lists.  There will be 2 files per day, first file is
     just the GSX files for that day and second file *.NS is the rolling set of day-1, day, day+1
     files.
@@ -71,9 +73,10 @@ x.  Make the set of required directories needed.
 
 10. From $SENSOR_scripts, do
 
-    SSMIS_make.sh to create lists for make process
+    all_SSMIS_make_for_sensor.sh to create list for make process
 
-    for each year to process.  Arguments are year, start_doy, end_doy, src and
+    For the time period to process.
+    Arguments are start_year start_doy end_year end_doy sensor and
     path to summit_set_pmesdr_environment.sh script, which will depend
     on where you installed the system, usually $MEASURES-BYU/src/prod
 
