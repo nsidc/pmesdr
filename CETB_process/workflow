@@ -52,26 +52,24 @@ x.  Make the set of required directories needed.
 
 6.  From $SENSOR_scripts, do
 
-    run daily_file_lists.sh to create list of input files for each day in series,
-    these are stored in directory $SENSOR_lists, 1 file per day
+    run all_lists_for_sensor.sh to create the list of input files for each day in series,
 
-    arguments are year, start_doy, end_doy, platform i.e. yyy ddd ddd Fxx
-
-7.  run file_3day.sh to create list of input files for NS projections for each day in series
-    	arguments are yyyy ddd ddd Fxx
-
-8.  count to confirm the correct number of files created, 2 files
+    these are stored in directory $SENSOR_lists.  There will be 2 files per day, first file is
+    just the GSX files for that day and second file *.NS is the rolling set of day-1, day, day+1
+    files.
+    
+7.  count to confirm the correct number of files created, 2 files
     per day for total number of days
 
-9.  use grep to check for no "such" messages in files created -
+8.  use grep to check for no "such" messages in files created -
     should only be in NS files for first and last doys - this is
     useful because it will also show if there are missing days of
     files
 
-10. use sed to edit files to remove missing file messages
+9. use sed to edit files to remove missing file messages
     	grep -l such ../Fxx_lists/* | xargs sed -i '/such/d'
 
-11. From $SENSOR_scripts, do
+10. From $SENSOR_scripts, do
 
     SSMIS_make.sh to create lists for make process
 
@@ -85,10 +83,10 @@ x.  Make the set of required directories needed.
     careful if you get interrupted to clean it up before
     restarting from the first year.
 
-12. count number of lines in input file to run_make, there should
+11. count number of lines in input file to run_make, there should
     be 4 * number of days to process
 
-13. From $SENSOR_scripts, do
+12. From $SENSOR_scripts, do
 
     sbatch --mail-user=yourname@nsidc.org run_make.sh Fxx /path/to/set_env
 
@@ -103,12 +101,12 @@ From this point processing should proceed by year.  (Note that 1
 year of SSMIS setup files is around 15 - 17 TB, so plan
 accordingly.)
 
-14. from $SENSOR_scripts dir, execute SSMIS_setup_year.sh
+13. from $SENSOR_scripts dir, execute SSMIS_setup_year.sh
     with arguments of 4-digit year
     platform and path to summit_set_pmesdr_environement.sh script,
     to generate list of commands for loadbalancer
 
-15. sbatch run_setup_year.sh to run 1 year -- only run 3 of these at one time:
+14. sbatch run_setup_year.sh to run 1 year -- only run 3 of these at one time:
 
     sbatch --mail-user=yourname@nsidc.org run_setup_year.sh YYYY Fxx /path/to/set_env
 
@@ -116,20 +114,21 @@ accordingly.)
     Setup currently reports warnings about precompute files, this can be ignored.
     (We will be removing this misleading message.)
     
-16. after completion, from $SENSOR_scripts dir, execute SSMIS_sir_year.sh to create list of
+15. after completion, from $SENSOR_scripts dir, execute SSMIS_sir_year.sh to create list of
     sir commands for loadbalancer:
 
     SSMIS_sir_year.sh yyyy platform /path/to/set_env
 
-17. sbatch run_sir_year.sh:
+16. sbatch run_sir_year.sh:
 
     sbatch --mail-user=yourname@nsidc.org run_sir_year.sh YYYY Fxx /path/to/set_env
 
     Use "grep -i error" and "grep -i warning" on batch stderr output.
     A successful sir batch should return no warnings or errors.
     
-18. Once setup has been completed for a given year (but before sir is completed),
-    you can set up a batch job that will remove the very large setup files, contingent on the     success of the sbatch that runs the sir commands.  To do this:
+17. Once setup has been completed for a given year (but before sir is completed),
+    you can set up a batch job that will remove the very large setup files, contingent
+    on the success of the sbatch that runs the sir commands.  To do this:
     
     From $SENSOR_scripts dir, execute SSMIS_setup_rm_year.sh
     with arguments of 4-digit year, platform and
@@ -138,20 +137,20 @@ accordingly.)
 
     SSMIS_setup_rm_year.sh yyyy platform /path/to/set_env
 
-19. And then the sbatch job to remove the input files can be
+18. And then the sbatch job to remove the input files can be
     scheduled to only run if the sir job completes successfully.
     So you do sbatch run_setup_rm_year.sh, with dependency as
     follows:-
 
     sbatch --dependency=afterok:jobid_from_sir run_setup_rm_year.sh yyyy Fxx /path/to/set_env
 
-20. at this point I usually edit the list of sir commands using
+19. at this point I usually edit the list of sir commands using
     sed to create the lists for further years
 
-21. also edit the list of setup rm commands with sed to change
+20. also edit the list of setup rm commands with sed to change
     year
 
-22. Now you can proceed to chain setup, sir and setup_rm jobs
+21. Now you can proceed to chain setup, sir and setup_rm jobs
     with dependencies.
 
 
