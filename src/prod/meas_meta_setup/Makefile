@@ -266,6 +266,16 @@ ssmis_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2t 	\
 	)
 
+ssmis_cross :
+	$(RM) $(TESTDIR)/setupSSMIS/e2n
+	$(MKDIR) $(TESTDIR)/setupSSMIS/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_20051231.meta  $(TESTDIR)/setupSSMIS/e2n 	\
+	)
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_20060101.meta  $(TESTDIR)/setupSSMIS/e2n 	\
+	)
+
 ssmis_test :
 	$(RM) $(TESTDIR)/setupSSMIS/e2n
 	$(MKDIR) $(TESTDIR)/setupSSMIS/e2n
