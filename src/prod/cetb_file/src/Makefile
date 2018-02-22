@@ -39,9 +39,6 @@ ifeq ($(LOCALE),SUMMITicc)
   AR = xiar
 endif
 
-CALCALCS_DIR = $(TOPDIR)/src/prod/cetb_file/src/calcalcs_1.0
-CALCALCS_INCDIR = $(CALCALCS_DIR)
-
 #
 #       debug or optimization settings
 #       these may be things that are machine-specific
@@ -103,37 +100,29 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
+CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ARFLAGS = ruv
-ifeq ($(LOCALE),JANUSicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
-  ARFLAGS = crs
-endif
-ifeq ($(LOCALE),JANUSgcc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
-endif
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -D'SUMMITicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
+  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),SUMMITgcc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
+  CFLAGS = -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
 endif
-DEPEND_LIBS = 
+DEPEND_HDRS = $(INCDIR)/calcalcs.h $(INCDIR)/utCalendar2_cal.h $(INCDIR)/cetb.h 
+DEPEND_LIBS = $(LIBDIR)/libcalcalcs.a
 
-SRCS = cetb_file.c $(CALCALCS_DIR)/calcalcs.c
-OBJS = cetb_file.o $(CALCALCS_DIR)/calcalcs.o
-HDRS = cetb_file.h $(CALCALCS_DIR)/calcalcs.h
+SRCS = cetb_file.c
+OBJS = cetb_file.o
+HDRS = cetb_file.h
 
 all : libcetb.a $(LIBDIR)/libcetb.a
 
 $(LIBDIR)/libcetb.a : libcetb.a
 
-libcetb.a : $(OBJS) $(DEPEND_LIBS) $(HDRS) $(INCDIR)/cetb.h 
+libcetb.a : $(OBJS) $(DEPEND_LIBS) $(HDRS) $(DEPEND_HDRS)
 	$(AR) $(ARFLAGS) libcetb.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
 	$(INSTALL) libcetb.a $(LIBDIR)
