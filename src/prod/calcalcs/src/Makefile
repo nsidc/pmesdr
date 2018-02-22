@@ -42,8 +42,6 @@ endif
 .SUFFIXES:
 .SUFFIXES: .o .c
 
-PROGS	= example_code_1 example_code_2
-
 UDUNITS2_BASE_DIR = /usr
 UDUNITS2_INC_DIR  = $(UDUNITS2_BASE_DIR)/include
 UDUNITS2_LIB_DIR  = $(UDUNITS2_BASE_DIR)/lib
@@ -56,11 +54,12 @@ UDUNITS2_LIB_DIR  = $(UDUNITS2_BASE_DIR)/lib
 
 ################################################################################
 # summit configuration is TBD
-# ifeq ($(LOCALE),SUMMITicc)
-#   $(info Build location: $(LOCALE))
-#   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
-#   ARFLAGS = crs
-# endif
+ifeq ($(LOCALE),SUMMITicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
+	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
+	-Wremarks -wd981 -wd869 -wd2415
+endif
 
 SRCS = calcalcs.c utCalendar2_cal.c
 OBJS = calcalcs.o utCalendar2_cal.o
