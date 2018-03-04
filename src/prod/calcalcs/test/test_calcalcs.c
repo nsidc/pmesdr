@@ -138,7 +138,67 @@ void test_cetb_epoch_conversion( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 58, outMinute, "Minute" );
   TEST_ASSERT_EQUAL_FLOAT_MESSAGE( 54.175, outSecond, "Second" );
 
-  fprintf( stderr, "%s: End of unit test.", __FUNCTION__ );
+  return;
+  
+}
+
+void test_date2doy_conversion( void ) {
+
+  calcalcs_cal* calendar = ccs_init_calendar( "Standard" );
+  
+  int year, outYear;
+  int month, outMonth;
+  int day, outDay;
+  int doy, outDoy;
+  int status;
+
+  /* yyyyddd to yyyymmdd, non-leap year */
+  year = 1997;
+  doy = 61;
+  status = ccs_doy2date( calendar, year, doy, &month, &day );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: unable to convert doy to mm/day\n", __FUNCTION__ );
+  } else {
+    fprintf( stderr, "%s: yyyydoy=%4d%03d --> yyyymmdd=%4d%02d%02d\n",
+	     __FUNCTION__, year, doy, year, month, day );
+  }
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 3, month, "Month" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 2, day, "Day" );
+
+  /* and reverse: */
+  doy = 0;
+  status = ccs_date2doy( calendar, year, month, day, &doy );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: unable to mm/dd to doy\n", __FUNCTION__ );
+  } else {
+    fprintf( stderr, "%s: yyyymmdd=%4d%02d%02d --> yyyydoy=%4d%03d\n",
+	     __FUNCTION__, year, month, day, year, doy );
+  }
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 61, doy, "Doy" );
+  
+  /* yyyyddd to yyyymmdd, non-leap year */
+  year = 2000;
+  doy = 61;
+  status = ccs_doy2date( calendar, year, doy, &month, &day );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: unable to convert doy to mm/day\n", __FUNCTION__ );
+  } else {
+    fprintf( stderr, "%s: yyyydoy=%4d%03d --> yyyymmdd=%4d%02d%02d\n",
+	     __FUNCTION__, year, doy, year, month, day );
+  }
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 3, month, "Month" );
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 1, day, "Day" );
+  
+  /* and reverse: */
+  doy = 0;
+  status = ccs_date2doy( calendar, year, month, day, &doy );
+  if ( 0 != status ) {
+    fprintf( stderr, "%s: unable to mm/dd to doy\n", __FUNCTION__ );
+  } else {
+    fprintf( stderr, "%s: yyyymmdd=%4d%02d%02d --> yyyydoy=%4d%03d\n",
+	     __FUNCTION__, year, month, day, year, doy );
+  }
+  TEST_ASSERT_EQUAL_INT_MESSAGE( 61, doy, "Doy" );
   
   return;
   
