@@ -49,10 +49,21 @@ void tearDown( void ) {
 
 void test_date_arithmetic( void ) {
 
+  char buf[128];
+  int len;
+
   unitString = strdup("seconds since 1987-01-01 00:00:00");
   ut_unit* binUnits = ut_parse( unitSystem, unitString, UT_ISO_8859_1 );
   if (NULL == binUnits) {
     fprintf( stderr, "%s: unable to parse unit string\n", __FUNCTION__ );
+  } else {
+    len = ut_format( binUnits, buf, sizeof(buf), UT_NAMES );
+    if ( -1 == len || sizeof( buf ) == len ) {
+      fprintf( stderr, "%s: unable to format binUnits\n", __FUNCTION__ );
+    } else {
+      fprintf( stderr, "%s: string representation: %s\n",
+	       __FUNCTION__, buf );
+    }
   }
 
   /* Test date arithmetic where units are seconds and we add/subtract days */
