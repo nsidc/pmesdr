@@ -17,24 +17,32 @@
 
 /*
  * global variables used in multiple tests
-  */
+ */
+calcalcs_cal* calendar;
+ut_system* unitSystem;
+char *unitString;
 
 void setUp( void ) {
   /*
    * Default values for globals
    * Tests only need to change the specific thing they're trying to find
    */
+  calendar = ccs_init_calendar( "Standard" );
+  /*  ut_set_error_message_handler(ut_ignore); */
+  unitSystem = ut_read_xml( NULL );
+  /* ut_set_error_message_handler( NULL ); */
+  
 }
 
 void tearDown( void ) {
+
+  ut_free_system( unitSystem );
+  ccs_free_calendar( calendar );
+  
 }
 
 void test_cetb_epoch_conversion( void ) {
 
-  char* calendar = "Standard";
-  ut_system* unitSystem = ut_read_xml( NULL );
-  char *unitString;
-  
   int year, outYear;
   int month, outMonth;
   int day, outDay;
@@ -62,7 +70,7 @@ void test_cetb_epoch_conversion( void ) {
   /* yyyy/mm/dd hh:mm:ss to epoch time */
   status = utInvCalendar2_cal( year, month, day,
 			       hour, minute, second,
-			       binUnits, &value, calendar);
+			       binUnits, &value, calendar->name );
   if ( 0 != status ) {
     fprintf( stderr, "%s: unable to convert Gregorian to epoch\n", __FUNCTION__ );
   } else {
@@ -74,7 +82,7 @@ void test_cetb_epoch_conversion( void ) {
   status = utCalendar2_cal( value, binUnits,
 			    &outYear, &outMonth, &outDay,
 			    &outHour, &outMinute, &outSecond,
-			    calendar);
+			    calendar->name );
   if ( 0 != status ) {
     fprintf( stderr, "%s: unable to convert epochTime to Gregorian\n", __FUNCTION__ );
   } else {
@@ -100,7 +108,7 @@ void test_cetb_epoch_conversion( void ) {
   status = utCalendar2_cal( value, binUnits,
   			    &outYear, &outMonth, &outDay,
   			    &outHour, &outMinute, &outSecond,
-  			    calendar);
+  			    calendar->name );
   if ( 0 != status ) {
     fprintf( stderr, "%s: unable to convert epochTime to Gregorian\n", __FUNCTION__ );
   } else {
@@ -121,7 +129,7 @@ void test_cetb_epoch_conversion( void ) {
   status = utCalendar2_cal( value, binUnits,
   			    &outYear, &outMonth, &outDay,
   			    &outHour, &outMinute, &outSecond,
-  			    calendar);
+  			    calendar->name );
   if ( 0 != status ) {
     fprintf( stderr, "%s: unable to convert epochTime to Gregorian\n", __FUNCTION__ );
   } else {
@@ -138,20 +146,21 @@ void test_cetb_epoch_conversion( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 58, outMinute, "Minute" );
   TEST_ASSERT_EQUAL_FLOAT_MESSAGE( 54.175, outSecond, "Second" );
 
+  free( binUnits );
   return;
   
 }
 
 void test_date2doy_conversion( void ) {
 
-  calcalcs_cal* calendar = ccs_init_calendar( "Standard" );
-  
   int year, outYear;
   int month, outMonth;
   int day, outDay;
   int doy, outDoy;
   int status;
 
+  fprintf( stderr, "%s: calendar name=%s\n", __FUNCTION__, calendar->name );
+  
   /* yyyyddd to yyyymmdd, non-leap year */
   year = 1997;
   doy = 61;
@@ -199,8 +208,10 @@ void test_date2doy_conversion( void ) {
 	     __FUNCTION__, year, month, day, year, doy );
   }
   TEST_ASSERT_EQUAL_INT_MESSAGE( 61, doy, "Doy" );
+
   
   return;
   
 }
+
 
