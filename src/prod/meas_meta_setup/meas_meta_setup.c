@@ -21,12 +21,15 @@
 #include <math.h>
 #endif
 #include <float.h>
+#include <udunits2.h>
 
+#include "calcalcs.h"
 #include "cetb.h"
 #include "utils.h"
 #include "gsx.h"
 #include "utils.h"
 #include "sir_geom.h"
+#include "utCalendar2_cal.h"
 
 #define prog_version 0.3 /* program version */
 
@@ -126,8 +129,11 @@ static FILE * get_meta(char *mname, char *outpath, int *dstart,
 
 static void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store);
 
-static void timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *ihour, int *imin, int *isec, int refyear);
-
+static void old_timedecode(double time, int *iyear, int *jday, int *imon, int *iday, int *ihour, int *imin, int *isec, int refyear);
+static int timedecode(double epochTime,
+		      ut_unit *epochUnits, calcalcs_cal *calendar,
+		      int *year, int *doy, int *month, int *day,
+		      int *hour, int *minute, double *second);
 static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat);
 
 static float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat);
@@ -141,6 +147,9 @@ static int julday(int mm, int id, int iyyy);
 static void caldat(int julian, int *mm, int *id, int *iyyy);
 static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_id,
 			    cetb_direction_id direction_id, int year, float *split_time );
+static int get_search_period( int year, int dstart, int mstart, int ltdflag,
+			      ut_unit *epochUnits, calcalcs_cal *calendar,
+			      double *startEpochTime, double *endEpochTime);
 
 /****************************************************************************/
 
@@ -177,6 +186,8 @@ int main(int argc,char *argv[])
   int flag,ascend;
   int dstart,dend,mstart,mend,year,iregion;
   int iday,iyear,imon,ihour,imin,isec,jday;
+  int newiday,newiyear,newimon,newihour,newimin,newjday;
+  double newisec;
   int idaye,iyeare,imone,ihoure,imine,isece,jdaye;
 
   float theta;
@@ -185,7 +196,7 @@ int main(int argc,char *argv[])
   float cx,cy,lath,latl,lonh,lonl;
   int nsx,nsy,projt,ltdflag;
   float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
-  int shortf;
+  /* int shortf; */
   float tbmin=1.e10,tbmax=-1.e10; 
   
   int iadd1, box_size;
@@ -220,8 +231,16 @@ int main(int argc,char *argv[])
   char lin[100];
 
   /*
-   * begin to add in GSX variables
+   * calendar calculation variables
    */
+  calcalcs_cal* calendar = ccs_init_calendar( "Standard" );
+  ut_system* unitSystem = ut_read_xml( NULL );
+  char *unitString;
+  ut_unit* epochUnits;
+  double searchStartEpochTime;
+  double searchEndEpochTime;
+  
+  /* GSX variables */
   gsx_class *gsx=NULL;
   int gsx_count;
   int first_file=0;
@@ -337,30 +356,46 @@ int main(int argc,char *argv[])
   icmin=200;
 
   /* read and process each input swath TB file from meta file input */
-    
   krec=0;              /* total scans read */
   flag=1;              /* end flag */
   nfile=0;             /* L1B input file counter */
 
-  /* Before running through the list of input files, save the file position for each setup output region */
-  status = utils_allocate_clean_aligned_memory( (void**)&position_filename, save_area.nregions*sizeof(long int) );
+  /*
+   * Before running through the list of input files,
+   * save the file position for each setup output region
+   */
+  status =
+    utils_allocate_clean_aligned_memory( (void**)&position_filename,
+					 save_area.nregions*sizeof(long int) );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: Couldn't allocate memory for file name position variables\n", __FILE__ );
+    fprintf( stderr,
+	     "%s: Couldn't allocate memory for file name position variables\n",
+	     __FILE__ );
     exit (-1);
   }
-  status = utils_allocate_clean_aligned_memory( (void**)&position_data, save_area.nregions*sizeof(long int) );
+  status =
+    utils_allocate_clean_aligned_memory( (void**)&position_data,
+					 save_area.nregions*sizeof(long int) );
   if ( 0 != status ) {
-    fprintf( stderr, "%s: Couldn't allocate memory for file data position variables\n", __FILE__ );
+    fprintf( stderr,
+	     "%s: Couldn't allocate memory for file data position variables\n",
+	     __FILE__ );
     exit (-1);
   }
   for ( iregion = 0; iregion < save_area.nregions; iregion++ ) {
     *(position_filename+iregion) = ftell( save_area.reg_lu[iregion] );
   }
     
-  /* Run through all of the input data files so that a list of them can be written out to the setup file */
+  /*
+   * Run through all of the input data files so that a list of
+   * them can be written out to the setup file
+   */
   while(flag) { 
     
-    /* before reading in the next file, free the memory from the previous gsx pointer */
+    /*
+     * before reading in the next file, free the memory from the
+     * previous gsx pointer
+     */
     if ( NULL != gsx ) {
       gsx_close( gsx );
       gsx = NULL;
@@ -372,14 +407,15 @@ int main(int argc,char *argv[])
       exit(-1);
     }
 
-    if ( strstr(fname,"End_input_file_list") || feof(file_id) ) { /* proper end of meta file */
+    if ( strstr(fname,"End_input_file_list") || feof(file_id) ) {
+      /* proper end of meta file */
       flag=0;
       gsx_close( gsx );
       gsx = NULL;
     } else {
       /* read name of input swath file */
       s=strstr(fname,"Input_file");
-      if ( NULL != s ) {/* skip line if not an input file */
+      if ( NULL != s ) { /* skip line if not an input file */
 	/* find start of file name and extract it */
 	s=strchr(s,'=');
 	strcpy(ftempname,++s);
@@ -445,15 +481,19 @@ int main(int argc,char *argv[])
      * read data from file into gsx_class variable
      */
     gsx = gsx_init( fname ); // Read in a GSX file
-
     if ( NULL == gsx ) {
       fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
       free( gsx_fname[infile] );
       infile++;
       goto label_330;  // skip reading file on error
+    } else {
+      fprintf( stderr, "%s: Swath file: %s\n", __FILE__, fname );
     }
 
-    /* if this is the first file to be read, then write out the final header info for downstream processing */
+    /*
+     * if this is the first file to be read, then write out the
+     * final header info for downstream processing
+     */
     if ( 0 == first_file ) {
       first_file++;
       status = write_header_info( gsx, &save_area, year );
@@ -466,7 +506,10 @@ int main(int argc,char *argv[])
 	fprintf( stderr, "%s: *** couldn't write out end header information\n", __FILE__ );
 	exit (-1);
       }
-      /* If this is AMSRE, combine the output setup files for a and b scans and close the unneeded output file */
+      /*
+       * If this is AMSRE, combine the output setup files for a
+       * and b scans and close the unneeded output file
+       */
       if ( CETB_AQUA == cetb_platform ) {
 	combine_setup_files( &save_area, 1 );
       }
@@ -475,65 +518,185 @@ int main(int argc,char *argv[])
       fprintf( stderr, "%s: Subsequent file to be read\n", __FILE__ );
     }
 
-    /* Here is where you loop through all of the different measurement sets in the file */
-    fprintf( stderr, "%s: Satellite %s  orbit %d  lo scans %d hi scans %d\n", \
-				__FUNCTION__, cetb_platform_id_name[gsx->short_platform], \
+    /*
+     * Loop for each measurement set in the file
+     * One measurement set is one set of positions
+     */
+    fprintf( stderr, "%s: Satellite=%s orbit=%d lo scans=%d hi scans=%d\n",
+	     __FILE__, cetb_platform_id_name[gsx->short_platform],
 	     gsx->orbit, gsx->scans[0], gsx->scans[1] );
+    /*
+     * The target start/stop times are specified in the meta
+     * file.  This logic will ignore stop time and calculate a "gross"
+     * search period, outside of which any swath files will just be
+     * skipped.  Swath measurement sets within the "gross" period will
+     * be examined for each measurement in the later loop.
+     *
+     * FIXME: epoch time should be pulled from gsx variable scan_time
+     * units attribute
+     */
+    unitString = strdup("seconds since 1987-01-01 00:00:00");
+    epochUnits = ut_parse( unitSystem, unitString, UT_ISO_8859_1 );
+    if (NULL == epochUnits) {
+      fprintf( stderr,
+	       "%s: unable to parse unit string=%s\n", 
+	       __FILE__, unitString );
+    }
+    if (0 != get_search_period( year, dstart, mstart, ltdflag,
+				epochUnits, calendar,
+				&searchStartEpochTime,
+				&searchEndEpochTime)) {
+      fprintf(stderr,
+	      "%s: ERROR in get_search_period, exiting",
+	      __FILE__);
+      exit( -1 );
+    }
+    
     for ( loc=0; loc<GSX_MAX_DIMS; loc++ ) {
       
-      /* extract values of interest */
+      /* Get the times of the first and last scan in the measurement set */
+      fprintf( stderr, "%s: measurement set index =%d\n", __FILE__, loc);
       nscans = gsx->scans[loc];
       if ( 0 != gsx->scans[loc] ) {
 
 	first_scan_loc = loc;
 	last_scan_loc = gsx->scans[loc]-1;
-	timedecode( *(gsx->scantime[first_scan_loc]), &iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
-	timedecode( *(gsx->scantime[first_scan_loc]+last_scan_loc),	\
-		    &iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
-	fprintf( stderr, "* start time:  %lf  %d %d %d %d %d %d %d\n",	\
-	       *(gsx->scantime[first_scan_loc]),iyear,iday,imon,jday,ihour,imin,isec);    
-	fprintf( stderr, "* stop time:   %lf  %d %d %d %d %d %d %d\n",	\
-	       *(gsx->scantime[first_scan_loc]+last_scan_loc),iyeare,idaye,imone,jdaye,ihoure,imine,isece);    
-	fprintf( stderr, "search year: %d dstart,dend: %d %d  mstart: %d\n",year,dstart,dend,mstart);
+	old_timedecode( *(gsx->scantime[first_scan_loc]),
+			&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+	if ( 0 != timedecode( *(gsx->scantime[first_scan_loc]),
+			      epochUnits, calendar,
+			      &newiyear,&newjday,&newimon,
+			      &newiday,&newihour,&newimin,&newisec) ) {
+	  fprintf( stderr, "%s: FATAL timedecode error.", __FILE__ );
+	  exit(-1);
+	}
+	fprintf( stderr,
+		 "%s: swath start : OLD %.3lf %4d-%02d-%02d jday=%03d "
+		 "%02d:%02d:%02d\n",
+		 __FILE__, *(gsx->scantime[first_scan_loc]),
+		 iyear,imon,iday,jday,ihour,imin,isec);    
+	fprintf( stderr,
+		 "%s: swath start : NEW %.3lf %4d-%02d-%02d jday=%03d "
+		 "%02d:%02d:%.3lf\n",
+		 __FILE__, *(gsx->scantime[first_scan_loc]),
+		 newiyear,newimon,newiday,newjday,newihour,newimin,newisec);
+	     
+	old_timedecode( *(gsx->scantime[first_scan_loc]+last_scan_loc),
+			&iyeare,&jdaye,&imone,&idaye,&ihoure,&imine,&isece,1987);
+	fprintf( stderr,
+		 "%s: swath stop  : %.3lf %4d-%02d-%02d jday=%03d "
+		 "%02d:%02d:%02d\n",
+		 __FILE__, *(gsx->scantime[first_scan_loc]+last_scan_loc),
+		 iyeare,imone,idaye,jdaye,ihoure,imine,isece);    
+	fprintf( stderr, "%s: searching for: year=%d dstart=%d dend=%d "
+		 "mstart=%d mend=%d\n",
+		 __FILE__, year,dstart,dend,mstart,mend);
 
+	/*
+	 * Reject the whole measurement set and skip to next
+	 * swath file, if swath ends before search span begins,
+	 * or if swath begins later than search spand ends
+	 */
+	if ( *(gsx->scantime[first_scan_loc]+last_scan_loc)
+	     < searchStartEpochTime ) {
+	  fprintf( stderr,
+		   "%s: swath is prior to search period: skipping %s\n",
+		   __FILE__, fname );
+	  goto label_3501;
+
+	}
+	if ( *(gsx->scantime[first_scan_loc])
+	     > searchEndEpochTime ) {
+	  fprintf( stderr,
+		   "%s: swath is after search period: skipping %s\n",
+		   __FILE__, fname );
+	  goto label_3501;
+	}
+	  
 	iday=jday;    /* use day of year (jday) for day search */
 	idaye=jdaye;    
 
 	/* check data range to see if file contains useful time period
 	   if not, skip reading file */
-	shortf=1;
-	if (dstart <= dend) {
-	  if (iyear != year && iyeare != year) goto label_3501;
-	  if (iday <= dstart) {
-	    if (idaye < dstart-1) goto label_3501;
-	    if (idaye == dstart && ihoure*MINUTES_PER_HOUR+imine < mstart) goto label_3501;
-	  } else {
-	    if (iday > dend) {
-	      if (!ltdflag) goto label_3501;
-	      dend2=dend+1;
-	      if (ltdflag && idaye > dend2) goto label_3501;
-	    } else {
-	      if (iday == dend && ihour*MINUTES_PER_HOUR+imin > mend) goto label_3501;
-	    }
-	  }
-	} else {
-	  ilenyear=365;
-	  if (isleapyear(year)) ilenyear=366;      
-	  iday=iday+(iyear-year)*ilenyear;
-	  idaye=idaye+(iyeare-year)*ilenyear;
-	  if (ltdflag)
-	    dend2=dend+ilenyear+1;    
-	  else
-	    dend2=dend+ilenyear;
-	  if (iday <= dstart) {
-	    if (idaye < dstart) goto label_3501;
-	    if (idaye == dstart && ihoure*MINUTES_PER_HOUR+imine < mstart) goto label_3501;
-	  } else {
-	    if (iday > dend2) goto label_3501;
-	    if (iday == dend2 && ihour*MINUTES_PER_HOUR+imin > mend) goto label_3501;
-	  }
-	  /* shortf=0; */
-	}
+	/* shortf=1; */
+	/* if (dstart <= dend) {  /\* why wouldn't this always be the case? *\/ */
+	/*   if (iyear != year && iyeare != year) { */
+	/*     fprintf( stderr, "%s: SKIP: BOTH BEGIN/END SWATH YEAR != SEARCH YEAR\n", __FILE__); */
+	/*     goto label_3501; */
+	/*   } */
+	/*   if (iday <= dstart) { */
+	/*     if (idaye < dstart-1) { */
+	/*       fprintf( stderr, "%s: SKIP: SWATH BEGIN DOY PRIOR TO SEARCH BEGIN DOY" */
+	/* 	       " AND SWATH END DOY PRIOR TO SEARCH DOY - 1 \n", __FILE__); */
+	/*       goto label_3501; */
+	/*     } */
+	/*     if (idaye == dstart && ihoure*MINUTES_PER_HOUR+imine < mstart) { */
+	/*       fprintf( stderr, "%s: SKIP: SWATH BEGIN DOY PRIOR TO SEARCH BEGIN DOY" */
+	/* 	       " SWATH END DOY == SEARCH DOY BUT" */
+	/* 	       " SWATH END TIME EARLIER THAN SEARCH START MINUTES\n", __FILE__); */
+	/*       goto label_3501; */
+	/*     } */
+	/*   } else { */
+	/*     if (iday > dend) { */
+	/*       if (!ltdflag) { */
+	/* 	fprintf( stderr, "%s: SKIP: SWATH BEGIN DOY LATER THAN SEARCH BEGIN DOY" */
+	/* 		 " AND SWATH BEGIN DOY LATER THAN SEARCH END DOY" */
+	/* 		 " AND NOT LTOD\n", __FILE__); */
+	/* 	goto label_3501; */
+	/*       } */
+	/*       dend2=dend+1; */
+	/*       if (ltdflag && idaye > dend2) { */
+	/* 	fprintf( stderr, "%s: SKIP: SWATH BEGIN DOY LATER THAN SEARCH BEGIN DOY" */
+	/* 		 " AND SWATH END DOY LATER THAN SEARCH END DOY + 1" */
+	/* 		 " AND LTOD\n", __FILE__); */
+	/* 	goto label_3501; */
+	/*       } */
+	/*     } else { */
+	/*       if (iday == dend && ihour*MINUTES_PER_HOUR+imin > mend) { */
+	/* 	fprintf( stderr, "%s: SKIP: SWATH BEGIN DOY LATER THAN SEARCH BEGIN DOY" */
+	/* 		 " AND SWATH BEGIN DOY >= SEARCH END DOY" */
+	/* 		 " AND SWATH BEGIN TIME LATER THAN SEARCH END TIME\n", __FILE__); */
+	/* 	goto label_3501; */
+	/*       } */
+	/*     } */
+	/*   } */
+	/* } else { /\* dstart > dend, so start doy is end of year and end doy is beginning of year *\/ */
+	/*   ilenyear=365; */
+	/*   if (isleapyear(year)) ilenyear=366;       */
+	/*   iday=iday+(iyear-year)*ilenyear; */
+	/*   idaye=idaye+(iyeare-year)*ilenyear; */
+	/*   if (ltdflag) */
+	/*     dend2=dend+ilenyear+1;     */
+	/*   else */
+	/*     dend2=dend+ilenyear; */
+	/*   if (iday <= dstart) { */
+	/*     if (idaye < dstart) { */
+	/*       fprintf( stderr, "%s: SKIP: SEARCH CROSSES A YEAR" */
+	/* 	       " AND SWATH BEGIN DOY <= SEARCH START DOY" */
+	/* 	       " AND SWATH END DOY PRIOR TO SEARCH START DOY\n", __FILE__); */
+	/*       goto label_3501; */
+	/*     } */
+	/*     if (idaye == dstart && ihoure*MINUTES_PER_HOUR+imine < mstart) { */
+	/*       fprintf( stderr, "%s: SKIP: SEARCH CROSSES A YEAR" */
+	/* 	       " AND SWATH END DOY IS SEARCH START DOY" */
+	/* 	       " AND SWATH END TIME PRIOR TO SEARCH START MINUTES\n", __FILE__); */
+	/*       goto label_3501; */
+	/*     } */
+	/*   } else { */
+	/*     if (iday > dend2) { */
+	/*       fprintf( stderr, "%s: SKIP: SEARCH CROSSES A YEAR" */
+	/* 	       " AND SWATH START DOY IS LATER THAN SEARCH END DOY\n", __FILE__); */
+	/*       goto label_3501; */
+	/*     } */
+	/*     if (iday == dend2 && ihour*MINUTES_PER_HOUR+imin > mend) { */
+	/*       fprintf( stderr, "%s: SKIP: SEARCH CROSSES A YEAR" */
+	/* 	       " AND SWATH START DOY IS SEARCH END DOY" */
+	/* 	       " AND SWATH START TIME IS LATER THAN SEARCH END MINUTES\n", __FILE__); */
+	/*       goto label_3501; */
+	/*     } */
+	/*   } */
+	/*   /\* shortf=0; *\/ */
+	/* } */
   
 	/* for each scan in file */
 	nrec=0;
@@ -542,7 +705,11 @@ int main(int argc,char *argv[])
 	  krec=krec+1;	/* count total scans read */
 	  nrec=nrec+1;      /* count scans read in file */
       
-	  if ((krec%500)==0) fprintf( stderr, "Scans %7d | Pulses %9d | Output %9d | Day %3d\n",krec,irec,jrec,iday);
+	  if ((krec%500)==0) {
+	    fprintf( stderr,
+		     "Scans %7d | Pulses %9d | Output %9d | Day %3d\n",
+		     krec, irec, jrec, iday );
+	  }
 
 	  if ( (*(gsx->scantime[loc]+iscan) - gsx->fill_scantime[loc]) <= DBL_EPSILON ) goto label_350;
 	  /* do not process this scan if the time is set to the scantime fillvalue
@@ -550,7 +717,7 @@ int main(int argc,char *argv[])
 	   * rather than flag them with the fill value
 	   */
 	  /* scan time.  All measurements in this scan assigned this time */
-	  timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
+	  old_timedecode(*(gsx->scantime[loc]+iscan),&iyear,&jday,&imon,&iday,&ihour,&imin,&isec,1987);
 	  iday = jday;
     
 	  /* check to see if scan is in desired range */
@@ -572,15 +739,23 @@ int main(int argc,char *argv[])
 	    }
 	  }
       
-	  /* compute time in mins since start of image data (assumes mstart=0) */
-	  /* compute the time in minutes of the current scan line, wrt to the UTC day being processed
-	     for example, if the observation time is 30 minutes before midnight UTC, then ktime will
-	     be -30 - this time will later be combined with the longitude of the observation to get the relative
-	     local time for the measurement at that point
-	     to see the how different UTC values and longitudes are combined, look at the spreadsheet in the docs/internal
-	     directory in the repo - spreadsheet allows you to enter day and time of observation and longitude and then
-	     calculates ktime and ctime as in the code - the result can be compared with the split times to see if the time
-	     of the measurement is in the correct range */
+	  /* compute time in mins since start of image data
+	     (assumes mstart=0) */
+	  /* compute the time in minutes of the current scan
+	     line, wrt to the UTC day being processed for
+	     example, if the observation time is 30 minutes
+	     before midnight UTC, then ktime will be -30 - this
+	     time will later be combined with the longitude of
+	     the observation to get the relative local time for
+	     the measurement at that point to see the how
+	     different UTC values and longitudes are combined,
+	     look at the spreadsheet in the docs/internal
+	     directory in the repo - spreadsheet allows you to
+	     enter day and time of observation and longitude and
+	     then calculates ktime and ctime as in the code - the
+	     result can be compared with the split times to see
+	     if the time of the measurement is in the correct
+	     range */
 	  ktime=((ktime+iday-dstart)*24+ihour)*MINUTES_PER_HOUR+imin;
 
 	  /* compute the orientation of the nadir track with respect to north */
@@ -588,8 +763,10 @@ int main(int argc,char *argv[])
 	  eqlon = (fractional_orbit * 360.f);
 	  if (eqlon<0.0) eqlon=(eqlon+360.f);      
 	  /*
-	    find the longitude of the equator crossing of the middle measurement to use in computing the
-	    longitudes that separate ascending and descending for this rev */
+	    find the longitude of the equator crossing of the
+	    middle measurement to use in computing the longitudes
+	    that separate ascending and descending for this
+	    rev */
 	  xhigh_lon=(eqlon+90.f);
 	  xlow_lon =(eqlon-90.f);
 	   
@@ -598,7 +775,8 @@ int main(int argc,char *argv[])
 	  if (xlow_lon  >  180.f) xlow_lon =(xlow_lon -360.f);
 	  if (xlow_lon  < -180.f) xlow_lon =(xlow_lon +360.f);
 
-	  /* here test for AMSRE that doesn't have spacecraft position and get asc desc flag from gsx variable */
+	  /* here test for AMSRE that doesn't have spacecraft
+	     position and get asc desc flag from gsx variable */
 	  /* set asc/dsc flag for measurements */
 	  if ( CETB_AMSRE != gsx->short_sensor ) {
 	    if (*(gsx->sc_latitude[loc]+iscan)-sc_last_lat < 0.0 ) 
@@ -615,51 +793,71 @@ int main(int argc,char *argv[])
 	  }
 
 	  /* extract TB measurements for each scan */
-
 	  first_measurement = 0;
 	  if ( CETB_AMSRE == gsx->short_sensor ) first_measurement = CETB_AMSRE_FIRST_MEASUREMENT;
-	  for (imeas=first_measurement; imeas < gsx->measurements[loc]; imeas++) { /* measurements loop */
+	  /* measurements loop */
+	  for (imeas=first_measurement; imeas < gsx->measurements[loc]; imeas++) {
 	    irec=irec+1;	/* count of pulses examined */
 
-	    /* for each output region and section */
-	    for (iregion=0; iregion<save_area.nregions; iregion++) { /* regions loop label_3400 */
+	    /*
+	     * regions loop
+	     * for each output region and section
+	     * loop label_3400
+	     */
+	    for (iregion=0; iregion<save_area.nregions; iregion++) { 
 
 	      ibeam=save_area.sav_ibeam[iregion];  /* beam number */
 	      cetb_region = (cetb_region_id)(save_area.sav_regnum[iregion]-cetb_region_number[0]);
 
-	      /* If we are processing a T grid (asc/des), check to make sure the scan line is for the day of processing */
+	      /* If we are processing a T grid (asc/des), check
+		 to make sure the scan line is for the day of
+		 processing */
 	      if ( cetb_region == CETB_EASE2_T ) {
 		if ( iday != dstart ) goto label_3400;
 	      }
 		      
-	      if ( CETB_SSMI == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-	      if ( CETB_AMSRE == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
-	      if ( CETB_SSMIS == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_ssmis_channel[ibeam];
-	      if ( CETB_SMMR == gsx->short_sensor ) gsx_count = cetb_ibeam_to_cetb_smmr_channel[ibeam];
+	      if ( CETB_SSMI == gsx->short_sensor )
+		gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
+	      if ( CETB_AMSRE == gsx->short_sensor )
+		gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
+	      if ( CETB_SSMIS == gsx->short_sensor )
+		gsx_count = cetb_ibeam_to_cetb_ssmis_channel[ibeam];
+	      if ( CETB_SMMR == gsx->short_sensor )
+		gsx_count = cetb_ibeam_to_cetb_smmr_channel[ibeam];
 	      
-	      /* only get Tb's for channels that use the current set of position coordinates */
-
+	      /* only get Tb's for channels that use the current
+		 set of position coordinates */
 	      if ( gsx->channel_dims[gsx_count] == (cetb_loc_id)loc ) {
 	      
 		/* for this beam, get measurement, geometry, and location */
-		/* Note that the gsx_count variable gives you the offset into the tb array for whichever channel
-		 * you are currently looking at - which comes from the region array
-		 * the imeas variable counts measurements across a scanline and the
-		 * iscan variable keeps track of which scan line you are on and
-		 * gsx->measurements[loc] is the number of measurements in each scan line
+		/* Note that the gsx_count variable gives you the
+		 * offset into the tb array for whichever channel
+		 * you are currently looking at - which comes
+		 * from the region array the imeas variable
+		 * counts measurements across a scanline and the
+		 * iscan variable keeps track of which scan line
+		 * you are on and gsx->measurements[loc] is the
+		 * number of measurements in each scan line
 		 */
-
 		tb = *(gsx->brightness_temps[gsx_count]+imeas+iscan*gsx->measurements[loc]);
 
-		thetai = *(gsx->eia[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal incidence angle */
-		azang = *(gsx->eaz[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal azimuth angle */
-		cen_lat = *(gsx->latitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal longitude */
-		cen_lon = *(gsx->longitude[loc]+imeas+iscan*gsx->measurements[loc]);  /* nominal latitude */
+		/*
+		 * Each in turn: nominal incidence angle, nominal azimuth angle,
+		 * nominal longitude, nominal latitude
+		 */
+		thetai = *(gsx->eia[loc]+imeas+iscan*gsx->measurements[loc]);
+		azang = *(gsx->eaz[loc]+imeas+iscan*gsx->measurements[loc]); 
+		cen_lat = *(gsx->latitude[loc]+imeas+iscan*gsx->measurements[loc]);
+		cen_lon = *(gsx->longitude[loc]+imeas+iscan*gsx->measurements[loc]);
 
-		if (tb < *(gsx->validRange[gsx_count])) goto label_3400; /* skip bad measurements */
-		if (fabs(thetai) < FLT_EPSILON) goto label_3400; /* skip bad measurements */
+		/* skip bad measurements */
+		if (tb < *(gsx->validRange[gsx_count])) goto label_3400;
+		if (fabs(thetai) < FLT_EPSILON) goto label_3400;
 	  
-		/* check ascending/descending orbit pass flag (see cetb.h for definitions) */
+		/*
+		 * check ascending/descending orbit pass flag
+		 * (see cetb.h for definitions)
+		 */
 		iasc=save_area.sav_ascdes[iregion];
 		if (iasc != (int)CETB_ALL_PASSES) {
 		  if (iasc == (int)CETB_ASC_PASSES) {
@@ -670,16 +868,19 @@ int main(int argc,char *argv[])
 		}
 
 		/* only for N and S projections */
-		/* extract local-time-of-day split values  - these are sensor, year and projection dependent */
-		/* a status return of non-zero indicates invalid satellite/year combination */
-
-		status = ltod_split_time(gsx->short_platform, cetb_region, CETB_MORNING_PASSES, year, &tsplit);
+		/* extract local-time-of-day split values - these
+		   are sensor, year and projection dependent */
+		/* a status return of non-zero indicates invalid
+		   satellite/year combination */
+		status = ltod_split_time(gsx->short_platform, cetb_region,
+					 CETB_MORNING_PASSES, year, &tsplit);
 		if ( status != 0 ) {
 		  exit(-1);
 		} else {
 		  tsplit1_mins = tsplit * MINUTES_PER_HOUR;
 		}
-		status = ltod_split_time(gsx->short_platform, cetb_region, CETB_EVENING_PASSES, year, &tsplit);
+		status = ltod_split_time(gsx->short_platform, cetb_region,
+					 CETB_EVENING_PASSES, year, &tsplit);
 		if ( status != 0 ) {
 		  exit(-1);
 		} else {
@@ -884,24 +1085,23 @@ int main(int argc,char *argv[])
     label_3501:;  /* end of input file */
 
     /* input file has been processed */
-    if (shortf) {
-      fprintf( stderr, "\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
-      fprintf( stderr, "Region counts: ");
-      for (j=0; j<save_area.nregions; j++)
-	fprintf( stderr, " %d",jrec2[j]);
-      fprintf( stderr, "\n");
-      fprintf( stderr, "Input File Completed:  %s\n",fname);
-      fprintf( stderr, "Last Day %d in Range: %d - %d\n\n",iday,dstart,dend);
-      fprintf( stderr, "Number of measurements: %d\n",icc);
-      fprintf( stderr, "IPR count average:  %lf\n",(icc>0? cave/(float) icc: cave));
-      fprintf( stderr, "IPR count max,min:  %d %d \n",icmax,icmin);
-      fprintf( stderr, "Tb max,min:  %f %f \n\n",tbmax,tbmin);
+    fprintf( stderr, "\nTotal input scans: %d  Total input pulses: %d\n",krec,irec);
+    fprintf( stderr, "Region counts: ");
+    for (j=0; j<save_area.nregions; j++)
+      fprintf( stderr, " %d",jrec2[j]);
+    fprintf( stderr, "\n");
+    fprintf( stderr, "Input File Completed:  %s\n",fname);
+    fprintf( stderr, "Last Day %d in Range: %d - %d\n\n",iday,dstart,dend);
+    fprintf( stderr, "Number of measurements: %d\n",icc);
+    fprintf( stderr, "IPR count average:  %lf\n",(icc>0? cave/(float) icc: cave));
+    fprintf( stderr, "IPR count max,min:  %d %d \n",icmax,icmin);
+    fprintf( stderr, "Tb max,min:  %f %f \n\n",tbmax,tbmin);
   
-      if (iday <= dend)
-	fprintf( stderr, "*** DAY RANGE IS NOT FINISHED ***\n");
-      fprintf( stderr, "End of day period reached %d %d \n",iday,dend);
-    }
-               /* input file loop */
+    if (iday <= dend)
+      fprintf( stderr, "*** DAY RANGE IS NOT FINISHED ***\n");
+    fprintf( stderr, "End of day period reached %d %d \n",iday,dend);
+
+    /* input file loop */
     fprintf( stderr, "Done with setup records %d %d\n",irec,krec);
     free( gsx_fname[infile] );
     status = write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
@@ -937,7 +1137,8 @@ int main(int argc,char *argv[])
   }
   fprintf( stderr, "\n");
 
-  /* close input meta file */	    
+  /* Cleanup memory and close files */
+  ccs_free_calendar( calendar );
   fclose(file_id);
   fprintf( stderr, "Setup program successfully completed\n");
 
@@ -1924,18 +2125,16 @@ void caldat(int julian, int *mm, int *id, int *iyyy) {
     *iyyy=*iyyy-1;
 }
 
-/* date conversion routine */
-
-void timedecode(double time, int *iyear, int *jday, int *imon, 
+void old_timedecode(double time, int *iyear, int *jday, int *imon, 
 		int *iday, int *ihour, int *imin, int *isec, int refyear)
 {     
   /* given a time in seconds from the start of 1987 (1/1/87 0Z) determine
      the year, month, day, hour, minute, and second */
-
+   
   int itime=(int)time;
   int ijd=(int)(time/(24*3600));
   int ijd0, ijd1;  
-  
+
   if (ijd < 0) ijd=ijd-1;
   ijd0=julday(1,1,refyear);   /* julian day reference */
   caldat(ijd+ijd0,imon,iday,iyear);
@@ -1947,6 +2146,57 @@ void timedecode(double time, int *iyear, int *jday, int *imon,
   *imin=mod(itime-*ihour*3600,60*60)/60;
   *isec=mod(itime-*ihour*3600-*imin*60,60);
 }
+
+
+/* ***********************************************************************
+ * timedecode - convert an epoch time value to Gregorian and day-of-year
+ *    equivalent
+ *
+ *  Input:
+ *    epochTime - double, epoch time to convert
+ *    epochUnits - pointer to ut_units, epoch information
+ *    calendar - pointer to calcalcs_cal calendar information
+ *
+ *  Output:
+ *    year - integer, year
+ *    doy - integer, day of year
+ *    month - integer month
+ *    day - integer, day of month
+ *    hour - integer, hour
+ *    minute - integer, minutes
+ *    second - double, seconds
+ *
+ *  Result:
+ *    status variable indicates success (0) or failure (1)
+ *
+ *  N.B. The originial timedecode function was truncating fractions
+ *  of seconds.
+ */
+static int timedecode(double epochTime,
+		      ut_unit *epochUnits, calcalcs_cal *calendar,
+		      int *year, int *doy, int *month, int *day,
+		      int *hour, int *minute, double *second) {
+
+  /* epoch time to Gregorian */
+  if ( 0 != utCalendar2_cal( epochTime, epochUnits,
+			     year, month, day, hour, minute, second,
+			     calendar->name ) ) {
+    fprintf( stderr, "%s: unable to convert epochTime=%.3lf to Gregorian\n",
+	     __FUNCTION__, epochTime );
+    return 1;
+  }
+
+  /* also get day of year */
+  if ( 0 != ccs_date2doy( calendar, *year, *month, *day, doy ) ) {
+    fprintf( stderr, "%s: unable to convert %4d-%02d-%02d to day of year\n",
+	     __FUNCTION__, *year, *month, *day );
+    return 1;
+  }
+
+  return 0;
+
+}
+ 
 
 /*
  * box_size_by_channel - returns the box size to use based on the channel and sensor
@@ -2576,3 +2826,105 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
   }
 
 } 
+
+/* ***********************************************************************
+ * get_search_period - get the search period window we are looking for,
+ *    relative to the start year, day-of-year and minutes-of-day
+ *    from the meta file; returns the search period relative to the
+ *    requested epoch time
+ *
+ *  Input:
+ *    year - integer, year for target start
+ *    dstart - integer, day for target start
+ *    mstart - integer, minutes of day for target start
+ *    ltdflag - integer, LTOD processing flag
+ *    epochUnits - pointer to ut_units, epoch information
+ *    calendar - pointer to calcalcs_cal calendar information
+ *
+ *  Output:
+ *    startEpochTime - double, begin of search time in requested epochUnits
+ *    endEpochTime - double, end of search time in requested epochUnits
+ *
+ *  Result:
+ *    status variable indicates success (0) or failure (1)
+ * 
+ *  Method:
+ *    if LTOD, set search span to target day +/- 1 full day
+ *    else, set search span to target day
+ */
+static int get_search_period( int year, int dstart, int mstart, int ltdflag,
+			      ut_unit *epochUnits, calcalcs_cal *calendar,
+			      double *startEpochTime, double *endEpochTime) {
+
+  int status;
+  int month;
+  int day;
+  int hour = 0;
+  double second = 0.0;
+  int startDayOffset;
+  int endDayOffset;
+  int startYear, endYear;
+  int startMonth, endMonth;
+  int startDay, endDay;
+
+  /* Convert yyyydoy to yyyymmdd */
+  if ( 0 != ccs_doy2date( calendar, year, dstart, &month, &day) ) {
+    fprintf( stderr, "%s: Error converting yyyydoy=%4d%03d to yyyymmdd\n",
+	     __FUNCTION__, year, dstart );
+    return 1;
+  }
+
+  /*
+   * For LTOD processing, start and end are 1 day on either side,
+   * otherwise, start and end are this day only
+   */
+  if (ltdflag) {
+    startDayOffset = -1;
+    endDayOffset = 2;
+  } else {
+    startDayOffset = 0;
+    endDayOffset = 1;
+  }
+
+  /* Get search start, relative to requested epoch time */
+  if ( 0 != ccs_dayssince( calendar, year, month, day, startDayOffset,
+			   calendar, &startYear, &startMonth, &startDay) ) {
+    fprintf( stderr,
+	     "%s: Error dayssince yyyymmdd=%4d%02d%02d for offset=%d\n",
+	     __FUNCTION__, year, month, day, startDayOffset );
+    return 1;
+  }
+    
+  if ( 0 != utInvCalendar2_cal( startYear, startMonth, startDay,
+				hour, mstart, second, epochUnits,
+				startEpochTime, calendar->name) ) {
+    fprintf( stderr, "%s: Error converting yyyymmdd=%4d%02d%02d to epoch\n",
+	     __FUNCTION__, startYear, startMonth, startDay );
+    return 1;
+  }
+
+  /* Get search end, relative to requested epoch time */
+  if ( 0 != ccs_dayssince( calendar, year, month, day, endDayOffset,
+			   calendar, &endYear, &endMonth, &endDay) ) {
+    fprintf( stderr,
+	     "%s: Error dayssince yyyymmdd=%4d%02d%02d for offset=%d\n",
+	     __FUNCTION__, year, month, day, endDayOffset );
+    return 1;
+  }
+    
+  if ( 0 != utInvCalendar2_cal( endYear, endMonth, endDay,
+				hour, mstart, second, epochUnits,
+				endEpochTime, calendar->name) ) {
+    fprintf( stderr, "%s: Error converting yyyymmdd=%4d%02d%02d to epoch\n",
+	     __FUNCTION__, endYear, endMonth, endDay );
+    return 1;
+  }
+
+  fprintf( stderr, "%s: search start: %.3lf %4d-%02d-%02d\n",
+	   __FILE__, *startEpochTime, startYear, startMonth, startDay );
+  fprintf( stderr, "%s: search   end: %.3lf %4d-%02d-%02d\n",
+	   __FILE__, *endEpochTime, endYear, endMonth, endDay );
+  
+  return 0;
+  
+}
