@@ -83,14 +83,6 @@ static void no_trailing_blanks(char *s)
   return;
 }
 
-static int isleapyear(int year) 
-{ /* is year a leap year? */
-  if (year==4*(year/4))  /* this test is only good for 1904-2096! */
-    return(1);
-  else
-    return(0);
-}
-
 /****************************************************************************/
 
 typedef struct { /* BYU region information storage */
@@ -190,8 +182,7 @@ int main(int argc,char *argv[])
 
   /* output record information */
   float tb,thetai,azang=0.0;
-  int count,ktime,iadd, fill_array[MAXFILL+1];
-  int newktime;
+  int count,ktime_minutes,iadd, fill_array[MAXFILL+1];
   short int response_array[MAXFILL+1];  
 
   int jrec2[NSAVE];  /* measurement counter for each region */
@@ -549,9 +540,17 @@ int main(int argc,char *argv[])
      * be examined for each measurement in the later loop.
      *
      * FIXME: unitString should be pulled from gsx variable scan_time
-     * units attribute
+     * units attribute.
      */
     unitString = strdup("seconds since 1987-01-01 00:00:00");
+    /* ktime calculation assumes that units are seconds */
+    if ( 0 != strncmp( unitString, "seconds", 7 ) ) {
+      fprintf( stderr,
+	       "%s: ERROR, unexpected time units = %s, exiting\n",
+	       __FILE__, unitString );
+      exit( -1 );
+    }
+    
     epochUnits = ut_parse( unitSystem, unitString, UT_ISO_8859_1 );
     if (NULL == epochUnits) {
       fprintf( stderr,
@@ -562,10 +561,10 @@ int main(int argc,char *argv[])
 				epochUnits, calendar,
 				&searchStartEpochTime,
 				&imageStartEpochTime,
-				&searchEndEpochTime)) {
-      fprintf(stderr,
-	      "%s: ERROR in get_search_period, exiting",
-	      __FILE__);
+				&searchEndEpochTime ) ) {
+      fprintf( stderr,
+	       "%s: ERROR in get_search_period, exiting\n",
+	       __FILE__ );
       exit( -1 );
     }
     
@@ -666,56 +665,28 @@ int main(int argc,char *argv[])
 	    exit(-1);
 	  }
 
-	  /* This operation assumes that epochUnits are seconds */
-	  newktime =
+	  /*
+	   * Compute time in mins since start of image data.
+	   * This operation assumes that epochUnits are seconds.
+	   *
+	   * For example, if the observation time is 30 minutes
+	   * before midnight UTC, then ktime_minutes will be -30
+	   * - this time will later be combined with the
+	   * longitude of the observation to get the relative
+	   * local time for the measurement at that point to see
+	   * the how different UTC values and longitudes are
+	   * combined, look at the spreadsheet in the
+	   * docs/internal directory in the repo - spreadsheet
+	   * allows you to enter day and time of observation and
+	   * longitude and then calculates ktime_minutes and
+	   * ctime as in the code - the result can be compared
+	   * with the split times to see if the time of the
+	   * measurement is in the correct range.
+	   */
+	  ktime_minutes =
 	    (int) ( ( ( *(gsx->scantime[loc]+iscan) ) - imageStartEpochTime )
-		    / 60. );
+		    / ( SECONDS_PER_MINUTE ) );
 	    
-	  /* compute days since start of image data if cross year boundary */
-	  ktime=(iyear-year)*365;   /* days */
-	  if (ktime > 0) { /* more than a year */
-	    if (isleapyear(year)) {
-	      ktime=ktime+1;
-	    }
-	  }  else {
-	    if (ktime<0) {
-	      fprintf( stderr,
-		       "*possible bug in ktime %d iyear %d year %d iscan %d\n",
-		       ktime, iyear, year, iscan);
-	    }
-	  }
-      
-	  /* compute time in mins since start of image data
-	     (assumes mstart=0) */
-	  /* compute the time in minutes of the current scan
-	     line, wrt to the UTC day being processed for
-	     example, if the observation time is 30 minutes
-	     before midnight UTC, then ktime will be -30 - this
-	     time will later be combined with the longitude of
-	     the observation to get the relative local time for
-	     the measurement at that point to see the how
-	     different UTC values and longitudes are combined,
-	     look at the spreadsheet in the docs/internal
-	     directory in the repo - spreadsheet allows you to
-	     enter day and time of observation and longitude and
-	     then calculates ktime and ctime as in the code - the
-	     result can be compared with the split times to see
-	     if the time of the measurement is in the correct
-	     range */
-	  ktime=((ktime+jday-dstart)*24+ihour)*MINUTES_PER_HOUR+imin;
-
-	  if ( 1. < fabs( ktime - newktime ) ) {
-	    fprintf( stderr,
-		     "%s: ERROR next scan : %.3lf %4d-%02d-%02d jday=%03d "
-		     "%02d:%02d:%.3lf\nktime=%d != newktime=%d minutes since search day start\n",
-		     __FILE__, *(gsx->scantime[loc]+iscan),
-		     iyear,imon,iday,jday,ihour,imin,isec,ktime,newktime);
-	    fprintf( stderr,"swath time = %.3lf", *(gsx->scantime[loc]+iscan) );
-	    fprintf( stderr,"image time = %.3lf", imageStartEpochTime );
-	    fprintf( stderr,"newktime = %d", newktime );
-	    exit (-1);
-	  }
-	  
 	  /* compute the orientation of the nadir track with respect to north */
 	  fractional_orbit = ( float ) iscan/nscans;
 	  eqlon = (fractional_orbit * 360.f);
@@ -865,19 +836,22 @@ int main(int argc,char *argv[])
 		dateline=save_area.sav_dateline[iregion];
 
 		/*
-		 * if a local-time-of-day image, compute the
-		 *  local time relative to the current longitude,
-		 *  add in the UTC time of the observation
-		 *  (ktime) which was calculated above and
-		 *  compare the result to the split times
-		 *  windows.  ctime is the relative local time
-		 *  Note: data may be next or previous UTC day
-		 *  Note also: that the length of the window is
-		 *  currently set to # minutes per 24 hour period
-		 *  this may not be true for all sensors
+		 * Apply LTOD considerations: if a
+		 * local-time-of-day image, compute the local
+		 * time relative to the current longitude, add in
+		 * the UTC time of the observation
+		 * (ktime_minutes) which was calculated above and
+		 * compare the result to the split times windows.
+		 * ctime is the relative local time Note: data
+		 * may be next or previous UTC day Note also:
+		 * that the length of the window is currently set
+		 * to # minutes per 24 hour period this may not
+		 * be true for all sensors
 		 */
-		if (iasc == (int)CETB_MORNING_PASSES || iasc == (int)CETB_EVENING_PASSES) { /* apply LTOD considerations */
-		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime; /* calculate the relative local time of day in minutes */
+		if (iasc == (int)CETB_MORNING_PASSES
+		    || iasc == (int)CETB_EVENING_PASSES) {
+		  /* calculate the relative local time of day in minutes */
+		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime_minutes; 
 
 		  if ( iasc == (int)CETB_MORNING_PASSES ) { /* morning */
 		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
@@ -1024,7 +998,7 @@ int main(int argc,char *argv[])
 		  fwrite(&tb,    4,1,save_area.reg_lu[iregion]); /* TB (K) */
 		  fwrite(&thetai,4,1,save_area.reg_lu[iregion]); /* incidence angle (deg) */
 		  fwrite(&count, 4,1,save_area.reg_lu[iregion]); /* number of pixels in list */
-		  fwrite(&ktime, 4,1,save_area.reg_lu[iregion]); /* time of measurement */
+		  fwrite(&ktime_minutes, 4,1,save_area.reg_lu[iregion]); /* time of measurement */
 		  fwrite(&iadd,  4,1,save_area.reg_lu[iregion]); /* address of center pixel location */
 		  if (HASAZIMUTHANGLE)
 		    fwrite(&azang, 4,1,save_area.reg_lu[iregion]); /* azimuth angle relative to north (deg) */
@@ -2847,6 +2821,7 @@ static int get_search_period( int year, int dstart, int mstart, int ltdflag,
   /*
    * Get image start, relative to requested epoch time
    * The extra call is really only needed for LTOD cases
+   * when start day and image day are different
    */
   if ( imageDayOffset == startDayOffset ) {
     imageYear = startYear;
