@@ -9,8 +9,6 @@
   further revision are tracked in bitbucket and not via this comment list MAH 05/15/15
 
 ******************************************************************/
-
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -202,7 +200,6 @@ int main(int argc,char *argv[])
   float cx,cy,lath,latl,lonh,lonl;
   int nsx,nsy,projt,ltdflag;
   float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
-  /* int shortf; */
   float tbmin=1.e10,tbmax=-1.e10; 
   
   int iadd1, box_size;
@@ -1081,6 +1078,8 @@ int main(int argc,char *argv[])
   fprintf( stderr, "\n");
 
   /* Cleanup memory and close files */
+  free( unitString );
+  ut_free_system( unitSystem );
   ccs_free_calendar( calendar );
   fclose(file_id);
   fprintf( stderr, "Setup program successfully completed\n");
