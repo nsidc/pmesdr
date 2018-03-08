@@ -272,6 +272,18 @@ else
 	done
 endif
 
+ssmis_cross :
+	$(RM) $(TESTDIR)/sirSSMIS
+	$(MKDIR) $(TESTDIR)/sirSSMIS
+ifeq ($(SSMISE2NFILES),)
+	$(error	No setup files found)
+else
+	for file in $(SSMISE2NFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSSMIS; \
+	done
+endif
+
 ssmis_test :
 	$(RM) $(TESTDIR)/sirSSMIS
 	$(MKDIR) $(TESTDIR)/sirSSMIS
