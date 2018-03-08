@@ -33,51 +33,29 @@ CONFIG_CFLAGS =
 #
 #	system libraries and include directories
 #
-ifeq ($(LOCALE),NSIDCsnow)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  NETCDF4_LIBDIR = /usr/lib64
-  HDF5_INCDIR = /usr/include
-  HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
-else ifeq ($(LOCALE),NSIDCdev)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  NETCDF4_LIBDIR = /usr/lib64
-  HDF5_INCDIR = /usr/include
-  HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
-else ifeq ($(LOCALE),int.nsidc.org)
+ifeq ($(LOCALE),int.nsidc.org)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib
   ZLIB_LIBDIR = /usr/lib
-else ifeq ($(LOCALE),JANUSicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_INCDIR = ${CURC_HDF5_INC}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
-else ifeq ($(LOCALE),JANUSgcc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_INCDIR = ${CURC_HDF5_INC}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
 else ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+  UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else ifeq ($(LOCALE),SUMMITgcc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+  UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else
   $(info Assuming default LOCALE=BYU)
   NETCDF4_INCDIR = /usr/include
@@ -85,14 +63,16 @@ else
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
+  UDUNITS_INCDIR = /usr/include
+  UDUNITS_LIBDIR = /usr/lib64
 endif
 
 #
 # end configuration section
 #------------------------------------------------------------------------
 
-SUBDIRS = utils/src cetb_file/src gsx/src ../sirlib/c meas_meta_make \
-	meas_meta_setup meas_meta_sir
+SUBDIRS = calcalcs/src utils/src cetb_file/src gsx/src \
+	../sirlib/c meas_meta_make meas_meta_setup meas_meta_sir
 
 all install clean:
 	for i in $(SUBDIRS); do			\

@@ -1,5 +1,5 @@
 #========================================================================
-# Makefile for cetb_file utility library
+# Makefile for calcalcs utility library
 #
 # 2015-07-06 M. J. Brodzik 303-492-8263 brodzik@nsidc.org
 # National Snow & Ice Data Center, University of Colorado, Boulder
@@ -21,7 +21,7 @@ TESTDIR = $(TOPDIR)/NSIDCtest
 #	commands
 #
 AR = ar
-CC = gcc
+CC = gcc -O3 -Wall
 CD = cd
 INSTALL = cp -f -p
 LS = ls -1
@@ -38,6 +38,9 @@ ifeq ($(LOCALE),SUMMITicc)
   CC = icc
   AR = xiar
 endif
+
+CALCALCS_DIR = $(TOPDIR)/src/prod/calcalcs/src/calcalcs_1.0
+CALCALCS_INCDIR = $(CALCALCS_DIR)
 
 #
 #       debug or optimization settings
@@ -100,38 +103,46 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
+CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ARFLAGS = ruv
+ifeq ($(LOCALE),JANUSicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'JANUSicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
+  ARFLAGS = crs
+endif
+ifeq ($(LOCALE),JANUSgcc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
+endif
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
+  CFLAGS = -D'SUMMITicc=1' -I$(CALCALCS_INCDIR) -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),SUMMITgcc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
+  CFLAGS = -I$(CALCALCS_INCDIR) -I$(INCDIR) $(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -Wall
 endif
-DEPEND_HDRS = $(INCDIR)/calcalcs.h $(INCDIR)/utCalendar2_cal.h $(INCDIR)/cetb.h 
-DEPEND_LIBS = $(LIBDIR)/libcalcalcs.a
+DEPEND_LIBS = 
 
-SRCS = cetb_file.c
-OBJS = cetb_file.o
-HDRS = cetb_file.h
+SRCS = calcalcs.c $(CALCALCS_DIR)/calcalcs.c
+OBJS = calcalcs.o $(CALCALCS_DIR)/calcalcs.o
+HDRS = calcalcs.h $(CALCALCS_DIR)/calcalcs.h
 
-all : libcetb.a $(LIBDIR)/libcetb.a
+all : libcalcalcs.a $(LIBDIR)/libcalcalcs.a
 
-$(LIBDIR)/libcetb.a : libcetb.a
+$(LIBDIR)/libcalcalcs.a : libcalcalcs.a
 
-libcetb.a : $(OBJS) $(DEPEND_LIBS) $(HDRS) $(DEPEND_HDRS)
-	$(AR) $(ARFLAGS) libcetb.a $(OBJS)
+libcalcalcs.a : $(OBJS) $(DEPEND_LIBS) $(HDRS) $(INCDIR)/cetb.h 
+	$(AR) $(ARFLAGS) libcalcalcs.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
-	$(INSTALL) libcetb.a $(LIBDIR)
+	$(INSTALL) libcalcalcs.a $(LIBDIR)
 	$(INSTALL) $(HDRS) $(INCDIR)
 
-install : libcetb.a $(HDRS)
+install : libcalcalcs.a $(HDRS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
-	$(INSTALL) libcetb.a $(LIBDIR)
+	$(INSTALL) libcalcalcs.a $(LIBDIR)
 	$(INSTALL) $(HDRS) $(INCDIR)
 
 clean :
-	- $(RM) libcetb.a $(OBJS)
+	- $(RM) libcalcalcs.a $(OBJS)
