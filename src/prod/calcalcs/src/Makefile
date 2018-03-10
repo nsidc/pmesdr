@@ -39,20 +39,40 @@ ifeq ($(LOCALE),SUMMITicc)
   ARFLAGS = crs
 endif
 
+#
+#	system libraries and include directories
+#
+ifeq ($(LOCALE),int.nsidc.org)
+  $(info Build location: $(LOCALE))
+  NETCDF4_LIBDIR = /usr/lib
+  HDF5_LIBDIR = /usr/lib
+  ZLIB_LIBDIR = /usr/lib
+  UDUNITS_INCDIR = /usr/include
+else ifeq ($(LOCALE),SUMMITicc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = ${CURC_NETCDF_LIB}
+  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+else
+  $(info Assuming default LOCALE=BYU)
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_LIBDIR = /usr/lib64
+  ZLIB_LIBDIR = /usr/lib64
+endif
+
 .SUFFIXES:
 .SUFFIXES: .o .c
-
-UDUNITS2_BASE_DIR = /usr
-UDUNITS2_INC_DIR  = $(UDUNITS2_BASE_DIR)/include
-UDUNITS2_LIB_DIR  = $(UDUNITS2_BASE_DIR)/lib
 
 ################################################################################
 
 .c.o:
-	$(CC) -c -I$(UDUNITS2_INC_DIR) $< 
+	$(CC) -c -I$(UDUNITS_INCDIR) $< 
 
 
 ################################################################################
+CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
+
 # summit configuration is TBD
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
