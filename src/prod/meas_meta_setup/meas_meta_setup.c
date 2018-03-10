@@ -138,8 +138,6 @@ static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 			     float ascale, float bscale, float a0, float b0);
 static int box_size_by_channel( int ibeam, cetb_sensor_id id );
 static void combine_setup_files( region_save *a, int execution_flag );
-static int julday(int mm, int id, int iyyy);
-static void caldat(int julian, int *mm, int *id, int *iyyy);
 static int ltod_split_time( cetb_platform_id platform_id,
 			    cetb_region_id region_id,
 			    cetb_direction_id direction_id,
@@ -2014,58 +2012,6 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 }
 
 /* *********************************************************************** */
-
-/* support routines for date conversion */
-
-int julday(int mm, int id, int iyyy) {
-  /* returns the Julian day number that begins on noon of the calendar
-     date specifed by month mm, day id and year iyy.
-     the opposite of caldat */
-  int IGREG=15+31*(10+12*1582);
-  int jy=iyyy;
-  int juday, jm, ja;
-  
-  if (jy < 0) 
-    jy=jy+1;
-  if (mm > 2) 
-    jm=mm+1;
-  else {
-    jy=jy-1;
-    jm=mm+13;
-  }
-  juday=(int)(floor(365.25*jy)+floor(30.6001*jm)+id+1720995);
-  if ( (id+(31*(mm+12*iyyy))) >= IGREG ) {
-    ja=(int)floor(0.01*jy);
-    juday=(int)(juday+2-ja+floor(0.25*ja));
-  }
-  return(juday);
-}
-
-void caldat(int julian, int *mm, int *id, int *iyyy) {
-  /* given julian day, returns output month, day, year
-     the opposite of julday*/
-  int IGREG=2299161;
-  int jalpha, ja, jb, jc, jd, je;
-  
-  if (julian >= IGREG) {     
-    jalpha=(int)(floor(((julian-1867216)-0.25)/36524.25));
-    ja=(int)(julian+1+jalpha-floor(0.25*jalpha));
-  } else
-    ja=julian;
-  jb=ja+1524;
-  jc=(int)(floor(6680.+((jb-2439870)-122.1)/365.25));
-  jd=(int)(365*jc+floor(0.25*jc));
-  je=(int)(floor((jb-jd)/30.6001));
-  *id=(int)(jb-jd-floor(30.6001*je));
-  *mm=je-1;
-  if (*mm > 12)
-    *mm=*mm-12;
-  *iyyy=jc-4715;
-  if (*mm > 2) 
-    *iyyy=*iyyy-1;
-  if (*iyyy <= 0) 
-    *iyyy=*iyyy-1;
-}
 
 /* ***********************************************************************
  * timedecode - convert an epoch time value to Gregorian and day-of-year
