@@ -118,31 +118,24 @@ endif
 # end configuration section
 #------------------------------------------------------------------------
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
-	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
-CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable -Wno-unused-but-set-variable
-ifeq ($(LOCALE),JANUSicc)
-  $(info Build location: $(LOCALE))
-  LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
-	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
-else ifeq ($(LOCALE),JANUSgcc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) 
-endif
+	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
+	-lhdf5_hl -lhdf5 -lz $(SYSLIBS) 
+CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) \
+	-Wall -Wno-unused-variable -Wno-unused-but-set-variable
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
-	-lutils -lcetb -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz -ludunits2 $(SYSLIBS) 
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
-else ifeq ($(LOCALE),SUMMITgcc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR)
+	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
+	-lhdf5_hl -lhdf5 -lz $(SYSLIBS) 
+  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) \
+	-O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 endif
-DEPEND_LIBS = $(LIBDIR)/libcetb.a 
+DEPEND_LIBS = $(LIBDIR)/libcetb.a $(LIBDIR)/libcalcalcs.a \
+	$(LIBDIR)/libutils.a
 
 SRCS = meas_meta_sir.c 
 OBJS = meas_meta_sir.o 
-HDRS = $(INCDIR)/cetb.h $(INCDIR)/cetb_file.h 
+HDRS = $(INCDIR)/cetb.h $(INCDIR)/cetb_file.h
 BIN = meas_meta_sir
 
 RSSFILES = $(wildcard $(TESTDIR)/setupRSS/e2*/F*E2*.setup)
@@ -251,10 +244,10 @@ endif
 amsre_quick :
 	$(RM) $(TESTDIR)/sirAMSRE
 	$(MKDIR) $(TESTDIR)/sirAMSRE
-ifeq ($(AMSRE2NFILES),)
+ifeq ($(AMSREFILES),)
 	$(error	No setup files found)
 else
-	for file in $(AMSRE2NFILES); do \
+	for file in $(AMSREFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirAMSRE; \
 	done
@@ -267,6 +260,18 @@ ifeq ($(SSMISFILES),)
 	$(error	No setup files found)
 else
 	for file in $(SSMISFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSSMIS; \
+	done
+endif
+
+ssmis_cross :
+	$(RM) $(TESTDIR)/sirSSMIS
+	$(MKDIR) $(TESTDIR)/sirSSMIS
+ifeq ($(SSMISE2NFILES),)
+	$(error	No setup files found)
+else
+	for file in $(SSMISE2NFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSSMIS; \
 	done

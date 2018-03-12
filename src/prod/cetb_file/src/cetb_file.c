@@ -2459,7 +2459,7 @@ static char *set_source_value( cetb_file_class *this ) {
   }
 
   if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    source_value = strdup( "CSU SSM/I FCDR V01R00" );
+    source_value = strdup( "CSU SSM/I FCDR V01" );
   }
 
   if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_RSS == this->producer_id ) ) {
@@ -2467,7 +2467,7 @@ static char *set_source_value( cetb_file_class *this ) {
   }
 
   if ( ( CETB_SSMIS == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    source_value = strdup( "CSU SSMIS FCDR V01R00" );
+    source_value = strdup( "CSU SSMIS FCDR V01" );
   }
 
   if ( ( CETB_SMMR == this->sensor_id ) ) {

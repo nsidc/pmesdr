@@ -35,9 +35,8 @@ OUTDIR=/scratch/summit/${USER}/${SRC}_make/
 # run meas_meta_make with specific parameters
 #
 date
-echo $YEAR
-echo $DOY1
-echo $DOY2
+echo "$0: $YEAR $DOY1 $DOY2"
+
 for DOY in `seq $DOY1 $DOY2`
 do
     DOYM1=$(( $DOY - 1 ))
@@ -57,4 +56,3 @@ do
 done
 #
 date
-exit 0

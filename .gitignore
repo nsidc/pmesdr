@@ -31,6 +31,7 @@ src/prod/cetb_file/test/NSIDC-0630*nc
 /include/utils.h
 /include/calcalcs.h
 /include/sir_geom.h
+/include/utCalendar2_cal.h
 /testing/AMSRE200*
 /testing/CSU200*
 /testing/RSS200*
