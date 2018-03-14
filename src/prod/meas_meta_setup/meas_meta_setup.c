@@ -83,6 +83,12 @@ static void no_trailing_blanks(char *s)
 
 /****************************************************************************/
 
+typedef enum {
+  UNKNOWN_LTOD=-1,
+  ASCDES,
+  LTOD
+} setup_ltod_flag;
+
 typedef struct { /* BYU region information storage */
   int nregions;
   FILE *reg_lu[NSAVE];
@@ -124,6 +130,8 @@ static FILE * get_meta(char *mname, char *outpath, int *dstart,
 		       int *median_flag, int *inc_correct, float *b_correct,
 		       float *angle_ref, region_save *save_area,
 		       cetb_platform_id *cetb_platform);
+static int check_for_consistent_regions( region_save *save_area,
+					 setup_ltod_flag *ltdflag );
 static void compute_locations(region_save *a, int *nregions, int **noffset,
 			      short int **latlon_store);
 static int timedecode( double epochTime,
@@ -142,7 +150,7 @@ static int ltod_split_time( cetb_platform_id platform_id,
 			    cetb_region_id region_id,
 			    cetb_direction_id direction_id,
 			    int year, float *split_time );
-static int get_search_period( int year, int dstart, int mstart, int ltdflag,
+static int get_search_period( int year, int dstart, int mstart, 
 			      ut_unit *epochUnits, calcalcs_cal *calendar,
 			      double *startEpochTime, double *imageEpochTime,
 			      double *endEpochTime );
@@ -170,8 +178,8 @@ int main(int argc,char *argv[])
   char ftempname[250];
   char *option;
   
-  int i,j,n;
-  int dend2, ilenyear, nrec, iscan, iasc;
+  int j,n;
+  int nrec, iscan, iasc;
   char *s;
   float cen_lat, cen_lon, ctime;
   double cave;  
@@ -196,7 +204,7 @@ int main(int argc,char *argv[])
   
   int ibeam,icc,icmax,icmin,nfile;  
   float cx,cy,lath,latl,lonh,lonl;
-  int nsx,nsy,projt,ltdflag;
+  int nsx,nsy,projt;
   float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
   float tbmin=1.e10,tbmax=-1.e10; 
   
@@ -214,7 +222,13 @@ int main(int argc,char *argv[])
 
   int ix1,ix2,ixsize,iysize,ixsize1,ixsize2,iysize1,iysize2,iy1,iy2,ix,iy,cnt;
   float clat,clon,dlat,dlon,sum;
-  float eqlon, xhigh_lon, xlow_lon, sc_last_lat;
+  float eqlon, xhigh_lon, xlow_lon;
+  int first_scan_flag[ CETB_NUM_LOCS ];
+  int first_Tscan_flag[ CETB_NUM_LOCS ];
+  float lat_diff;
+  float sc_last_lat[ CETB_NUM_LOCS ];
+  double sc_last_scantime[ CETB_NUM_LOCS ];
+  int sc_last_ascend[ CETB_NUM_LOCS ];
   float dscale, alat1, alon1,x_rel, y_rel;
   float tsplit1_mins, tsplit2_mins, tsplit;
   float fractional_orbit;
@@ -241,6 +255,9 @@ int main(int argc,char *argv[])
   double searchStartEpochTime;
   double imageStartEpochTime;
   double searchEndEpochTime;
+
+  /* keeping track of LTOD mode */
+  setup_ltod_flag ltod_flag;
   
   /* GSX variables */
   gsx_class *gsx=NULL;
@@ -312,18 +329,17 @@ int main(int argc,char *argv[])
     fprintf(stderr,"*** could not open meta file %s/%s\n",outpath,mname);    
     exit(-1);  
   }
+  if (0 != check_for_consistent_regions( &save_area, &ltod_flag ) ) {
+    fprintf(stderr,"%s: ERROR setup cannot handle mixed LTOD region types\n",
+	    __FILE__);
+    exit(-1);  
+  }
 
   fprintf( stderr, "Number of output setup files %d\n",save_area.nregions);
   
   /* convert response threshold from dB to normal space */
   response_threshold=(float)(pow(10.,0.1*response_threshold));  
  
-  /* Set flag for local time of day filtered images */
-  ltdflag=0;
-  for (i=0; i<save_area.nregions; i++)
-    if (save_area.sav_ascdes[i] >= CETB_MORNING_PASSES && save_area.sav_ascdes[i] <= CETB_EVENING_PASSES)
-      ltdflag=1;
-  
   /* compute approximate projection grid scale factors for later use */
   cnt = 100;
   for (iregion=0; iregion<save_area.nregions; iregion++) {      
@@ -454,7 +470,20 @@ int main(int argc,char *argv[])
 	exit (-1);
       }
   }
-  
+
+  /*
+   * Initialize flags to keep track of orbit direction, one for
+   * each measurement set; these will keep track of corresponding
+   * measurement sets across sequentially ordered swath files
+   */
+  for ( loc=0; loc<CETB_NUM_LOCS; loc++ ) {
+    first_scan_flag[ loc ] = 1;
+    first_Tscan_flag[ loc ] = 1;
+    sc_last_lat[ loc ] = (float) 0.0;
+    sc_last_scantime[ loc ] = (double) 0.0;
+    sc_last_ascend[ loc ] = 1;
+  }
+
   for ( infile=0; infile<nfile; infile++ ) { /* input file read loop 1050 */     
 
   label_330:; /* read next file name from list gsx_fname */
@@ -475,9 +504,6 @@ int main(int argc,char *argv[])
       fprintf( stderr, "%s: Unable to allocate memory for file_flag array\n", __FILE__ );
       exit (-1);
     } 
-
-    /* initialize last spacecraft latitude */
-    sc_last_lat=-1.e25;
 
     /*
      * read data from file into gsx_class variable
@@ -552,7 +578,7 @@ int main(int argc,char *argv[])
 	       "%s: unable to parse unit string=%s\n", 
 	       __FILE__, unitString );
     }
-    if (0 != get_search_period( year, dstart, mstart, ltdflag,
+    if (0 != get_search_period( year, dstart, mstart,
 				epochUnits, calendar,
 				&searchStartEpochTime,
 				&imageStartEpochTime,
@@ -642,6 +668,25 @@ int main(int argc,char *argv[])
 	       <= DBL_EPSILON ) {
 	    goto label_350;
 	  }
+
+	  /*
+	   * Keep track of sequential latitudes/times for scans
+	   * This throws away the first scan line in each
+	   * measurement set, that's ok because we assume a 3-day
+	   * window of inputs.
+	   */
+	  if ( ASCDES == ltod_flag ) {
+	    if ( first_scan_flag[loc] ) {
+	      sc_last_lat[loc] = *(gsx->sc_latitude[loc]+iscan);
+	      sc_last_scantime[loc] = *(gsx->scantime[loc]+iscan);
+	      first_scan_flag[loc] = 0;
+#ifdef DEBUG	      
+	      fprintf( stderr, "ASCDES DEBUG: First scan: f=%d, loc=%d, iscan=%d, new time=%.3lf, new lat=%.3f\n",
+		       infile, loc, iscan, sc_last_scantime[loc], sc_last_lat[loc] );
+#endif	      
+	      goto label_350;
+	    }
+	  }
 	  
 	  /* Skip scans outside the search period */
 	  if ( ( *(gsx->scantime[loc]+iscan) < searchStartEpochTime )
@@ -699,22 +744,65 @@ int main(int argc,char *argv[])
 	  if (xlow_lon  >  180.f) xlow_lon =(xlow_lon -360.f);
 	  if (xlow_lon  < -180.f) xlow_lon =(xlow_lon +360.f);
 
-	  /* here test for AMSRE that doesn't have spacecraft
-	     position and get asc desc flag from gsx variable */
-	  /* set asc/dsc flag for measurements */
-	  if ( CETB_AMSRE != gsx->short_sensor ) {
-	    if (*(gsx->sc_latitude[loc]+iscan)-sc_last_lat < 0.0 ) 
-	      ascend=0;  
-	    else  
-	      ascend=1;
+	  /*
+	   * For asc/des processing: If gsx has an orbit
+	   * direction, use it.  Otherwise, use the running
+	   * latitude/scantime to decide
+	   */
+	  if ( ASCDES == ltod_flag ) {
+	    if ( CETB_ASC_PASSES == gsx->pass_direction ) {
+	      ascend = 1;
+	    } else if ( CETB_DES_PASSES == gsx->pass_direction ) {
+	      ascend = 0;
+	    } else {
+	      /*
+	       * Check the time difference between this scan
+	       * and the last one that was saved, if it's too large,
+	       * we don't have enough information to decide, so
+	       * we have to skip this scan
+	       */
+	      if ( *(gsx->scantime[loc]+iscan) - sc_last_scantime[loc] >
+		   SECONDS_PER_MINUTE ) {
+		sc_last_lat[loc] = *(gsx->sc_latitude[loc]+iscan);
+		sc_last_scantime[loc] = *(gsx->scantime[loc]+iscan);
+#ifdef DEBUG	      
+		fprintf( stderr, "ASCDES DEBUG: Times too far apart, skipping this scan: f=%d, loc=%d, iscan=%d, "
+			 "    time=%.3lf,     lat=%.3f\n",
+			 infile, loc, iscan, sc_last_scantime[loc], sc_last_lat[loc] );
+#endif		
+		goto label_350;
+	      } else {
+		lat_diff = *(gsx->sc_latitude[loc]+iscan) - sc_last_lat[loc];
+		if ( fabs( lat_diff ) < FLT_EPSILON ) {
+		  ascend = sc_last_ascend[loc];
+		} else if ( lat_diff > 0.0 ) {
+		  ascend=1;
+		} else { 
+		  ascend=0;
+		}
 
-	    sc_last_lat = *(gsx->sc_latitude[loc]+iscan); 
-	  } else {
-	    if ( CETB_ASC_PASSES == gsx->pass_direction )
-	      ascend=1;
-	    else
-	      ascend=0;
-	  }
+#ifdef DEBUG	      
+		if (( infile == 13 || infile == 14 || infile == 15) &&
+		    loc == 1 ) { 
+		  fprintf( stderr, "ASCDES DEBUG: Times close: f=%d, loc=%d, iscan=%d, "
+			 " last time=%.3lf, this_time=%.3lf, last lat=%.3f, this lat=%.3f, diff=%.8f, ascend=%d\n",
+			   infile, loc, iscan, sc_last_scantime[loc], *(gsx->scantime[loc]+iscan),
+			   sc_last_lat[loc], *(gsx->sc_latitude[loc]+iscan),
+			   *(gsx->sc_latitude[loc]+iscan) - sc_last_lat[loc], ascend );
+		}
+#endif		
+		sc_last_lat[loc] = *(gsx->sc_latitude[loc]+iscan);
+		sc_last_scantime[loc] = *(gsx->scantime[loc]+iscan);
+		sc_last_ascend[loc] = ascend;
+	      }
+	    } /* end gsx didn't know the pass direction */
+
+	    /*
+	     * Skip this scan if it's not in the search day
+	     */
+	    if ( jday != dstart ) goto label_350;
+		      
+	  } /* end ASCDES processing */
 
 	  /* extract TB measurements for each scan */
 	  first_measurement = 0;
@@ -728,6 +816,18 @@ int main(int argc,char *argv[])
 	       imeas++) {
 	    irec=irec+1;	/* count of pulses examined */
 
+	    if ( ASCDES == ltod_flag ) {
+	      if ( first_Tscan_flag[loc] ) {
+		first_Tscan_flag[loc] = 0;
+#ifdef DEBUG	      
+		fprintf( stderr, "ASCDES DEBUG: First T scan for this day: f=%d, loc=%d, "
+			 "iscan=%d, new time=%.3lf, new lat=%.3f\n",
+			 infile, loc, iscan, sc_last_scantime[loc], sc_last_lat[loc] );
+#endif		
+		
+	      }
+	    }
+
 	    /*
 	     * regions loop
 	     * for each output region and section
@@ -740,13 +840,6 @@ int main(int argc,char *argv[])
 		(cetb_region_id)(save_area.sav_regnum[iregion]
 				 - cetb_region_number[0]);
 
-	      /* If we are processing a T grid (asc/des), check
-		 to make sure the scan line is for the day of
-		 processing */
-	      if ( cetb_region == CETB_EASE2_T ) {
-		if ( jday != dstart ) goto label_3400;
-	      }
-		      
 	      if ( CETB_SSMI == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
 	      if ( CETB_AMSRE == gsx->short_sensor )
@@ -1750,7 +1843,6 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
   char *p, local[]="./";
   int iadd,ix,iy,nsize,iadd0;
   float x,y,clat,clon;
-  FILE *f;
   int projection, resolution;
   int dumb;
 
@@ -2702,7 +2794,6 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
  *    year - integer, year for target start
  *    dstart - integer, day for target start
  *    mstart - integer, minutes of day for target start
- *    ltdflag - integer, LTOD processing flag
  *    epochUnits - pointer to ut_units, epoch information
  *    calendar - pointer to calcalcs_cal calendar information
  *
@@ -2718,12 +2809,11 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
  *    if LTOD, set search span to target day +/- 1 full day
  *    else, set search span to target day
  */
-static int get_search_period( int year, int dstart, int mstart, int ltdflag,
+static int get_search_period( int year, int dstart, int mstart,
 			      ut_unit *epochUnits, calcalcs_cal *calendar,
 			      double *startEpochTime, double *imageEpochTime,
 			      double *endEpochTime) {
 
-  int status;
   int month;
   int day;
   int hour = 0;
@@ -2741,17 +2831,11 @@ static int get_search_period( int year, int dstart, int mstart, int ltdflag,
   }
 
   /*
-   * For LTOD processing, start and end are 1 day on either side,
-   * otherwise, start and end are this day only
+   * Set search start and end to 1 day on either side of image date,
    */
-  if (ltdflag) {
-    startDayOffset = -1;
-    endDayOffset = 2;
-  } else {
-    startDayOffset = 0;
-    endDayOffset = 1;
-  }
+  startDayOffset = -1;
   imageDayOffset = 0;
+  endDayOffset = 2;
 
   /* Get search start, relative to requested epoch time */
   if ( 0 != day_offset_from( year, month, day, 
@@ -2765,23 +2849,14 @@ static int get_search_period( int year, int dstart, int mstart, int ltdflag,
 
   /*
    * Get image start, relative to requested epoch time
-   * The extra call is really only needed for LTOD cases
-   * when start day and image day are different
    */
-  if ( imageDayOffset == startDayOffset ) {
-    imageYear = startYear;
-    imageMonth = startMonth;
-    imageDay = startDay;
-    *imageEpochTime = *startEpochTime;
-  } else {
-    if ( 0 != day_offset_from( year, month, day, 
-			       hour, mstart, second,
-			       imageDayOffset,
-			       epochUnits, calendar,
-			       &imageYear, &imageMonth, &imageDay,
-			       imageEpochTime ) ) {
-      return 1;
-    }
+  if ( 0 != day_offset_from( year, month, day, 
+			     hour, mstart, second,
+			     imageDayOffset,
+			     epochUnits, calendar,
+			     &imageYear, &imageMonth, &imageDay,
+			     imageEpochTime ) ) {
+    return 1;
   }
 
   /* Get search end, relative to requested epoch time */
@@ -2859,3 +2934,73 @@ static int day_offset_from( int year, int month, int day,
 
 }
 
+/* ***********************************************************************
+ * check_for_consistent_regions - setup logic depends on processing
+ * all regions of the same LTOD-type (so NS regions or T regions, but
+ * not both in the same setup execution).  Check the regions that
+ * have just been read from the meta file and quit if they are not all
+ * the same type.
+ * If the regions are not consistent, close and delete the setup files
+ * 
+ *  Input:
+ *    save_area - pointer to region information
+ *
+ *  Output:
+ *    ltdflag - flag indicating the region type
+ *
+ *  Result:
+ *    status variable indicates success (0) or failure (1)
+ * 
+ */
+static int check_for_consistent_regions( region_save *save_area,
+					 setup_ltod_flag *ltdflag ) {
+
+  int i;
+  setup_ltod_flag last, next;
+  int consistent_flag;
+
+  consistent_flag = 1;
+
+  last = UNKNOWN_LTOD;
+  for ( i=0; i<save_area->nregions; i++ ) {
+    if ( cetb_region_number[CETB_EASE2_N] == save_area->sav_regnum[i]
+	 || cetb_region_number[CETB_EASE2_S] == save_area->sav_regnum[i] ) {
+      next = LTOD;
+    } else if ( cetb_region_number[CETB_EASE2_T] == save_area->sav_regnum[i] ) {
+      next = ASCDES;
+    }
+
+    if ( 0 == i ) {
+      last = next;
+    } else if ( last != next ) {
+      consistent_flag = 0;
+      break;
+    } /* end first time through region loop */
+  } /* end region loop */
+
+  if ( consistent_flag ) {
+    
+    *ltdflag = last;
+    
+  } else {
+
+    /*
+     * Clean up the bogus output files and return error exit
+     */
+    for ( i=0; i<save_area->nregions; i++ ) {
+      no_trailing_blanks(save_area->sav_fname2[i] );
+      fprintf( stderr, "%s: Closing and deleting incomplete %s\n",
+	       __FILE__, save_area->sav_fname2[i] );
+      fclose( save_area->reg_lu[i] );
+      remove( save_area->sav_fname2[i] );
+    } /* end of region loop */
+
+    *ltdflag = UNKNOWN_LTOD;
+    return 1;
+
+  }
+     
+  return 0;
+  
+}
+  
