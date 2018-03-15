@@ -36,7 +36,7 @@ export meas_home=$PMESDR_TOP_DIR
 export SIR_areas=$PMESDR_TOP_DIR/ref/locs
 export SIR_region=$PMESDR_TOP_DIR/ref/regiondef1.dat
 export RSS_path=$PMESDR_TOP_DIR/ref
-regression_yyyymmdd=20170516
+regression_yyyymmdd=20180315
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
 # Determine the LOCALE, a function of host and compiler.

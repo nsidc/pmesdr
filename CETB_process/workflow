@@ -114,8 +114,7 @@ accordingly.)
     sbatch --mail-user=yourname@nsidc.org run_setup_year.sh YYYY Fxx /path/to/set_env
 
     Use "grep -i error" and "grep -i warning" on batch stderr output.
-    Setup currently reports warnings about precompute files, this can be ignored.
-    (We will be removing this misleading message.)
+    A successful setup batch should return no warnings or errors.
     
 15. after completion, from $SENSOR_scripts dir, execute SSMIS_sir_year.sh to create list of
     sir commands for loadbalancer:
