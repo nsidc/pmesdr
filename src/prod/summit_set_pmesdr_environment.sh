@@ -47,7 +47,7 @@ if [[ "$thisHostname" == *"shas"* \
 
   echo "Setting environment for summit..."
   export PMESDR_RUN=${PMESDR_TOP_DIR}/CETB_process/scripts
-  export PMESDR_COMPARE_TOLERANCE=0.25
+  export PMESDR_COMPARE_TOLERANCE=0.05
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_REGRESS_DIR=/projects/moha2290/pmesdr_regression_data/${regression_yyyymmdd}
 
