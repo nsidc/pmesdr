@@ -3,9 +3,10 @@ if [ "$1" == "-h" ] || [ "$#" -ne 5 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR DOY_START DOY_STOP SRC ENVPATH"
     echo "  Creates an sbatch file to create meas_meta_make files."
-    echo "  It creates 4 different commands, for 19-22 NS, 19-22 T, "
-    echo "  37-91 NS and 37-91 T, and appends them all to a single "
-    echo "  output file."
+    echo "  It creates 6 different commands, for 19-22 NS, 19-22 T, "
+    echo "  37 NS, 37 T, 91 NS and 91 T, and appends them all to a single "
+    echo "  output file.  It can be used for SSM/I or SSMIS sensors,"
+    echo "  since they have the same number of channels."
     echo "Arguments:"
     echo "  YEAR: 4-digit year"
     echo "  DOY_START: start day of year"
@@ -48,9 +49,13 @@ do
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.19-22.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi19-22hv_T.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37-91.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37-85hv_NS.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37hv_NS.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37-91.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37-85hv_T.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37hv_T.def \
+	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
+    echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.91.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi85hv_NS.def \
+	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
+    echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.91.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi85hv_T.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
 
 done
