@@ -41,7 +41,8 @@ char rname[] = "regiondef1.dat";  /* file defining region codes */
 
 /* function prototypes */
 
-static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num );
+static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
+			     float response_threshold_dB );
 
 static int get_file_names(FILE *mout, int *argn, char *argv[]);
 
@@ -55,25 +56,69 @@ int main(int argc,char *argv[])
   char mname[256];  
   time_t tod;
   char ltime[29];
-  int argn=1;
+  int argn=0;
   char platform[28];
   int Fn=0;
   cetb_platform_id F_num=CETB_NO_PLATFORM;
+  float response_threshold_dB;
+  char *option;
   FILE *mout;
 
-  
-  fprintf( stderr, "%s: MEaSures Meta_Make Program\nProgram: %s  Version: %f\n\n", __FILE__, prog_name,prog_version);
+  /*
+   * Default response pattern minimum threshold, in dB.
+   * Command-line option -t will override this.
+   */
+  response_threshold_dB = -8.0;
 
-  if (argc < 8) {
-    fprintf( stderr, "\n%s: usage: %s meta_name platform start_day stop_day year def in_list\n\n", __FILE__, argv[0] );
+  /* Check for command line options */
+  while ( --argc > 0 && (*++argv)[0] == '-' ) {
+    for ( option = argv[0]+1; *option != '\0'; option++ ) {
+      switch (*option) {
+	case 't':
+	  ++argv; --argc;
+	  if ( sscanf( *argv, "%f", &response_threshold_dB ) != 1 ) {
+	    fprintf( stderr, "%s: ERROR reading -t value\n", __FILE__ );
+	    exit( -1 );
+	  }
+	  if ( response_threshold_dB >= 0. ) {
+	    fprintf( stderr, "%s: ERROR -t option should be < 0.\n",
+		     __FILE__ );
+	    exit( -1 );
+	  }
+	  break;
+      default:
+	fprintf( stderr, "%s: ERROR invalid option %c\n",
+		 __FILE__, *option );
+	exit( -1 );
+      }
+    }
+  }
+  
+  fprintf( stderr,
+	   "%s: MEaSures Meta_Make Program\nProgram: %s  Version: %f\n\n",
+	   __FILE__, prog_name,prog_version);
+
+  if (argc < 7) {
+    fprintf( stderr,
+	     "\n%s: incorrect number of input arguments\n",
+	     __FILE__);
+    fprintf( stderr,
+	     "\n%s: usage: meas_meta_make [-t threshold] meta_name platform start_day "
+	     "stop_day year def in_list\n\n",
+	     __FILE__);
+    fprintf( stderr, " %s: options:\n", __FILE__ );
+    fprintf( stderr, "   %s: -t threshold = response threshold, dB, "
+	     "default is -8. dB\n", __FILE__ );
     fprintf( stderr, " %s: input parameters:\n", __FILE__ );
     fprintf( stderr, "   %s: meta_name   = meta file output name\n", __FILE__ );
-    fprintf( stderr, "   %s: platform    = name of the platform as cetb_platform_id (from cetb.h)\n", __FILE__ );
+    fprintf( stderr, "   %s: platform    = name of the platform as "
+	     "cetb_platform_id (from cetb.h)\n", __FILE__ );
     fprintf( stderr, "   %s: start_day   = start day\n", __FILE__ );
     fprintf( stderr, "   %s: end_day     = end day\n", __FILE__ );
     fprintf( stderr, "   %s: year        = year input\n", __FILE__ );
     fprintf( stderr, "   %s: def         = region def file \n", __FILE__ );
-    fprintf( stderr, "   %s: in_list     = name of input file containing list of swath files\n\n", __FILE__ );
+    fprintf( stderr, "   %s: in_list     = name of input file containing list "
+	     "of swath files\n\n", __FILE__ );
     exit (-1);
   }
 
@@ -117,7 +162,7 @@ int main(int argc,char *argv[])
   fprintf(mout,"Sensor=%s\n",platform);
 
   /* get rest of input region parameters and write to file */
-  get_region_parms( mout,&argn,argv,F_num );
+  get_region_parms( mout, &argn, argv, F_num, response_threshold_dB );
 
   /* get list of input files and save to file */
   get_file_names(mout,&argn,argv);
@@ -237,12 +282,27 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
 
 /* utility routines */
 
-/* routine that reads the input args and generates region definitions */
-
-static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num )
-{
-  /* define meta regions and file sections  and write to meta and job files */
-
+/* ***********************************************************************
+ * get_region_parms - generates region parameters section of .meta file.
+ * 
+ *  Input:
+ *    mout - FILE pointer to write to
+ *    argn - integer pointer index to next argument to use (dstart)
+ *    argv - char pointer array with command-line arguments
+ *    F_num - integer with platform_id
+ *    threshold_response_dB - float, response pattern minimum threshold, in dB
+ *
+ *  Output: n/a
+ *    
+ *  Result:
+ *    status variable indicates success (0) or failure (1)
+ *
+ *  All output is written to file pointed to by mout
+ * 
+ */
+static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
+			     float response_threshold_dB ) {
+  
   int err=0;  
   int negg=2; /* only do eggs */
   int nsection;
@@ -301,7 +361,6 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num )
   b_weight=1;     /* slope weighting */
   nits=20;        /* SIR iterations */
   angle_ref=53.0; /* reference incidence angle (if used) */
-  response_threshold=-8.0;  /* response pattern minimum threshold in dB */
   flatten=FALSE;     /* flatten antenna response to 1,0 if TRUE */
   median_flag=FALSE; /* include median filter in SIR processing if TRUE */
 
@@ -312,7 +371,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num )
   fprintf(mout," B_weight=%10.5f\n", b_weight);
   fprintf(mout," Max_iterations=%3d\n", nits);
   fprintf(mout," Reference_incidence_angle=%10.5f\n", angle_ref);
-  fprintf(mout," Response_threshold=%10.5f\n", response_threshold);
+  fprintf(mout," Response_threshold=%10.5f\n", response_threshold_dB);
   fprintf(mout," Flat_response=%c\n", TF[flatten]);
   fprintf(mout," Median_filter=%c\n", TF[median_flag]);
 
