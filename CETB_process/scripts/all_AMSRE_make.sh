@@ -28,7 +28,7 @@ outfile=${sensor}_make_list
 rm -f ${outfile}
 echo "$0: removing make file: $outfile"
 
-# Call SSMIS_make.sh for each year to process
+# Call AMSRE_make.sh for each year to process
 for year in `seq $startyear $endyear`
 do
     if [ "$year" -eq "$startyear" ]; then
