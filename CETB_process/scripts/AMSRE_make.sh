@@ -44,21 +44,21 @@ do
     MONTH=`date -d "$YEAR-01-01 + $DOYM1 days" +%m`
     DOYA=$( printf "%03g" $DOY )
 
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.6-10.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre6-10hv_NS.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.6-10.NS.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre6-10hv_NS.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.6-10.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre6-10hv_T.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.6-10.T.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre6-10hv_T.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.18-23.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre18-23hv_NS.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.18-23.NS.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre18-23hv_NS.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.18-23.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre18-23hv_T.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.18-23.T.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre18-23hv_T.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.36.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre36hv_NS.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.36.NS.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre36hv_NS.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.36.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre36hv_T.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.36.T.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre36hv_T.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.89.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre89hvab_NS.def \
+    echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.89.NS.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre89hvab_NS.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.89.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/amsre89hvab_T.def \
+    echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.89.T.meta AQUA $DOYA $DOYA $YEAR $TOPDIR/ref/amsre89hvab_T.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
 
 done
