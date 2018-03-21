@@ -670,21 +670,24 @@ int main(int argc,char *argv[])
 	  }
 
 	  /*
+	   * If gsx knows the pass direction then use it otherwise
 	   * Keep track of sequential latitudes/times for scans
 	   * This throws away the first scan line in each
 	   * measurement set, that's ok because we assume a 3-day
 	   * window of inputs.
 	   */
 	  if ( ASCDES == ltod_flag ) {
-	    if ( first_scan_flag[loc] ) {
-	      sc_last_lat[loc] = *(gsx->sc_latitude[loc]+iscan);
-	      sc_last_scantime[loc] = *(gsx->scantime[loc]+iscan);
-	      first_scan_flag[loc] = 0;
+	    if ( CETB_NO_DIRECTION == gsx->pass_direction ) {
+	      if ( first_scan_flag[loc] ) {
+		sc_last_lat[loc] = *(gsx->sc_latitude[loc]+iscan);
+		sc_last_scantime[loc] = *(gsx->scantime[loc]+iscan);
+		first_scan_flag[loc] = 0;
 #ifdef DEBUG	      
-	      fprintf( stderr, "ASCDES DEBUG: First scan: f=%d, loc=%d, iscan=%d, new time=%.3lf, new lat=%.3f\n",
-		       infile, loc, iscan, sc_last_scantime[loc], sc_last_lat[loc] );
+		fprintf( stderr, "ASCDES DEBUG: First scan: f=%d, loc=%d, iscan=%d, new time=%.3lf, new lat=%.3f\n",
+			 infile, loc, iscan, sc_last_scantime[loc], sc_last_lat[loc] );
 #endif	      
-	      goto label_350;
+		goto label_350;
+	      }
 	    }
 	  }
 	  

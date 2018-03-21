@@ -309,7 +309,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
   char regname[11], reg[4], cpol, sen, cegg, chan;
   char TF[]={'F', 'T'};
   int dstart, dend, year, mstart, mend;
-  float a_init, a_offset, b_init, b_weight, angle_ref, response_threshold;
+  float a_init, a_offset, b_init, b_weight, angle_ref;
   int nits, flatten, median_flag;
   char rfile[250];  
   int pfile;
