@@ -2482,13 +2482,16 @@ void combine_setup_files( region_save *a, int execution_flag ) {
 	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
 	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) ) {
 	    /* depending on the execution_flag either
-	       - close the file that won't be used and save file id for the setup file for
-	         AMSRE_89H_A to the file id for AMSRE_89H_B or
+	       - close and delete the file that won't be used and save file id
+	         for the setup file for AMSRE_89H_A to the file id for
+		 AMSRE_89H_B or
 	       - set the file id to NULL */
 	    if ( execution_flag == 1 ) {
 	      fclose( a->reg_lu[count] );
+	      remove( a->sav_fname2[count] );
 	      a->reg_lu[count] = a->reg_lu[sub_count];
-	      fprintf( stderr, "%s: closed region file count %d in favor of sub_count %d\n", __FUNCTION__,
+	      fprintf( stderr, "%s: closed region file count %d in favor of "
+		       "sub_count %d\n", __FUNCTION__,
 		       count, sub_count );
 	    }
 	    if ( execution_flag == 2 ) {
@@ -2503,13 +2506,16 @@ void combine_setup_files( region_save *a, int execution_flag ) {
 	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
 	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) )  {
 	    /* depending on the execution_flag either
-	       - close the file that won't be used and save file id for the setup file for
-	         AMSRE_89H_A to the file id for AMSRE_89H_B or
+	       - close and delete the file that won't be used and save file id
+	         for the setup file for AMSRE_89H_A to the file id for
+		 AMSRE_89H_B or
 	       - set the file id to NULL */
 	    if ( execution_flag == 1 ) {
 	      fclose( a->reg_lu[count] );
+	      remove( a->sav_fname2[count] );
 	      a->reg_lu[count] = a->reg_lu[sub_count];
-	      fprintf( stderr, "%s: closed region file count %d in favor of sub_count %d\n", __FUNCTION__,
+	      fprintf( stderr, "%s: closed region file count %d in favor of "
+		       "sub_count %d\n", __FUNCTION__,
 		       count, sub_count );
 	    }
 	    if ( execution_flag == 2 ) {
