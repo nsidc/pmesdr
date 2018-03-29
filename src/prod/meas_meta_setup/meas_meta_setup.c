@@ -2574,7 +2574,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
 				     2010-2011 -1 hour,
 				     2012-2013 -1 hour,
 				     2014      -1 hour,
-				     2015-2016 -1 hour, N or S projection */
+				     2015-2017 -1 hour, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_F19 platform, N or S projection */
@@ -2768,6 +2768,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
       break;
     case 2015:
     case 2016:
+    case 2017:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	*split_time = -2.0;
       } else {
