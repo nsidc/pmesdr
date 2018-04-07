@@ -39,4 +39,3 @@ done
 
 echo "Wrote move commands to $outfile"
 
-exit 0
