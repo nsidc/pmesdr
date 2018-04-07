@@ -2713,6 +2713,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     case 2014:
     case 2015:
     case 2016:
+    case 2017:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	*split_time = -3.0;
       } else {
