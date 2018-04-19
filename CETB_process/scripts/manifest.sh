@@ -34,6 +34,5 @@ done
 date
 cd /scratch/summit/${USER}/${src}_scripts
 
-exit 0
 	
 

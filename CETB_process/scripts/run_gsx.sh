@@ -8,7 +8,7 @@
 #SBATCH --qos normal
 #SBATCH --job-name CETB_GSX
 #SBATCH --partition=shas
-#SBATCH --time=01:30:00
+#SBATCH --time=04:30:00
 #SBATCH --ntasks-per-node=24
 #SBATCH --account=ucb13_summit1
 #SBATCH --nodes=5

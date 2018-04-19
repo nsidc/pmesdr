@@ -35,6 +35,5 @@ for year in $(seq $yyyy_start $yyyy_stop) ; do
     done
 done
 
-exit 0
 
 

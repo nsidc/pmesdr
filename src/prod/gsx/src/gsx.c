@@ -231,16 +231,20 @@ int get_gsx_global_attributes( gsx_class *this ) {
     return -1;
   }
 
-  /* check to see if there is an orbit direction attribute in the file - they don't all have one */
-
+  /*
+   * check to see if there is an orbit direction attribute in the
+   * file, if there is, use it, but they don't all have one,
+   * because some files are full orbits and will have to be
+   * determined for each scan line.
+   */
+  this->pass_direction = CETB_NO_DIRECTION;
   temp = get_att_text( this->fileid, NC_GLOBAL, "orbit_direction" );
   if ( NULL != temp ) { // retrieve the orbit direction
-    if ( 0 == strncmp( "Ascending", temp, strlen(temp) ) )
+    if ( 0 == strncmp( "Ascending", temp, strlen(temp) ) ) {
       this->pass_direction = CETB_ASC_PASSES;
-    else
+    } else if ( 0 == strncmp( "Descending", temp, strlen(temp) ) ) {
       this->pass_direction = CETB_DES_PASSES;
-  } else {
-    this->pass_direction = CETB_NO_DIRECTION;
+    }
   }
     
   temp = get_att_text( this->fileid, NC_GLOBAL, "short_platform" );
