@@ -87,7 +87,7 @@ x.  Make the set of required directories needed.
     restarting from the first year.
 
 11. count number of lines in input file to run_make, there should
-    be 4 * number of days to process
+    be 6 * number of days to process
 
 12. From $SENSOR_scripts, do
 
@@ -109,12 +109,20 @@ accordingly.)
     platform and path to summit_set_pmesdr_environement.sh script,
     to generate list of commands for loadbalancer
 
+    You can do these all at once with a bash loop:
+
+for y in $(seq 2005 2017); do echo $y ; $PMESDR_RUN/SSMIS_setup_year.sh $y F16 $PMESDR_SCRIPT_DIR; done
+
 14. sbatch run_setup_year.sh to run 1 year -- only run 3 of these at one time:
 
     sbatch --mail-user=yourname@nsidc.org run_setup_year.sh YYYY Fxx /path/to/set_env
 
     Use "grep -i error" and "grep -i warning" on batch stderr output.
     A successful setup batch should return no warnings or errors.
+
+    I think there's a way to do this with regex's, but a way to do this with a loop is:
+
+    for t in warning error; do echo "looking for $t..."; grep -i $t setup_lb-745501.out ; done
     
 15. after completion, from $SENSOR_scripts dir, execute SSMIS_sir_year.sh to create list of
     sir commands for loadbalancer:
@@ -155,6 +163,7 @@ accordingly.)
 21. Now you can proceed to chain setup, sir and setup_rm jobs
     with dependencies.
 
+"for y in $(seq 2011 2017) ; do echo "enxt" ; echo $y ; for f in $(ls $y/*N25*${y}001-37V-[ME]* ) ; do ncdump -h $f | grep temporal ; done ; for f in $(ls $y/*T25*${y}001-37V*) ; do ncdump -h $f | grep input ; done ; done"
 
 Once the processing has completed, you have to move the files
 around and run the premet and spatial file generation
@@ -184,7 +193,10 @@ around and run the premet and spatial file generation
 
     sbatch --mail-user=yourname@nsidc.org run_premet_cetb.sh Fxx CONDAENV
     
-6.  run manifest.sh to create the manifest list for OPS
+6.  From Fxx_scripts directory, run manifest.sh to create the
+    manifest list for OPS:
+
+    manifest.sh Fxx /path/to/set_env
 
 7.  Make sure that group read permissions are set recursively on
     Fxx_sir, and on /scratch/summit/$USER/ and on the
