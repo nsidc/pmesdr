@@ -290,6 +290,12 @@ int get_gsx_global_attributes( gsx_class *this ) {
        this->short_sensor == CETB_NO_SENSOR || \
        this->input_provider == CETB_NO_PRODUCER ) {
     fprintf( stderr, "%s: missing platform, sensor or producer\n", __FUNCTION__ );
+    fprintf( stderr, "%s: missing platform, sensor or producer %d platform\n", 
+             __FUNCTION__, this->short_platform );
+    fprintf( stderr, "%s: missing platform, sensor or producer %d sensor\n", 
+             __FUNCTION__, this->short_sensor );
+    fprintf( stderr, "%s: missing platform, sensor or producer %d producer\n", 
+             __FUNCTION__, this->input_provider );
     if ( NULL != temp ) free( temp );
     return -1;
   }

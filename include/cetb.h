@@ -205,7 +205,7 @@ static const char *cetb_sensor_id_name[] = {
   "AMSRE",
   "SSMI",
   "SSMIS",
-  "SMAP RAD"
+  "SMAP L-BAND RADAR"
 };
 
 /* need to be able to map platform ID to sensor ID in meas_meta_setup */
