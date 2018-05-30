@@ -30,7 +30,6 @@ do
 done
 date
 
-exit 0
    
 	
 

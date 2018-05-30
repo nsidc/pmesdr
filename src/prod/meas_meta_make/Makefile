@@ -19,9 +19,6 @@ ifeq ($(LOCALE),int.nsidc.org)
   TESTDIR = /projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)
 endif
 AMSRE_INPUT_FILES = AMSRE_regress_list_VM
-ifeq ($(LOCALE),JANUSicc)
-  AMSRE_INPUT_FILES = AMSRE_regress_list_JANUS
-endif
 ifeq ($(LOCALE),SUMMITicc)
   AMSRE_INPUT_FILES = AMSRE_regress_list_SUMMIT
 endif
@@ -35,10 +32,6 @@ LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
-ifeq ($(LOCALE),JANUSicc)
-  $(info Build location: $(LOCALE))
-  CC = icc
-endif
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CC = icc
@@ -62,21 +55,9 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
-ifeq ($(LOCALE),JANUSicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
-endif
-ifeq ($(LOCALE),JANUSgcc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -Wall
-endif
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
-endif
-ifeq ($(LOCALE),SUMMITgcc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -Wall
 endif
 
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
