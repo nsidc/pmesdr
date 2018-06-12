@@ -544,16 +544,14 @@ typedef enum {
   SMAP_NO_CHANNEL=-1,
   SMAP_1d41H,
   SMAP_1d41V,
-  SMAP_1d41z3,
   SMAP_1d41z4,
   SMAP_NUM_CHANNELS
 } cetb_smap_channel_id;
   
 static const char *cetb_smap_channel_name[] = {
-  "1d41H",
-  "1d41V",
-  "1d41z3",
-  "1d41z4"
+  "1.41GH",
+  "1.41GV",
+  "1.41G4"
 };
 
 /*
@@ -567,7 +565,6 @@ static const cetb_smap_channel_id cetb_ibeam_to_cetb_smap_channel[] = {
   SMAP_NO_CHANNEL,
   SMAP_1d41H,
   SMAP_1d41V,
-  SMAP_1d41z3,
   SMAP_1d41z4
 };
 
