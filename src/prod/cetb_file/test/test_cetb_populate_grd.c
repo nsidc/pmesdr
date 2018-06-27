@@ -32,7 +32,6 @@ cetb_direction_id direction_id;
 cetb_reconstruction_id reconstruction_id;
 cetb_swath_producer_id producer_id;
 
-
 void setUp( void ) {
   /*
    * Default values for globals
@@ -40,7 +39,6 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( test_filename, "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-GRD-CSU-v1.3.nc" );
   strcpy( dirname, "./test" );
   region_id = CETB_EASE2_N;
   region_number = cetb_region_number[ region_id ];
@@ -53,6 +51,9 @@ void setUp( void ) {
   direction_id = CETB_MORNING_PASSES;
   reconstruction_id = CETB_GRD;
   producer_id = CETB_CSU;
+
+  sprintf( test_filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-GRD-CSU-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year,

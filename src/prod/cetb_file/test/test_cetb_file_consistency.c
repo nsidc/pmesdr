@@ -36,7 +36,6 @@ cetb_direction_id direction_id;
 cetb_reconstruction_id reconstruction_id;
 cetb_swath_producer_id producer_id;
 
-
 /* Helper functions */
 static int allocate_clean_aligned_memory( void **this, size_t size );
 static char *get_text_att( int fileid, int varid, const char *name );
@@ -50,8 +49,6 @@ void setUp( void ) {
   status = 0;
   strcpy( dir, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dir, "/src/prod/cetb_file/test" );
-  strcpy( test_filename, dir );
-  strcat( test_filename, "/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.3.nc" );
   region_id = CETB_EASE2_T;
   region_number = cetb_region_number[ region_id ];
   factor = 0;
@@ -65,6 +62,7 @@ void setUp( void ) {
   direction_id = CETB_ASC_PASSES;
   reconstruction_id = CETB_SIR;
   producer_id = CETB_CSU;
+  
   char progname[256] = "/my/path/test_program_name";
 
   cetb = cetb_file_init( dir,
@@ -72,6 +70,8 @@ void setUp( void ) {
 			 direction_id, reconstruction_id, producer_id,
 			 basename( progname ) );
   TEST_ASSERT_NOT_NULL( cetb );
+  sprintf( test_filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
+	   dir, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
   status = cetb_file_open( cetb );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
