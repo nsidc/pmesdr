@@ -18,7 +18,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char test_filename[ FILENAME_MAX ];
+char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 int region_number;
 int factor;
@@ -51,14 +51,14 @@ void setUp( void ) {
   reconstruction_id = CETB_SIR;
   producer_id = CETB_CSU;
 
-  sprintf( test_filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
+  TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   TEST_ASSERT_EQUAL_INT( direction_id, cetb->direction_id );
   
 }

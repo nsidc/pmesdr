@@ -21,7 +21,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char test_filename[ FILENAME_MAX ];
+char filename[ FILENAME_MAX ];
 char dir[ FILENAME_MAX ];
 cetb_region_id region_id;
 int region_number;
@@ -70,9 +70,9 @@ void setUp( void ) {
 			 direction_id, reconstruction_id, producer_id,
 			 basename( progname ) );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( test_filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
 	   dir, CETB_VERSION_ID );
-  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
+  TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   status = cetb_file_open( cetb );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
   
@@ -210,10 +210,10 @@ void test_cetb_file_consistency( void ) {
   status = cetb_file_check_consistency( "testing" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( -1, status, "checking consistency" );
 
-  status = cetb_file_check_consistency( test_filename );
+  status = cetb_file_check_consistency( filename );
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "checking consistency" );
 
-  status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
+  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
   /* Confirm that the data date is the value of the comment attribute */
@@ -289,7 +289,7 @@ void test_cetb_file_consistency( void ) {
 				 tb_data[ cols-1 ], // Last element at end of first row
 				 "sample2 tb_std_dev element" );
 
-  fprintf( stderr, "%s: fileid %d and file_name %s to be closed\n", __FUNCTION__, nc_fileid, test_filename );
+  fprintf( stderr, "%s: fileid %d and file_name %s to be closed\n", __FUNCTION__, nc_fileid, filename );
   
   nc_close( nc_fileid );
 

@@ -18,7 +18,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char test_filename[ FILENAME_MAX ];
+char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 cetb_region_id region_id;
 int region_number;
@@ -52,7 +52,7 @@ void setUp( void ) {
   reconstruction_id = CETB_GRD;
   producer_id = CETB_CSU;
 
-  sprintf( test_filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-GRD-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-GRD-CSU-v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,
@@ -60,7 +60,7 @@ void setUp( void ) {
 			 doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL_MESSAGE( cetb, "Error calling cetb_file_init" );
-  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
+  TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   
 }
 
@@ -112,7 +112,7 @@ void test_cetb_populate_grd_parameters( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
+  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
   status = nc_inq_varid( nc_fileid, "TB", &varid );
