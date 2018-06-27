@@ -205,7 +205,7 @@ static const char *cetb_sensor_id_name[] = {
   "AMSRE",
   "SSMI",
   "SSMIS",
-  "SMAP L-BAND RADAR"
+  "LRM"
 };
 
 /* need to be able to map platform ID to sensor ID in meas_meta_setup */
@@ -231,7 +231,7 @@ static const char *cetb_NSIDC_dataset_id[] = {
   "NSIDC-0630",
   "NSIDC-0630",
   "NSIDC-0630",
-  "NSIDC-SMAP"
+  "NSIDC-0738"
 };
 /*
  * GCMD sensor name keywords
@@ -544,14 +544,14 @@ typedef enum {
   SMAP_NO_CHANNEL=-1,
   SMAP_1d41H,
   SMAP_1d41V,
-  SMAP_1d41z4,
+  SMAP_1d41F,
   SMAP_NUM_CHANNELS
 } cetb_smap_channel_id;
   
 static const char *cetb_smap_channel_name[] = {
-  "1.41GH",
-  "1.41GV",
-  "1.41G4"
+  "1.4H",
+  "1.4V",
+  "1.4F"
 };
 
 /*
@@ -565,7 +565,7 @@ static const cetb_smap_channel_id cetb_ibeam_to_cetb_smap_channel[] = {
   SMAP_NO_CHANNEL,
   SMAP_1d41H,
   SMAP_1d41V,
-  SMAP_1d41z4
+  SMAP_1d41F
 };
 
 #endif // cetb_H
