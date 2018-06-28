@@ -94,7 +94,7 @@ CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) \
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
-	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -O3 -ipo -xHost -no-prec-div \
+	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -g -ipo -xHost -no-prec-div \
 	-Wall -Wremarks -wd981 -wd2415
 else ifeq ($(LOCALE),SUMMITgcc)
   $(info Build location: $(LOCALE))
