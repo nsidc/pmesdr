@@ -2475,7 +2475,7 @@ static char *set_source_value( cetb_file_class *this ) {
   }
 
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
-    source_value = strdup( "JPL SMMR" );
+    source_value = strdup( "JPL SMAP JPL CL#14-2285, JPL 400-1567" );
   }
   
   return source_value;
