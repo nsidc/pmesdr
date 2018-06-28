@@ -510,8 +510,8 @@ int main(int argc,char *argv[])
      */
     gsx = gsx_init( fname ); // Read in a GSX file
     if ( NULL == gsx ) {
-      fprintf( stderr, "%s: couldn't read file '%s' into gsx variable\n", __FUNCTION__, fname );
-      fprintf( stderr, "%s: infile is %d and gsx name is %s\n", __FUNCTION__, infile, gsx_fname[infile] );
+      fprintf( stderr, "%s: couldn't read file '%s' with infile %d and gsx name %s\n",
+	       __FUNCTION__, fname, infile, gsx_fname[infile] );
       free( gsx_fname[infile] );
       infile++;
       goto label_330;  // skip reading file on error
@@ -846,14 +846,19 @@ int main(int argc,char *argv[])
 
 	      if ( CETB_SSMI == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-	      if ( CETB_AMSRE == gsx->short_sensor )
+	      else if ( CETB_AMSRE == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_amsre_channel[ibeam];
-	      if ( CETB_SSMIS == gsx->short_sensor )
+	      else if ( CETB_SSMIS == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_ssmis_channel[ibeam];
-	      if ( CETB_SMMR == gsx->short_sensor )
+	      else if ( CETB_SMMR == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_smmr_channel[ibeam];
-	      if ( CETB_SMAP_RADIOMETER == gsx->short_sensor )
+	      else if ( CETB_SMAP_RADIOMETER == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_smap_channel[ibeam];
+	      else {
+		fprintf( stderr, "%s ****ERROR: Invalid short sensor name %d\n",
+			 __FUNCTION__, gsx->short_sensor );
+		continue;
+	      }
 	      
 	      /* only get Tb's for channels that use the current
 		 set of position coordinates */

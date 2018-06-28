@@ -167,6 +167,10 @@ static const char *cetb_platform_id_name[] = {
 /*
  * GCMD platform keywords
  * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/platforms/platforms.csv
+ *
+ * Note that generate_premetandspatial.py parses this string to the the GCMD SHORT_NAME
+ * for the platform field and that this short_name must be an exact match to GCMD
+ * entry for short_name in order for ECS to ingest the data
  */
 static const char *cetb_gcmd_platform_keyword[] = {
   "NIMBUS > Nimbus-7",
@@ -236,6 +240,10 @@ static const char *cetb_NSIDC_dataset_id[] = {
 /*
  * GCMD sensor name keywords
  * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/instruments/instruments.csv
+ *
+ * Note that generate_premetandspatial.py parses this string to the the GCMD SHORT_NAME
+ * for the sensor field and that this short_name must be an exact match to GCMD
+ * entry for short_name in order for ECS to ingest the data
  */
 static const char *cetb_gcmd_sensor_keyword[] = {
   "SMMR > Scanning Multichannel Microwave Radiometer",
