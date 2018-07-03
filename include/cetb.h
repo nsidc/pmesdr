@@ -141,6 +141,7 @@ typedef enum {
   CETB_F17,
   CETB_F18,
   CETB_F19,
+  CETB_SMAP,
   CETB_NUM_PLATFORMS
 } cetb_platform_id;
 
@@ -159,12 +160,17 @@ static const char *cetb_platform_id_name[] = {
   "F16",
   "F17",
   "F18",
-  "F19"
+  "F19",
+  "SMAP"
 };
 
 /*
  * GCMD platform keywords
  * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/platforms/platforms.csv
+ *
+ * Note that generate_premetandspatial.py parses this string to the the GCMD SHORT_NAME
+ * for the platform field and that this short_name must be an exact match to GCMD
+ * entry for short_name in order for ECS to ingest the data
  */
 static const char *cetb_gcmd_platform_keyword[] = {
   "NIMBUS > Nimbus-7",
@@ -178,7 +184,8 @@ static const char *cetb_gcmd_platform_keyword[] = {
   "DMSP 5D-3/F16 > Defense Meteorological Satellite Program-F16",
   "DMSP 5D-3/F17 > Defense Meteorological Satellite Program-F17",
   "DMSP 5D-3/F18 > Defense Meteorological Satellite Program-F18",
-  "DMSP 5D-3/F19 > Defense Meteorological Satellite Program-F19"
+  "DMSP 5D-3/F19 > Defense Meteorological Satellite Program-F19",
+  "SMAP > Soil Moisture Active and Passive Observatory"
 };
 
 /*
@@ -190,6 +197,7 @@ typedef enum {
   CETB_AMSRE,
   CETB_SSMI,
   CETB_SSMIS,
+  CETB_SMAP_RADIOMETER,
   CETB_NUM_SENSORS
 } cetb_sensor_id;
 
@@ -200,7 +208,8 @@ static const char *cetb_sensor_id_name[] = {
   "SMMR",
   "AMSRE",
   "SSMI",
-  "SSMIS"
+  "SSMIS",
+  "LRM"
 };
 
 /* need to be able to map platform ID to sensor ID in meas_meta_setup */
@@ -216,7 +225,8 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
   CETB_SSMIS,
   CETB_SSMIS,
   CETB_SSMIS,
-  CETB_SSMIS
+  CETB_SSMIS,
+  CETB_SMAP_RADIOMETER
 };
 
 /* Need to be able to map sensor ID to NSIDC dataset ID */
@@ -224,17 +234,23 @@ static const char *cetb_NSIDC_dataset_id[] = {
   "NSIDC-0630",
   "NSIDC-0630",
   "NSIDC-0630",
-  "NSIDC-0630"
+  "NSIDC-0630",
+  "NSIDC-0738"
 };
 /*
  * GCMD sensor name keywords
  * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/instruments/instruments.csv
+ *
+ * Note that generate_premetandspatial.py parses this string to the the GCMD SHORT_NAME
+ * for the sensor field and that this short_name must be an exact match to GCMD
+ * entry for short_name in order for ECS to ingest the data
  */
 static const char *cetb_gcmd_sensor_keyword[] = {
   "SMMR > Scanning Multichannel Microwave Radiometer",
   "AMSR-E > Advanced Microwave Scanning Radiometer-EOS",
   "SSM/I > Special Sensor Microwave/Imager",
-  "SSMIS > Special Sensor Microwave Imager/Sounder"
+  "SSMIS > Special Sensor Microwave Imager/Sounder",
+  "SMAP L-BAND RADIOMETER > SMAP L-Band Radiometer"
 };
 
 /*
@@ -527,6 +543,37 @@ static const cetb_smmr_channel_id cetb_ibeam_to_cetb_smmr_channel[] = {
   SMMR_21V,
   SMMR_37H,
   SMMR_37V
+};
+
+/*
+ * SMAP channel IDs
+ */
+typedef enum {
+  SMAP_NO_CHANNEL=-1,
+  SMAP_1d41H,
+  SMAP_1d41V,
+  SMAP_1d41F,
+  SMAP_NUM_CHANNELS
+} cetb_smap_channel_id;
+  
+static const char *cetb_smap_channel_name[] = {
+  "1.4H",
+  "1.4V",
+  "1.4F"
+};
+
+/*
+ * this mapping is set to match the way SMAP beams are defined in meas_meta_setup and
+ * in meas_meta_make
+ *
+ * see explanation above
+ *
+ */
+static const cetb_smap_channel_id cetb_ibeam_to_cetb_smap_channel[] = {
+  SMAP_NO_CHANNEL,
+  SMAP_1d41H,
+  SMAP_1d41V,
+  SMAP_1d41F
 };
 
 #endif // cetb_H

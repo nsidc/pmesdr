@@ -117,6 +117,7 @@ endif
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
+#  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -g -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
   ARFLAGS = crs
 endif
 ifeq ($(LOCALE),SUMMITgcc)
