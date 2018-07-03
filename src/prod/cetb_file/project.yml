@@ -42,6 +42,8 @@
     - *common_defines
     - TEST
     - UNITY_INCLUDE_DOUBLE
+    - CETB_VERSION_ID=1.4
+    - SMAP_VERSION_ID=0.1
   :test_preprocess:
     - *common_defines
     - TEST

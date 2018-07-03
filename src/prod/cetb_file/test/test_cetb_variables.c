@@ -20,7 +20,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char test_filename[ FILENAME_MAX ];
+char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 cetb_region_id region_id;
 int region_number;
@@ -48,8 +48,6 @@ void setUp( void ) {
   status = 0;
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
-  strcpy( test_filename, dirname );
-  strcat( test_filename, "/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.3.nc" );
   region_id = CETB_EASE2_T;
   region_number = cetb_region_number[ region_id ];
   factor = 0;
@@ -66,7 +64,9 @@ void setUp( void ) {
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
+  sprintf( filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
+  TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   status = cetb_file_open( cetb );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
   
@@ -330,7 +330,7 @@ void test_cetb_tbs( void ) {
 
   cetb_file_close( cetb );
 
-  status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
+  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
   /* Confirm the expected TB variable is in the output file */

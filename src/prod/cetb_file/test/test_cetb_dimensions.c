@@ -62,8 +62,9 @@ void setUp( void ) {
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/"
-			    "NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.3.nc",
+  sprintf( filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
+  TEST_ASSERT_EQUAL_STRING( filename,
 			    cetb->filename );
   status = cetb_file_open( cetb );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );
@@ -114,8 +115,7 @@ void test_cetb_dimensions( void ) {
   char *att_p;
   double valid_range[ 2 ];
 
-  status = nc_open( "./test/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v1.3.nc",
-		    NC_NOWRITE, &nc_fileid );
+  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
   /* Confirm the expected rows dimensions are in the output file */

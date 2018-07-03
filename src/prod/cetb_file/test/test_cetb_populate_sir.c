@@ -40,7 +40,6 @@ void setUp( void ) {
    */
   cetb = NULL;
   status = 0;
-  strcpy( filename, "" );
   strcpy( dirname, "./test" );
   region_id = CETB_EASE2_N;
   region_number = cetb_region_number[ region_id ];
@@ -54,12 +53,14 @@ void setUp( void ) {
   reconstruction_id = CETB_SIR;
   producer_id = CETB_CSU;
 
+  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
+
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( "./test/"
-			    "NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.3.nc",
+  TEST_ASSERT_EQUAL_STRING( filename,
 			    cetb->filename );
   
 }
@@ -123,8 +124,7 @@ void test_cetb_populate_sir_parameters( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  status = nc_open( "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.3.nc",
-		    NC_NOWRITE, &nc_fileid );
+  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
   status = nc_inq_varid( nc_fileid, "TB", &varid );
@@ -199,16 +199,13 @@ void test_populate_filenames( void ) {
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
-  TEST_ASSERT_EQUAL_STRING( "./test/"
-			    "NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.3.nc",
-			    cetb->filename );
+  TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   status = cetb_file_open( cetb );
   status = cetb_file_add_filenames( cetb, num_input_files, filenames );
   cetb_file_close( cetb );
 
   /* Reopen the file and make sure the filename we expect is a file attribute */
-  status = nc_open( "./test/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v1.3.nc",
-		    NC_NOWRITE, &nc_fileid );
+  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   status = nc_get_att_int( nc_fileid, NC_GLOBAL, "number_of_input_files", &num_input_files );
   TEST_ASSERT_EQUAL_INT( 1, num_input_files );
   status = nc_get_att_text( nc_fileid, NC_GLOBAL, "input_file1", ret_filename );

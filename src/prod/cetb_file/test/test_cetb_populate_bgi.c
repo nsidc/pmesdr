@@ -20,7 +20,7 @@
   */
 cetb_file_class *cetb;
 int status;
-char test_filename[ FILENAME_MAX ];
+char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 cetb_region_id region_id;
 int region_number;
@@ -43,8 +43,6 @@ void setUp( void ) {
   status = 0;
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
-  strcpy( test_filename, dirname );
-  strcat( test_filename, "/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-BGI-CSU-v1.3.nc" );
   region_id = CETB_EASE2_N;
   region_number = cetb_region_number[ region_id ];
   factor = 0;
@@ -56,12 +54,15 @@ void setUp( void ) {
   direction_id = CETB_MORNING_PASSES;
   reconstruction_id = CETB_BGI;
   producer_id = CETB_CSU;
-
+  
+  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-BGI-CSU-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
+  
   cetb = cetb_file_init( dirname,
 			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  TEST_ASSERT_EQUAL_STRING( test_filename, cetb->filename );
+  TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   
 }
 
@@ -125,7 +126,7 @@ void test_cetb_populate_bgi_parameters( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  status = nc_open( test_filename, NC_NOWRITE, &nc_fileid );
+  status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
 
   status = nc_inq_varid( nc_fileid, "TB", &varid );
