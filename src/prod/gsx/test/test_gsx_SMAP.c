@@ -205,7 +205,7 @@ void test_gsx_channel_number ( void ) {
     fprintf( stderr, "\n%s: netcdf file '%s' has %d channels\n",	\
 	     __FUNCTION__, gsx->source_file, gsx->channel_number );
   }
-  TEST_ASSERT_TRUE( 4 == gsx->channel_number );
+  TEST_ASSERT_TRUE( 3 == gsx->channel_number );
   gsx_close( gsx );
 }
 
