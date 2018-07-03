@@ -2289,7 +2289,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     }
   }
   else if ( CETB_SMAP_RADIOMETER == id ) {
-    box_size = 120;
+    box_size = 40;
   } else {
     box_size = -1;
     fprintf( stderr, "%s: bad sensor id %d\n", __FUNCTION__, id );
