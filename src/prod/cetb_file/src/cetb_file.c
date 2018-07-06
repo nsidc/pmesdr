@@ -294,6 +294,8 @@ int cetb_file_open( cetb_file_class *this ) {
 	     __FUNCTION__, filename, nc_strerror( status ) );
   }
 
+  free( filename );
+  
   return 0;
   
 }
