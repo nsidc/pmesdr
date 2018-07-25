@@ -1102,6 +1102,12 @@ int main(int argc,char *argv[])
 		  if (HASAZIMUTHANGLE)
 		    fwrite(&azang, 4,1,save_area.reg_lu[iregion]); /* azimuth angle relative to north (deg) */
 		  fwrite(&cnt,   4,1,save_area.reg_lu[iregion]);
+#ifdef DEBUGCOUNT
+		  if ( iregion == 1 ) {
+		    fprintf( stderr, "COUNT DEBUG: jrec2=%d, cnt=%d, tb=%.2f, thetai=%.2f, count=%d, ktime=%d, iadd=%d, cnt=%d\n",
+			     jrec2[iregion], cnt, tb, thetai, count, ktime, iadd, cnt );
+		  }
+#endif	      
 
 		  /* first write list of pixels covered by response pattern */
 		  cnt=4*count;
