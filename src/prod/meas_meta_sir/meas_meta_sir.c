@@ -373,7 +373,8 @@ int main(int argc, char **argv)
        status = utils_allocate_clean_aligned_memory( (void**)&list_of_input_files[input_file_total],
 						     FILENAME_MAX );
        if ( 0 != status ) {
-	 fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
+	 fprintf( stderr, "%s: couldn't allocate space for list of input files, setup file=%s\n",
+		  __FILE__, file_in );
 	 exit (-1);
        }
        strcpy( list_of_input_files[input_file_total], ++x );
@@ -460,7 +461,7 @@ int main(int argc, char **argv)
    nspace = nls * file_savings;/* space to allocate for measurement storage */
    fprintf( stderr, "%s: File size: %ld  Space allocated: %ld\n", __FILE__, nls, nspace );
    if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space, ( size_t )nspace*sizeof(char)) ) {
-     fprintf( stderr, "%s: *** Inadequate memory for data file storage\n", __FILE__ );
+     fprintf( stderr, "%s: inadequate memory for setup file=%s \n", __FILE__, file_in );
      exit(-1);
    }
 
@@ -469,39 +470,39 @@ int main(int argc, char **argv)
 
   nsize = nsx * nsy;  
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for a_val\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for a_val, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&b_val, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for b_val\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for b_val, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for a_temp\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for a_temp, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sxy, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sxy\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sxy, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sx\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sx, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx2, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sx2\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sx2, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sy, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sy\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sy, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&tot, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for tot\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for tot, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&num_samples, (size_t)(sizeof(unsigned char)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for num_samples\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for num_samples, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
 
