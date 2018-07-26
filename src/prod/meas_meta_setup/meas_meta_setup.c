@@ -1105,7 +1105,7 @@ int main(int argc,char *argv[])
 #ifdef DEBUGCOUNT
 		  if ( iregion == 1 ) {
 		    fprintf( stderr, "COUNT DEBUG: jrec2=%d, cnt=%d, tb=%.2f, thetai=%.2f, count=%d, ktime=%d, iadd=%d, cnt=%d\n",
-			     jrec2[iregion], cnt, tb, thetai, count, ktime, iadd, cnt );
+			     jrec2[iregion], cnt, tb, thetai, count, ktime_minutes, iadd, cnt );
 		  }
 #endif	      
 

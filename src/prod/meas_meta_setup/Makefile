@@ -93,7 +93,7 @@ CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) \
 	-I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -D'SUMMITicc=1' -D'DEBUGCOUNT' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
+  CFLAGS = -D'SUMMITicc=1' -DDEBUGCOUNT -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
 	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -ipo -xHost -no-prec-div \
 	-Wall -Wremarks -wd981 -wd2415
 else ifeq ($(LOCALE),SUMMITgcc)
