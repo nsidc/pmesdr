@@ -10,7 +10,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --ntasks-per-node 24
 #SBATCH --nodes 1
-#SBATCH --account=ucb13_summit1
+#SBATCH --account=ucb13_summit2
 #SBATCH -o output/make_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL

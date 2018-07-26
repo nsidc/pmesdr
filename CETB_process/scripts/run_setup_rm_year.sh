@@ -9,7 +9,7 @@
 #SBATCH --job-name CETB_rm
 #SBATCH --partition=shas
 #SBATCH --time=00:15:00
-#SBATCH --account=ucb13_summit1
+#SBATCH --account=ucb13_summit2
 #SBATCH --ntasks-per-node 24
 #SBATCH --nodes 1
 #SBATCH -o output/rm_lb-%j.out

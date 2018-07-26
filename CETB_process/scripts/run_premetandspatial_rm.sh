@@ -7,7 +7,7 @@
 #SBATCH --job-name CETB_rm_premet_spatial
 #SBATCH --partition=shas
 #SBATCH --time=00:30:00
-#SBATCH --account=ucb13_summit1
+#SBATCH --account=ucb13_summit2
 #SBATCH --ntasks-per-node 12
 #SBATCH --nodes 1
 #SBATCH -o premet_spatial_rm_lb-%j.out

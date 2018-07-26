@@ -9,7 +9,7 @@
 #SBATCH --partition=shas
 #SBATCH --time=01:20:00
 #SBATCH --nodes 5
-#SBATCH --account=ucb13_summit1
+#SBATCH --account=ucb13_summit2
 #SBATCH --ntasks-per-node 24
 #SBATCH -o output/premet_lb-%j.out
 # Set the system up to notify upon completion
