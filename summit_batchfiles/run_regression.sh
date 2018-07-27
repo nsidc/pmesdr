@@ -13,7 +13,7 @@
 
 #
 # Set a walltime for the job. The time format is HH:MM:SS
-#SBATCH --time=00:10:00
+#SBATCH --time=00:15:00
 
 # Set the output file and embed the job number in the filename
 #SBATCH -o output/run_regression-%j.out
@@ -21,9 +21,9 @@
 # Select the summit QOS
 #SBATCH --qos normal
 #SBATCH --partition=shas
-##SBATCH --account=ucb13_summit1
-##SBATCH --ntasks-per-node=1
-##SBATCH --nodes=1
+#SBATCH --account=ucb13_summit2
+#SBATCH --ntasks-per-node=1
+#SBATCH --nodes=1
 
 #
 # Set the system up to notify upon completion

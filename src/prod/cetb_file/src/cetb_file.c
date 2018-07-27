@@ -32,7 +32,9 @@
 #define DEFLATE_LEVEL 9
 #define HOURS_PER_DAY 24
 
-static int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_data, int xdim, int ydim ); 
+static int cetb_file_set_time_coverage( cetb_file_class *this,
+					float *tb_data, int xdim, int ydim ); 
+static char *cetb_template_filename( cetb_sensor_id sensor_id );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -40,7 +42,10 @@ static int fetch_global_atts( cetb_file_class *this, int template_fid );
 static char *pmesdr_release_version( void );
 static char *pmesdr_top_dir( void );
 static int set_all_dimensions( cetb_file_class *this );
-static int set_dimension( cetb_file_class *this, const char *name, size_t size, double *vals,
+static int set_dimension( cetb_file_class *this,
+			  const char *name,
+			  size_t size,
+			  double *vals,
 			  const char *standard_name,
 			  const char *long_name,
 			  const char *units,
@@ -50,7 +55,8 @@ static int set_dimension( cetb_file_class *this, const char *name, size_t size, 
 			  int *dim_id );
 static int set_epoch_string( cetb_file_class *this );
 static int valid_date( int year, int doy );
-static int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id );
+static int valid_pass_direction( cetb_region_id region_id,
+				 cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
 static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id );
 static cetb_region_id valid_region_id( int region_number );
@@ -106,7 +112,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   cetb_file_class *this=NULL;
   char *channel_str=NULL;
   cetb_region_id region_id;
-  char *ptr_path, template_filename[FILENAME_MAX];
+  char *filename;
   int template_fid;
   int status;
   char *file_version=NULL;
@@ -162,17 +168,16 @@ cetb_file_class *cetb_file_init( char *dirname,
    * Find and open the CETB template file with the global attribute data
    * - all we need here is the file format version
    */
-  if ( !( ptr_path = pmesdr_top_dir( ) ) ) return 0;
-  strncpy( template_filename, ptr_path, FILENAME_MAX );
-  strcat( template_filename,
-  	  "/src/prod/cetb_file/templates/cetb_global_template.nc" );
-  if ( ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) ) {
-    fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
-  	     __FUNCTION__, template_filename, nc_strerror( status ) );
+  if ( !( filename = cetb_template_filename( this->sensor_id ) ) ) return 0;
+  	  
+  if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
+    fprintf( stderr, "%s: Error opening template filename=%s: %s.\n",
+  	     __FUNCTION__, filename, nc_strerror( status ) );
     return 0;
   }
 
-  if ( ( status = nc_inq_attlen( template_fid, NC_GLOBAL, "product_version", &len_version ) ) ) {
+  if ( ( status = nc_inq_attlen( template_fid, NC_GLOBAL,
+				 "product_version", &len_version ) ) ) {
     fprintf( stderr, "%s: Error getting file version length=%s\n",
 	     __FUNCTION__, nc_strerror( status ) );
   }
@@ -188,8 +193,8 @@ cetb_file_class *cetb_file_init( char *dirname,
   file_version[ len_version ] = '\0';
   
   if ( ( status = nc_close( template_fid ) ) ) {
-    fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
-	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    fprintf( stderr, "%s: Error closing template filename=%s: %s.\n",
+	     __FUNCTION__, filename, nc_strerror( status ) );
   }
 
   snprintf( this->filename, FILENAME_MAX,
@@ -212,6 +217,8 @@ cetb_file_class *cetb_file_init( char *dirname,
 
   free( file_version );
   free( channel_str );
+  free( filename );
+  
   return this;
   
 }
@@ -236,8 +243,7 @@ cetb_file_class *cetb_file_init( char *dirname,
 int cetb_file_open( cetb_file_class *this ) {
 
   int status;
-  char template_filename[ FILENAME_MAX ];
-  char *ptr_path;
+  char *filename;
   int template_fid;
 
   if ( !this->filename ) {
@@ -262,15 +268,13 @@ int cetb_file_open( cetb_file_class *this ) {
   /*
    * Find and open the CETB template file with the global attribute data
    */
-  if ( !( ptr_path = pmesdr_top_dir( ) ) ) return 0;
-  strncpy( template_filename, ptr_path, FILENAME_MAX );
-  strcat( template_filename,
-  	  "/src/prod/cetb_file/templates/cetb_global_template.nc" );
-  if ( ( status = nc_open( template_filename, NC_NOWRITE, &template_fid ) ) ) {
+  if ( !( filename = cetb_template_filename( this->sensor_id ) ) ) return 0;
+  
+  if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
-  	     __FUNCTION__, template_filename, nc_strerror( status ) );
+  	     __FUNCTION__, filename, nc_strerror( status ) );
     return 0;
-  } 
+  }
 
   status = fetch_global_atts( this, template_fid );
   if ( 0 != status ) {
@@ -286,10 +290,12 @@ int cetb_file_open( cetb_file_class *this ) {
   }
   
   if ( ( status = nc_close( template_fid ) ) ) {
-    fprintf( stderr, "%s: Error closing template_filename=%s: %s.\n",
-	     __FUNCTION__, template_filename, nc_strerror( status ) );
+    fprintf( stderr, "%s: Error closing template filename=%s: %s.\n",
+	     __FUNCTION__, filename, nc_strerror( status ) );
   }
 
+  free( filename );
+  
   return 0;
   
 }
@@ -554,8 +560,9 @@ int cetb_file_add_var( cetb_file_class *this,
      */
     if ( NC_USHORT == xtype ) {
 
-      status = utils_allocate_clean_aligned_memory( ( void * )&ushort_data,
-    					      sizeof( unsigned short ) * 1 * rows * cols );
+      status =
+	utils_allocate_clean_aligned_memory( ( void * )&ushort_data,
+					     sizeof( unsigned short ) * 1 * rows * cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
     		 __FUNCTION__, nc_strerror( status ) );
@@ -588,8 +595,9 @@ int cetb_file_add_var( cetb_file_class *this,
 
     } else if ( NC_SHORT == xtype ) {
 
-      status = utils_allocate_clean_aligned_memory( ( void * )&short_data,
-    					      sizeof( short ) * 1 * rows * cols );
+      status =
+	utils_allocate_clean_aligned_memory( ( void * )&short_data,
+					     sizeof( short ) * 1 * rows * cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
     		 __FUNCTION__, nc_strerror( status ) );
@@ -635,7 +643,9 @@ int cetb_file_add_var( cetb_file_class *this,
      */
     if ( NC_FLOAT == xtype ) {
 
-      status = utils_allocate_clean_aligned_memory( ( void * )&float_data, sizeof( float ) * 1 * cols * rows );
+      status =
+	utils_allocate_clean_aligned_memory( ( void * )&float_data,
+					     sizeof( float ) * 1 * cols * rows );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for flipped float_data.\n", __FUNCTION__ );
     	return 1;
@@ -656,8 +666,9 @@ int cetb_file_add_var( cetb_file_class *this,
       
     } else if ( NC_UBYTE == xtype ) {
 
-      status = utils_allocate_clean_aligned_memory( ( void * )&uchar_data,
-					      sizeof( unsigned char ) * 1 * cols * rows );
+      status =
+	utils_allocate_clean_aligned_memory( ( void * )&uchar_data,
+					     sizeof( unsigned char ) * 1 * cols * rows );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for flipped uchar_data.\n", __FUNCTION__ );
     	return 1;
@@ -1145,8 +1156,9 @@ int cetb_file_check_consistency( char *file_name ) {
     return -1;
   }
 
-  status = utils_allocate_clean_aligned_memory( ( void * )&tb_ushort_data,
-						sizeof( *tb_ushort_data ) * 1 * cols * rows );
+  status =
+    utils_allocate_clean_aligned_memory( ( void * )&tb_ushort_data,
+					 sizeof( *tb_ushort_data ) * 1 * cols * rows );
   if ( status != 0 ) {
     fprintf( stderr, "%s: couldn't allocate memory for TB array\n", __FUNCTION__ );
     return -1;
@@ -1157,8 +1169,9 @@ int cetb_file_check_consistency( char *file_name ) {
     return -1;
   }
 
-  status = utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_ushort_data,
-						sizeof( *tb_std_dev_ushort_data ) * 1 * cols * rows );
+  status =
+    utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_ushort_data,
+					 sizeof( *tb_std_dev_ushort_data ) * 1 * cols * rows );
   if ( status != 0 ) {
     fprintf( stderr, "%s: couldn't allocate memory for TB std dev array\n", __FUNCTION__ );
     return -1;
@@ -1208,63 +1221,6 @@ int cetb_file_check_consistency( char *file_name ) {
  * Internal function definitions
  *********************************************************************/
 
-/*
- * channel_name - Determine the frequency and polarization string from
- *               the input sensor and beam_id
- *               Beam_id values must correspond to the values
- *               set in the meas_meta_make processing.
- *
- *  input :
- *    sensor_id : sensor_id (determines which list of beam_ids to index)
- *    beam_id : beam_id - integer id for channels, e.g. for SSM/I,
- *              beam_id = 1 (19H), 2 (19V), etc.
- *
- *  result : (newly-allocated) channel string, with frequency and polarization,  e.g. "19H", or
- *           NULL on error
- */
-char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
-
-  char *channel_str = NULL;
-  
-  if ( CETB_SSMI == sensor_id ) {
-    if ( 0 < beam_id && beam_id <= SSMI_NUM_CHANNELS ) {
-      channel_str = strdup( cetb_ssmi_channel_name[ cetb_ibeam_to_cetb_ssmi_channel[ beam_id ] ] );
-    } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-    }
-  } else if ( CETB_AMSRE == sensor_id ) {
-    if ( 0 < beam_id && beam_id <= AMSRE_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_amsre_channel_name[ cetb_ibeam_to_cetb_amsre_channel[ beam_id ] ] );
-    } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-    }
-  } else if ( CETB_SSMIS == sensor_id ) {
-    if ( 0 < beam_id && beam_id <= SSMIS_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_ssmis_channel_name[ cetb_ibeam_to_cetb_ssmis_channel[ beam_id ] ] );
-    } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-    }
-  } else if ( CETB_SMMR == sensor_id ) {
-    if ( 0 < beam_id && beam_id <= SMMR_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_smmr_channel_name[ cetb_ibeam_to_cetb_smmr_channel[ beam_id ] ] );
-    } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-    }
-  } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
-    if ( 0 < beam_id && beam_id <= SMAP_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_smap_channel_name[ cetb_ibeam_to_cetb_smap_channel[ beam_id ] ] );
-    } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
-    }
-  } else {
-    fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
-    fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
-	     __FUNCTION__ );
-  }
-
-  return channel_str;
-
-}
 /*
  * cetb_file_set_time_coverage - find the min and max minute values stored in the
  *                               tb_time variable and save them to the netCDF
@@ -1347,6 +1303,99 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 }
 
 /*
+ * cetb_template_filename - Return the file template to use, based on sensor_id
+ *
+ *  input :
+ *    sensor_id : sensor_id (determines which template to use)
+ *
+ *  result : (newly-allocated) template_filename string (includes absolute path)
+ *           or NULL on error
+ */
+char *cetb_template_filename( cetb_sensor_id sensor_id ) {
+
+  char *ptr_path;
+  char *filename = NULL;
+
+  if ( !( ptr_path = pmesdr_top_dir( ) ) ) return NULL;
+
+  if ( STATUS_OK
+       != utils_allocate_clean_aligned_memory( ( void * )&filename,
+  					       FILENAME_MAX + 1 ) ) {
+    return NULL;
+  }
+  strncpy( filename, ptr_path, FILENAME_MAX );
+
+  if ( CETB_SMMR <= sensor_id && sensor_id <= CETB_SSMIS ) {
+    strcat( filename, "/src/prod/cetb_file/templates/cetb_global_template.nc" );
+  } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
+    strcat( filename, "/src/prod/cetb_file/templates/smap_global_template.nc" );
+  } else {
+    fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
+    return NULL;
+  }
+
+  return filename;
+
+}
+
+/*
+ * channel_name - Determine the frequency and polarization string from
+ *               the input sensor and beam_id
+ *               Beam_id values must correspond to the values
+ *               set in the meas_meta_make processing.
+ *
+ *  input :
+ *    sensor_id : sensor_id (determines which list of beam_ids to index)
+ *    beam_id : beam_id - integer id for channels, e.g. for SSM/I,
+ *              beam_id = 1 (19H), 2 (19V), etc.
+ *
+ *  result : (newly-allocated) channel string, with frequency and polarization,
+ *           e.g. "19H", or NULL on error
+ */
+char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
+
+  char *channel_str = NULL;
+  
+  if ( CETB_SSMI == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SSMI_NUM_CHANNELS ) {
+      channel_str = strdup( cetb_ssmi_channel_name[ cetb_ibeam_to_cetb_ssmi_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
+  } else if ( CETB_AMSRE == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= AMSRE_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_amsre_channel_name[ cetb_ibeam_to_cetb_amsre_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
+  } else if ( CETB_SSMIS == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SSMIS_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_ssmis_channel_name[ cetb_ibeam_to_cetb_ssmis_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
+  } else if ( CETB_SMMR == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SMMR_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_smmr_channel_name[ cetb_ibeam_to_cetb_smmr_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
+  } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= SMAP_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_smap_channel_name[ cetb_ibeam_to_cetb_smap_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+    }
+  } else {
+    fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
+    fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
+	     __FUNCTION__ );
+  }
+
+  return channel_str;
+
+}
+/*
  * current_time_stamp - Formats a string with the current date and time.
  *
  *  input : n/a
@@ -1365,7 +1414,8 @@ char *current_time_stamp( void ) {
   struct tm *loctime;
 
   if ( STATUS_OK
-       != utils_allocate_clean_aligned_memory( ( void * )&p, MAX_STR_LENGTH + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&p,
+					       MAX_STR_LENGTH + 1 ) ) {
     return NULL;
   }
 
@@ -1711,7 +1761,8 @@ char *pmesdr_release_version( void ) {
     return NULL;
   }
   if ( STATUS_OK
-       != utils_allocate_clean_aligned_memory( ( void * )&version_str, fileinfo.st_size + 1 ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&version_str,
+					       fileinfo.st_size + 1 ) ) {
     return NULL;
   }
   
@@ -1822,7 +1873,8 @@ int set_all_dimensions( cetb_file_class *this ) {
    * decreasing from a maximum at the top row to the bottom row.
    */
   if ( STATUS_OK
-       != utils_allocate_clean_aligned_memory( ( void * )&vals, rows * sizeof( double ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&vals,
+					       rows * sizeof( double ) ) ) {
     return STATUS_FAILURE;
   }
 
@@ -1855,7 +1907,8 @@ int set_all_dimensions( cetb_file_class *this ) {
    * the right
    */
   if ( STATUS_OK
-       != utils_allocate_clean_aligned_memory( ( void * )&vals, cols * sizeof( double ) ) ) {
+       != utils_allocate_clean_aligned_memory( ( void * )&vals,
+					       cols * sizeof( double ) ) ) {
     return STATUS_FAILURE;
   }
 
