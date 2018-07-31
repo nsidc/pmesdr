@@ -141,8 +141,14 @@ int main(int argc, char **argv)
   cetb_sensor_id sensor_id;
   cetb_direction_id direction_id=CETB_NO_DIRECTION;
   unsigned short tb_fill_value=CETB_NCATTS_TB_FILL_VALUE;
+  unsigned short stokes_fill_value=CETB_NCATTS_STOKES_FILL_VALUE;
+  unsigned short tb_or_stokes_fill_value;
   unsigned short tb_missing_value=CETB_NCATTS_TB_MISSING_VALUE;
+  unsigned short stokes_missing_value=CETB_NCATTS_STOKES_MISSING_VALUE;
+  unsigned short tb_or_stokes_missing_value;
   unsigned short tb_valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
+  unsigned short stokes_valid_range[ 2 ] = { CETB_NCATTS_STOKES_MIN, CETB_NCATTS_STOKES_MAX };
+  unsigned short tb_or_stokes_valid_range[ 2 ];
   short tb_time_fill_value=CETB_NCATTS_TB_TIME_FILL_VALUE;
   short tb_time_valid_range[ 2 ] = { CETB_NCATTS_TB_TIME_MIN, CETB_NCATTS_TB_TIME_MAX };
   unsigned short tb_stddev_fill_value=CETB_NCATTS_TB_STDDEV_FILL_VALUE;
@@ -154,6 +160,8 @@ int main(int argc, char **argv)
   short theta_fill_value=CETB_NCATTS_THETA_FILL_VALUE;
   short theta_valid_range[ 2 ] = { CETB_NCATTS_THETA_MIN, CETB_NCATTS_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
+  float tb_or_stokes_scaled_min, tb_or_stokes_scaled_max, tb_or_stokes_scale_factor, tb_or_stokes_stddev_scale_factor;
+  int tb_or_stokes_add_offset, tb_or_stokes_stddev_add_offset;
 
   long head_len;
   int errors = 0;
@@ -400,6 +408,7 @@ int main(int argc, char **argv)
      }
 
    } while (end_flag == 0);
+
    /*
     * USING gsx:
     *
@@ -415,7 +424,26 @@ int main(int argc, char **argv)
     *  - list of GSX version used to create each gsx file used as input
     *
     * Initialize 2 cetb_files one for SIR output, the other for GRD output.
+    * Also set the appropriate constants in case this is a Stokes var rather than TB
     */
+
+   tb_or_stokes_scaled_min = CETB_NCATTS_TB_SCALED_MIN;
+   tb_or_stokes_scaled_max = CETB_NCATTS_TB_SCALED_MAX;
+   tb_or_stokes_scale_factor = CETB_NCATTS_TB_SCALE_FACTOR;
+   tb_or_stokes_stddev_scale_factor = CETB_NCATTS_TB_STDDEV_SCALE_FACTOR;
+   tb_or_stokes_add_offset = CETB_NCATTS_TB_ADD_OFFSET;
+   tb_or_stokes_stddev_add_offset = CETB_NCATTS_TB_STDDEV_ADD_OFFSET;
+
+   if ( ( sensor_id == CETB_SMAP_RADIOMETER ) &&
+	( SMAP_1d41F == cetb_ibeam_to_cetb_smap_channel[ibeam] ) ) {
+     tb_or_stokes_scaled_min = CETB_NCATTS_STOKES_SCALED_MIN;
+     tb_or_stokes_scaled_max = CETB_NCATTS_STOKES_SCALED_MAX;
+     tb_or_stokes_scale_factor = CETB_NCATTS_STOKES_SCALE_FACTOR;
+     tb_or_stokes_stddev_scale_factor = CETB_NCATTS_STOKES_STDDEV_SCALE_FACTOR;
+     tb_or_stokes_add_offset = CETB_NCATTS_STOKES_ADD_OFFSET;
+     tb_or_stokes_stddev_add_offset = CETB_NCATTS_STOKES_STDDEV_ADD_OFFSET;
+   }
+   
    cetb_sir = cetb_file_init( outpath,
 			      iregion, ascale, platform_id, sensor_id,
 			      iyear, isday, ibeam,
@@ -527,6 +555,7 @@ int main(int argc, char **argv)
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
 
       tbval = *((float *) (store+0));
+      tbval = tbval - tb_or_stokes_add_offset;
       ang   = *((float *) (store+4));
       count = *((int *)   (store+8));
       ktime = *((int *)   (store+12));
@@ -544,7 +573,7 @@ int main(int argc, char **argv)
 	 if not, new values will be stored over old values */
 
       keep=0;
-      if (tbval < CETB_NCATTS_TB_SCALED_MAX && tbval > CETB_NCATTS_TB_SCALED_MIN) { 
+      if (tbval < tb_or_stokes_scaled_max && tbval > tb_or_stokes_scaled_min) { 
 	nbyte=nbyte+HS;
 	store=store+HS;
 	ncnt++;
@@ -642,6 +671,7 @@ int main(int argc, char **argv)
     for (irec = 0; irec < ncnt; irec++) {
     
       tbval = *((float *) (store+0));
+      tbval = tbval - tb_or_stokes_add_offset;
       ang   = *((float *) (store+4));
       count = *((int *)   (store+8));
       if (its == 0) iadd = *((int *) (store+16));
@@ -737,8 +767,8 @@ int main(int argc, char **argv)
 				     &tb_missing_value,
 				     &tb_valid_range,
 				     CETB_PACK,
-				     (float) CETB_NCATTS_TB_SCALE_FACTOR,
-				     (float) CETB_NCATTS_TB_ADD_OFFSET,
+				     tb_or_stokes_scale_factor,
+				     (float) tb_or_stokes_add_offset,
 				     NULL ) ) {
 	  errors++;
 	  fprintf( stderr, "%s: Error writing Tb (ave_image).\n", __FILE__ );
@@ -763,8 +793,8 @@ int main(int argc, char **argv)
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_NCATTS_TB_SCALE_FACTOR,
-			       (float) CETB_NCATTS_TB_ADD_OFFSET,
+			       tb_or_stokes_scale_factor,
+			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
@@ -850,6 +880,7 @@ int main(int argc, char **argv)
   for (irec = 0; irec < ncnt; irec++) {
 
     tbval = *((float *) (store+0));
+    tbval = tbval - tb_or_stokes_add_offset;
     ang   = *((float *) (store+4));
     count = *((int *)   (store+8));
     if (HASAZANG)
@@ -909,8 +940,8 @@ int main(int argc, char **argv)
 			       &tb_stddev_missing_value,
 			       &tb_stddev_valid_range,
 			       CETB_PACK,
-			       (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
-			       (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
+			       tb_or_stokes_stddev_scale_factor,
+			       (float) tb_or_stokes_stddev_add_offset,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb stddev (V).\n", __FILE__ );
@@ -954,6 +985,7 @@ int main(int argc, char **argv)
   for (irec = 0; irec < ncnt; irec++) {
 
     tbval = *((float *) (store+0));
+    tbval = tbval - tb_or_stokes_add_offset;
     ang   = *((float *) (store+4));
     count = *((int *)   (store+8));
     ktime = *((int *)   (store+12));
@@ -1047,6 +1079,7 @@ int main(int argc, char **argv)
   for (irec = 0; irec < ncnt; irec++) {
 
     tbval = *((float *) (store+0));
+    tbval = tbval - tb_or_stokes_add_offset;
     ang   = *((float *) (store+4));
     count = *((int *)   (store+8));
     iadd  = *((int *)   (store+16));
@@ -1158,8 +1191,8 @@ int main(int argc, char **argv)
 			       &tb_missing_value,
 			       &tb_valid_range,
 			       CETB_PACK,
-			       (float) CETB_NCATTS_TB_SCALE_FACTOR,
-			       (float) CETB_NCATTS_TB_ADD_OFFSET,
+			       tb_or_stokes_scale_factor,
+			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD Tb (A).\n", __FILE__ );
