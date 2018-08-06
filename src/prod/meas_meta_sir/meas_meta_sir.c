@@ -161,7 +161,8 @@ int main(int argc, char **argv)
   short theta_valid_range[ 2 ] = { CETB_NCATTS_THETA_MIN, CETB_NCATTS_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
   float tb_or_stokes_scaled_min, tb_or_stokes_scaled_max, tb_or_stokes_scale_factor, tb_or_stokes_stddev_scale_factor;
-  int tb_or_stokes_add_offset, tb_or_stokes_stddev_add_offset;
+  int tb_or_stokes_add_offset, tb_or_stokes_stddev_add_offset, tb_or_stokes_SIR_offset;
+  char *tb_or_stokes_SIR_long_name, *tb_or_stokes_GRD_long_name;
 
   long head_len;
   int errors = 0;
@@ -169,14 +170,6 @@ int main(int argc, char **argv)
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
-
-  /*
-   * Set output_debug=1 to get all output images
-   * These files will be very large and should only be generated
-   * for debug purposes.
-   * We should eventually make this a command-line switch.
-   */
-  int output_debug = 0; 
 
   /* begin program */
 
@@ -433,6 +426,11 @@ int main(int argc, char **argv)
    tb_or_stokes_stddev_scale_factor = CETB_NCATTS_TB_STDDEV_SCALE_FACTOR;
    tb_or_stokes_add_offset = CETB_NCATTS_TB_ADD_OFFSET;
    tb_or_stokes_stddev_add_offset = CETB_NCATTS_TB_STDDEV_ADD_OFFSET;
+   tb_or_stokes_SIR_offset = CETB_NCATTS_TB_ADD_OFFSET;
+   tb_or_stokes_valid_range[0] = tb_valid_range[0];
+   tb_or_stokes_valid_range[1] = tb_valid_range[1];
+   tb_or_stokes_SIR_long_name = strdup( CETB_NCATTS_TB_SIR_LONG_NAME );
+   tb_or_stokes_GRD_long_name = strdup( CETB_NCATTS_TB_GRD_LONG_NAME );
 
    if ( ( sensor_id == CETB_SMAP_RADIOMETER ) &&
 	( SMAP_1d41F == cetb_ibeam_to_cetb_smap_channel[ibeam] ) ) {
@@ -442,6 +440,14 @@ int main(int argc, char **argv)
      tb_or_stokes_stddev_scale_factor = CETB_NCATTS_STOKES_STDDEV_SCALE_FACTOR;
      tb_or_stokes_add_offset = CETB_NCATTS_STOKES_ADD_OFFSET;
      tb_or_stokes_stddev_add_offset = CETB_NCATTS_STOKES_STDDEV_ADD_OFFSET;
+     tb_or_stokes_SIR_offset = CETB_NCATTS_STOKES_ADD_OFFSET;
+     tb_or_stokes_valid_range[0] = stokes_valid_range[0];
+     tb_or_stokes_valid_range[1] = stokes_valid_range[1];
+     tb_or_stokes_SIR_long_name = strdup( CETB_NCATTS_STOKES_SIR_LONG_NAME );
+     tb_or_stokes_GRD_long_name = strdup( CETB_NCATTS_STOKES_GRD_LONG_NAME );
+     anodata_A = CETB_NCATTS_STOKES_FILL_VALUE;
+     anodata_V = (float)((CETB_NCATTS_STOKES_STDDEV_FILL_VALUE*CETB_NCATTS_STOKES_STDDEV_SCALE_FACTOR)
+			 + CETB_NCATTS_STOKES_STDDEV_ADD_OFFSET);
    }
    
    cetb_sir = cetb_file_init( outpath,
@@ -555,7 +561,6 @@ int main(int argc, char **argv)
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
 
       tbval = *((float *) (store+0));
-      tbval = tbval - tb_or_stokes_add_offset;
       ang   = *((float *) (store+4));
       count = *((int *)   (store+8));
       ktime = *((int *)   (store+12));
@@ -671,7 +676,7 @@ int main(int argc, char **argv)
     for (irec = 0; irec < ncnt; irec++) {
     
       tbval = *((float *) (store+0));
-      tbval = tbval - tb_or_stokes_add_offset;
+      tbval = tbval - tb_or_stokes_SIR_offset;
       ang   = *((float *) (store+4));
       count = *((int *)   (store+8));
       if (its == 0) iadd = *((int *) (store+16));
@@ -753,47 +758,30 @@ int main(int argc, char **argv)
     if (median_flag == 1)   /* apply modified median filtering */
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
-    if (its == 0) {  /* output num_samples and AVE image */
-      
-      if ( output_debug ) {
-	
-	if ( 0 != cetb_file_add_var( cetb_sir, "TB_ave_image",
-				     NC_USHORT, b_val,
-				     ( size_t )nsx, ( size_t )nsy,
-				     CETB_FILE_TB_STANDARD_NAME,
-				     "SIR TB ave image",
-				     CETB_FILE_TB_UNIT,
-				     &tb_fill_value,
-				     &tb_missing_value,
-				     &tb_valid_range,
-				     CETB_PACK,
-				     tb_or_stokes_scale_factor,
-				     (float) tb_or_stokes_add_offset,
-				     NULL ) ) {
-	  errors++;
-	  fprintf( stderr, "%s: Error writing Tb (ave_image).\n", __FILE__ );
-	} else {
-	  fprintf( stderr, "> %s: Wrote Tb (ave_image) to %s.\n", __FILE__, cetb_sir->filename );
-	}
-    
-      }
-      
-    }
-
   }    /* end of loop for each SIR iteration */
+
   fprintf( stderr, "%s:  weight max --> %f Average weight: %.4f\n", __FILE__, tmax, total/nsize );
+
+  /*
+   * if this is a Stokes variable then the SIR offset must be added back in before
+   * the variable is written and packed into the netCDF output file
+  */
+
+  for ( i = 0; i < nsx*nsy; i++ ) {
+    *(a_val+i) += tb_or_stokes_SIR_offset;
+  }
   
   if ( 0 != cetb_file_add_var( cetb_sir, "TB",
 			       NC_USHORT, a_val,
 			       ( size_t )nsx, ( size_t ) nsy,
 			       CETB_FILE_TB_STANDARD_NAME,
-			       "SIR TB",
+			       tb_or_stokes_SIR_long_name,
 			       CETB_FILE_TB_UNIT,
 			       &tb_fill_value,
 			       &tb_missing_value,
-			       &tb_valid_range,
+			       &tb_or_stokes_valid_range,
 			       CETB_PACK,
-			       tb_or_stokes_scale_factor,
+			       (float) tb_or_stokes_scale_factor,
 			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
@@ -820,29 +808,6 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error writing Tb num_samples.\n", __FILE__ );
   } else {
     fprintf( stderr, "> %s: Wrote Tb num_samples to %s.\n", __FILE__, cetb_sir->filename );
-  }
-
-  if ( output_debug ) {
-    /* output other auxilary product images */
-    if ( 0 != cetb_file_add_var( cetb_sir, "i_image",
-				 NC_SHORT, sx2,
-				 ( size_t )nsx, ( size_t )nsy,
-				 NULL,
-				 "SIR Incidence Angle stddev",
-				 CETB_FILE_ANGULAR_UNIT,
-				 &theta_fill_value,
-				 NULL,
-				 &theta_valid_range,
-				 CETB_PACK,
-				 (float) CETB_NCATTS_THETA_SCALE_FACTOR,
-				 (float) CETB_NCATTS_THETA_ADD_OFFSET,
-				 NULL ) ) {
-      errors++;
-      fprintf( stderr, "%s: Error writing Tb (i_image).\n", __FILE__ );
-    } else {
-      fprintf( stderr, "> %s: Wrote Tb (i_image) to %s.\n", __FILE__, cetb_sir->filename );
-    }
-    
   }
 
   if ( 0 != cetb_file_add_var( cetb_sir, "Incidence_angle",
@@ -949,27 +914,6 @@ int main(int argc, char **argv)
     fprintf( stderr, "> %s: Wrote Tb stddev (V) to %s.\n", __FILE__, cetb_sir->filename );
   }
     
-  if ( output_debug ) {
-    if ( 0 != cetb_file_add_var( cetb_sir, "e_image",
-				 NC_FLOAT, sx,
-				 ( size_t )nsx, ( size_t ) nsy,
-				 NULL,
-				 "SIR TB e_image",
-				 "decibel",
-				 &anodata_E,
-				 NULL,
-				 &error_valid_range,
-				 CETB_NO_PACK,
-				 0.0,
-				 0.0,
-				 NULL ) ) {
-      errors++;
-      fprintf( stderr, "%s: Error writing Tb err (e_image).\n", __FILE__ );
-    } else {
-      fprintf( stderr, "> %s: Wrote Tb err (e_image) to %s.\n", __FILE__, cetb_sir->filename );
-    }
-  }
-
 /* create time image */
   /* initialize arrays */
 
@@ -1181,6 +1125,9 @@ int main(int argc, char **argv)
   fprintf( stderr, "%s:  Non-enhanced/Grid I  min   max --> %f %f\n", __FILE__, bmin, bmax );
   fprintf( stderr, "%s:  Non-enhanced/Grid C        max --> %.1f\n", __FILE__, tmax );
 
+  for ( i=0; i < nsx2*nsy2; i++ ) {
+    *(a_val+i) += tb_or_stokes_SIR_offset;
+  }
   if ( 0 != cetb_file_add_var( cetb_grd, "TB",
 			       NC_USHORT, a_val,
 			       ( size_t )nsx2, ( size_t ) nsy2,
@@ -1189,9 +1136,9 @@ int main(int argc, char **argv)
 			       CETB_FILE_TB_UNIT,
 			       &tb_fill_value,
 			       &tb_missing_value,
-			       &tb_valid_range,
+			       &tb_or_stokes_valid_range,
 			       CETB_PACK,
-			       tb_or_stokes_scale_factor,
+			       (float) tb_or_stokes_scale_factor,
 			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
@@ -1259,29 +1206,6 @@ int main(int argc, char **argv)
 	     cetb_grd->filename );
   }
 
-  if ( output_debug ) {
-
-    if ( 0 != cetb_file_add_var( cetb_grd, "i_image",
-				 NC_SHORT, sx2,
-				 ( size_t )nsx2, ( size_t )nsy2,
-				 NULL,
-				 "GRD Incidence Angle stddev",
-				 CETB_FILE_ANGULAR_UNIT,
-				 &theta_fill_value,
-				 NULL,
-				 &theta_valid_range,
-				 CETB_PACK,
-				 (float) CETB_NCATTS_THETA_SCALE_FACTOR,
-				 (float) CETB_NCATTS_THETA_ADD_OFFSET,
-				 NULL ) ) {
-      errors++;
-      fprintf( stderr, "%s: Error writing GRD Tb (i_image).\n", __FILE__ );
-    } else {
-      fprintf( stderr, "> %s: Wrote GRD Tb (i_image) to %s.\n", __FILE__, cetb_grd->filename );
-    }
-
-  }
-
   if ( 0 != cetb_file_add_var( cetb_grd, "TB_time",
   			       NC_SHORT, a_temp,
   			       ( size_t )nsx2, ( size_t )nsy2,
@@ -1300,71 +1224,6 @@ int main(int argc, char **argv)
   } else {
     fprintf( stderr, "> %s: Wrote GRD Tb time (P) to %s.\n", __FILE__, cetb_grd->filename );
   }
-
-  if ( output_debug ) {
-    if (CREATE_NON) {
-
-      /* create NON images with same pixel sizes as enhanced resolution images
-	 using grid image data */
-
-      for (i=0; i < nsize; i++)
-	*(sx + i) = anodata_A;
-      for (i=0; i < nsize; i++)
-	*(sx2 + i) = anodata_V;
-  
-      for (i=0; i < nsize2; i++) {
-	ix = (i % nsx2) * non_size_x;
-	iy = (i / nsx2) * non_size_y;
-
-	for (ii=0; ii < non_size_y; ii++)
-	  for (iii=0; iii < non_size_x; iii++) {
-	    iadd = nsx*(iy+ii)+ix+iii;
-	    *(sx + iadd) = *(a_val + i);
-	    *(sx2 + iadd) = *(sy + i);
-	  }
-      }
-
-      if ( 0 != cetb_file_add_var( cetb_sir, "TB_nonenhanced",
-				   NC_USHORT, sx,
-				   ( size_t )nsx, ( size_t )nsy,
-				   CETB_FILE_TB_STANDARD_NAME,
-				   "Non-enhanced TB",
-				   CETB_FILE_TB_UNIT,
-				   &tb_fill_value,
-				   &tb_missing_value,
-				   &tb_valid_range,
-				   CETB_PACK,
-				   (float) CETB_NCATTS_TB_SCALE_FACTOR,
-				   (float) CETB_NCATTS_TB_ADD_OFFSET,
-				   NULL ) ) {
-	errors++;
-	fprintf( stderr, "%s: Error writing Non-enhanced Tb (A).\n", __FILE__ );
-      } else {
-	fprintf( stderr, "> %s: Wrote Non-enhanced Tb (A) to %s.\n", __FILE__, cetb_sir->filename );
-      }
-
-      if ( 0 != cetb_file_add_var( cetb_sir, "TB_nonenhanced_std_dev",
-				   NC_USHORT, sx2,
-				   ( size_t )nsx, ( size_t )nsy,
-				   NULL,
-				   "Non-enhanced TB Std Deviation",
-				   CETB_FILE_TB_UNIT,
-				   &tb_stddev_fill_value,
-				   &tb_stddev_missing_value,
-				   &tb_stddev_valid_range,
-				   CETB_PACK,
-				   (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
-				   (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
-				   NULL ) ) {
-	errors++;
-	fprintf( stderr, "%s: Error writing Non-enhanced Tb stddev (V).\n", __FILE__ );
-      } else {
-	fprintf( stderr, "> %s: Wrote Non-enhanced Tb stddev (V) to %s.\n", __FILE__,
-		 cetb_sir->filename );
-      }
-    
-    } /* End of NON data section */
-  } /* End of output_debug for NON data */
 
   if ( 0 != cetb_file_add_grd_parameters( cetb_grd, median_flag ) ) {
     fprintf( stderr, "%s: Error adding GRD parameters to %s.\n", __FILE__, cetb_grd->filename );
