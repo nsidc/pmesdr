@@ -563,11 +563,6 @@ int main(int argc, char **argv)
       }
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
       get_vars_from_store( store, &tbval, &ang, &count, 0.0 );
-      /*
-      tbval = *((float *) (store+0));
-      ang   = *((float *) (store+4));
-      count = *((int *)   (store+8));
-      */
       ktime = *((int *)   (store+12));
       iadd  = *((int *)   (store+16));
       if (HASAZANG)
@@ -681,11 +676,6 @@ int main(int argc, char **argv)
     for (irec = 0; irec < ncnt; irec++) {
 
       get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset );
-      /*
-      tbval = *((float *) (store+0));
-      tbval = tbval - tb_or_stokes_SIR_offset;
-      ang   = *((float *) (store+4));
-      */
       count = *((int *)   (store+8));
       if (its == 0) iadd = *((int *) (store+16));
       if (HASAZANG)
@@ -1031,11 +1021,6 @@ int main(int argc, char **argv)
   for (irec = 0; irec < ncnt; irec++) {
 
     get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_add_offset );
-    /*
-    tbval = *((float *) (store+0));
-    tbval = tbval - tb_or_stokes_add_offset;
-    ang   = *((float *) (store+4));
-    */
     count = *((int *)   (store+8));
     iadd  = *((int *)   (store+16));
     if (HASAZANG)
