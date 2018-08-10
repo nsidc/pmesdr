@@ -676,7 +676,6 @@ int main(int argc, char **argv)
     for (irec = 0; irec < ncnt; irec++) {
 
       get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset );
-      count = *((int *)   (store+8));
       if (its == 0) iadd = *((int *) (store+16));
       if (HASAZANG)
 	azang = *((float *) (store+20));	
@@ -1021,7 +1020,6 @@ int main(int argc, char **argv)
   for (irec = 0; irec < ncnt; irec++) {
 
     get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_add_offset );
-    count = *((int *)   (store+8));
     iadd  = *((int *)   (store+16));
     if (HASAZANG)
       azang = *((float *) (store+20));
