@@ -73,6 +73,9 @@ static void stat_updates(float tbval, int count, int *fill_array,
 static void filter(float *val, int size, int opt, int nsx, int nsy, float
 	    *temp, float thres);
 
+static void get_vars_from_store( char *store, float *tbval, float *ang, int *count,
+				 float tb_or_stokes_offset );
+
 /****************************************************************************/
 
 /* global array variables used for storing images*/
@@ -559,10 +562,12 @@ int main(int argc, char **argv)
 	exit(-1);
       }
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
-
+      get_vars_from_store( store, &tbval, &ang, &count, 0.0 );
+      /*
       tbval = *((float *) (store+0));
       ang   = *((float *) (store+4));
       count = *((int *)   (store+8));
+      */
       ktime = *((int *)   (store+12));
       iadd  = *((int *)   (store+16));
       if (HASAZANG)
@@ -674,10 +679,13 @@ int main(int argc, char **argv)
 
     store=space;
     for (irec = 0; irec < ncnt; irec++) {
-    
+
+      get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset );
+      /*
       tbval = *((float *) (store+0));
       tbval = tbval - tb_or_stokes_SIR_offset;
       ang   = *((float *) (store+4));
+      */
       count = *((int *)   (store+8));
       if (its == 0) iadd = *((int *) (store+16));
       if (HASAZANG)
@@ -905,7 +913,7 @@ int main(int argc, char **argv)
 			       &tb_stddev_missing_value,
 			       &tb_stddev_valid_range,
 			       CETB_PACK,
-			       tb_or_stokes_stddev_scale_factor,
+			       (float) tb_or_stokes_stddev_scale_factor,
 			       (float) tb_or_stokes_stddev_add_offset,
 			       NULL ) ) {
     errors++;
@@ -1022,9 +1030,12 @@ int main(int argc, char **argv)
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
+    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_add_offset );
+    /*
     tbval = *((float *) (store+0));
     tbval = tbval - tb_or_stokes_add_offset;
     ang   = *((float *) (store+4));
+    */
     count = *((int *)   (store+8));
     iadd  = *((int *)   (store+16));
     if (HASAZANG)
@@ -1292,6 +1303,23 @@ int main(int argc, char **argv)
   return(errors);
 }
 
+/*
+ * Function to get tbval, ang and count from store array - this happens 4 times in the code
+ */
+
+void get_vars_from_store( char *store, float *tbval, float *ang, int *count, float tb_or_stokes_offset )
+{
+  float local_tbval, local_ang;
+  int local_count;
+  local_tbval = *((float *) (store+0));
+  local_ang   = *((float *) (store+4));
+  local_count = *((int *)   (store+8));
+  local_tbval = local_tbval - tb_or_stokes_offset;
+
+  *tbval = local_tbval;
+  *ang = local_ang;
+  *count = local_count;
+}
 
 /* SIR algorithm update step */
 
