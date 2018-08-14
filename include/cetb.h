@@ -79,49 +79,60 @@ static const char *cetb_geospatial_bounds_crs[] = {
  *          1 : 25/2**1 = 12.5
  */
 #define CETB_BASE_RESOLUTION 25.0
+#define CETB_SMAP_BASE_RESOLUTION 36.0
 #define CETB_MIN_RESOLUTION_FACTOR 0
 #define CETB_MAX_RESOLUTION_FACTOR 4
-
+#define CETB_NUMBER_BASE_RESOLUTIONS 2
 /*
  * Grid resolution strings: string to match the names specified on the ATBD,
  * which in turn match the authoritative gpd filenames
  * In the case of N or S projections, these are exact.
  * For T projections, they are nominal (but used tin the gpd names, nonetheless).
  */
-static const char *cetb_resolution_name[] = {
-  "25km",
-  "12.5km",
-  "6.25km",
-  "3.125km",
-  "1.5625km"
+static const char
+*cetb_resolution_name[] = {
+  "25km", "12.5km", "6.25km", "3.125km", "1.5625km",
+  "36km", "18km",   "9km",    "4.5km",   "2.25km"   
 };
 
 /*
  * Exact scale is a function of projection (N, S, T) and resolution factor
  * N,S grids are exact divisors of 25.0 km, T grids are slightly different
  */
-static double cetb_exact_scale_m[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
-  { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_N */
-  { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_S */
-  { 25025.26000, 12512.63000, 6256.31500, 3128.15750, 1564.07875 }  /* row indexed by EASE2_T */
+static double cetb_exact_scale_m[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
+                                [CETB_MAX_RESOLUTION_FACTOR+1] = {
+  { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_N 25 km*/
+  { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_S 25 km */
+  { 25025.26000, 12512.63000, 6256.31500, 3128.15750, 1564.07875 },  /* row indexed by EASE2_T 25 km */
+  { 36000.00000, 18000.00000, 9000.00000, 4500.00000, 2250.00000 }, /* row indexed by EASE2_N 36 km*/
+  { 36000.00000, 18000.00000, 9000.00000, 4500.00000, 2250.0000  }, /* row indexed by EASE2_S 36 km */
+  { 36025.26000, 18012.63000, 9006.31500, 4503.15750, 2251.57875 }  /* row indexed by EASE2_T 36 km */
 };
 
 /*
  * Number of rows is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_rows[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
-  { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_N */
-  { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_S */
-  { 540, 1080, 2160, 4320,  8640 }  /* row indexed by EASE2_T */
+static long int cetb_grid_rows[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
+                              [CETB_MAX_RESOLUTION_FACTOR+1] = {
+  { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_N 25 km */
+  { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_S 25 km */
+  { 540, 1080, 2160, 4320,  8640 },  /* row indexed by EASE2_T 25 km */
+  { 500, 1000, 2000, 4000,  8000 }, /* row indexed by EASE2_N 36 km */
+  { 500, 1000, 2000, 4000,  8000 }, /* row indexed by EASE2_S 36 km */
+  { 376,  752, 1504, 3008,  6016 }  /* row indexed by EASE2_T 36 km */
 };
 
 /*
  * Number of cols is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_cols[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
-  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_N */
-  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S */
-  { 1388, 2776, 5552, 11104, 22208 }  /* row indexed by EASE2_T */
+static long int cetb_grid_cols[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
+                              [CETB_MAX_RESOLUTION_FACTOR+1] = {
+  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_N 25 km */
+  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S 25 km */
+  { 1388, 2776, 5552, 11104, 22208 },  /* row indexed by EASE2_T 25 km */
+  {  500, 1000, 2000,  5760, 11510 }, /* row indexed by EASE2_N 36 km */
+  {  500, 1000, 2000,  5760, 11510 }, /* row indexed by EASE2_S 36 km */
+  {  964, 1928, 3856,  7712, 15424 }  /* row indexed by EASE2_T 36 km */
 };
 
 /*
