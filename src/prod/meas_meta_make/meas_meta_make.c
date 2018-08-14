@@ -42,7 +42,7 @@ char rname[] = "regiondef1.dat";  /* file defining region codes */
 /* function prototypes */
 
 static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
-			     float response_threshold_dB );
+			     float response_threshold_dB, int resolution_ind );
 
 static int get_file_names(FILE *mout, int *argn, char *argv[]);
 
@@ -59,6 +59,7 @@ int main(int argc,char *argv[])
   int argn=0;
   char platform[28];
   int Fn=0;
+  int resolution_ind=0;
   cetb_platform_id F_num=CETB_NO_PLATFORM;
   float response_threshold_dB;
   char *option;
@@ -83,6 +84,18 @@ int main(int argc,char *argv[])
 	  if ( response_threshold_dB >= 0. ) {
 	    fprintf( stderr, "%s: ERROR -t option should be < 0.\n",
 		     __FILE__ );
+	    exit( -1 );
+	  }
+	  break;
+	case 'r':
+	  ++argv; --argc;
+	  if ( sscanf( *argv, "%d", &resolution_ind ) != 1 ) {
+	    fprintf( stderr, "%s: ERROR reading -r value\n", __FILE__ );
+	    exit( -1 );
+	  }
+	  if ( resolution_ind < 0 || resolution_ind > 3 ) {
+	    fprintf( stderr, "%s: ERROR -r option should be 0, 1 or 2 %d\n",
+		     __FILE__, resolution_ind );
 	    exit( -1 );
 	  }
 	  break;
@@ -162,7 +175,7 @@ int main(int argc,char *argv[])
   fprintf(mout,"Sensor=%s\n",platform);
 
   /* get rest of input region parameters and write to file */
-  get_region_parms( mout, &argn, argv, F_num, response_threshold_dB );
+  get_region_parms( mout, &argn, argv, F_num, response_threshold_dB, resolution_ind );
 
   /* get list of input files and save to file */
   get_file_names(mout,&argn,argv);
@@ -301,7 +314,7 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
  * 
  */
 static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
-			     float response_threshold_dB ) {
+			     float response_threshold_dB, int resolution_ind ) {
   
   int err=0;  
   int negg=2; /* only do eggs */
@@ -465,7 +478,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       fscanf(pid,"%d",&nease);
       /* projt=regnum-300; */ 
       /* define projection parameters for particular EASE2 case */
-      ind=0;  /* standard base resolution */
+      ind=resolution_ind;  /* standard base resolution */
       fprintf( stderr, "%s: EASE2 parameters: proj=%d  nease=%d  ind=%d\n", __FUNCTION__, projt,nease,ind);      
       ease2_map_info(projt, nease, ind, &map_equatorial_radius_m, 
 		     &map_eccentricity, &e2,
