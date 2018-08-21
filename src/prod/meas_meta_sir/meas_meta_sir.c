@@ -63,15 +63,20 @@ static void Ferror(int i)
 static void get_updates(float tbval, int count, int *fill_array,
 		 short int *response_array, int its );
 
-static void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
+static void compute_ave(float tbval, float ang, int count, int *fill_array,
+			short int *response_array);
 
 static void time_updates(float ktime, int count, int *fill_array);
 
 static void stat_updates(float tbval, int count, int *fill_array,
 		  short int *response_array);
 
-static void filter(float *val, int size, int opt, int nsx, int nsy, float
-	    *temp, float thres);
+static void filter(float *val, int size, int opt, int nsx, int nsy, float *temp,
+		   float thres);
+
+static void get_vars_from_store( char *store, float *tbval, float *ang,
+				 int *count, float tb_or_stokes_offset,
+				 int *ktime, int *add, int HASAZANG, float *azang );
 
 /****************************************************************************/
 
@@ -99,12 +104,12 @@ int main(int argc, char **argv)
 
   float latl, lonl, lath, lonh;
   char regname[11];
-  int dumb, nrec, ncnt, i, ii, iii, nsize;
+  int dumb, nrec, ncnt, i, nsize;
   long int nls, nbyte;
   float ratio, fn, ninv;
   char *space, *store, *store2;
   float tbval, ang, azang;
-  int count, ktime, iadd, end_flag, input_file_total;
+  int count, ktime, dummy_ktime, iadd, dummy_iadd, end_flag, input_file_total;
   char *list_of_input_files[CETB_MAX_INPUT_FILES];
   char *x, *stopstring;
   int irecords;
@@ -113,12 +118,12 @@ int main(int argc, char **argv)
   float rthreshold, box_size_km;
 
   /* define no-data values */
-  float anodata_A=CETB_NCATTS_TB_FILL_VALUE;
+  float anodata_A;
   float anodata_C=CETB_NCATTS_TB_NUM_SAMPLES_FILL_VALUE;
   float anodata_I=CETB_NCATTS_THETA_FILL_VALUE;
   float anodata_Ia=CETB_NCATTS_THETA_FILL_VALUE;
   float anodata_P=(float)(CETB_NCATTS_TB_TIME_FILL_VALUE*CETB_NCATTS_TB_TIME_SCALE_FACTOR);
-  float anodata_V=(float)(CETB_NCATTS_TB_STDDEV_FILL_VALUE*CETB_NCATTS_TB_STDDEV_SCALE_FACTOR);
+  float anodata_V;
   float anodata_E=-15.0;
 
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
@@ -141,8 +146,14 @@ int main(int argc, char **argv)
   cetb_sensor_id sensor_id;
   cetb_direction_id direction_id=CETB_NO_DIRECTION;
   unsigned short tb_fill_value=CETB_NCATTS_TB_FILL_VALUE;
+  unsigned short stokes_fill_value=CETB_NCATTS_STOKES_FILL_VALUE;
+  unsigned short tb_or_stokes_fill_value;
   unsigned short tb_missing_value=CETB_NCATTS_TB_MISSING_VALUE;
+  unsigned short stokes_missing_value=CETB_NCATTS_STOKES_MISSING_VALUE;
+  unsigned short tb_or_stokes_missing_value;
   unsigned short tb_valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
+  unsigned short stokes_valid_range[ 2 ] = { CETB_NCATTS_STOKES_MIN, CETB_NCATTS_STOKES_MAX };
+  unsigned short tb_or_stokes_valid_range[ 2 ];
   short tb_time_fill_value=CETB_NCATTS_TB_TIME_FILL_VALUE;
   short tb_time_valid_range[ 2 ] = { CETB_NCATTS_TB_TIME_MIN, CETB_NCATTS_TB_TIME_MAX };
   unsigned short tb_stddev_fill_value=CETB_NCATTS_TB_STDDEV_FILL_VALUE;
@@ -154,6 +165,10 @@ int main(int argc, char **argv)
   short theta_fill_value=CETB_NCATTS_THETA_FILL_VALUE;
   short theta_valid_range[ 2 ] = { CETB_NCATTS_THETA_MIN, CETB_NCATTS_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
+  float tb_or_stokes_scaled_min, tb_or_stokes_scaled_max, tb_or_stokes_scale_factor;
+  float tb_or_stokes_stddev_scale_factor, tb_or_stokes_SIR_offset;
+  int tb_or_stokes_add_offset, tb_or_stokes_stddev_add_offset;
+  char *tb_or_stokes_SIR_long_name, *tb_or_stokes_GRD_long_name;
 
   long head_len;
   int errors = 0;
@@ -161,14 +176,6 @@ int main(int argc, char **argv)
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
-
-  /*
-   * Set output_debug=1 to get all output images
-   * These files will be very large and should only be generated
-   * for debug purposes.
-   * We should eventually make this a command-line switch.
-   */
-  int output_debug = 0; 
 
   /* begin program */
 
@@ -373,7 +380,8 @@ int main(int argc, char **argv)
        status = utils_allocate_clean_aligned_memory( (void**)&list_of_input_files[input_file_total],
 						     FILENAME_MAX );
        if ( 0 != status ) {
-	 fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
+	 fprintf( stderr, "%s: couldn't allocate space for list of input files, setup file=%s\n",
+		  __FILE__, file_in );
 	 exit (-1);
        }
        strcpy( list_of_input_files[input_file_total], ++x );
@@ -399,6 +407,7 @@ int main(int argc, char **argv)
      }
 
    } while (end_flag == 0);
+
    /*
     * USING gsx:
     *
@@ -414,7 +423,41 @@ int main(int argc, char **argv)
     *  - list of GSX version used to create each gsx file used as input
     *
     * Initialize 2 cetb_files one for SIR output, the other for GRD output.
+    * Also set the appropriate constants in case this is a Stokes var rather than TB
     */
+
+   tb_or_stokes_scaled_min = CETB_NCATTS_TB_SCALED_MIN;
+   tb_or_stokes_scaled_max = CETB_NCATTS_TB_SCALED_MAX;
+   tb_or_stokes_scale_factor = CETB_NCATTS_TB_SCALE_FACTOR;
+   tb_or_stokes_stddev_scale_factor = CETB_NCATTS_TB_STDDEV_SCALE_FACTOR;
+   tb_or_stokes_add_offset = CETB_NCATTS_TB_ADD_OFFSET;
+   tb_or_stokes_stddev_add_offset = CETB_NCATTS_TB_STDDEV_ADD_OFFSET;
+   tb_or_stokes_SIR_offset = CETB_NCATTS_TB_ADD_OFFSET;
+   tb_or_stokes_valid_range[0] = tb_valid_range[0];
+   tb_or_stokes_valid_range[1] = tb_valid_range[1];
+   tb_or_stokes_SIR_long_name = strdup( CETB_NCATTS_TB_SIR_LONG_NAME );
+   tb_or_stokes_GRD_long_name = strdup( CETB_NCATTS_TB_GRD_LONG_NAME );
+   anodata_A = CETB_NCATTS_TB_FILL_VALUE;
+   anodata_V = (float)(CETB_NCATTS_TB_STDDEV_FILL_VALUE*CETB_NCATTS_TB_STDDEV_SCALE_FACTOR);
+
+   if ( ( sensor_id == CETB_SMAP_RADIOMETER ) &&
+	( SMAP_1d41F == cetb_ibeam_to_cetb_smap_channel[ibeam] ) ) {
+     tb_or_stokes_scaled_min = CETB_NCATTS_STOKES_SCALED_MIN;
+     tb_or_stokes_scaled_max = CETB_NCATTS_STOKES_SCALED_MAX;
+     tb_or_stokes_scale_factor = CETB_NCATTS_STOKES_SCALE_FACTOR;
+     tb_or_stokes_stddev_scale_factor = CETB_NCATTS_STOKES_STDDEV_SCALE_FACTOR;
+     tb_or_stokes_add_offset = CETB_NCATTS_STOKES_ADD_OFFSET;
+     tb_or_stokes_stddev_add_offset = CETB_NCATTS_STOKES_STDDEV_ADD_OFFSET;
+     tb_or_stokes_SIR_offset = CETB_NCATTS_STOKES_ADD_OFFSET;
+     tb_or_stokes_valid_range[0] = stokes_valid_range[0];
+     tb_or_stokes_valid_range[1] = stokes_valid_range[1];
+     tb_or_stokes_SIR_long_name = strdup( CETB_NCATTS_STOKES_SIR_LONG_NAME );
+     tb_or_stokes_GRD_long_name = strdup( CETB_NCATTS_STOKES_GRD_LONG_NAME );
+     anodata_A = CETB_NCATTS_STOKES_FILL_VALUE;
+     anodata_V = (float)((CETB_NCATTS_STOKES_STDDEV_FILL_VALUE*CETB_NCATTS_STOKES_STDDEV_SCALE_FACTOR)
+			 + CETB_NCATTS_STOKES_STDDEV_ADD_OFFSET);
+   }
+   
    cetb_sir = cetb_file_init( outpath,
 			      iregion, ascale, platform_id, sensor_id,
 			      iyear, isday, ibeam,
@@ -460,7 +503,7 @@ int main(int argc, char **argv)
    nspace = nls * file_savings;/* space to allocate for measurement storage */
    fprintf( stderr, "%s: File size: %ld  Space allocated: %ld\n", __FILE__, nls, nspace );
    if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space, ( size_t )nspace*sizeof(char)) ) {
-     fprintf( stderr, "%s: *** Inadequate memory for data file storage\n", __FILE__ );
+     fprintf( stderr, "%s: inadequate memory for setup file=%s \n", __FILE__, file_in );
      exit(-1);
    }
 
@@ -469,39 +512,39 @@ int main(int argc, char **argv)
 
   nsize = nsx * nsy;  
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for a_val\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for a_val, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&b_val, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for b_val\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for b_val, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for a_temp\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for a_temp, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sxy, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sxy\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sxy, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sx\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sx, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx2, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sx2\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sx2, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sy, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sy\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for sy, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&tot, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for tot\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for tot, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&num_samples, (size_t)(sizeof(unsigned char)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for num_samples\n", __FILE__ );
+    fprintf( stderr, "%s: inadequate memory for num_samples, setup file=%s\n", __FILE__, file_in );
     exit(-1);
   }
 
@@ -524,14 +567,8 @@ int main(int argc, char **argv)
 	exit(-1);
       }
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
-
-      tbval = *((float *) (store+0));
-      ang   = *((float *) (store+4));
-      count = *((int *)   (store+8));
-      ktime = *((int *)   (store+12));
-      iadd  = *((int *)   (store+16));
-      if (HASAZANG)
-	azang = *((float *) (store+20));
+      get_vars_from_store( store, &tbval, &ang, &count, 0.0, &ktime, &iadd,
+			   HASAZANG, &azang );
 
       if (count > MAXFILL) {
 	fprintf( stderr, "%s: *** Count error %d  record %d\n", __FILE__, count, nrec );
@@ -543,7 +580,7 @@ int main(int argc, char **argv)
 	 if not, new values will be stored over old values */
 
       keep=0;
-      if (tbval < CETB_NCATTS_TB_SCALED_MAX && tbval > CETB_NCATTS_TB_SCALED_MIN) { 
+      if (tbval < tb_or_stokes_scaled_max && tbval > tb_or_stokes_scaled_min) { 
 	nbyte=nbyte+HS;
 	store=store+HS;
 	ncnt++;
@@ -639,13 +676,14 @@ int main(int argc, char **argv)
 
     store=space;
     for (irec = 0; irec < ncnt; irec++) {
-    
-      tbval = *((float *) (store+0));
-      ang   = *((float *) (store+4));
-      count = *((int *)   (store+8));
-      if (its == 0) iadd = *((int *) (store+16));
-      if (HASAZANG)
-	azang = *((float *) (store+20));	
+
+      if (its == 0) {
+	get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			   &dummy_ktime, &iadd, HASAZANG, &azang );
+      } else {
+	get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			   &dummy_ktime, &dummy_iadd, HASAZANG, &azang );
+      }
 
       store = store+HS;
       store2 = store + 4*count;
@@ -722,48 +760,31 @@ int main(int argc, char **argv)
     if (median_flag == 1)   /* apply modified median filtering */
       filter(a_val, 3, 0, nsx, nsy, a_temp, anodata_A);  /* 3x3 modified median filter */
 
-    if (its == 0) {  /* output num_samples and AVE image */
-      
-      if ( output_debug ) {
-	
-	if ( 0 != cetb_file_add_var( cetb_sir, "TB_ave_image",
-				     NC_USHORT, b_val,
-				     ( size_t )nsx, ( size_t )nsy,
-				     CETB_FILE_TB_STANDARD_NAME,
-				     "SIR TB ave image",
-				     CETB_FILE_TB_UNIT,
-				     &tb_fill_value,
-				     &tb_missing_value,
-				     &tb_valid_range,
-				     CETB_PACK,
-				     (float) CETB_NCATTS_TB_SCALE_FACTOR,
-				     (float) CETB_NCATTS_TB_ADD_OFFSET,
-				     NULL ) ) {
-	  errors++;
-	  fprintf( stderr, "%s: Error writing Tb (ave_image).\n", __FILE__ );
-	} else {
-	  fprintf( stderr, "> %s: Wrote Tb (ave_image) to %s.\n", __FILE__, cetb_sir->filename );
-	}
-    
-      }
-      
-    }
-
   }    /* end of loop for each SIR iteration */
+
   fprintf( stderr, "%s:  weight max --> %f Average weight: %.4f\n", __FILE__, tmax, total/nsize );
+
+  /*
+   * if this is a Stokes variable then the SIR offset must be added back in before
+   * the variable is written and packed into the netCDF output file
+  */
+
+  for ( i = 0; i < nsx*nsy; i++ ) {
+    *(a_val+i) += tb_or_stokes_SIR_offset;
+  }
   
   if ( 0 != cetb_file_add_var( cetb_sir, "TB",
 			       NC_USHORT, a_val,
 			       ( size_t )nsx, ( size_t ) nsy,
 			       CETB_FILE_TB_STANDARD_NAME,
-			       "SIR TB",
+			       tb_or_stokes_SIR_long_name,
 			       CETB_FILE_TB_UNIT,
 			       &tb_fill_value,
 			       &tb_missing_value,
-			       &tb_valid_range,
+			       &tb_or_stokes_valid_range,
 			       CETB_PACK,
-			       (float) CETB_NCATTS_TB_SCALE_FACTOR,
-			       (float) CETB_NCATTS_TB_ADD_OFFSET,
+			       (float) tb_or_stokes_scale_factor,
+			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
@@ -789,29 +810,6 @@ int main(int argc, char **argv)
     fprintf( stderr, "%s: Error writing Tb num_samples.\n", __FILE__ );
   } else {
     fprintf( stderr, "> %s: Wrote Tb num_samples to %s.\n", __FILE__, cetb_sir->filename );
-  }
-
-  if ( output_debug ) {
-    /* output other auxilary product images */
-    if ( 0 != cetb_file_add_var( cetb_sir, "i_image",
-				 NC_SHORT, sx2,
-				 ( size_t )nsx, ( size_t )nsy,
-				 NULL,
-				 "SIR Incidence Angle stddev",
-				 CETB_FILE_ANGULAR_UNIT,
-				 &theta_fill_value,
-				 NULL,
-				 &theta_valid_range,
-				 CETB_PACK,
-				 (float) CETB_NCATTS_THETA_SCALE_FACTOR,
-				 (float) CETB_NCATTS_THETA_ADD_OFFSET,
-				 NULL ) ) {
-      errors++;
-      fprintf( stderr, "%s: Error writing Tb (i_image).\n", __FILE__ );
-    } else {
-      fprintf( stderr, "> %s: Wrote Tb (i_image) to %s.\n", __FILE__, cetb_sir->filename );
-    }
-    
   }
 
   if ( 0 != cetb_file_add_var( cetb_sir, "Incidence_angle",
@@ -848,11 +846,14 @@ int main(int argc, char **argv)
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
-    tbval = *((float *) (store+0));
-    ang   = *((float *) (store+4));
-    count = *((int *)   (store+8));
-    if (HASAZANG)
-      azang = *((float *) (store+20));
+    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			 &dummy_ktime, &dummy_iadd, HASAZANG, &azang );
+    //    tbval = *((float *) (store+0));
+    //    tbval = tbval - tb_or_stokes_add_offset;
+    //    ang   = *((float *) (store+4));
+    //    count = *((int *)   (store+8));
+    //    if (HASAZANG)
+    //      azang = *((float *) (store+20));
       
     store = store+HS;
     store2 = store+4*count;
@@ -908,8 +909,8 @@ int main(int argc, char **argv)
 			       &tb_stddev_missing_value,
 			       &tb_stddev_valid_range,
 			       CETB_PACK,
-			       (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
-			       (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
+			       (float) tb_or_stokes_stddev_scale_factor,
+			       (float) tb_or_stokes_stddev_add_offset,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb stddev (V).\n", __FILE__ );
@@ -917,27 +918,6 @@ int main(int argc, char **argv)
     fprintf( stderr, "> %s: Wrote Tb stddev (V) to %s.\n", __FILE__, cetb_sir->filename );
   }
     
-  if ( output_debug ) {
-    if ( 0 != cetb_file_add_var( cetb_sir, "e_image",
-				 NC_FLOAT, sx,
-				 ( size_t )nsx, ( size_t ) nsy,
-				 NULL,
-				 "SIR TB e_image",
-				 "decibel",
-				 &anodata_E,
-				 NULL,
-				 &error_valid_range,
-				 CETB_NO_PACK,
-				 0.0,
-				 0.0,
-				 NULL ) ) {
-      errors++;
-      fprintf( stderr, "%s: Error writing Tb err (e_image).\n", __FILE__ );
-    } else {
-      fprintf( stderr, "> %s: Wrote Tb err (e_image) to %s.\n", __FILE__, cetb_sir->filename );
-    }
-  }
-
 /* create time image */
   /* initialize arrays */
 
@@ -951,15 +931,11 @@ int main(int argc, char **argv)
 
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
-
-    tbval = *((float *) (store+0));
-    ang   = *((float *) (store+4));
-    count = *((int *)   (store+8));
-    ktime = *((int *)   (store+12));
+    
+    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			 &ktime, &dummy_iadd, HASAZANG, &azang );
     if (ktime < 0) ktime = -ktime;
-    if (HASAZANG)
-      azang = *((float *) (store+20));
-      
+    
     store = store+HS;
     store2 = store+4*count;     
 
@@ -1045,12 +1021,8 @@ int main(int argc, char **argv)
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
-    tbval = *((float *) (store+0));
-    ang   = *((float *) (store+4));
-    count = *((int *)   (store+8));
-    iadd  = *((int *)   (store+16));
-    if (HASAZANG)
-      azang = *((float *) (store+20));
+    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			 &dummy_ktime, &iadd, HASAZANG, &azang );
 
     store = store+HS;
     store = store+4*count;
@@ -1147,18 +1119,21 @@ int main(int argc, char **argv)
   fprintf( stderr, "%s:  Non-enhanced/Grid I  min   max --> %f %f\n", __FILE__, bmin, bmax );
   fprintf( stderr, "%s:  Non-enhanced/Grid C        max --> %.1f\n", __FILE__, tmax );
 
+  for ( i=0; i < nsx2*nsy2; i++ ) {
+    *(a_val+i) += tb_or_stokes_SIR_offset;
+  }
   if ( 0 != cetb_file_add_var( cetb_grd, "TB",
 			       NC_USHORT, a_val,
 			       ( size_t )nsx2, ( size_t ) nsy2,
 			       CETB_FILE_TB_STANDARD_NAME,
-			       "GRD TB",
+			       tb_or_stokes_GRD_long_name,
 			       CETB_FILE_TB_UNIT,
 			       &tb_fill_value,
 			       &tb_missing_value,
-			       &tb_valid_range,
+			       &tb_or_stokes_valid_range,
 			       CETB_PACK,
-			       (float) CETB_NCATTS_TB_SCALE_FACTOR,
-			       (float) CETB_NCATTS_TB_ADD_OFFSET,
+			       (float) tb_or_stokes_scale_factor,
+			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD Tb (A).\n", __FILE__ );
@@ -1225,29 +1200,6 @@ int main(int argc, char **argv)
 	     cetb_grd->filename );
   }
 
-  if ( output_debug ) {
-
-    if ( 0 != cetb_file_add_var( cetb_grd, "i_image",
-				 NC_SHORT, sx2,
-				 ( size_t )nsx2, ( size_t )nsy2,
-				 NULL,
-				 "GRD Incidence Angle stddev",
-				 CETB_FILE_ANGULAR_UNIT,
-				 &theta_fill_value,
-				 NULL,
-				 &theta_valid_range,
-				 CETB_PACK,
-				 (float) CETB_NCATTS_THETA_SCALE_FACTOR,
-				 (float) CETB_NCATTS_THETA_ADD_OFFSET,
-				 NULL ) ) {
-      errors++;
-      fprintf( stderr, "%s: Error writing GRD Tb (i_image).\n", __FILE__ );
-    } else {
-      fprintf( stderr, "> %s: Wrote GRD Tb (i_image) to %s.\n", __FILE__, cetb_grd->filename );
-    }
-
-  }
-
   if ( 0 != cetb_file_add_var( cetb_grd, "TB_time",
   			       NC_SHORT, a_temp,
   			       ( size_t )nsx2, ( size_t )nsy2,
@@ -1266,71 +1218,6 @@ int main(int argc, char **argv)
   } else {
     fprintf( stderr, "> %s: Wrote GRD Tb time (P) to %s.\n", __FILE__, cetb_grd->filename );
   }
-
-  if ( output_debug ) {
-    if (CREATE_NON) {
-
-      /* create NON images with same pixel sizes as enhanced resolution images
-	 using grid image data */
-
-      for (i=0; i < nsize; i++)
-	*(sx + i) = anodata_A;
-      for (i=0; i < nsize; i++)
-	*(sx2 + i) = anodata_V;
-  
-      for (i=0; i < nsize2; i++) {
-	ix = (i % nsx2) * non_size_x;
-	iy = (i / nsx2) * non_size_y;
-
-	for (ii=0; ii < non_size_y; ii++)
-	  for (iii=0; iii < non_size_x; iii++) {
-	    iadd = nsx*(iy+ii)+ix+iii;
-	    *(sx + iadd) = *(a_val + i);
-	    *(sx2 + iadd) = *(sy + i);
-	  }
-      }
-
-      if ( 0 != cetb_file_add_var( cetb_sir, "TB_nonenhanced",
-				   NC_USHORT, sx,
-				   ( size_t )nsx, ( size_t )nsy,
-				   CETB_FILE_TB_STANDARD_NAME,
-				   "Non-enhanced TB",
-				   CETB_FILE_TB_UNIT,
-				   &tb_fill_value,
-				   &tb_missing_value,
-				   &tb_valid_range,
-				   CETB_PACK,
-				   (float) CETB_NCATTS_TB_SCALE_FACTOR,
-				   (float) CETB_NCATTS_TB_ADD_OFFSET,
-				   NULL ) ) {
-	errors++;
-	fprintf( stderr, "%s: Error writing Non-enhanced Tb (A).\n", __FILE__ );
-      } else {
-	fprintf( stderr, "> %s: Wrote Non-enhanced Tb (A) to %s.\n", __FILE__, cetb_sir->filename );
-      }
-
-      if ( 0 != cetb_file_add_var( cetb_sir, "TB_nonenhanced_std_dev",
-				   NC_USHORT, sx2,
-				   ( size_t )nsx, ( size_t )nsy,
-				   NULL,
-				   "Non-enhanced TB Std Deviation",
-				   CETB_FILE_TB_UNIT,
-				   &tb_stddev_fill_value,
-				   &tb_stddev_missing_value,
-				   &tb_stddev_valid_range,
-				   CETB_PACK,
-				   (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
-				   (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
-				   NULL ) ) {
-	errors++;
-	fprintf( stderr, "%s: Error writing Non-enhanced Tb stddev (V).\n", __FILE__ );
-      } else {
-	fprintf( stderr, "> %s: Wrote Non-enhanced Tb stddev (V) to %s.\n", __FILE__,
-		 cetb_sir->filename );
-      }
-    
-    } /* End of NON data section */
-  } /* End of output_debug for NON data */
 
   if ( 0 != cetb_file_add_grd_parameters( cetb_grd, median_flag ) ) {
     fprintf( stderr, "%s: Error adding GRD parameters to %s.\n", __FILE__, cetb_grd->filename );
@@ -1399,6 +1286,25 @@ int main(int argc, char **argv)
   return(errors);
 }
 
+/*
+ * Function to get tbval, ang and count from store array - this happens 4 times in the code
+ */
+
+void get_vars_from_store( char *store, float *tbval, float *ang, int *count,
+			  float tb_or_stokes_offset, int *ktime, int *iadd,
+			  int hasazang, float *azang )
+{
+
+  *tbval = *((float *) (store+0));
+  *ang   = *((float *) (store+4));
+  *count = *((int *)   (store+8));
+  *ktime = *((int *)  (store+12));
+  *iadd  = *((int *)  (store+16));
+  if ( hasazang )
+    *azang = *((float *) (store+20));
+  *tbval = *tbval - tb_or_stokes_offset;
+
+}
 
 /* SIR algorithm update step */
 

@@ -29,7 +29,7 @@ outfile=${sensor}_make_list
 rm -f ${outfile}
 echo "$0: removing make file: $outfile"
 
-# Call SSMIS_make.sh for each year to process
+# Call SMAP_make.sh for each year to process
 for year in `seq $startyear $endyear`
 do
     if [ "$year" -eq "$startyear" ]; then
@@ -49,8 +49,8 @@ do
 	fi
     fi
     
-    echo "$0: SSMIS_make for: $year $thisbegindoy $thisenddoy $sensor"
-    source $PMESDR_RUN/SSMIS_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath
+    echo "$0: SMAP_make for: $year $thisbegindoy $thisenddoy $sensor"
+    source $PMESDR_RUN/SMAP_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath
     
 done    
 
