@@ -326,7 +326,7 @@ int main(int argc,char *argv[])
 		     &inc_correct, &b_correct, &angle_ref, 
 		     &save_area, &cetb_platform);
   if (file_id == NULL) {
-    fprintf(stderr,"*** could not open meta file %s/%s\n",outpath,mname);    
+    fprintf(stderr,"*** could not open meta file %s/%s\n", outpath, mname);    
     exit(-1);  
   }
   if (0 != check_for_consistent_regions( &save_area, &ltod_flag ) ) {
@@ -335,7 +335,8 @@ int main(int argc,char *argv[])
     exit(-1);  
   }
 
-  fprintf( stderr, "Number of output setup files %d\n",save_area.nregions);
+  fprintf( stderr, "%s: %s metafile number of output setup files %d\n",
+	   __FILE__, mname, save_area.nregions);
   
   /* convert response threshold from dB to normal space */
   response_threshold=(float)(pow(10.,0.1*response_threshold));  
@@ -344,18 +345,22 @@ int main(int argc,char *argv[])
   cnt = 100;
   for (iregion=0; iregion<save_area.nregions; iregion++) {      
     save_area.sav_km[iregion]=km2pix(&dlon,&dlat,save_area.sav_projt[iregion],
-				     save_area.sav_ascale[iregion], save_area.sav_bscale[iregion], &ret_status);
+				     save_area.sav_ascale[iregion],
+				     save_area.sav_bscale[iregion], &ret_status);
     if ( ret_status != 1 ) {
-      fprintf( stderr, "meas_meta_setup: fatal error in routine\n" );
+      fprintf( stderr, "%s: %s metafile: fatal error in routine km2pix\n",
+	       __FILE__, mname );
       exit ( -1 );
     }
-    fprintf( stderr, "Region %d of %d: nominal km/pixel=%f\n", iregion, save_area.nregions, save_area.sav_km[iregion]);
+    fprintf( stderr, "%s: %s metafile: Region %d of %d: nominal km/pixel=%f\n",
+	     __FILE__, mname, iregion, save_area.nregions, save_area.sav_km[iregion]);
   /* write out the search box size in km to each setup output file */
 
-    box_size = box_size_by_channel( save_area.sav_ibeam[iregion], cetb_platform_to_sensor[cetb_platform] );
+    box_size = box_size_by_channel( save_area.sav_ibeam[iregion],
+				    cetb_platform_to_sensor[cetb_platform] );
     box_size_km = box_size/save_area.sav_km[iregion];
-    fprintf( stderr, "%s: box size in pixels is %d and in km is %f for channel %d\n", __FILE__,
-	     box_size, box_size_km, save_area.sav_ibeam[iregion] );
+    fprintf( stderr, "%s: %s metafile:box size in pixels is %d and in km is %f for channel %d\n",
+	     __FILE__, mname, box_size, box_size_km, save_area.sav_ibeam[iregion] );
     fwrite( &cnt, 4, 1, save_area.reg_lu[iregion] );
     for( z=0; z < 100; z++ ) lin[z] = ' ';
     sprintf( lin, " Search_box_km=%f", box_size_km );
@@ -387,8 +392,8 @@ int main(int argc,char *argv[])
 					 save_area.nregions*sizeof(long int) );
   if ( 0 != status ) {
     fprintf( stderr,
-	     "%s: Couldn't allocate memory for file name position variables\n",
-	     __FILE__ );
+	     "%s: %s metafile: Couldn't allocate memory for file name position variables\n",
+	     __FILE__, mname );
     exit (-1);
   }
   status =
@@ -396,8 +401,8 @@ int main(int argc,char *argv[])
 					 save_area.nregions*sizeof(long int) );
   if ( 0 != status ) {
     fprintf( stderr,
-	     "%s: Couldn't allocate memory for file data position variables\n",
-	     __FILE__ );
+	     "%s: %s: metafile Couldn't allocate memory for file data position variables\n",
+	     __FILE__, mname );
     exit (-1);
   }
   for ( iregion = 0; iregion < save_area.nregions; iregion++ ) {
@@ -421,7 +426,8 @@ int main(int argc,char *argv[])
     fgets(fname,sizeof(fname),file_id);
 
     if (ferror(file_id)) {
-      fprintf( stderr, "*** error reading input meta file encountered\n" );
+      fprintf( stderr, "%s: %s metafile: error reading input meta file \n",
+	       __FILE__, mname );
       exit(-1);
     }
 
@@ -442,12 +448,14 @@ int main(int argc,char *argv[])
         gsx = gsx_init( fname );
 	status = write_blanklines_to_header( &save_area );
 	if ( 0 != status ) {
-	  fprintf( stderr, "%s: *** couldn't write out blank lines for filenames\n", __FILE__ );
+	  fprintf( stderr, "%s: %s metafile: couldn't write out blank lines for filenames\n",
+		   __FILE__, mname );
 	  exit (-1);
 	}
 	status = utils_allocate_clean_aligned_memory( (void**)&gsx_fname[nfile], strlen(fname)+1 );
 	if ( 0 != status ) {
-	  fprintf( stderr, "%s: *** couldn't allocate space for filename\n", __FILE__ );
+	  fprintf( stderr, "%s: %s metafile: couldn't allocate space for filename\n",
+		   __FILE__, mname );
 	  exit (-1);
 	}
 	strcpy( gsx_fname[nfile], fname );
@@ -499,7 +507,8 @@ int main(int argc,char *argv[])
       free( file_flag );
       file_flag = NULL;
     }
-    status = utils_allocate_clean_aligned_memory( (void**)&file_flag, sizeof(int)*(save_area.nregions) );
+    status = utils_allocate_clean_aligned_memory( (void**)&file_flag,
+						  sizeof(int)*(save_area.nregions) );
     if ( 0 != status ) {
       fprintf( stderr, "%s: Unable to allocate memory for file_flag array\n", __FILE__ );
       exit (-1);
@@ -527,12 +536,14 @@ int main(int argc,char *argv[])
       first_file++;
       status = write_header_info( gsx, &save_area, year );
       if ( 0 != status ) {
-	fprintf( stderr, "%s: *** couldn't write out remaining header information\n", __FILE__ );
+	fprintf( stderr, "%s: error: couldn't write out remaining header information\n",
+		 __FILE__ );
 	exit (-1);
       }
       status = write_end_header( &save_area );
       if ( 0 != status ) {
-	fprintf( stderr, "%s: *** couldn't write out end header information\n", __FILE__ );
+	fprintf( stderr, "%s: error: couldn't write out end header information\n",
+		 __FILE__ );
 	exit (-1);
       }
       /*
@@ -684,7 +695,8 @@ int main(int argc,char *argv[])
 		sc_last_scantime[loc] = *(gsx->scantime[loc]+iscan);
 		first_scan_flag[loc] = 0;
 #ifdef DEBUG	      
-		fprintf( stderr, "ASCDES DEBUG: First scan: f=%d, loc=%d, iscan=%d, new time=%.3lf, new lat=%.3f\n",
+		fprintf( stderr,
+			 "ASCDES DEBUG: First scan: f=%d, loc=%d, iscan=%d, new time=%.3lf, new lat=%.3f\n",
 			 infile, loc, iscan, sc_last_scantime[loc], sc_last_lat[loc] );
 #endif	      
 		goto label_350;
@@ -770,8 +782,8 @@ int main(int argc,char *argv[])
 		sc_last_lat[loc] = *(gsx->sc_latitude[loc]+iscan);
 		sc_last_scantime[loc] = *(gsx->scantime[loc]+iscan);
 #ifdef DEBUG	      
-		fprintf( stderr, "ASCDES DEBUG: Times too far apart, skipping this scan: f=%d, loc=%d, iscan=%d, "
-			 "    time=%.3lf,     lat=%.3f\n",
+		fprintf( stderr, "ASCDES DEBUG: Times too far apart, skipping this scan: "
+			 "f=%d, loc=%d, iscan=%d,    time=%.3lf,     lat=%.3f\n",
 			 infile, loc, iscan, sc_last_scantime[loc], sc_last_lat[loc] );
 #endif		
 		goto label_350;
@@ -789,7 +801,8 @@ int main(int argc,char *argv[])
 		if (( infile == 13 || infile == 14 || infile == 15) &&
 		    loc == 1 ) { 
 		  fprintf( stderr, "ASCDES DEBUG: Times close: f=%d, loc=%d, iscan=%d, "
-			 " last time=%.3lf, this_time=%.3lf, last lat=%.3f, this lat=%.3f, diff=%.8f, ascend=%d\n",
+			 " last time=%.3lf, this_time=%.3lf, last lat=%.3f, this lat=%.3f, "
+			 " diff=%.8f, ascend=%d\n",
 			   infile, loc, iscan, sc_last_scantime[loc], *(gsx->scantime[loc]+iscan),
 			   sc_last_lat[loc], *(gsx->sc_latitude[loc]+iscan),
 			   *(gsx->sc_latitude[loc]+iscan) - sc_last_lat[loc], ascend );
@@ -956,7 +969,8 @@ int main(int argc,char *argv[])
 		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
 		  } 
 		  if ( iasc == (int)CETB_EVENING_PASSES ) {  /* evening */
-		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) goto label_3400;
+		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY)
+		      goto label_3400;
 		  }
 		}
 
@@ -1048,7 +1062,9 @@ int main(int argc,char *argv[])
 			 location, and projection rotation and scaling */
 		      rel_latlon(&x_rel,&y_rel,alon1,alat1,clon,clat);
 		      //		      gsx_count = (int)cetb_ibeam_to_cetb_ssmi_channel[ibeam];
-		      sum = gsx_antenna_response( x_rel, y_rel, theta, *(gsx->efov[gsx_count]), *(gsx->efov[gsx_count]+1) );
+		      sum = gsx_antenna_response( x_rel, y_rel, theta,
+						  *(gsx->efov[gsx_count]),
+						  *(gsx->efov[gsx_count]+1) );
 		      if (sum > response_threshold) {
 			if (flatten) sum=1.0;    /* optionally flatten response */
 			fill_array[count]=iadd1; /* address of pixel */
@@ -1066,13 +1082,16 @@ int main(int argc,char *argv[])
 	  
 		/* write measurement and addresses to setup output file */
 		if (count > 1) {
-		  /* if there is a measurement, then set the value of file_flag to be 1 for this file and projection */
+		  /* if there is a measurement, then set the value of file_flag to be
+		     1 for this file and projection */
 		  *(file_flag+iregion) = 1;
 		  jrec++; /* a count of total records written */
 		  jrec2[iregion]++; /* records/region */
 		  if (count >= MAXFILL) { /* error handling -- this should not occur! */
-		    fprintf( stderr, "*** count %d overflow=%d at %d\n",count,MAXFILL,jrec);
-		    fprintf( stderr, "center %f %f  %d %d  count %d\n",cen_lat,cen_lon,iscan,ibeam,count);
+		    fprintf( stderr, "%s: %s metafile: count %d overflow=%d at %d\n",
+			     __FILE__, mname, count, MAXFILL, jrec );
+		    fprintf( stderr, "%s: %s metafile: center %f %f  %d %d  count %d\n",
+			     __FILE__, mname, cen_lat, cen_lon, iscan, ibeam, count );
 		    count=MAXFILL;
 		  }
 
@@ -1104,7 +1123,8 @@ int main(int argc,char *argv[])
 		  fwrite(&cnt,   4,1,save_area.reg_lu[iregion]);
 #ifdef DEBUGCOUNT
 		  if ( iregion == 1 ) {
-		    fprintf( stderr, "COUNT DEBUG: jrec2=%d, cnt=%d, tb=%.2f, thetai=%.2f, count=%d, ktime=%d, iadd=%d, cnt=%d\n",
+		    fprintf( stderr, "COUNT DEBUG: jrec2=%d, cnt=%d, tb=%.2f, thetai=%.2f, "
+			     " count=%d, ktime=%d, iadd=%d, cnt=%d\n",
 			     jrec2[iregion], cnt, tb, thetai, count, ktime_minutes, iadd, cnt );
 		  }
 #endif	      
@@ -1123,7 +1143,7 @@ int main(int argc,char *argv[])
 	      }
 	      label_3400:; /* end of regions loop */
 	    }
-	    /* At the end of the regions loop, check to see if any file names need to be writte out */
+	    /* At the end of the regions loop, check to see if any file names need to be written out */
 	    
 	  }  /* end of measurements loop */
 	label_350:; /* end of scan loop */
@@ -1152,9 +1172,11 @@ int main(int argc,char *argv[])
     /* input file loop */
     fprintf( stderr, "Done with setup records %d %d\n",irec,krec);
     free( gsx_fname[infile] );
-    status = write_filenames_to_header( gsx, &save_area, file_flag, position_filename, position_data );
+    status = write_filenames_to_header( gsx, &save_area, file_flag, position_filename,
+					position_data );
     if ( 0 != status ) {
-      fprintf( stderr, "%s: *** couldn't write %s filename to output setup file\n", __FILE__, gsx->source_file );
+      fprintf( stderr, "%s: couldn't write %s filename to output setup file\n",
+	       __FILE__, gsx->source_file );
       exit (-1);
     }
   } /* input file read loop 1050 */
@@ -1170,7 +1192,8 @@ int main(int argc,char *argv[])
       save_area.reg_lu[j] = NULL;
     } else {
         if ( CETB_AQUA == cetb_platform ) {
-	  /* now check to see if you have b channels for 89H or 89V and if you also have A channels then combine */
+	  /* now check to see if you have b channels for 89H or 89V and if you also
+	     have A channels then combine */
 	  combine_setup_files( &save_area, 2 );
 	  if ( NULL != save_area.reg_lu[j] ) {
 	    fprintf( stderr, "%s: back from combin with fileid != NULL", __FUNCTION__ );
