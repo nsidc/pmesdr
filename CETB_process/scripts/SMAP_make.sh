@@ -44,11 +44,11 @@ do
     MONTH=`date -d "$YEAR-01-01 + $DOYM1 days" +%m`
     DOYA=$( printf "%03g" $DOY )
 
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.N.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2N_smap_test.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.N.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2N_smap.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2T_smap_test.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2T_smap.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.S.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2S_smap_test.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.S.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2S_smap.def \
 	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
 
 done

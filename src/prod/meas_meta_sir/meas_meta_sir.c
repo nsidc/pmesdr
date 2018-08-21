@@ -63,18 +63,20 @@ static void Ferror(int i)
 static void get_updates(float tbval, int count, int *fill_array,
 		 short int *response_array, int its );
 
-static void compute_ave(float tbval, float ang, int count, int *fill_array, short int *response_array);
+static void compute_ave(float tbval, float ang, int count, int *fill_array,
+			short int *response_array);
 
 static void time_updates(float ktime, int count, int *fill_array);
 
 static void stat_updates(float tbval, int count, int *fill_array,
 		  short int *response_array);
 
-static void filter(float *val, int size, int opt, int nsx, int nsy, float
-	    *temp, float thres);
+static void filter(float *val, int size, int opt, int nsx, int nsy, float *temp,
+		   float thres);
 
-static void get_vars_from_store( char *store, float *tbval, float *ang, int *count,
-				 float tb_or_stokes_offset );
+static void get_vars_from_store( char *store, float *tbval, float *ang,
+				 int *count, float tb_or_stokes_offset,
+				 int *ktime, int *add, int HASAZANG, float *azang );
 
 /****************************************************************************/
 
@@ -102,12 +104,12 @@ int main(int argc, char **argv)
 
   float latl, lonl, lath, lonh;
   char regname[11];
-  int dumb, nrec, ncnt, i, ii, iii, nsize;
+  int dumb, nrec, ncnt, i, nsize;
   long int nls, nbyte;
   float ratio, fn, ninv;
   char *space, *store, *store2;
   float tbval, ang, azang;
-  int count, ktime, iadd, end_flag, input_file_total;
+  int count, ktime, dummy_ktime, iadd, dummy_iadd, end_flag, input_file_total;
   char *list_of_input_files[CETB_MAX_INPUT_FILES];
   char *x, *stopstring;
   int irecords;
@@ -116,12 +118,12 @@ int main(int argc, char **argv)
   float rthreshold, box_size_km;
 
   /* define no-data values */
-  float anodata_A=CETB_NCATTS_TB_FILL_VALUE;
+  float anodata_A;
   float anodata_C=CETB_NCATTS_TB_NUM_SAMPLES_FILL_VALUE;
   float anodata_I=CETB_NCATTS_THETA_FILL_VALUE;
   float anodata_Ia=CETB_NCATTS_THETA_FILL_VALUE;
   float anodata_P=(float)(CETB_NCATTS_TB_TIME_FILL_VALUE*CETB_NCATTS_TB_TIME_SCALE_FACTOR);
-  float anodata_V=(float)(CETB_NCATTS_TB_STDDEV_FILL_VALUE*CETB_NCATTS_TB_STDDEV_SCALE_FACTOR);
+  float anodata_V;
   float anodata_E=-15.0;
 
   int nsx, nsy, iyear, isday, ismin, ieday, iemin;
@@ -163,8 +165,9 @@ int main(int argc, char **argv)
   short theta_fill_value=CETB_NCATTS_THETA_FILL_VALUE;
   short theta_valid_range[ 2 ] = { CETB_NCATTS_THETA_MIN, CETB_NCATTS_THETA_MAX };
   float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
-  float tb_or_stokes_scaled_min, tb_or_stokes_scaled_max, tb_or_stokes_scale_factor, tb_or_stokes_stddev_scale_factor;
-  int tb_or_stokes_add_offset, tb_or_stokes_stddev_add_offset, tb_or_stokes_SIR_offset;
+  float tb_or_stokes_scaled_min, tb_or_stokes_scaled_max, tb_or_stokes_scale_factor;
+  float tb_or_stokes_stddev_scale_factor, tb_or_stokes_SIR_offset;
+  int tb_or_stokes_add_offset, tb_or_stokes_stddev_add_offset;
   char *tb_or_stokes_SIR_long_name, *tb_or_stokes_GRD_long_name;
 
   long head_len;
@@ -434,6 +437,8 @@ int main(int argc, char **argv)
    tb_or_stokes_valid_range[1] = tb_valid_range[1];
    tb_or_stokes_SIR_long_name = strdup( CETB_NCATTS_TB_SIR_LONG_NAME );
    tb_or_stokes_GRD_long_name = strdup( CETB_NCATTS_TB_GRD_LONG_NAME );
+   anodata_A = CETB_NCATTS_TB_FILL_VALUE;
+   anodata_V = (float)(CETB_NCATTS_TB_STDDEV_FILL_VALUE*CETB_NCATTS_TB_STDDEV_SCALE_FACTOR);
 
    if ( ( sensor_id == CETB_SMAP_RADIOMETER ) &&
 	( SMAP_1d41F == cetb_ibeam_to_cetb_smap_channel[ibeam] ) ) {
@@ -562,11 +567,8 @@ int main(int argc, char **argv)
 	exit(-1);
       }
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
-      get_vars_from_store( store, &tbval, &ang, &count, 0.0 );
-      ktime = *((int *)   (store+12));
-      iadd  = *((int *)   (store+16));
-      if (HASAZANG)
-	azang = *((float *) (store+20));
+      get_vars_from_store( store, &tbval, &ang, &count, 0.0, &ktime, &iadd,
+			   HASAZANG, &azang );
 
       if (count > MAXFILL) {
 	fprintf( stderr, "%s: *** Count error %d  record %d\n", __FILE__, count, nrec );
@@ -675,10 +677,13 @@ int main(int argc, char **argv)
     store=space;
     for (irec = 0; irec < ncnt; irec++) {
 
-      get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset );
-      if (its == 0) iadd = *((int *) (store+16));
-      if (HASAZANG)
-	azang = *((float *) (store+20));	
+      if (its == 0) {
+	get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			   &dummy_ktime, &iadd, HASAZANG, &azang );
+      } else {
+	get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			   &dummy_ktime, &dummy_iadd, HASAZANG, &azang );
+      }
 
       store = store+HS;
       store2 = store + 4*count;
@@ -841,12 +846,14 @@ int main(int argc, char **argv)
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
-    tbval = *((float *) (store+0));
-    tbval = tbval - tb_or_stokes_add_offset;
-    ang   = *((float *) (store+4));
-    count = *((int *)   (store+8));
-    if (HASAZANG)
-      azang = *((float *) (store+20));
+    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			 &dummy_ktime, &dummy_iadd, HASAZANG, &azang );
+    //    tbval = *((float *) (store+0));
+    //    tbval = tbval - tb_or_stokes_add_offset;
+    //    ang   = *((float *) (store+4));
+    //    count = *((int *)   (store+8));
+    //    if (HASAZANG)
+    //      azang = *((float *) (store+20));
       
     store = store+HS;
     store2 = store+4*count;
@@ -924,16 +931,11 @@ int main(int argc, char **argv)
 
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
-
-    tbval = *((float *) (store+0));
-    tbval = tbval - tb_or_stokes_add_offset;
-    ang   = *((float *) (store+4));
-    count = *((int *)   (store+8));
-    ktime = *((int *)   (store+12));
+    
+    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			 &ktime, &dummy_iadd, HASAZANG, &azang );
     if (ktime < 0) ktime = -ktime;
-    if (HASAZANG)
-      azang = *((float *) (store+20));
-      
+    
     store = store+HS;
     store2 = store+4*count;     
 
@@ -1019,10 +1021,8 @@ int main(int argc, char **argv)
   store=space;
   for (irec = 0; irec < ncnt; irec++) {
 
-    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_add_offset );
-    iadd  = *((int *)   (store+16));
-    if (HASAZANG)
-      azang = *((float *) (store+20));
+    get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
+			 &dummy_ktime, &iadd, HASAZANG, &azang );
 
     store = store+HS;
     store = store+4*count;
@@ -1126,7 +1126,7 @@ int main(int argc, char **argv)
 			       NC_USHORT, a_val,
 			       ( size_t )nsx2, ( size_t ) nsy2,
 			       CETB_FILE_TB_STANDARD_NAME,
-			       "GRD TB",
+			       tb_or_stokes_GRD_long_name,
 			       CETB_FILE_TB_UNIT,
 			       &tb_fill_value,
 			       &tb_missing_value,
@@ -1290,18 +1290,20 @@ int main(int argc, char **argv)
  * Function to get tbval, ang and count from store array - this happens 4 times in the code
  */
 
-void get_vars_from_store( char *store, float *tbval, float *ang, int *count, float tb_or_stokes_offset )
+void get_vars_from_store( char *store, float *tbval, float *ang, int *count,
+			  float tb_or_stokes_offset, int *ktime, int *iadd,
+			  int hasazang, float *azang )
 {
-  float local_tbval, local_ang;
-  int local_count;
-  local_tbval = *((float *) (store+0));
-  local_ang   = *((float *) (store+4));
-  local_count = *((int *)   (store+8));
-  local_tbval = local_tbval - tb_or_stokes_offset;
 
-  *tbval = local_tbval;
-  *ang = local_ang;
-  *count = local_count;
+  *tbval = *((float *) (store+0));
+  *ang   = *((float *) (store+4));
+  *count = *((int *)   (store+8));
+  *ktime = *((int *)  (store+12));
+  *iadd  = *((int *)  (store+16));
+  if ( hasazang )
+    *azang = *((float *) (store+20));
+  *tbval = *tbval - tb_or_stokes_offset;
+
 }
 
 /* SIR algorithm update step */

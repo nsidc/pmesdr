@@ -2,8 +2,9 @@
 if [ "$1" == "-h" ] || [ "$#" -ne 6 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC ENVPATH"
-    echo "  Makes daily and concatenated 3-day file lists of GSX input files for the "
-    echo "  requested sensor SRC"
+    echo "  Makes a list of meas_meta_make commands"
+    echo "  this script is a wrapper for the yearly meas_meta_make list"
+    echo "  the script calls the yearly script for each year in the period"
     echo "Arguments:"
     echo "  YEAR_START: start 4-digit year"
     echo "  DOY_START: start day of year"

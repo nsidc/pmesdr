@@ -9,8 +9,8 @@
 #SBATCH --partition=shas
 #SBATCH --time=01:15:00
 #SBATCH --account=ucb13_summit2
-#SBATCH --ntasks-per-node 24
-#SBATCH --nodes 1
+#SBATCH --ntasks=24
+#SBATCH --cpus-per-task=1
 #SBATCH -o output/mv_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
@@ -23,6 +23,6 @@ ml impi
 ml loadbalance
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 -n 24 lb $FILE
+mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb $FILE
 date
 

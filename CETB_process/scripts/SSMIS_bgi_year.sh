@@ -2,7 +2,7 @@
 if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR SRC ENVPATH"
-    echo "  Creates an sbatch script to run meas_meta_sir processing"
+    echo "  Creates an sbatch script to run meas_meta_bgi processing"
     echo "  for this sensor and year."
     echo "Arguments:"
     echo "  YEAR: 4-digit year"

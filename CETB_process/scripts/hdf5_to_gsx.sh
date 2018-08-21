@@ -1,14 +1,14 @@
 #!/bin/sh
-# getfiles.sh
+# hdf5_to_gsx.sh
 # Created Mon Nov 14 2016 by mhardman <mhardman@nsidc-mhardman.local>
 # $Id$
 # $Log$
 #
-# This script rips through all of the CSU .nc files for a particular satellite and creates a file
-# for the loadbalancer to run and convert them from CSU to GSX input files
+# This script rips through all of the hdf5 files with suffix .h5 and creates a file
+# for the loadbalancer to run and convert them from hdf5 to GSX input files
 #
 # first argument is the type of gsx translation to do
-# second argument is the name of the platform, F08, F10, F19 etc
+# second argument is the name of the platform, SMAP etc
 gsx_type=$1
 src=$2
 for file in `find ../${src} -name "*.h5"`
