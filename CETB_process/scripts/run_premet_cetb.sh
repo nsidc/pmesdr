@@ -8,9 +8,9 @@
 #SBATCH --job-name CETB_platform_premet
 #SBATCH --partition=shas
 #SBATCH --time=01:20:00
-#SBATCH --nodes 5
 #SBATCH --account=ucb13_summit2
-#SBATCH --ntasks-per-node 24
+#SBATCH --ntasks 120
+#SBATCH --cpus-per-task=1
 #SBATCH -o output/premet_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
@@ -23,5 +23,5 @@ ml impi
 ml loadbalance
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 -n 120 lb $file
+mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb $file
 date
