@@ -281,15 +281,18 @@ int main(int argc, char **argv)
    do {
      
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) {
-       fprintf( stderr, "%s: reached Ferror(70), Error in setup file\n", __FILE__ );
+       fprintf( stderr, "%s: reached Ferror(70), Error in setup file %s\n",
+		__FILE__, file_in );
        exit (-1);
      }
      if (fread(line,   sizeof(char), 100, imf) == 0) {
-       fprintf( stderr, "%s: reached Ferror(71), Error in setup file\n", __FILE__ );
+       fprintf( stderr, "%s: reached Ferror(71), Error in setup file %s\n",
+		__FILE__, file_in );
        exit (-1);
      }
      if (fread(&dumb,   sizeof(int),   1, imf) == 0) { 
-       fprintf( stderr, "%s: reached Ferror(72), Error in setup file\n", __FILE__ );
+       fprintf( stderr, "%s: reached Ferror(72), Error in setup file %s\n",
+		__FILE__, file_in );
        exit (-1);
      }
 
@@ -326,25 +329,29 @@ int main(int argc, char **argv)
      if ( strstr( line, " Producer_id" ) != NULL ) {
        x = strchr( line,'=' );
        swath_producer_id = ( cetb_swath_producer_id )strtol(++x, NULL, 10);
-       fprintf( stderr,  "%s: Producer_id %s\n",  __FUNCTION__, cetb_swath_producer_id_name[ swath_producer_id ] );
+       fprintf( stderr,  "%s: Producer_id %s\n",  __FUNCTION__,
+		cetb_swath_producer_id_name[ swath_producer_id ] );
      }
 
      if ( strstr( line, " Platform_id" ) != NULL ) {
        x = strchr( line,'=' );
        platform_id = ( cetb_platform_id )strtol(++x, NULL, 10);
-       fprintf( stderr,  "%s: Platform_id %s\n",  __FUNCTION__, cetb_platform_id_name[ platform_id ] );
+       fprintf( stderr,  "%s: Platform_id %s\n",  __FUNCTION__,
+		cetb_platform_id_name[ platform_id ] );
      }
 
      if ( strstr( line, " Sensor_id" ) != NULL ) {
        x = strchr( line,'=' );
        sensor_id = ( cetb_sensor_id )strtol(++x, NULL, 10);
-       fprintf( stderr,  "%s: Sensor_id %s\n",  __FUNCTION__, cetb_sensor_id_name[ sensor_id ] );
+       fprintf( stderr,  "%s: Sensor_id %s\n",  __FUNCTION__,
+		cetb_sensor_id_name[ sensor_id ] );
      }
 
      if ( strstr( line, " Pass_direction" ) != NULL ) {
        x = strchr( line,'=' );
        direction_id = ( cetb_direction_id )strtol(++x, NULL, 10);
-       fprintf( stderr,  "%s: Direction_id %s\n",  __FUNCTION__, cetb_direction_id_name[ direction_id ] );
+       fprintf( stderr,  "%s: Direction_id %s\n",  __FUNCTION__,
+		cetb_direction_id_name[ direction_id ] );
      }
 
      if ( strstr( line, " Ltod_morning" ) != NULL ) {
@@ -380,12 +387,13 @@ int main(int argc, char **argv)
        status = utils_allocate_clean_aligned_memory( (void**)&list_of_input_files[input_file_total],
 						     FILENAME_MAX );
        if ( 0 != status ) {
-	 fprintf( stderr, "%s: couldn't allocate space for list of input files, setup file=%s\n",
-		  __FILE__, file_in );
+	 fprintf( stderr, "%s: couldn't allocate space for list of input files, "
+		  "setup file=%s\n", __FILE__, file_in );
 	 exit (-1);
        }
        strcpy( list_of_input_files[input_file_total], ++x );
-       fprintf( stderr, "%s: Input file '%s'\n", __FUNCTION__, list_of_input_files[input_file_total] );
+       fprintf( stderr, "%s: Input file '%s'\n", __FUNCTION__,
+		list_of_input_files[input_file_total] );
        input_file_total++;
      }
 
@@ -472,12 +480,13 @@ int main(int argc, char **argv)
    } 
 
    if ( 0 != cetb_file_open( cetb_sir ) ) {
-     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__, cetb_sir->filename );
+     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__,
+	      cetb_sir->filename );
      exit( -1 );
    } 
      
-   cetb_grd = cetb_file_init( outpath,
-			      iregion, CETB_MIN_RESOLUTION_FACTOR, platform_id, sensor_id,
+   cetb_grd = cetb_file_init( outpath, iregion, CETB_MIN_RESOLUTION_FACTOR,
+			      platform_id, sensor_id,
 			      iyear, isday, ibeam,
 			      direction_id,
 			      CETB_GRD,
@@ -490,7 +499,8 @@ int main(int argc, char **argv)
    }
 
    if ( 0 != cetb_file_open( cetb_grd ) ) {
-     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__, cetb_grd->filename );
+     fprintf( stderr, "%s: Error opening cetb_file=%s.\n", __FILE__,
+	      cetb_grd->filename );
      exit( -1 );
    }
      
@@ -501,9 +511,12 @@ int main(int argc, char **argv)
 /* header read completed, now determine how much program memory to allocate */
 
    nspace = nls * file_savings;/* space to allocate for measurement storage */
-   fprintf( stderr, "%s: File size: %ld  Space allocated: %ld\n", __FILE__, nls, nspace );
-   if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space, ( size_t )nspace*sizeof(char)) ) {
-     fprintf( stderr, "%s: inadequate memory for setup file=%s \n", __FILE__, file_in );
+   fprintf( stderr, "%s: File size: %ld  Space allocated: %ld\n", __FILE__, nls,
+	    nspace );
+   if ( 0 != utils_allocate_clean_aligned_memory( ( void ** )&space,
+						  ( size_t )nspace*sizeof(char)) ) {
+     fprintf( stderr, "%s: inadequate memory for setup file=%s \n", __FILE__,
+	      file_in );
      exit(-1);
    }
 
@@ -511,40 +524,58 @@ int main(int argc, char **argv)
    note: these arrays are re-used multiple times to save memory */
 
   nsize = nsx * nsy;  
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for a_val, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for a_val, setup file=%s\n", __FILE__,
+	     file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&b_val, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for b_val, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&b_val,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for b_val, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for a_temp, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_temp,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for a_temp, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sxy, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sxy, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sxy,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sxy, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sx, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sx, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx2, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sx2, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sx2,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sx2, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sy, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for sy, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&sy,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for sy, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&tot, (size_t)(sizeof(float)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for tot, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&tot,
+						 (size_t)(sizeof(float)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for tot, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
-  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&num_samples, (size_t)(sizeof(unsigned char)*nsize) ) ) {
-    fprintf( stderr, "%s: inadequate memory for num_samples, setup file=%s\n", __FILE__, file_in );
+  if ( 0 != utils_allocate_clean_aligned_memory( (void**)&num_samples,
+						 (size_t)(sizeof(unsigned char)*nsize) ) ) {
+    fprintf( stderr, "%s: inadequate memory for num_samples, setup file=%s\n",
+	     __FILE__, file_in );
     exit(-1);
   }
 
@@ -563,7 +594,8 @@ int main(int argc, char **argv)
     /*6 items at 4 bytes each: 24 bytes if azimuth angle */
     if (nbyte+HS < nspace) {
       if ((dumb=fread(store, sizeof(char), HS, imf)) != HS) {
-	fprintf ( stderr, "%s: *** Error reading input file data at 180 %d\n", __FILE__, dumb);
+	fprintf ( stderr, "%s: Error reading input file data at 180 %d, input file %s\n",
+		  __FILE__, dumb, file_in);
 	exit(-1);
       }
       if (fread(&dumb,sizeof(int), 1, imf) == 0) Ferror(100);
@@ -591,7 +623,8 @@ int main(int argc, char **argv)
       if (nbyte+count*4 < nspace) {
 	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(110);
 	if (fread(store, sizeof(int), count, imf) != count) {
-	  fprintf( stderr, "%s:  *** Error reading input file data at 111\n", __FILE__ );
+	  fprintf( stderr, "%s: Error reading input file data at 111 file %s\n",
+		   __FILE__, file_in );
 	  /* exit(-1); */
 	  goto label;
 	}
@@ -601,8 +634,10 @@ int main(int argc, char **argv)
 	  store=store+count*4;
 	}
       } else {
-	fprintf( stderr, "%s:  *** out of storage space 1 *** %d\n", __FILE__, ncnt);
-	fprintf( stderr, "%s:  *** out of storage space 1 *** %d %ld %ld\n",__FILE__, ncnt, nbyte, nspace );
+	fprintf( stderr, "%s: out of storage space 1 %d for file %s\n",
+		 __FILE__, ncnt, file_in );
+	fprintf( stderr, "%s: out of storage space 1 %d %ld %ld for file %s\n",
+		 __FILE__, ncnt, nbyte, nspace, file_in );
 	exit(-1);
       }
 
@@ -610,7 +645,8 @@ int main(int argc, char **argv)
       if (nbyte+count*2 < nspace) {
 	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1111);
 	if (fread(store, sizeof(short int), count, imf) != count) {
-	  fprintf( stderr, "%s:  *** Error reading input file data at 1111\n", __FILE__ );
+	  fprintf( stderr, "%s: Error reading input file data at 1111 for file %s\n",
+		   __FILE__, file_in );
 	  goto label;
 	}
 	if (fread(&dumb, sizeof(int), 1, imf) == 0) Ferror(1121);
@@ -620,16 +656,20 @@ int main(int argc, char **argv)
 	  store=store+count*2;
 	}
       } else {
-	fprintf( stderr, "%s:  *** out of storage space 2 *** %d\n", __FILE__, ncnt);
-	fprintf( stderr, "%s:  *** out of storage space 2 *** %d %ld %ld\n", __FILE__, ncnt, nbyte, nspace );
+	fprintf( stderr, "%s: out of storage space 2 %d for file %s\n",
+		 __FILE__, ncnt, file_in );
+	fprintf( stderr, "%s: out of storage space 2 %d %ld %ld for file %s\n",
+		 __FILE__, ncnt, nbyte, nspace, file_in );
 	exit(-1);
       }
 
       nrec++;
 
     } else {
-      fprintf( stderr, "%s:  *** out of storage space 3 *** %d \n", __FILE__, ncnt);
-      fprintf( stderr, "%s:  *** out of storage space 3 *** %d %ld\n", __FILE__, ncnt, nspace);
+      fprintf( stderr, "%s: out of storage space 3 %d for file %s\n",
+	       __FILE__, ncnt, file_in );
+      fprintf( stderr, "%s: out of storage space 3 %d %ld for file %s\n",
+	       __FILE__, ncnt, nspace, file_in );
       exit(-1);
     }
   }
@@ -638,9 +678,10 @@ int main(int argc, char **argv)
 
   /* print measurement file storage requirements */
   ratio=(float)(100.0 * (float) nbyte / (float) nls);
-  fprintf( stderr, "%s:  Input file read into ram\n", __FILE__ );
-  fprintf( stderr, "%s:  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)\n",
-	   __FILE__, nrec, ncnt, nbyte, nspace, ratio, 100.0*file_savings );
+  fprintf( stderr, "%s:  Input file %s read into ram\n", __FILE__, file_in );
+  fprintf( stderr, "%s:  Total storage used: %d %d recs = %ld of %ld (%.1f%% %.1f%%)"
+	   " for input file %s\n",
+	   __FILE__, nrec, ncnt, nbyte, nspace, ratio, 100.0*file_savings, file_in );
 
 /* Begin SIR/SIRF processing.  First initialize working arrays. */
 
@@ -664,13 +705,15 @@ int main(int argc, char **argv)
   old_amin=a_init;
   old_amax=a_init;
   
-  fprintf( stderr, "%s: \nSIR parameters: A_init=%f  N=%d\n", __FILE__, a_init, nits );
+  fprintf( stderr, "%s: \nSIR parameters: A_init=%f  N=%d for file %s\n",
+	   __FILE__, a_init, nits, file_in );
 
   /* for each iteration of SIR */
 
   for (its=0; its < nits; its++) {
 
-    fprintf( stderr, "%s: \nSIR iteration %d %d\n", __FILE__, its+1, ncnt);
+    fprintf( stderr, "%s: \nSIR iteration %d %d for file %s\n",
+	     __FILE__, its+1, ncnt, file_in );
 
     /* for each measurement, accumulate results */
 
@@ -750,9 +793,12 @@ int main(int argc, char **argv)
       }	
     }
 
-    if (its == 0) fprintf( stderr, "%s:  Average weight: %.4f\n", __FILE__, total/nsize );
-    fprintf( stderr, "%s:  A min max  --> %f %f %d\n", __FILE__, amin, amax, its+1 );
-    fprintf( stderr, "%s:  A change   --> %f %f\n", __FILE__, amin-old_amin, amax-old_amax );
+    if (its == 0) fprintf( stderr, "%s:  Average weight: %.4f for file %s\n",
+			   __FILE__, total/nsize, file_in );
+    fprintf( stderr, "%s:  A min max  --> %f %f %d for file %s\n",
+	     __FILE__, amin, amax, its+1, file_in );
+    fprintf( stderr, "%s:  A change   --> %f %f for file %s\n", __FILE__,
+	     amin-old_amin, amax-old_amax, file_in );
 
     old_amin=amin;
     old_amax=amax;
@@ -762,7 +808,8 @@ int main(int argc, char **argv)
 
   }    /* end of loop for each SIR iteration */
 
-  fprintf( stderr, "%s:  weight max --> %f Average weight: %.4f\n", __FILE__, tmax, total/nsize );
+  fprintf( stderr, "%s: weight max --> %f Average weight: %.4f for file %s\n",
+	   __FILE__, tmax, total/nsize, file_in );
 
   /*
    * if this is a Stokes variable then the SIR offset must be added back in before
@@ -787,7 +834,8 @@ int main(int argc, char **argv)
 			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing Tb (A).\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing Tb (A) to %s.\n", __FILE__,
+	     cetb_sir->filename );
   } else {
     fprintf( stderr, "> %s: Wrote Tb (A) to %s.\n", __FILE__, cetb_sir->filename );
   }
@@ -807,7 +855,8 @@ int main(int argc, char **argv)
 			       0.0,
 			       NULL ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing Tb num_samples.\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing Tb num_samples to %s.\n", __FILE__,
+	     cetb_sir->filename );
   } else {
     fprintf( stderr, "> %s: Wrote Tb num_samples to %s.\n", __FILE__, cetb_sir->filename );
   }
@@ -826,9 +875,11 @@ int main(int argc, char **argv)
 			       (float) CETB_NCATTS_THETA_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing Tb incidence angle (j_image).\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing Tb incidence angle (j_image) to %s.\n",
+	     __FILE__, cetb_sir->filename );
   } else {
-    fprintf( stderr, "> %s: Wrote Tb incidence angle (j_image) to %s.\n", __FILE__, cetb_sir->filename );
+    fprintf( stderr, "> %s: Wrote Tb incidence angle (j_image) to %s.\n",
+	     __FILE__, cetb_sir->filename );
   }
 
 /* create STD and Err images */
@@ -896,8 +947,10 @@ int main(int argc, char **argv)
     }
   }
     
-  fprintf( stderr, "%s:  Tb STD min   max --> %f %f\n", __FILE__, amin, amax );
-  fprintf( stderr, "%s:  Tb ERR min   max --> %f %f\n", __FILE__, bmin, bmax );
+  fprintf( stderr, "%s: Tb STD min   max --> %f %f for file %s\n",
+	   __FILE__, amin, amax, file_in );
+  fprintf( stderr, "%s: Tb ERR min   max --> %f %f for file %s\n",
+	   __FILE__, bmin, bmax, file_in );
 
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_std_dev",
 			       NC_USHORT, sxy,
@@ -913,9 +966,11 @@ int main(int argc, char **argv)
 			       (float) tb_or_stokes_stddev_add_offset,
 			       NULL ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing Tb stddev (V).\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing Tb stddev (V)to %s.\n", __FILE__,
+	     cetb_sir->filename );
   } else {
-    fprintf( stderr, "> %s: Wrote Tb stddev (V) to %s.\n", __FILE__, cetb_sir->filename );
+    fprintf( stderr, "> %s: Wrote Tb stddev (V) to %s.\n", __FILE__,
+	     cetb_sir->filename );
   }
     
 /* create time image */
@@ -969,7 +1024,8 @@ int main(int argc, char **argv)
       *(sxy+i) = anodata_P;
   }
 
-  fprintf( stderr, "%s:  Time min   max --> %f %f\n", __FILE__, amin, amax );
+  fprintf( stderr, "%s:  Time min   max --> %f %f for file %s\n",
+	   __FILE__, amin, amax, file_in );
 
   if ( 0 != cetb_file_add_var( cetb_sir, "TB_time",
   			       NC_SHORT, sxy,
@@ -985,9 +1041,11 @@ int main(int argc, char **argv)
   			       (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
   			       "gregorian" ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing Tb time (P).\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing Tb time (P) to %s.\n",
+	     __FILE__, cetb_sir->filename );
   } else {
-    fprintf( stderr, "> %s: Wrote Tb time (P) to %s.\n", __FILE__, cetb_sir->filename );
+    fprintf( stderr, "> %s: Wrote Tb time (P) to %s.\n",
+	     __FILE__, cetb_sir->filename );
   }
 
 /* create non-enhanced images
@@ -1044,8 +1102,8 @@ int main(int argc, char **argv)
     /* compute unweighted, normalized stats for measurements hitting grid element */
 
       if (iadd >= nsx2*nsy2 || iadd < 0) {  /* keep only in-image measurements */
-	fprintf( stderr, "%s: *** Non-enhanced address error: %d %d %d %d %d\n",
-		 __FILE__, iadd, ix, iy, non_size_x, non_size_y );
+	fprintf( stderr, "%s: *** Non-enhanced address error: %d %d %d %d %d file %s\n",
+		 __FILE__, iadd, ix, iy, non_size_x, non_size_y, file_in );
       } else {
 	fn = *(tot + iadd);
 	*(tot +  iadd) = *(tot +   iadd) + 1;                    /* count */
@@ -1114,10 +1172,14 @@ int main(int argc, char **argv)
     }
   }
 
-  fprintf( stderr, "%s:  Non-enhanced/Grid A  min   max --> %f %f\n", __FILE__, amin, amax );
-  fprintf( stderr, "%s:  Non-enhanced/Grid V  min   max --> %f %f\n", __FILE__, old_bmin, old_bmax );
-  fprintf( stderr, "%s:  Non-enhanced/Grid I  min   max --> %f %f\n", __FILE__, bmin, bmax );
-  fprintf( stderr, "%s:  Non-enhanced/Grid C        max --> %.1f\n", __FILE__, tmax );
+  fprintf( stderr, "%s:  Non-enhanced/Grid A  min   max --> %f %f in file %s\n",
+	   __FILE__, amin, amax, file_in );
+  fprintf( stderr, "%s:  Non-enhanced/Grid V  min   max --> %f %f in file %s\n",
+	   __FILE__, old_bmin, old_bmax, file_in );
+  fprintf( stderr, "%s:  Non-enhanced/Grid I  min   max --> %f %f in file %s\n",
+	   __FILE__, bmin, bmax, file_in );
+  fprintf( stderr, "%s:  Non-enhanced/Grid C        max --> %.1f in file %s\n",
+	   __FILE__, tmax, file_in );
 
   for ( i=0; i < nsx2*nsy2; i++ ) {
     *(a_val+i) += tb_or_stokes_SIR_offset;
@@ -1136,9 +1198,11 @@ int main(int argc, char **argv)
 			       (float) tb_or_stokes_add_offset,
 			       NULL ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing GRD Tb (A).\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing GRD Tb (A) to %s.\n",
+	     __FILE__, cetb_grd->filename );
   } else {
-    fprintf( stderr, "> %s: Wrote GRD Tb (A) to %s.\n", __FILE__, cetb_grd->filename );
+    fprintf( stderr, "> %s: Wrote GRD Tb (A) to %s.\n",
+	     __FILE__, cetb_grd->filename );
   }
     
   /* Save the number of measurement samples that hit each GRD pixel */
@@ -1156,9 +1220,11 @@ int main(int argc, char **argv)
 			       0.0,
 			       NULL ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing GRD Tb num_samples.\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing GRD Tb num_samples to %s.\n",
+	     __FILE__, cetb_grd->filename );
   } else {
-    fprintf( stderr, "> %s: Wrote GRD Tb num_samples to %s.\n", __FILE__, cetb_grd->filename );
+    fprintf( stderr, "> %s: Wrote GRD Tb num_samples to %s.\n",
+	     __FILE__, cetb_grd->filename );
   }
 
   if ( 0 != cetb_file_add_var( cetb_grd, "TB_std_dev",
@@ -1175,9 +1241,11 @@ int main(int argc, char **argv)
 			       (float) CETB_NCATTS_TB_STDDEV_ADD_OFFSET,
 			       NULL ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing GRD Tb stddev (V).\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing GRD Tb stddev (V) to %s.\n", __FILE__,
+	     cetb_grd->filename );
   } else {
-    fprintf( stderr, "> %s: Wrote GRD Tb stddev (V) to %s.\n", __FILE__, cetb_grd->filename );
+    fprintf( stderr, "> %s: Wrote GRD Tb stddev (V) to %s.\n", __FILE__,
+	     cetb_grd->filename );
   }
     
   if ( 0 != cetb_file_add_var( cetb_grd, "Incidence_angle",
@@ -1214,21 +1282,28 @@ int main(int argc, char **argv)
   			       (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
   			       "gregorian" ) ) {
     errors++;
-    fprintf( stderr, "%s: Error writing GRD Tb time (P).\n", __FILE__ );
+    fprintf( stderr, "%s: Error writing GRD Tb time (P) to file %s.\n",
+	     __FILE__, cetb_grd->filename );
   } else {
-    fprintf( stderr, "> %s: Wrote GRD Tb time (P) to %s.\n", __FILE__, cetb_grd->filename );
+    fprintf( stderr, "> %s: Wrote GRD Tb time (P) to file %s.\n",
+	     __FILE__, cetb_grd->filename );
   }
 
   if ( 0 != cetb_file_add_grd_parameters( cetb_grd, median_flag ) ) {
-    fprintf( stderr, "%s: Error adding GRD parameters to %s.\n", __FILE__, cetb_grd->filename );
+    fprintf( stderr, "%s: Error adding GRD parameters to %s.\n", __FILE__,
+	     cetb_grd->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_filenames( cetb_grd, input_file_total, list_of_input_files ) ) {
-    fprintf( stderr, "%s: Error adding list of files to %s.\n", __FILE__, cetb_grd->filename );
+  if ( 0 != cetb_file_add_filenames( cetb_grd, input_file_total,
+				     list_of_input_files ) ) {
+    fprintf( stderr, "%s: Error adding list of files to %s.\n", __FILE__,
+	     cetb_grd->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_TB_parameters( cetb_grd, rthreshold, box_size_km, ltod_morning, ltod_evening ) ) {
-    fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__, cetb_grd->filename );
+  if ( 0 != cetb_file_add_TB_parameters( cetb_grd, rthreshold, box_size_km,
+					 ltod_morning, ltod_evening ) ) {
+    fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__,
+	     cetb_grd->filename );
     exit( -1 );
   }
   strcpy( cetb_grd_filename, cetb_grd->filename );
@@ -1236,21 +1311,26 @@ int main(int argc, char **argv)
 
   /* Now check to make sure that there are no OOR temps and set to MISSING if so */
   if ( 0 != cetb_file_check_consistency( cetb_grd_filename ) ) {
-    fprintf( stderr, "%s: Error running file consistency check file %s\n", __FILE__,
-	     cetb_grd_filename );
+    fprintf( stderr, "%s: Error running file consistency check file %s\n",
+	     __FILE__, cetb_grd_filename );
     exit( -1 );
   }
 
   if ( 0 != cetb_file_add_sir_parameters( cetb_sir, nits, median_flag ) ) {
-    fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__, cetb_sir->filename );
+    fprintf( stderr, "%s: Error adding SIR parameters to %s.\n", __FILE__,
+	     cetb_sir->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_filenames( cetb_sir, input_file_total, list_of_input_files ) ) {
-    fprintf( stderr, "%s: Error adding input file names to %s.\n", __FILE__, cetb_sir->filename );
+  if ( 0 != cetb_file_add_filenames( cetb_sir, input_file_total,
+				     list_of_input_files ) ) {
+    fprintf( stderr, "%s: Error adding input file names to %s.\n", __FILE__, 
+	     cetb_sir->filename );
     exit( -1 );
   }
-  if ( 0 != cetb_file_add_TB_parameters( cetb_sir, rthreshold, box_size_km, ltod_morning, ltod_evening ) ) {
-    fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__, cetb_sir->filename );
+  if ( 0 != cetb_file_add_TB_parameters( cetb_sir, rthreshold, box_size_km,
+					 ltod_morning, ltod_evening ) ) {
+    fprintf( stderr, "%s: Error adding TB parameters to %s.\n", __FILE__,
+	     cetb_sir->filename );
     exit( -1 );
   }
   strcpy( cetb_sir_filename, cetb_sir->filename );
@@ -1265,9 +1345,11 @@ int main(int argc, char **argv)
   }
 
   if (errors == 0) {
-    fprintf( stderr, "%s: Processing successfully completed\n", __FILE__ );
+    fprintf( stderr, "%s: Processing successfully completed for %s\n", __FILE__,
+	     cetb_sir_filename );
   } else {
-    fprintf( stderr, "%s: Processing errors encountered and azang set to %f\n", __FILE__, azang );
+    fprintf( stderr, "%s: Processing errors encountered in %s and azang set to %f\n",
+	     __FILE__, cetb_sir_filename, azang );
   }
   
   /* end of program */
