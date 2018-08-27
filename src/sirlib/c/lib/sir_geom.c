@@ -579,13 +579,13 @@ void ease2_map_info(int iopt, int isc, int ind,
     ind:  base grid size index   (map units per cell in m
  
           NSIDC .grd file for isc=0
-           project type    ind=0     ind=1         ind=3
+           project type    ind=0     ind=1         ind=2
 	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
               S         EASE2_S25km EASE2_S30km EASE2_S36km 
               T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
-           project type    ind=0     ind=1            ind=3
+           project type    ind=0     ind=1            ind=2
 	      N          25000.0     30000.0         36000.0
               S          25000.0     30000.0         36000.0
               T/M       T25025.26   M25025.26000   M36032.220840584
@@ -730,13 +730,13 @@ void ease2sf(int iopt, float ascale, float bscale, float *fmap_scale,
     bscale: base grid scale index (ind=int(bscale))
  
           NSIDC .grd file for isc=0
-           project type    ind=0     ind=1         ind=3
+           project type    ind=0     ind=1         ind=2
 	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
               S         EASE2_S25km EASE2_S30km EASE2_S36km 
               T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
-           project type    ind=0     ind=1            ind=3
+           project type    ind=0     ind=1            ind=2
 	      N          25000.0     30000.0         36000.0
               S          25000.0     30000.0         36000.0
               T/M       T25025.26   M25025.26000  M36032.220840584
@@ -794,13 +794,13 @@ void ease2grid(int iopt, float alon, float alat,
 	  bscale: base grid scale index (ind=int(bscale))
 
           NSIDC .grd file for isc=0
-           project type    ind=0     ind=1         ind=3
+           project type    ind=0     ind=1         ind=2
 	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
               S         EASE2_S25km EASE2_S30km EASE2_S36km 
               T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
-           project type    ind=0     ind=1            ind=3
+           project type    ind=0     ind=1            ind=2
 	      N          25000.0     30000.0         36000.0
               S          25000.0     30000.0         36000.0
               T/M       T25025.26   M25025.26000  M36032.220840584

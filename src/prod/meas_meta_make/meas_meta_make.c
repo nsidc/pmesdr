@@ -430,6 +430,14 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     strncpy( regname, "Custom", 10);
     if (regnum > 0) { /* use region definition from standard region definition file */
       getregdata( regnum, &iproj, &dateline, &latl, &lonl, &lath, &lonh, regname );
+      /*
+       * Because the regions definition file is still used this kludge is the
+       * best way to get the correct latitude and longitude set for 36km M grids
+       */
+      if ( resolution_ind == 2 && regnum == 310 ) {
+	latl = -85.0445664;
+	lath = 85.0445664;
+      }
       if (((regnum >= 0) && (regnum < 100)) || (regnum >= 120)) poleflag=0; /* non-polar area */
       fprintf( stderr, "%s: Region name: '%s'  Def Proj %d  Dateline %d\n",
 	       __FUNCTION__, regname, iproj, dateline );
