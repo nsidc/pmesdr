@@ -116,12 +116,14 @@ int main(int argc,char *argv[])
 	     "\n%s: incorrect number of input arguments\n",
 	     __FILE__);
     fprintf( stderr,
-	     "\n%s: usage: meas_meta_make [-t threshold] meta_name platform start_day "
-	     "stop_day year def in_list\n\n",
+	     "\n%s: usage: meas_meta_make [-t threshold] [-r resolution] "
+	     "meta_name platform start_day stop_day year def in_list\n\n",
 	     __FILE__);
     fprintf( stderr, " %s: options:\n", __FILE__ );
     fprintf( stderr, "   %s: -t threshold = response threshold, dB, "
 	     "default is -8. dB\n", __FILE__ );
+    fprintf( stderr, "   %s: -r resolution flag = 0 (25km) 1 (30 km) 2 (36 km), "
+	     "default is 0 for 25 km base resolution\n", __FILE__ );
     fprintf( stderr, " %s: input parameters:\n", __FILE__ );
     fprintf( stderr, "   %s: meta_name   = meta file output name\n", __FILE__ );
     fprintf( stderr, "   %s: platform    = name of the platform as "
@@ -242,8 +244,8 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
 
 /* *********************************************************************** */
 
-static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float *lonl,
-		float *lath, float *lonh, char *regname)
+static void getregdata(int regnum, int *iproj, int *dateline, float *latl,
+		       float *lonl, float *lath, float *lonh, char *regname)
 {
   char line[180], *s, *p;  
   int regnum1=1, last;
@@ -251,35 +253,39 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
   /* try to get environment variable */
   p=getenv("SIR_region");
   if (p==NULL) {
-    fprintf( stderr, "%s: *** standard regions environment variable 'SIR_region' not defined!\n", __FUNCTION__ );    
+    fprintf( stderr, "%s: *** standard regions environment variable 'SIR_region'"
+	     "not defined!\n", __FUNCTION__ );    
     p=rname; /* use default if environment variable not available */
   }  
 
   FILE *rid=fopen(p,"r");
   if (rid==NULL) {
-    fprintf( stderr, "%s: *** could not open standard regions file %s\n", __FUNCTION__, p);
+    fprintf( stderr, "%s: *** could not open standard regions file %s\n",
+	     __FUNCTION__, p);
     exit(-1);
   }
 
   /* skip first two input file header lines*/
-  fgets(line,180,rid);
-  fgets(line,180,rid);  
+  fgets( line, 180, rid );
+  fgets( line, 180, rid );  
 
   last=1;
   do {
     /* read line of input file and check */
     if (fgets(line,180,rid) == NULL || regnum1==9999 || regnum1==0) {
-      fprintf( stderr, "%s: *** region %d not found in %s\n", __FUNCTION__, regnum,p);
+      fprintf( stderr, "%s: *** region %d not found in %s\n",
+	       __FUNCTION__, regnum,p);
       exit(-1);
       last=0;
     }	
     sscanf(line,"%d %d %d %f %f %f %f %s\n",
 	   &regnum1, iproj, dateline, latl, lonl, lath,  lonh, regname);
-    s=strstr(line,regname);
-    strncpy(regname,s,10);
+    s=strstr( line, regname );
+    strncpy( regname, s, 10 );
     regname[10]='\0';
     if (regnum1 == 9999 || regnum1 == 0) {
-      fprintf( stderr, "%s: *** region %d not found in %s\n", __FUNCTION__, regnum, p );
+      fprintf( stderr, "%s: *** region %d not found in %s\n",
+	       __FUNCTION__, regnum, p );
       exit(-1);
       last=0;
     }	
@@ -304,6 +310,7 @@ static void getregdata(int regnum, int *iproj, int *dateline, float *latl, float
  *    argv - char pointer array with command-line arguments
  *    F_num - integer with platform_id
  *    threshold_response_dB - float, response pattern minimum threshold, in dB
+ *    resolution_ind - int, resolution index 0, 1 or 2 for 25, 30 or 36 km base res
  *
  *  Output: n/a
  *    
@@ -397,12 +404,15 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
   fprintf(mout," Region_parameters_file=%s\n",rfile);
   pid=fopen(rfile,"r");
   if (pid==NULL) {
-    fprintf( stderr, "%s: *** could not open region parameters file: %s\n", __FUNCTION__, rfile );
+    fprintf( stderr, "%s: *** could not open region parameters file: %s\n",
+	     __FUNCTION__, rfile );
     exit(-1);      
   }
   fscanf(pid,"%d",&nregions);
+  fprintf( stderr, "%s: Base resolution: %d\n", __FUNCTION__, resolution_ind );
+  fprintf( mout, " Base_resolution=%2d\n", resolution_ind );
   fprintf( stderr, "%s: Number of regions: %d\n", __FUNCTION__, nregions);
-  fprintf(mout," Num_Regions=%2d\n",nregions);
+  fprintf( mout, " Num_Regions=%2d\n", nregions );
   
   /* for each region, read in the parameters that define the region 
      size and projection and data selection criteria */
@@ -413,13 +423,13 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     
     /* region ID number */ 
 
-    fscanf(pid,"%d",&regnum);
+    fscanf( pid, "%d", &regnum );
     fprintf( stderr, "%s: Region %d number: %d\n", __FUNCTION__, iregion, regnum );
     
     /* define region, using auto definition if possible */
-    strncpy(regname,"Custom",10);
+    strncpy( regname, "Custom", 10);
     if (regnum > 0) { /* use region definition from standard region definition file */
-      getregdata(regnum,&iproj,&dateline,&latl,&lonl,&lath,&lonh,regname);
+      getregdata( regnum, &iproj, &dateline, &latl, &lonl, &lath, &lonh, regname );
       if (((regnum >= 0) && (regnum < 100)) || (regnum >= 120)) poleflag=0; /* non-polar area */
       fprintf( stderr, "%s: Region name: '%s'  Def Proj %d  Dateline %d\n",
 	       __FUNCTION__, regname, iproj, dateline );
@@ -432,14 +442,16 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     fprintf( stderr, "%s: Region definition information\n", __FUNCTION__ );
     fprintf( stderr, "%s:  Latitude range:  %f %f\n", __FUNCTION__, latl, lath );
     fprintf( stderr, "%s:  Longitude range: %f %f\n", __FUNCTION__, lonl, lonh );
-    fprintf( stderr, "%s:  Region polar code (0=arbitrary, 1=N pol, 2=S pole: %d\n", __FUNCTION__, poleflag );
+    fprintf( stderr, "%s:  Region polar code (0=arbitrary, 1=N pol, 2=S pole: %d\n",
+	     __FUNCTION__, poleflag );
     if (dateline) {
       fprintf( stderr, "%s:  Region crosses dateline\n", __FUNCTION__ );
       maplxlon=min(lonh,lonl);
       maprxlon=max(lonh,lonl);
       lonl=maplxlon;
       lonh=maprxlon;
-      fprintf( stderr, "%s:  Corrected longitude range: %f %f\n", __FUNCTION__, lonl, lonh );
+      fprintf( stderr, "%s:  Corrected longitude range: %f %f\n",
+	       __FUNCTION__, lonl, lonh );
     }
      
     /* write region ID number and bound box info to meta file */
@@ -459,7 +471,8 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     projt=iproj;  /* default value from region definition file */
     /* This version of meas_meta_make only does EASE2-N, -S, -T */
     if ( projt > 10 || projt < 8 ) {
-      fprintf( stderr, "%s: Only acceptable projections are 308, 309, 310, EASE2-N, -S, -T\n", __FUNCTION__ );
+      fprintf( stderr, "%s: Only acceptable projections are 308, 309, 310, "
+	       "EASE2-N, -S, -T\n", __FUNCTION__ );
       exit(-1);
     }
     /* projection codes 
@@ -467,7 +480,8 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
        9 = EASE2 S
       10 = EASE2 T */
 
-    fprintf( stderr, "%s:  Projection code ( 8=EASE2N,9=EASE2S,10=EASE2T ): %d\n", __FUNCTION__, projt);
+    fprintf( stderr, "%s:  Projection code ( 8=EASE2N,9=EASE2S,10=EASE2T ): %d\n",
+	     __FUNCTION__, projt);
 
     /* define the origin, size, scale, offset for each projection */
     switch (projt) {
@@ -479,7 +493,8 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       /* projt=regnum-300; */ 
       /* define projection parameters for particular EASE2 case */
       ind=resolution_ind;  /* standard base resolution */
-      fprintf( stderr, "%s: EASE2 parameters: proj=%d  nease=%d  ind=%d\n", __FUNCTION__, projt,nease,ind);      
+      fprintf( stderr, "%s: EASE2 parameters: proj=%d  nease=%d  ind=%d\n",
+	       __FUNCTION__, projt, nease, ind);      
       ease2_map_info(projt, nease, ind, &map_equatorial_radius_m, 
 		     &map_eccentricity, &e2,
 		     &map_reference_latitude, &map_reference_longitude, 
@@ -501,27 +516,30 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       break;
 
     default:
-      fprintf(stderr,"%s: *** Error selecting projection type %d ***\n", __FUNCTION__, projt );
+      fprintf( stderr,"%s: *** Error selecting projection type %d ***\n",
+	      __FUNCTION__, projt );
       exit(-1);      
     }
   
     /* select ascending/descending data */
     iasc=0;
     fscanf(pid,"%d",&iasc);
-    fprintf( stderr, "%s: Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) %d\n", __FUNCTION__, iasc );
-    fprintf(mout,"  AscDesc_flag=%2d\n",iasc);
+    fprintf( stderr, "%s: Asc/Desc flag: (0=both,1=asc,2=dsc,3=morn,4=eve) %d\n",
+	     __FUNCTION__, iasc );
+    fprintf( mout,"  AscDesc_flag=%2d\n",iasc );
 
     /* Selection is based on whichever platform is specified on the input */
-    fscanf(pid,"%d",&ibeam);
-    fprintf( stderr, "%s: Beam index (1=19H,2=19V,3=22V,4=37H,5=37V,6=85H,7=85V): %d\n", __FUNCTION__, ibeam );
+    fscanf( pid, "%d", &ibeam );
+    fprintf( stderr, "%s: Beam index (eg for SSM/I 1=19H,2=19V,3=22V,etc): %d\n",
+	     __FUNCTION__, ibeam );
     ipolar=0;   /* h pol */
     if (ibeam==2 || ibeam==3 || ibeam==5 || ibeam==7) ipolar=1; /* v pol */
-    fprintf(mout,"  Polarization=%d\n",ipolar);
-    fprintf(mout,"  Beam_index=%d\n", ibeam);
+    fprintf( mout, "  Polarization=%d\n", ipolar );
+    fprintf( mout, "  Beam_index=%d\n", ibeam );
 
     /* read number iterations from .def file */
     fscanf( pid, "%d", &nits );
-    fprintf(mout," Max_iterations=%d\n", nits);
+    fprintf( mout, " Max_iterations=%d\n", nits );
 
     /* set grid image size parameters */
     /* number of enhanced resolution pixels/non-enhanced pixels */
@@ -529,8 +547,8 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     non_size=(1 << (nease) );
  
     if (non_size*(nsx/non_size) != nsx || non_size*(nsy/non_size) != nsy) {
-      fprintf(stderr,"%s: *** warning: non grid size parameter %d does not evenly divide image size: %d %d\n",
-	      __FUNCTION__, non_size, nsx, nsy );
+      fprintf( stderr,"%s: *** warning: non grid size parameter %d does not evenly"
+	       "divide image size: %d %d\n", __FUNCTION__, non_size, nsx, nsy );
     }
 
     /* optionally section region in to smaller images for processing.  They will be recombined later */
@@ -555,8 +573,8 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       fprintf(mout,"   Projection_offset_y=%16.9f\n", b0);
       fprintf(mout,"   Projection_scale_x=%16.9f\n", ascale);
       fprintf(mout,"   Projection_scale_y=%16.9f\n", bscale);
-      fprintf(mout,"   Projection_dim_x=%d\n",xdim);
-      fprintf(mout,"   Projection_dim_y=%d\n",ydim);
+      fprintf(mout,"   Projection_dim_x=%d\n", xdim);
+      fprintf(mout,"   Projection_dim_y=%d\n", ydim);
       fprintf(mout,"   Image_size_x=%d\n", nsx);
       fprintf(mout,"   Image_size_y=%d\n", nsy);
 
@@ -564,8 +582,8 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       nsx2=nsx/non_size;
       nsy2=nsy/non_size;
       if (non_size*nsx2 != nsx || non_size*nsy2 != nsy) {
-	fprintf( stderr, "%s: *** WARNING: non grid size %d ' does not evenly divide image size %d %d\n",
-		 __FUNCTION__, non_size, nsx, nsy );
+	fprintf( stderr, "%s: *** WARNING: non grid size %d does not evenly divide"
+		 "image size %d %d\n", __FUNCTION__, non_size, nsx, nsy );
       }
       ascale2=ascale;
       bscale2=bscale;
@@ -574,9 +592,8 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       } else {
 	nsx2=nsx;
 	nsy2=nsy;
-	fprintf( stderr, "%s: *** WARNING: Projection type can not generate Non-enhanced parameters ***\n",
-		 __FUNCTION__ );
-
+	fprintf( stderr, "%s: *** WARNING: Projection type can not generate "
+		 "Non-enhanced parameters ***\n", __FUNCTION__ );
       }
 
       /* write grid projection info to meta file */
