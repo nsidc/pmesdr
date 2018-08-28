@@ -58,8 +58,10 @@ static int valid_date( int year, int doy );
 static int valid_pass_direction( cetb_region_id region_id,
 				 cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
+static int valid_base_resolution( cetb_resolution_id base );
 static int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id );
-static cetb_region_id valid_region_id( int region_number );
+static cetb_region_id valid_region_id( int region_number,
+				       cetb_resolution_id base_resolution );
 static int valid_resolution_factor( int factor );
 static int valid_sensor_id( cetb_sensor_id sensor_id );
 static int valid_swath_producer_id( cetb_swath_producer_id producer_id );
@@ -98,6 +100,7 @@ static char *set_source_value( cetb_file_class *this );
  */
 cetb_file_class *cetb_file_init( char *dirname,
 				 int region_number,
+				 cetb_resolution_id  base_resolution,
 				 int factor,
 				 cetb_platform_id platform_id,
 				 cetb_sensor_id sensor_id,
@@ -118,7 +121,13 @@ cetb_file_class *cetb_file_init( char *dirname,
   char *file_version=NULL;
   size_t len_version;
 
-  if ( CETB_NO_REGION == ( region_id = valid_region_id( region_number ) ) ) return NULL;
+  if ( STATUS_OK != valid_base_resolution( base_resolution ) ) return NULL;
+  if ( CETB_NO_REGION ==
+       ( region_id = valid_region_id( region_number, base_resolution ) ) ) {
+    fprintf( stderr, "%s: bad return from valid_region_id %d, res %d\n",
+	     __FUNCTION__, region_number, base_resolution );
+    return NULL;
+  }
   if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
   if ( STATUS_OK != valid_platform_id( platform_id ) ) return NULL;
   if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
@@ -155,6 +164,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->producer_id = producer_id;
   this->platform_id = platform_id;
   this->region_id = region_id;
+  this->resolution_id = base_resolution;
   this->direction_id = direction_id;
   this->factor = factor;
   this->sensor_id = sensor_id;
@@ -202,7 +212,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    dirname,
 	    cetb_NSIDC_dataset_id[ sensor_id ],
   	    cetb_region_id_name[ region_id ],
-  	    cetb_resolution_name[ factor ],
+  	    cetb_resolution_name[ factor + (CETB_MAX_RESOLUTION_FACTOR+1)*((int)base_resolution)],
   	    cetb_platform_id_name[ platform_id ],
   	    cetb_sensor_id_name[ sensor_id ],
   	    year,
@@ -1812,7 +1822,7 @@ char *pmesdr_top_dir( void ) {
 /*
  * set_all_dimensions - Sets dimension variables (time, y, x) in the output file
  *                      to the expected size for the grid that will be stored here
- *                      grid is determined by region_id and factor
+ *                      grid is determined by region_id,init and factor
  *
  *  input : 
  *    this : pointer to initialized/opened cetb_file_class object
@@ -2155,7 +2165,8 @@ int valid_date( int year, int doy ) {
  */
 int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
 
-  if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ) {
+  if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ||
+       CETB_EASE2_N36 == region_id || CETB_EASE2_S36 == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_MORNING_PASSES == direction_id
 	 || CETB_EVENING_PASSES == direction_id ) {
@@ -2166,7 +2177,7 @@ int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_
 	       direction_id );
       return STATUS_FAILURE;
     }
-  } else if ( CETB_EASE2_T == region_id ) {
+  } else if ( CETB_EASE2_T == region_id || CETB_EASE2_M == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_ASC_PASSES == direction_id
 	 || CETB_DES_PASSES == direction_id ) {
@@ -2234,18 +2245,20 @@ int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  *
  *  input :
  *    region_id : integer region_id number
+ *    base_resolution : cetb_resolution_id base_resolution 
  *
  *  output : n/a
  *
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-cetb_region_id valid_region_id( int region_number ) {
+cetb_region_id valid_region_id( int region_number, cetb_resolution_id base_resolution ) {
 
-  int i;
+  int i, istart;
   cetb_region_id region_id=CETB_NO_REGION;
 
-  for ( i = 0; i < CETB_NUM_REGIONS; i++ ) {
+  istart = 0 + (int)(base_resolution*(CETB_NUM_REGIONS/CETB_NUMBER_BASE_RESOLUTIONS));
+  for ( i = istart; i < CETB_NUM_REGIONS; i++ ) {
     if ( region_number == cetb_region_number[ i ] ) {
       region_id = ( cetb_region_id ) i;
       break;
@@ -2274,6 +2287,30 @@ int valid_resolution_factor( int factor ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid factor=%d\n", __FUNCTION__, factor );
+    return STATUS_FAILURE;
+  }    
+  
+}
+
+
+/*
+ * valid_base_resolution - checks for valid base resolution
+ *
+ *  input :
+ *    base_resolution : cetb_resolution_id base_resolution
+ *
+ *  output : n/a
+ *
+ *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
+ *
+ */
+int valid_base_resolution( cetb_resolution_id base ) {
+
+  if ( (CETB_NO_RESOLUTION != base)
+       && (base < CETB_NUMBER_BASE_RESOLUTIONS) ) {
+    return STATUS_OK;
+  } else {
+    fprintf( stderr, "%s: Invalid base resolution=%d\n", __FUNCTION__, base );
     return STATUS_FAILURE;
   }    
   

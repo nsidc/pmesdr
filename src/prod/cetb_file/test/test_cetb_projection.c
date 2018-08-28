@@ -20,6 +20,7 @@ int status;
 char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 int region_number;
+cetb_resolution_id base_resolution;
 int factor;
 cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
@@ -41,6 +42,7 @@ void setUp( void ) {
   strcpy( dirname, "./test" );
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
+  base_resolution = CETB_25KM;
   year = 1991;
   doy = 1;
   beam_id = 1;
@@ -69,7 +71,8 @@ void test_cetb_N_parameters( void ) {
   factor = 3;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   sprintf( filename, "%s/NSIDC-0630-EASE2_N3.125km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
@@ -153,7 +156,8 @@ void test_cetb_S_parameters( void ) {
   factor = 2;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   sprintf( filename, "%s/NSIDC-0630-EASE2_S6.25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
@@ -237,7 +241,8 @@ void test_cetb_T_parameters( void ) {
   factor = 1;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   sprintf( filename, "%s/NSIDC-0630-EASE2_T12.5km-F13_SSMI-1991001-19H-A-SIR-CSU-v%.1f.nc",

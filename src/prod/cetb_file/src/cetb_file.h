@@ -52,6 +52,7 @@ typedef struct {
   cetb_swath_producer_id producer_id;
   cetb_platform_id platform_id;
   cetb_region_id region_id;
+  cetb_resolution_id resolution_id;
   cetb_direction_id direction_id;
   int factor;
   cetb_sensor_id sensor_id;
@@ -66,6 +67,7 @@ typedef struct {
 
 cetb_file_class *cetb_file_init( char *dirname,
 				 int region_number,
+				 cetb_resolution_id base_resolution,
 				 int factor,
 				 cetb_platform_id platform_id,
 				 cetb_sensor_id sensor_id,

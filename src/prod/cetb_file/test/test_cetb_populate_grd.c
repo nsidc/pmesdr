@@ -22,6 +22,7 @@ char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 cetb_region_id region_id;
 int region_number;
+cetb_resolution_id base_resolution;
 int factor;
 cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
@@ -42,6 +43,7 @@ void setUp( void ) {
   strcpy( dirname, "./test" );
   region_id = CETB_EASE2_N;
   region_number = cetb_region_number[ region_id ];
+  base_resolution = CETB_25KM;
   factor = 0;
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
@@ -56,7 +58,8 @@ void setUp( void ) {
 	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year,
 			 doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL_MESSAGE( cetb, "Error calling cetb_file_init" );

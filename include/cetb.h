@@ -129,7 +129,7 @@ typedef enum {
  * Exact scale is a function of projection (N, S, T/M) and resolution factor
  * N,S grids are exact divisors of 25.0 or 36.0 km, T/M grids are slightly different
  */
-static double cetb_exact_scale_m[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
+static double cetb_exact_scale_m[CETB_NUM_REGIONS]
                                 [CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_N 25 km*/
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_S 25 km */
@@ -142,7 +142,7 @@ static double cetb_exact_scale_m[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
 /*
  * Number of rows is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_rows[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
+static long int cetb_grid_rows[CETB_NUM_REGIONS]
                               [CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_N 25 km */
   { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_S 25 km */
@@ -155,7 +155,7 @@ static long int cetb_grid_rows[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
 /*
  * Number of cols is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_cols[CETB_NUM_REGIONS*CETB_NUMBER_BASE_RESOLUTIONS]
+static long int cetb_grid_cols[CETB_NUM_REGIONS]
                               [CETB_MAX_RESOLUTION_FACTOR+1] = {
   {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_N 25 km */
   {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S 25 km */

@@ -176,6 +176,8 @@ int main(int argc, char **argv)
 
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
+  int resolution;
+  cetb_resolution_id base_resolution = 0;
 
   /* begin program */
 
@@ -323,6 +325,26 @@ int main(int argc, char **argv)
        fprintf( stderr, "%s: Max fill %d\n", __FUNCTION__, MAXFILL);
      }
 
+     if (strstr(line," Base_resolution") != NULL) {
+       x = strchr(line,'=');
+       resolution=strtol(++x, NULL, 10);
+       fprintf( stderr, "%s: Base resolution %d\n", __FUNCTION__,
+		resolution );
+       switch (resolution) {
+       case 25:
+	 base_resolution = CETB_25KM;
+	 break;
+       case 30:
+	 base_resolution = CETB_NO_RESOLUTION;
+	 break;
+       case 36:
+	 base_resolution = CETB_36KM;
+	 break;
+       default:
+	 base_resolution = CETB_NO_RESOLUTION;
+       }
+     }
+
      if ( strstr( line, " Producer_id" ) != NULL ) {
        x = strchr( line,'=' );
        swath_producer_id = ( cetb_swath_producer_id )strtol(++x, NULL, 10);
@@ -459,7 +481,8 @@ int main(int argc, char **argv)
    }
    
    cetb_sir = cetb_file_init( outpath,
-			      iregion, ascale, platform_id, sensor_id,
+			      iregion, base_resolution, ascale, platform_id,
+			      sensor_id,
 			      iyear, isday, ibeam,
 			      direction_id,
 			      CETB_SIR,
@@ -477,7 +500,8 @@ int main(int argc, char **argv)
    } 
      
    cetb_grd = cetb_file_init( outpath,
-			      iregion, CETB_MIN_RESOLUTION_FACTOR, platform_id, sensor_id,
+			      iregion, base_resolution, CETB_MIN_RESOLUTION_FACTOR,
+			      platform_id, sensor_id,
 			      iyear, isday, ibeam,
 			      direction_id,
 			      CETB_GRD,

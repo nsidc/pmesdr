@@ -23,6 +23,7 @@ char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 cetb_region_id region_id;
 int region_number;
+cetb_resolution_id base_resolution;
 int factor;
 cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
@@ -43,6 +44,7 @@ void setUp( void ) {
   strcpy( dirname, "./test" );
   region_id = CETB_EASE2_N;
   region_number = cetb_region_number[ region_id ];
+  base_resolution = CETB_25KM;
   factor = 0;
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;
@@ -57,7 +59,8 @@ void setUp( void ) {
 	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_STRING( filename,
@@ -195,7 +198,8 @@ void test_populate_filenames( void ) {
   strcpy( filenames[0], "my_test_file.txt");
   
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );

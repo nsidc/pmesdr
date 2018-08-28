@@ -351,6 +351,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
     map_scale, r0, s0, epsilon;
   int bcols, brows, ind;
+  int base_resolution[] = {25, 30, 36};
   
   fprintf(mout,"Egg_or_slice=%d\n",negg);
 
@@ -410,7 +411,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
   }
   fscanf(pid,"%d",&nregions);
   fprintf( stderr, "%s: Base resolution: %d\n", __FUNCTION__, resolution_ind );
-  fprintf( mout, " Base_resolution=%2d\n", resolution_ind );
+  fprintf( mout, " Base_resolution=%2d\n", base_resolution[resolution_ind] );
   fprintf( stderr, "%s: Number of regions: %d\n", __FUNCTION__, nregions);
   fprintf( mout, " Num_Regions=%2d\n", nregions );
   

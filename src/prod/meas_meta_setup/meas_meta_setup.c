@@ -1254,6 +1254,7 @@ FILE * get_meta(char *mname, char *outpath,
   float a_init,a_offset;
   int nits;
 
+  int base_resolution=25;
   char *x;
   int z, nsection, isection, cnt;
   float tsplit1=1.0, tsplit2=13.0;
@@ -1368,6 +1369,11 @@ FILE * get_meta(char *mname, char *outpath,
 	if (*x== 'F' || *x== 'f') *median_flag=0;
 	else *median_flag=1;	
       }      
+      
+      if (strstr(line,"Base_resolution") != NULL) {
+	x = strchr(line,'=');
+	base_resolution=atoi(++x);
+      }
       
       if (strstr(line,"Num_Regions") != NULL) {
 	x = strchr(line,'=');
@@ -1715,7 +1721,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," Setup output direcory=%s", outpath );
+		      sprintf(lin," Setup output directory=%s", outpath );
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
@@ -1800,6 +1806,11 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
+		      for(z=0;z<100;z++)lin[z]=' ';
+		      sprintf(lin," Base_resolution=%d", base_resolution);
+		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		    }
 

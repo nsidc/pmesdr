@@ -21,6 +21,7 @@ int status;
 char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 int region_number;
+cetb_resolution_id base_resolution;
 int factor;
 cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
@@ -42,6 +43,7 @@ void setUp( void ) {
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
+  base_resolution = CETB_25KM;
   factor = 1;
   platform_id = CETB_NIMBUS7;
   sensor_id = CETB_SMMR;
@@ -53,7 +55,8 @@ void setUp( void ) {
   producer_id = CETB_JPL;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   sprintf( filename, "%s/NSIDC-0630-EASE2_N12.5km-NIMBUS7_SMMR-1984001-06H-M-SIR-JPL-v%.1f.nc",
