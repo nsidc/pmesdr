@@ -1621,10 +1621,12 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   /* Copy/set the coordinate reference system (crs) metadata */
   strcat( crs_name, cetb_region_id_name[ this->region_id ] );
   if ( ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) ) {
+    fprintf( stderr, "%s: Error getting template file crs var: %s.\n",
+	     __FUNCTION__, crs_name );
     fprintf( stderr, "%s: Error getting template file crs variable_id: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
-  }
+  }     
   
   if ( ( status = nc_copy_var( template_fid, crs_id, this->fid ) ) ) {
       fprintf( stderr, "%s: Error copying crs: %s.\n",
@@ -1661,7 +1663,9 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
    * geospatial_resolution = actual value (function of projection and resolution/scale)
    */
   strcat( long_name, cetb_region_id_name[ this->region_id ] );
-  strcat( long_name, cetb_resolution_name[ this->factor ] );
+  strcat( long_name, cetb_resolution_name[ this->factor +
+					   ((CETB_MAX_RESOLUTION_FACTOR+1)*
+					    this->resolution_id)] );
   if ( ( status = nc_put_att_text( this->fid, crs_id, "long_name",
 				   strlen( long_name ),
 				   long_name ) ) ) {
