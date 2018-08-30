@@ -208,7 +208,7 @@ int main(int argc,char *argv[])
   float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
   float tbmin=1.e10,tbmax=-1.e10; 
   
-  int iadd1, box_size;
+  int iadd1, box_size, box_size_flag=0;;
   float b_correct, angle_ref, box_size_km;
 
   /* file position pointers */
@@ -281,9 +281,11 @@ int main(int argc,char *argv[])
   strcpy( prog_name, argv[0] );
   fprintf( stderr, "MEaSUREs Setup Program\nProgram: %s \n\n",prog_name);
 
-  /* optionally get the box size of pixels to use for calculating MRF for each */
-  /* box size will ultimately be replaced by a function that sets the value based on the channel and the FOV */
-  box_size = 80;  // this is the default for the regression tests
+  /*
+   * optionally get the box size of pixels to use for calculating MRF for each 
+   * box size is determined by a function that sets the value based on the channel
+   * and the EFOV unless the box size is passed in as a cmd line argument
+   */ 
   while (--argc > 0 && (*++argv)[0] == '-') {
     for (option = argv[0]+1; *option != '\0'; option++) {
       switch (*option) {
@@ -294,6 +296,7 @@ int main(int argc,char *argv[])
 	  exit(-1);
 	}
 	fprintf( stderr, "box size is %d\n", box_size );
+	box_size_flag = 1;
 	break;
       default:
 	fprintf(stderr, "meas_meta_setup: Invalid option %c\n", *option);
@@ -356,8 +359,10 @@ int main(int argc,char *argv[])
 	     __FILE__, mname, iregion, save_area.nregions, save_area.sav_km[iregion]);
   /* write out the search box size in km to each setup output file */
 
-    box_size = box_size_by_channel( save_area.sav_ibeam[iregion],
-				    cetb_platform_to_sensor[cetb_platform] );
+    if ( box_size_flag == 0 ) {
+      box_size = box_size_by_channel( save_area.sav_ibeam[iregion],
+				      cetb_platform_to_sensor[cetb_platform] );
+    }
     box_size_km = box_size/save_area.sav_km[iregion];
     fprintf( stderr, "%s: %s metafile:box size in pixels is %d and in km is %f for channel %d\n",
 	     __FILE__, mname, box_size, box_size_km, save_area.sav_ibeam[iregion] );
