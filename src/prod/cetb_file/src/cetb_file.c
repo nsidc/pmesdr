@@ -2546,36 +2546,37 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
  */
 static char *set_source_value( cetb_file_class *this ) {
 
-  char *source_value=NULL;
-  char *fixed_source_value = "See input_fileN list and number_of_input_files attributes";
-  int source_value_length;
-  
+  char *source_value;
+  char *fixed_source_value = ": See input_fileN list and number_of_input_files attributes";
+
+  if ( STATUS_OK != utils_allocate_clean_aligned_memory( ( void * )&source_value,
+							 MAX_STR_LENGTH + 1 ) ) {
+    return NULL;
+  }
   if ( CETB_AMSRE == this->sensor_id ) {
-    source_value = strdup( "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+    strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
   }
 
   if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    source_value = strdup( "CSU SSM/I FCDR V01" );
+    strcat( source_value, "CSU SSM/I FCDR " );
   }
 
   if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_RSS == this->producer_id ) ) {
-    source_value = strdup( "RSS SSM/I V7" );
+    strcat( source_value, "RSS SSM/I V7 " );
   }
 
   if ( ( CETB_SSMIS == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    source_value = strdup( "CSU SSMIS FCDR V01" );
+    strcat( source_value, "CSU SSMIS FCDR " );
   }
 
   if ( ( CETB_SMMR == this->sensor_id ) ) {
-    source_value = strdup( "JPL SMMR" );
+    strcat( source_value, "JPL SMMR " );
   }
 
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
-    source_value = strdup( "JPL SMAP JPL CL#14-2285, JPL 400-1567" );
+    strcat( source_value, "10.5067/VA6W2M0JTK2N " );
   }
 
-  source_value_length = (int) sizeof(source_value);
-  source_value = realloc( source_value, 2+sizeof( fixed_source_value ));
   strcat( source_value, fixed_source_value );
   
   return source_value;
