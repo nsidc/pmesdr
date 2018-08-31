@@ -2547,6 +2547,8 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
 static char *set_source_value( cetb_file_class *this ) {
 
   char *source_value=NULL;
+  char *fixed_source_value = "See input_fileN list and number_of_input_files attributes";
+  int source_value_length;
   
   if ( CETB_AMSRE == this->sensor_id ) {
     source_value = strdup( "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
@@ -2571,6 +2573,10 @@ static char *set_source_value( cetb_file_class *this ) {
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
     source_value = strdup( "JPL SMAP JPL CL#14-2285, JPL 400-1567" );
   }
+
+  source_value_length = (int) sizeof(source_value);
+  source_value = realloc( source_value, 2+sizeof( fixed_source_value ));
+  strcat( source_value, fixed_source_value );
   
   return source_value;
   
