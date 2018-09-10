@@ -18,6 +18,7 @@ cetb_file_class *cetb;
 char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 int region_number;
+cetb_resolution_id base_resolution;
 int factor;
 cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
@@ -38,6 +39,7 @@ void setUp( void ) {
   strcpy( filename, "" );
   strcpy( dirname, "/path_to_file" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
+  base_resolution = CETB_25KM;
   factor = 1;
   platform_id = CETB_F08;
   sensor_id = CETB_SSMI;
@@ -60,7 +62,8 @@ void test_init_with_bogus_region_number( void ) {
   
   region_number = 311;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -69,7 +72,18 @@ void test_init_with_bogus_direction_id( void ) {
   
   direction_id = CETB_NO_DIRECTION;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
+			 direction_id, reconstruction_id, producer_id, "test" );
+  TEST_ASSERT_NULL( cetb );
+}
+
+void test_init_with_bogus_resolution( void ) {
+
+  base_resolution = CETB_NO_RESOLUTION;
+  cetb = cetb_file_init( dirname,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -78,7 +92,8 @@ void test_init_with_bogus_factor( void ) {
 
   factor = 5;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -87,7 +102,8 @@ void test_init_with_bogus_platform( void ) {
   
   platform_id = CETB_NO_PLATFORM;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -96,7 +112,8 @@ void test_init_with_bogus_sensor( void ) {
 
   sensor_id = CETB_NO_SENSOR;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -105,7 +122,8 @@ void test_init_with_bogus_year( void ) {
   
   year = 1970;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -114,7 +132,8 @@ void test_init_with_bogus_doy( void ) {
   
   doy = 366;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -124,7 +143,8 @@ void test_init_with_bogus_north_pass_direction( void ) {
   region_number = cetb_region_number[ CETB_EASE2_N ];
   direction_id = CETB_ASC_PASSES;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -134,7 +154,8 @@ void test_init_with_bogus_temperate_pass_direction( void ) {
   region_number = cetb_region_number[ CETB_EASE2_T ];
   direction_id = CETB_EVENING_PASSES;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -143,7 +164,8 @@ void test_init_with_bogus_beam_id( void ) {
 
   beam_id = 20;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -152,7 +174,8 @@ void test_init_with_bogus_reconstruction_id( void ) {
 
   reconstruction_id = CETB_UNKNOWN_RECONSTRUCTION;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -161,7 +184,8 @@ void test_init_with_bogus_producer_id( void ) {
 
   producer_id = CETB_NO_PRODUCER;
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NULL( cetb );
 }
@@ -177,7 +201,8 @@ void test_init_for_valid_cetb_north( void ) {
   producer_id = CETB_CSU;
   
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
@@ -202,7 +227,8 @@ void test_init_for_valid_cetb_south( void ) {
   producer_id = CETB_RSS;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
@@ -226,7 +252,8 @@ void test_init_for_valid_cetb_temperate( void ) {
   producer_id = CETB_CSU;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
@@ -237,3 +264,80 @@ void test_init_for_valid_cetb_temperate( void ) {
   
 }
 
+void test_init_for_valid_cetb_36_north( void ) {
+
+  region_number = cetb_region_number[ CETB_EASE2_N36 ];
+  factor = 0;
+  platform_id = CETB_F13;
+  sensor_id = CETB_SSMI;
+  year = 1991;
+  doy = 1;
+  base_resolution = CETB_36KM;
+  direction_id = CETB_MORNING_PASSES;
+  producer_id = CETB_CSU;
+  
+  cetb = cetb_file_init( dirname,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
+			 direction_id, reconstruction_id, producer_id, "test" );
+  TEST_ASSERT_NOT_NULL( cetb );
+  TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
+  sprintf( filename, "%s/NSIDC-0630-EASE2_N36km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
+  TEST_ASSERT_EQUAL_STRING( filename,
+			    cetb->filename );
+  
+}
+
+void test_init_for_valid_cetb_36_south( void ) {
+
+  region_number = cetb_region_number[ CETB_EASE2_S36 ];
+  factor = 1;
+  base_resolution = CETB_36KM;
+  platform_id = CETB_AQUA;
+  sensor_id = CETB_AMSRE;
+  year = 1991;
+  doy = 31;
+  beam_id = 2;
+  direction_id = CETB_EVENING_PASSES;
+  reconstruction_id = CETB_BGI;
+  producer_id = CETB_RSS;
+
+  cetb = cetb_file_init( dirname,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
+			 direction_id, reconstruction_id, producer_id, "test" );
+  TEST_ASSERT_NOT_NULL( cetb );
+  TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
+  sprintf( filename, "%s/NSIDC-0630-EASE2_S18km-AQUA_AMSRE-1991031-06V-E-BGI-RSS-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
+  TEST_ASSERT_EQUAL_STRING( filename,
+			    cetb->filename );
+  
+}
+
+void test_init_for_valid_cetb_36_temperate( void ) {
+
+  region_number = cetb_region_number[ CETB_EASE2_M ];
+  factor = 2;
+  base_resolution = CETB_36KM;
+  platform_id = CETB_F13;
+  sensor_id = CETB_SSMI;
+  year = 1991;
+  doy = 365;
+  beam_id = 7;
+  direction_id = CETB_ASC_PASSES;
+  producer_id = CETB_CSU;
+
+  cetb = cetb_file_init( dirname,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
+			 direction_id, reconstruction_id, producer_id, "test" );
+  TEST_ASSERT_NOT_NULL( cetb );
+  TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
+  sprintf( filename, "%s/NSIDC-0630-EASE2_M9km-F13_SSMI-1991365-85V-A-SIR-CSU-v%.1f.nc",
+	   dirname, CETB_VERSION_ID );
+  TEST_ASSERT_EQUAL_STRING( filename,
+			    cetb->filename );
+  
+}

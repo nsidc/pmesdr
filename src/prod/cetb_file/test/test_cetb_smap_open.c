@@ -22,6 +22,7 @@ char filename[ FILENAME_MAX ];
 char dirname[ FILENAME_MAX ];
 char auth_id[ 11 ];
 int region_number;
+cetb_resolution_id base_resolution;
 int factor;
 cetb_platform_id platform_id;
 cetb_sensor_id sensor_id;
@@ -44,6 +45,7 @@ void setUp( void ) {
   strcat( dirname, "/src/prod/cetb_file/test" );
   strcpy( auth_id, "NSIDC-0738" );
   region_number = cetb_region_number[ CETB_EASE2_N ];
+  base_resolution = CETB_25KM;
   factor = 1;
   platform_id = CETB_SMAP;
   sensor_id = CETB_SMAP_RADIOMETER;
@@ -55,7 +57,8 @@ void setUp( void ) {
   producer_id = CETB_JPL;
 
   cetb = cetb_file_init( dirname,
-			 region_number, factor, platform_id, sensor_id, year, doy, beam_id,
+			 region_number, base_resolution,
+			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   sprintf( filename, "%s/%s-EASE2_N12.5km-SMAP_LRM-2016001-1.4H-M-SIR-JPL-v%.1f.nc",
