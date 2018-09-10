@@ -499,7 +499,8 @@ int main(int argc, char **argv)
      exit( -1 );
    } 
      
-   cetb_grd = cetb_file_init( outpath, iregion, base_resolution, CETB_MIN_RESOLUTION_FACTOR,
+   cetb_grd = cetb_file_init( outpath, iregion,
+			      base_resolution, CETB_MIN_RESOLUTION_FACTOR,
 			      platform_id, sensor_id,
 			      iyear, isday, ibeam,
 			      direction_id,
