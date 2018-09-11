@@ -157,6 +157,21 @@ csu_ease :
 	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2t/e2ttest_CSU.meta F13 \
 	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
 
+csu_ease_36 :
+	$(RM) $(TESTDIR)/csu_e2n
+	$(MKDIR) $(TESTDIR)/csu_e2n
+	$(RM) $(TESTDIR)/csu_e2s
+	$(MKDIR) $(TESTDIR)/csu_e2s
+	$(RM) $(TESTDIR)/csu_e2t
+	$(MKDIR) $(TESTDIR)/csu_e2t
+	$(CD) $(TOPDIR)/sample_data
+	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2n/e2ntest_36_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2s/e2stest_36_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
+
 csu_full :
 	$(RM) $(TESTDIR)/csu_e2n
 	$(MKDIR) $(TESTDIR)/csu_e2n
@@ -200,6 +215,21 @@ csu_quick :
 	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2s/e2stest_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2t/e2ttest_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
+
+csu_quick_36 :
+	$(RM) $(TESTDIR)/csu_e2n
+	$(MKDIR) $(TESTDIR)/csu_e2n
+	$(RM) $(TESTDIR)/csu_e2s
+	$(MKDIR) $(TESTDIR)/csu_e2s
+	$(RM) $(TESTDIR)/csu_e2t
+	$(MKDIR) $(TESTDIR)/csu_e2t
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2n/e2ntest_36_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2s/e2stest_36_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 
 amsre_ease :
