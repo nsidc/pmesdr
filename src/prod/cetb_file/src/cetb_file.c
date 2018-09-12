@@ -123,11 +123,8 @@ cetb_file_class *cetb_file_init( char *dirname,
 
   if ( STATUS_OK != valid_base_resolution( base_resolution ) ) return NULL;
   if ( CETB_NO_REGION ==
-       ( region_id = valid_region_id( region_number, base_resolution ) ) ) {
-    fprintf( stderr, "%s: bad return from valid_region_id %d, res %d\n",
-	     __FUNCTION__, region_number, base_resolution );
+       ( region_id = valid_region_id( region_number, base_resolution ) ) )
     return NULL;
-  }
   if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
   if ( STATUS_OK != valid_platform_id( platform_id ) ) return NULL;
   if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
@@ -212,7 +209,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    dirname,
 	    cetb_NSIDC_dataset_id[ sensor_id ],
   	    cetb_region_id_name[ region_id ],
-  	    cetb_resolution_name[ factor + (CETB_MAX_RESOLUTION_FACTOR+1)*((int)base_resolution)],
+  	    cetb_resolution_name[ (int)base_resolution ][ factor ],
   	    cetb_platform_id_name[ platform_id ],
   	    cetb_sensor_id_name[ sensor_id ],
   	    year,
@@ -1036,7 +1033,9 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
    * to agree with the same offset actually used in the
    * setup processing when it does the temporal filtering.
    */
-  if ( CETB_EASE2_T != this->region_id ) { 
+  if ( ( CETB_EASE2_T != this->region_id ) &&
+       ( CETB_EASE2_M36 != this->region_id ) &&
+       ( CETB_EASE2_M24 != this->region_id ) ) { 
     if ( CETB_EVENING_PASSES == this->direction_id ) {
       ltod_tmp_morning = ltod_evening;
       ltod_tmp_evening = ltod_morning + HOURS_PER_DAY;
@@ -1663,9 +1662,8 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
    * geospatial_resolution = actual value (function of projection and resolution/scale)
    */
   strcat( long_name, cetb_region_id_name[ this->region_id ] );
-  strcat( long_name, cetb_resolution_name[ this->factor +
-					   ((CETB_MAX_RESOLUTION_FACTOR+1)*
-					    this->resolution_id)] );
+  strcat( long_name, cetb_resolution_name[ (int)this->resolution_id ]
+	  [ this->factor ] );
   if ( ( status = nc_put_att_text( this->fid, crs_id, "long_name",
 				   strlen( long_name ),
 				   long_name ) ) ) {
@@ -2170,18 +2168,20 @@ int valid_date( int year, int doy ) {
 int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
 
   if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ||
-       CETB_EASE2_N36 == region_id || CETB_EASE2_S36 == region_id ) {
+       CETB_EASE2_N36 == region_id || CETB_EASE2_S36 == region_id ||
+       CETB_EASE2_N24 == region_id || CETB_EASE2_S24 == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_MORNING_PASSES == direction_id
 	 || CETB_EVENING_PASSES == direction_id ) {
       return STATUS_OK;
     } else {
-      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id ],
+      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n",
+	       __FUNCTION__, cetb_region_id_name[ region_id ],
 	       direction_id );
       return STATUS_FAILURE;
     }
-  } else if ( CETB_EASE2_T == region_id || CETB_EASE2_M == region_id ) {
+  } else if ( CETB_EASE2_T == region_id || CETB_EASE2_M36 == region_id ||
+	      CETB_EASE2_M24 == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_ASC_PASSES == direction_id
 	 || CETB_DES_PASSES == direction_id ) {
@@ -2267,6 +2267,11 @@ cetb_region_id valid_region_id( int region_number, cetb_resolution_id base_resol
       region_id = ( cetb_region_id ) i;
       break;
     }
+  }
+
+  if ( CETB_NO_REGION == region_id ) {
+    fprintf( stderr, "%s: region_id %d in valid_region_id \n",
+	     __FUNCTION__, region_number );
   }
 
   return region_id;

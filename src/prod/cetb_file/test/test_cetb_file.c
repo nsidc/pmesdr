@@ -318,7 +318,7 @@ void test_init_for_valid_cetb_36_south( void ) {
 
 void test_init_for_valid_cetb_36_temperate( void ) {
 
-  region_number = cetb_region_number[ CETB_EASE2_M ];
+  region_number = cetb_region_number[ CETB_EASE2_M36 ];
   factor = 2;
   base_resolution = CETB_36KM;
   platform_id = CETB_F13;
