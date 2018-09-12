@@ -144,8 +144,8 @@ static const char *cetb_geospatial_bounds_crs[] = {
 static const char
 *cetb_resolution_name[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
   { "25km", "12.5km", "6.25km", "3.125km", "1.5625km" },
-  { "36km", "18km",   "9km",    "4.5km",   "2.25km" },
-  { "24km", "12km",   "6km",    "3km",     "1.5km" }
+  { "36km", "18km",   "09km",    "4.5km",   "2.25km" },
+  { "24km", "12km",   "06km",    "03km",     "1.5km" }
 };
 
 /*
