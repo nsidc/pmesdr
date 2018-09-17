@@ -21,6 +21,9 @@
 /* Max number of input files that could go into a daily output file */
 #define CETB_MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
 
+/* Hardcoded definition of region 308 from regionsdat.def file */
+#define CETB_REGION_BASE_NUMBER 308
+
 typedef enum {
   CETB_NO_REGION=-1,
   CETB_EASE2_N,
@@ -72,7 +75,7 @@ static const char *cetb_region_id_name[] = {
  * factor = 0 : 25/2**0 = 25
  *          1 : 25/2**1 = 12.5
  */
-#define CETB_BASE_RESOLUTION 25.0
+#define CETB_SMAP_BASE_25_RESOLUTION 25.0
 #define CETB_SMAP_BASE_36_RESOLUTION 36.0
 #define CETB_SMAP_BASE_24_RESOLUTION 24.0
 #define CETB_MIN_RESOLUTION_FACTOR 0

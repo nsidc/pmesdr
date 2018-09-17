@@ -580,15 +580,15 @@ void ease2_map_info(int iopt, int isc, int ind,
  
           NSIDC .grd file for isc=0
            project type    ind=0     ind=1         ind=2
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
+	      N         EASE2_N25km EASE2_N24km EASE2_N36km  
+              S         EASE2_S25km EASE2_S24km EASE2_S36km 
+              T/M       EASE2_T25km EASE2_M24km EASE2_M36km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
            project type    ind=0     ind=1            ind=2
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000   M36032.220840584
+	      N          25000.0     24000.0         36000.0
+              S          25000.0     24000.0         36000.0
+              T/M       T25025.26   M24021.4805603   M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
@@ -628,10 +628,10 @@ void ease2_map_info(int iopt, int isc, int ind,
     case 8:   /* EASE2 grid north */
       *map_reference_latitude = 90.0;
       switch(ind) {
-      case 1:  /* EASE2_N30km.gpd */
-	base=30000.0;
-	nx=600;
-	ny=600;	
+      case 1:  /* EASE2_N24km.gpd */
+	base=24000.0;
+	nx=750;
+	ny=750;	
 	break;
       case 2:  /* EASE2_N36km.gpd */
 	base=36000.0;      
@@ -648,9 +648,9 @@ void ease2_map_info(int iopt, int isc, int ind,
       *map_reference_latitude = -90.0;
       switch(ind) {
       case 1:  /* EASE2_S30km.gpd */
-	base=30000.0;
-	nx=600;
-	ny=600;	
+	base=24000.0;
+	nx=750;
+	ny=750;	
 	break;
       case 2:  /* EASE2_S36km.gpd */
 	base=36000.0;      
@@ -665,15 +665,15 @@ void ease2_map_info(int iopt, int isc, int ind,
       break;
     case 10:  /* EASE2 cylindrical */
       *map_reference_latitude = 0.0;
-      *map_second_reference_latitude = 30.0;
+      *map_second_reference_latitude = 24.0;
       *sin_phi1 = sin( DTR * *map_second_reference_latitude );
       *cos_phi1 = cos( DTR * *map_second_reference_latitude );
       *kz = *cos_phi1 / sqrt( 1.0 - *e2 * *sin_phi1 * *sin_phi1 );
       switch(ind) {
       case 1:  /* EASE2_M25km.gpd */
-	base=25025.26000;  /* removed 81 from end */
-	nx=1388;
-	ny=584;	
+	base=24021.480560389347;  
+	nx=1446;
+	ny=609;	
 	break;
       case 2:  /* EASE2_M36km.gpd */
 	base=36032.220840584;
@@ -731,15 +731,15 @@ void ease2sf(int iopt, float ascale, float bscale, float *fmap_scale,
  
           NSIDC .grd file for isc=0
            project type    ind=0     ind=1         ind=2
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
+	      N         EASE2_N25km EASE2_N24km EASE2_N36km  
+              S         EASE2_S25km EASE2_S24km EASE2_S36km 
+              T/M       EASE2_T25km EASE2_M24km EASE2_M36km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
            project type    ind=0     ind=1            ind=2
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000  M36032.220840584
+	      N          25000.0     24000.0         36000.0
+              S          25000.0     24000.0         36000.0
+              T/M       T25025.26   M24021.480560389347  M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
@@ -795,15 +795,15 @@ void ease2grid(int iopt, float alon, float alat,
 
           NSIDC .grd file for isc=0
            project type    ind=0     ind=1         ind=2
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
+	      N         EASE2_N25km EASE2_N24km EASE2_N36km  
+              S         EASE2_S25km EASE2_S24km EASE2_S36km 
+              T/M       EASE2_T25km EASE2_M24km EASE2_M36km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
            project type    ind=0     ind=1            ind=2
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000  M36032.220840584
+	      N          25000.0     24000.0         36000.0
+              S          25000.0     24000.0         36000.0
+              T/M       T25025.26   M24021.480560389347  M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
@@ -908,15 +908,15 @@ void iease2grid(int iopt, float *alon, float *alat,
 
           NSIDC .grd file for isc=0
            project type    ind=0     ind=1         ind=3
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
+	      N         EASE2_N25km EASE2_N24km EASE2_N36km  
+              S         EASE2_S25km EASE2_S24km EASE2_S36km 
+              T/M       EASE2_T25km EASE2_M24km EASE2_M36km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
            project type    ind=0     ind=1            ind=3
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000  M36032.220840584
+	      N          25000.0     24000.0         36000.0
+              S          25000.0     24000.0         36000.0
+              T/M       T25025.26   M24021.480560389347  M36032.220840584
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name

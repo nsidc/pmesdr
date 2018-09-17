@@ -46,6 +46,9 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
 
 static int get_file_names(FILE *mout, int *argn, char *argv[]);
 
+static void getregdata_fromcetb(int regnum, int resolution_ind, int *iproj, int *dateline, float *latl,
+				float *lonl, float *lath, float *lonh, char *regname);
+
 /****************************************************************************/
 /* note: program is designed to be run from command line and NOT interactively
 */
@@ -122,7 +125,7 @@ int main(int argc,char *argv[])
     fprintf( stderr, " %s: options:\n", __FILE__ );
     fprintf( stderr, "   %s: -t threshold = response threshold, dB, "
 	     "default is -8. dB\n", __FILE__ );
-    fprintf( stderr, "   %s: -r resolution flag = 0 (25km) 1 (30 km) 2 (36 km), "
+    fprintf( stderr, "   %s: -r resolution flag = 0 (25km) 1 (24 km) 2 (36 km), "
 	     "default is 0 for 25 km base resolution\n", __FILE__ );
     fprintf( stderr, " %s: input parameters:\n", __FILE__ );
     fprintf( stderr, "   %s: meta_name   = meta file output name\n", __FILE__ );
@@ -239,9 +242,67 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
   fprintf( stderr, "%s: Total number of input files: %d\n", __FUNCTION__, count);
   return(0);
 }
-  
 
+/*
+ * getregdata_fromcetb
+ *   this function replaces the original getregdata by retrieving the info
+ *   on the regions from cetb.h
+ *
+ *   input:
+ *         int region number from def file
+ *         int resolution_ind from command line
+ *
+ *   output:
+ *         int proj - short version of region id
+ *         int dateline - this is always zero for our projections - might not be needed
+ *         float *latl, *lonl - lower left latitude and longitude
+ *         float *lath, *lonh - upper right latitude and longitude
+ *         char *regname
+ */
+static void getregdata_fromcetb(int regnum, int resolution_ind, int *iproj, int *dateline, float *latl,
+				float *lonl, float *lath, float *lonh, char *regname)
+{
+  cetb_region_id cetb_region;
+  int proj;
+  int index_offset;
 
+  proj = regnum - CETB_REGION_BASE_NUMBER;
+  index_offset = CETB_NUMBER_BASE_RESOLUTIONS * resolution_ind;
+  cetb_region = (cetb_region_id)( proj + index_offset );
+  dateline = 0;
+
+  fprintf( stderr, "%s: proj %d, index_offset %d, cetb_region %d \n", __FUNCTION__,
+	   proj, index_offset, cetb_region );
+  regname = strdup( cetb_region_id_name[ proj + index_offset ] );
+  *latl = cetb_latitude_extent[(int)cetb_region][0];
+  *lath = cetb_latitude_extent[(int)cetb_region][1];
+  *lonl = cetb_longitude_extent[(int)cetb_region][0];
+  *lonh = cetb_longitude_extent[(int)cetb_region][1];
+
+  switch ( cetb_region ) {
+  case CETB_EASE2_N:
+  case CETB_EASE2_N36:
+  case CETB_EASE2_N24:
+    *iproj = 8;
+    break;
+  case CETB_EASE2_S:
+  case CETB_EASE2_S36:
+  case CETB_EASE2_S24:
+    *iproj = 9;
+    break;
+  case CETB_EASE2_T:
+  case CETB_EASE2_M36:
+  case CETB_EASE2_M24:
+    *iproj = 10;
+    break;
+  default:
+    *iproj = 0;
+  }
+
+  fprintf( stderr, "%s: regname=%s, latl=%f, lath=%f, lonl=%f, lonh=%f, proj=%d\n",
+	   __FUNCTION__, regname, *latl, *lath, *lonl, *lonh, *iproj );
+}
+    
 /* *********************************************************************** */
 
 static void getregdata(int regnum, int *iproj, int *dateline, float *latl,
@@ -351,7 +412,9 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
     map_scale, r0, s0, epsilon;
   int bcols, brows, ind;
-  int base_resolution[] = {25, 30, 36};
+  int base_resolution[] = { CETB_SMAP_BASE_25_RESOLUTION,
+			    CETB_SMAP_BASE_24_RESOLUTION,
+			    CETB_SMAP_BASE_36_RESOLUTION };
   
   fprintf(mout,"Egg_or_slice=%d\n",negg);
 
@@ -429,16 +492,11 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     
     /* define region, using auto definition if possible */
     strncpy( regname, "Custom", 10);
-    if (regnum > 0) { /* use region definition from standard region definition file */
-      getregdata( regnum, &iproj, &dateline, &latl, &lonl, &lath, &lonh, regname );
-      /*
-       * Because the regions definition file is still used this kludge is the
-       * best way to get the correct latitude and longitude set for 36km M grids
-       */
-      if ( resolution_ind == 2 && regnum == 310 ) {
-	latl = -85.0445664;
-	lath = 85.0445664;
-      }
+    if (regnum > 0) { /* get region definition from contents of cetb.h */
+      fprintf( stderr, "%s: about to call fromcetb, regnum=%d, resolution_ind%d\n",
+	       __FUNCTION__, regnum, resolution_ind );
+      getregdata_fromcetb( regnum, resolution_ind, &iproj, &dateline, &latl,
+			   &lonl, &lath, &lonh, regname );
       if (((regnum >= 0) && (regnum < 100)) || (regnum >= 120)) poleflag=0; /* non-polar area */
       fprintf( stderr, "%s: Region name: '%s'  Def Proj %d  Dateline %d\n",
 	       __FUNCTION__, regname, iproj, dateline );
@@ -478,18 +536,14 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
 
     /* projection */
     projt=iproj;  /* default value from region definition file */
-    /* This version of meas_meta_make only does EASE2-N, -S, -T */
+    /* This version of meas_meta_make only does EASE2-N, -S, -T/M */
     if ( projt > 10 || projt < 8 ) {
       fprintf( stderr, "%s: Only acceptable projections are 308, 309, 310, "
 	       "EASE2-N, -S, -T\n", __FUNCTION__ );
       exit(-1);
     }
-    /* projection codes 
-       8 = EASE2 N
-       9 = EASE2 S
-      10 = EASE2 T */
 
-    fprintf( stderr, "%s:  Projection code ( 8=EASE2N,9=EASE2S,10=EASE2T ): %d\n",
+    fprintf( stderr, "%s:  Projection code ( 8=EASE2N,9=EASE2S,10=EASE2T/M ): %d\n",
 	     __FUNCTION__, projt);
 
     /* define the origin, size, scale, offset for each projection */
