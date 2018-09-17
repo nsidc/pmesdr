@@ -665,7 +665,7 @@ void ease2_map_info(int iopt, int isc, int ind,
       break;
     case 10:  /* EASE2 cylindrical */
       *map_reference_latitude = 0.0;
-      *map_second_reference_latitude = 24.0;
+      *map_second_reference_latitude = 30.0;
       *sin_phi1 = sin( DTR * *map_second_reference_latitude );
       *cos_phi1 = cos( DTR * *map_second_reference_latitude );
       *kz = *cos_phi1 / sqrt( 1.0 - *e2 * *sin_phi1 * *sin_phi1 );
