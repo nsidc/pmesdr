@@ -273,7 +273,10 @@ static void getregdata_fromcetb(int regnum, int resolution_ind, int *iproj, int 
 
   fprintf( stderr, "%s: proj %d, index_offset %d, cetb_region %d \n", __FUNCTION__,
 	   proj, index_offset, cetb_region );
-  regname = strdup( cetb_region_id_name[ proj + index_offset ] );
+  fprintf( stderr, "%s: %s for region_id_name\n", __FUNCTION__,
+	   cetb_region_id_name[ proj + index_offset ] );
+  //  regname = strdup( cetb_region_id_name[ proj + index_offset ] );
+  strncpy( regname, cetb_region_id_name[ proj + index_offset ], 10 );
   *latl = cetb_latitude_extent[(int)cetb_region][0];
   *lath = cetb_latitude_extent[(int)cetb_region][1];
   *lonl = cetb_longitude_extent[(int)cetb_region][0];
