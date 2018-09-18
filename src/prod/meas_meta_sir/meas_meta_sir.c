@@ -337,8 +337,8 @@ int main(int argc, char **argv)
        case 25:
 	 base_resolution = CETB_25KM;
 	 break;
-       case 30:
-	 base_resolution = CETB_NO_RESOLUTION;
+       case 24:
+	 base_resolution = CETB_24KM;
 	 break;
        case 36:
 	 base_resolution = CETB_36KM;

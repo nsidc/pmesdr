@@ -2389,7 +2389,12 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
       fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
-      if ( (save_area->sav_regnum[iregion-1]-cetb_region_number[0]) != (int)CETB_EASE2_T ) {
+      if ( ((save_area->sav_regnum[iregion-1]-cetb_region_number[0]) !=
+	    (int)CETB_EASE2_T ) &&
+	   ((save_area->sav_regnum[iregion-1]-cetb_region_number[0]) !=
+	    (int)CETB_EASE2_M36) &&
+	   ((save_area->sav_regnum[iregion-1]-cetb_region_number[0]) !=
+	    (int)CETB_EASE2_M24) ) {
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 	for(z=0;z<100;z++)lin[z]=' ';
 	status = ltod_split_time(gsx->short_platform,
@@ -2655,7 +2660,9 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     negative_flag = 0;
   }
 
-  if ( region_id == CETB_EASE2_T ) {
+  if ( region_id == CETB_EASE2_T ||
+       region_id == CETB_EASE2_M36 ||
+       region_id == CETB_EASE2_M24 ) {
     *split_time = -1.0;
     return (0);
   }
