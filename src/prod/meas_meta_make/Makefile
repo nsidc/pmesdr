@@ -172,6 +172,21 @@ csu_ease_36 :
 	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta F13 \
 	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
 
+csu_ease_24 :
+	$(RM) $(TESTDIR)/csu_e2n_24
+	$(MKDIR) $(TESTDIR)/csu_e2n_24
+	$(RM) $(TESTDIR)/csu_e2s_24
+	$(MKDIR) $(TESTDIR)/csu_e2s_24
+	$(RM) $(TESTDIR)/csu_e2t_24
+	$(MKDIR) $(TESTDIR)/csu_e2t_24
+	$(CD) $(TOPDIR)/sample_data
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2n_24/e2ntest_24_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2s_24/e2stest_24_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2t_24/e2ttest_24_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
+
 csu_full :
 	$(RM) $(TESTDIR)/csu_e2n
 	$(MKDIR) $(TESTDIR)/csu_e2n
@@ -230,6 +245,21 @@ csu_quick_36 :
 	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2s/e2stest_36_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 	$(BINDIR)/$(BIN)  -r 2 $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
+
+csu_quick_24 :
+	$(RM) $(TESTDIR)/csu_e2n_24
+	$(MKDIR) $(TESTDIR)/csu_e2n_24
+	$(RM) $(TESTDIR)/csu_e2s_24
+	$(MKDIR) $(TESTDIR)/csu_e2s_24
+	$(RM) $(TESTDIR)/csu_e2t_24
+	$(MKDIR) $(TESTDIR)/csu_e2t_24
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2n_24/e2ntest_24_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2s_24/e2stest_24_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2t_24/e2ttest_24_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 
 amsre_ease :

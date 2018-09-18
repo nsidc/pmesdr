@@ -197,8 +197,8 @@ static long int cetb_grid_cols[CETB_NUM_REGIONS]
   {  500, 1000, 2000,  4000,  8000 }, /* row indexed by EASE2_N 36 km */
   {  500, 1000, 2000,  5760,  8000 }, /* row indexed by EASE2_S 36 km */
   {  964, 1928, 3856,  7712, 15424 }, /* row indexed by EASE2_M 36 km */
-  {  500, 1000, 2000,  5760, 11510 }, /* row indexed by EASE2_N 24 km */
-  {  500, 1000, 2000,  5760, 11510 }, /* row indexed by EASE2_S 24 km */
+  {  750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_N 24 km */
+  {  750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_S 24 km */
   { 1446, 2892, 5784, 11568, 23136 }  /* row indexed by EASE2_M 24 km */
 };
 

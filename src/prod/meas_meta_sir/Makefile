@@ -229,6 +229,18 @@ csu_ease_validate_36 :
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/daily/sirCSU_36 $(TESTDIR)/sirCSU_36
 
+csu_ease_24 :
+	$(RM) $(TESTDIR)/sirCSU_24
+	$(MKDIR) $(TESTDIR)/sirCSU_24
+ifeq ($(CSUFILES),)
+	$(error	No setup files found)
+else
+	for file in $(CSUFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU_24; \
+	done
+endif
+
 csu_quick :
 	$(RM) $(TESTDIR)/sirCSU
 	$(MKDIR) $(TESTDIR)/sirCSU
@@ -262,6 +274,18 @@ csu_quick_validate_36 :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/sirCSU_36 $(TESTDIR)/sirCSU_36
+
+csu_quick_24 :
+	$(RM) $(TESTDIR)/sirCSU_24
+	$(MKDIR) $(TESTDIR)/sirCSU_24
+ifeq ($(CSUFILES),)
+	$(error	No setup files found)
+else
+	for file in $(CSUFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU_24; \
+	done
+endif
 
 amsre_ease :
 	$(RM) $(TESTDIR)/sirAMSRE
