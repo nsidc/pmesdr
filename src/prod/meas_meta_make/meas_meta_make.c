@@ -275,7 +275,6 @@ static void getregdata_fromcetb(int regnum, int resolution_ind, int *iproj, int 
 	   proj, index_offset, cetb_region );
   fprintf( stderr, "%s: %s for region_id_name\n", __FUNCTION__,
 	   cetb_region_id_name[ proj + index_offset ] );
-  //  regname = strdup( cetb_region_id_name[ proj + index_offset ] );
   strncpy( regname, cetb_region_id_name[ proj + index_offset ], 10 );
   *latl = cetb_latitude_extent[(int)cetb_region][0];
   *lath = cetb_latitude_extent[(int)cetb_region][1];
@@ -305,64 +304,6 @@ static void getregdata_fromcetb(int regnum, int resolution_ind, int *iproj, int 
   fprintf( stderr, "%s: regname=%s, latl=%f, lath=%f, lonl=%f, lonh=%f, proj=%d\n",
 	   __FUNCTION__, regname, *latl, *lath, *lonl, *lonh, *iproj );
 }
-    
-/* *********************************************************************** */
-
-static void getregdata(int regnum, int *iproj, int *dateline, float *latl,
-		       float *lonl, float *lath, float *lonh, char *regname)
-{
-  char line[180], *s, *p;  
-  int regnum1=1, last;
-
-  /* try to get environment variable */
-  p=getenv("SIR_region");
-  if (p==NULL) {
-    fprintf( stderr, "%s: *** standard regions environment variable 'SIR_region'"
-	     "not defined!\n", __FUNCTION__ );    
-    p=rname; /* use default if environment variable not available */
-  }  
-
-  FILE *rid=fopen(p,"r");
-  if (rid==NULL) {
-    fprintf( stderr, "%s: *** could not open standard regions file %s\n",
-	     __FUNCTION__, p);
-    exit(-1);
-  }
-
-  /* skip first two input file header lines*/
-  fgets( line, 180, rid );
-  fgets( line, 180, rid );  
-
-  last=1;
-  do {
-    /* read line of input file and check */
-    if (fgets(line,180,rid) == NULL || regnum1==9999 || regnum1==0) {
-      fprintf( stderr, "%s: *** region %d not found in %s\n",
-	       __FUNCTION__, regnum,p);
-      exit(-1);
-      last=0;
-    }	
-    sscanf(line,"%d %d %d %f %f %f %f %s\n",
-	   &regnum1, iproj, dateline, latl, lonl, lath,  lonh, regname);
-    s=strstr( line, regname );
-    strncpy( regname, s, 10 );
-    regname[10]='\0';
-    if (regnum1 == 9999 || regnum1 == 0) {
-      fprintf( stderr, "%s: *** region %d not found in %s\n",
-	       __FUNCTION__, regnum, p );
-      exit(-1);
-      last=0;
-    }	
-    if (regnum1==regnum) {
-      last=0;
-      break;
-    }
-  } while (last);
-
-  fclose(rid);
-  return;  
-}
-
 /* utility routines */
 
 /* ***********************************************************************
@@ -496,8 +437,6 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     /* define region, using auto definition if possible */
     strncpy( regname, "Custom", 10);
     if (regnum > 0) { /* get region definition from contents of cetb.h */
-      fprintf( stderr, "%s: about to call fromcetb, regnum=%d, resolution_ind%d\n",
-	       __FUNCTION__, regnum, resolution_ind );
       getregdata_fromcetb( regnum, resolution_ind, &iproj, &dateline, &latl,
 			   &lonl, &lath, &lonh, regname );
       if (((regnum >= 0) && (regnum < 100)) || (regnum >= 120)) poleflag=0; /* non-polar area */
