@@ -2253,7 +2253,7 @@ int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  *
  *  output : n/a
  *
- *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
+ *  result : cetb_region_id on success, or CETB_NO_REGION  with error message to stderr
  *
  */
 cetb_region_id valid_region_id( int region_number, cetb_resolution_id base_resolution ) {

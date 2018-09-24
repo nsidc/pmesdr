@@ -75,9 +75,9 @@ static const char *cetb_region_id_name[] = {
  * factor = 0 : 25/2**0 = 25
  *          1 : 25/2**1 = 12.5
  */
-#define CETB_SMAP_BASE_25_RESOLUTION 25.0
-#define CETB_SMAP_BASE_36_RESOLUTION 36.0
-#define CETB_SMAP_BASE_24_RESOLUTION 24.0
+#define CETB_BASE_25_RESOLUTION 25.0
+#define CETB_BASE_36_RESOLUTION 36.0
+#define CETB_BASE_24_RESOLUTION 24.0
 #define CETB_MIN_RESOLUTION_FACTOR 0
 #define CETB_MAX_RESOLUTION_FACTOR 4
 
@@ -145,7 +145,7 @@ static const char *cetb_geospatial_bounds_crs[] = {
  * For T projections, they are nominal (but used tin the gpd names, nonetheless).
  */
 static const char
-*cetb_resolution_name[CETB_NUM_REGIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
+*cetb_resolution_name[CETB_NUMBER_BASE_RESOLUTIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
   { "25km", "12.5km", "6.25km", "3.125km", "1.5625km" },
   { "36km", "18km",   "09km",    "4.5km",   "2.25km" },
   { "24km", "12km",   "06km",    "03km",     "1.5km" }
@@ -195,7 +195,7 @@ static long int cetb_grid_cols[CETB_NUM_REGIONS]
   {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S 25 km */
   { 1388, 2776, 5552, 11104, 22208 },  /* row indexed by EASE2_T 25 km */
   {  500, 1000, 2000,  4000,  8000 }, /* row indexed by EASE2_N 36 km */
-  {  500, 1000, 2000,  5760,  8000 }, /* row indexed by EASE2_S 36 km */
+  {  500, 1000, 2000,  4000,  8000 }, /* row indexed by EASE2_S 36 km */
   {  964, 1928, 3856,  7712, 15424 }, /* row indexed by EASE2_M 36 km */
   {  750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_N 24 km */
   {  750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_S 24 km */
