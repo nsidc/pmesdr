@@ -860,7 +860,7 @@ int main(int argc,char *argv[])
 	      ibeam=save_area.sav_ibeam[iregion];  /* beam number */
 	      cetb_region =
 		(cetb_region_id)(save_area.sav_regnum[iregion]
-				 - cetb_region_number[0]);
+				 - CETB_PROJECTION_BASE_NUMBER);
 
 	      if ( CETB_SSMI == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_ssmi_channel[ibeam];
@@ -1542,6 +1542,9 @@ FILE * get_meta(char *mname, char *outpath,
 		    nsy=atoi(++x);
 		  }
 
+		  fprintf( stderr, "%s: ***frommeta***** nsx %d nsy %d *******\n",
+			   __FUNCTION__, nsx, nsy );
+		  
 		  if (strstr(line,"Grid_projection_origin_x") != NULL) {
 		    x = strchr(line,'=');
 		    ydeg2=(float)atof(++x);
@@ -1667,6 +1670,8 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&nsx,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&nsy,4,1,a->reg_lu[iregion-1]);
+		      fprintf( stderr, "%s: ****fwrite***** nsx %d nsy %d *********\n",
+			       __FUNCTION__, nsx, nsy );
 		      //fwrite(&projt,4,1,a->reg_lu[iregion-1]); //
 		      fwrite(&ascale,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&bscale,4,1,a->reg_lu[iregion-1]);
@@ -2389,16 +2394,17 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
       fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
-      if ( ((save_area->sav_regnum[iregion-1]-cetb_region_number[0]) !=
+      if ( ((save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER) !=
 	    (int)CETB_EASE2_T ) &&
-	   ((save_area->sav_regnum[iregion-1]-cetb_region_number[0]) !=
+	   ((save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER) !=
 	    (int)CETB_EASE2_M36) &&
-	   ((save_area->sav_regnum[iregion-1]-cetb_region_number[0]) !=
+	   ((save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER) !=
 	    (int)CETB_EASE2_M24) ) {
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 	for(z=0;z<100;z++)lin[z]=' ';
 	status = ltod_split_time(gsx->short_platform,
-				 (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
+				 (cetb_region_id)
+				 (save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER),
 				 CETB_MORNING_PASSES, year, &ltod_morning);
 	if ( status != 0 ) {
 	  ltod_morning = -1.;
@@ -2410,7 +2416,8 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 	for(z=0;z<100;z++)lin[z]=' ';
 	status = ltod_split_time(gsx->short_platform,
-				 (cetb_region_id)(save_area->sav_regnum[iregion-1]-cetb_region_number[0]),
+				 (cetb_region_id)
+				 (save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER),
 				 CETB_EVENING_PASSES, year, &ltod_evening);
 	if ( status != 0 ) {
 	  ltod_evening = -1.;
@@ -3038,10 +3045,10 @@ static int check_for_consistent_regions( region_save *save_area,
 
   last = UNKNOWN_LTOD;
   for ( i=0; i<save_area->nregions; i++ ) {
-    if ( cetb_region_number[CETB_EASE2_N] == save_area->sav_regnum[i]
-	 || cetb_region_number[CETB_EASE2_S] == save_area->sav_regnum[i] ) {
+    if ( cetb_region_number[0][CETB_EASE2_N] == save_area->sav_regnum[i]
+	 || cetb_region_number[0][CETB_EASE2_S] == save_area->sav_regnum[i] ) {
       next = LTOD;
-    } else if ( cetb_region_number[CETB_EASE2_T] == save_area->sav_regnum[i] ) {
+    } else if ( cetb_region_number[0][CETB_EASE2_T] == save_area->sav_regnum[i] ) {
       next = ASCDES;
     }
 

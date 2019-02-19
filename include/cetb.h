@@ -22,53 +22,8 @@
 #define CETB_MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
 
 /* Hardcoded definition of region 308 from regionsdat.def file */
-#define CETB_REGION_BASE_NUMBER 308
+#define CETB_PROJECTION_BASE_NUMBER 308
 
-typedef enum {
-  CETB_NO_REGION=-1,
-  CETB_EASE2_N,
-  CETB_EASE2_S,
-  CETB_EASE2_T,
-  CETB_EASE2_N36,
-  CETB_EASE2_S36,
-  CETB_EASE2_M36,
-  CETB_EASE2_N24,
-  CETB_EASE2_S24,
-  CETB_EASE2_M24,
-  CETB_NUM_REGIONS
-} cetb_region_id;
-
-/*
- * CETB Region Numbers to match meas_meta convetions
- */
-static const int cetb_region_number[] = {
-  308,
-  309,
-  310,
-  308,
-  309,
-  310,
-  308,
-  309,
-  310
-};
-
-/*
- * CETB Region Names
- * Use the region ID number to index into this array like this:
- * cetb_region_id_name[ num-CETB_EASE2_N ]
- */
-static const char *cetb_region_id_name[] = {
-  "EASE2_N",
-  "EASE2_S",
-  "EASE2_T",
-  "EASE2_N",
-  "EASE2_S",
-  "EASE2_M",
-  "EASE2_N",
-  "EASE2_S",
-  "EASE2_M"
-};
 
 /*
  * Grid resolution factor: power of 2 to divide into base resolution of 25 km
@@ -89,53 +44,85 @@ typedef enum {
   CETB_NUMBER_BASE_RESOLUTIONS
 } cetb_resolution_id;
 
+typedef enum {
+  CETB_NO_PROJECTION = 307,
+  CETB_NORTH_PROJECTION,
+  CETB_SOUTH_PROJECTION,
+  CETB_CYLINDRICAL_PROJECTION,
+  CETB_ALL_PROJECTIONS
+} cetb_projection_number;
+
+/* Number of allowed projections - N, S, T/M */
+#define CETB_NUMBER_PROJECTIONS ((int)CETB_ALL_PROJECTIONS - CETB_PROJECTION_BASE_NUMBER)
+
+typedef enum {
+  CETB_NO_REGION=-1,
+  CETB_EASE2_N,
+  CETB_EASE2_S,
+  CETB_EASE2_T,
+  CETB_EASE2_N36,
+  CETB_EASE2_S36,
+  CETB_EASE2_M36,
+  CETB_EASE2_N24,
+  CETB_EASE2_S24,
+  CETB_EASE2_M24,
+  CETB_NUM_REGIONS
+} cetb_region_id;
+
+/*
+ * CETB Region Numbers to match meas_meta convetions
+ */
+static const int cetb_region_number[CETB_NUMBER_BASE_RESOLUTIONS]
+                                   [CETB_NUMBER_PROJECTIONS] = {
+  { 308, 309, 310 },
+  { 308, 309, 310 },
+  { 308, 309, 310 }
+};
+
+/*
+ * CETB Region Names
+ * Use the region ID number to index into this array like this:
+ * cetb_region_id_name[ num-CETB_EASE2_N ]
+ */
+static const char *cetb_region_id_name[CETB_NUMBER_BASE_RESOLUTIONS]
+                                      [CETB_NUMBER_PROJECTIONS] = {
+  { "EASE2_N", "EASE2_S", "EASE2_T" },
+  { "EASE2_N", "EASE2_S", "EASE2_M" },
+  { "EASE2_N", "EASE2_S", "EASE2_M" }
+};
+
 /*
  * lat and lon extents are determined by the region number - use the region ID
  * number to index into the array
  */
-static double cetb_latitude_extent[CETB_NUM_REGIONS][2] = {
-  { 0.000000, 90.000000 },    /* latitude min and max indexed by EASE2_N */
-  { -90.000000, 0.000000 },   /* latitude min and max indexed by EASE2_S */
-  { -67.057541, 67.057541 },  /* latitude min and max indexed by EASE2_T */
-  { 0.000000, 90.000000 },    /* latitude min and max indexed by EASE2_N */
-  { -90.000000, 0.000000 },   /* latitude min and max indexed by EASE2_S */
-  { -85.0445664, 85.0445664 }, /* latitude min and max indexed by EASE2_M */
-  { 0.000000, 90.000000 },    /* latitude min and max indexed by EASE2_N */
-  { -90.000000, 0.000000 },   /* latitude min and max indexed by EASE2_S */
-  { -85.0445664, 85.0445664 } /* latitude min and max indexed by EASE2_M */
+static double cetb_latitude_extent[CETB_NUMBER_BASE_RESOLUTIONS]
+                                  [CETB_NUMBER_PROJECTIONS][2] = {
+  { {0.000000, 90.000000}, {-90.000000, 0.000000}, {-67.057541, 67.057541} }, 
+  { {0.000000, 90.000000}, {-90.000000, 0.000000}, {-85.0445664, 85.0445664} }, 
+  { {0.000000, 90.000000}, {-90.000000, 0.000000}, {-85.0445664, 85.0445664} }
 };
-static double cetb_longitude_extent[CETB_NUM_REGIONS][2] = {
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_N */
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_S */
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_T */
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_N */
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_S */
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_M */
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_N */
-  { -180.00000, 180.00000 }, /* longitude min and max indexed by EASE2_S */
-  { -180.00000, 180.00000 }  /* longitude min and max indexed by EASE2_M */
+static double cetb_longitude_extent[CETB_NUMBER_BASE_RESOLUTIONS]
+                                   [CETB_NUMBER_PROJECTIONS][2] = {
+  { {-180.00000, 180.00000}, {-180.00000, 180.00000}, {-180.00000, 180.00000} },
+  { {-180.00000, 180.00000}, {-180.00000, 180.00000}, {-180.00000, 180.00000} },
+  { {-180.00000, 180.00000}, {-180.00000, 180.00000}, {-180.00000, 180.00000} } 
 };
-static const char *cetb_geospatial_bounds[] = {
-  "EPSG:3475",
-  "EPSG:3474",
-  "POLYGON((-67.057541 -180.000000, -67.057541 180.000000, 67.057541 180.000000, 67.057541 -180.000000, -67.057541 -180.000000))",
-  "EPSG:3475",
-  "EPSG:3474",
-  "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, 85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))",
-  "EPSG:3475",
-  "EPSG:3474",
-  "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, 85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))"
+
+static const char *cetb_geospatial_bounds[CETB_NUMBER_BASE_RESOLUTIONS]
+                                         [CETB_NUMBER_PROJECTIONS] = {
+  { "EPSG:3475", "EPSG:3474",
+    "POLYGON((-67.057541 -180.000000, -67.057541 180.000000, 67.057541 180.000000, 67.057541 -180.000000, -67.057541 -180.000000))" },
+  { "EPSG:3475", "EPSG:3474",
+    "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, 85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" },
+  { "EPSG:3475", "EPSG:3474",
+    "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, 85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" }
 };
-static const char *cetb_geospatial_bounds_crs[] = {
-  "EPSG:6931",
-  "EPSG:6932",
-  "EPSG:6933",
-  "EPSG:6931",
-  "EPSG:6932",
-  "EPSG:6933",
-  "EPSG:6931",
-  "EPSG:6932",
-  "EPSG:6933"
+
+static const char *cetb_geospatial_bounds_crs[CETB_NUMBER_BASE_RESOLUTIONS]
+                                             [CETB_NUMBER_PROJECTIONS] = {
+  { "EPSG:6931", "EPSG:6932", "EPSG:6933" },
+  { "EPSG:6931", "EPSG:6932", "EPSG:6933" },
+  { "EPSG:6931", "EPSG:6932", "EPSG:6933" }
 };
 
 /*
@@ -155,7 +142,7 @@ static const char
  * Exact scale is a function of projection (N, S, T/M) and resolution factor
  * N,S grids are exact divisors of 25.0 or 36.0 km, T/M grids are slightly different
  */
-static double cetb_exact_scale_m[CETB_NUM_REGIONS]
+static double cetb_exact_scale_m[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJECTIONS]
                                 [CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_N 25 km*/
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_S 25 km */
@@ -163,7 +150,7 @@ static double cetb_exact_scale_m[CETB_NUM_REGIONS]
   { 36000.00000, 18000.00000, 9000.00000, 4500.00000, 2250.00000 }, /* row indexed by EASE2_N 36 km*/
   { 36000.00000, 18000.00000, 9000.00000, 4500.00000, 2250.0000  }, /* row indexed by EASE2_S 36 km */
   { 36032.220840584, 18016.110420292, 9008.055210146, 4504.027605073,
-    2252.0138025365 },  /* row indexed by EASE2_M 36 km */
+      2252.0138025365 },  /* row indexed by EASE2_M 36 km */
   { 24000.00000, 12000.00000, 6000.00000, 3000.00000, 1500.00000 }, /* row indexed by EASE2_N 24 km */
   { 24000.00000, 12000.00000, 6000.00000, 3000.00000, 1500.00000 }, /* row indexed by EASE2_S 24 km */
   { 24021.480560389347, 12010.740280194674, 6005.370140097337,
@@ -173,7 +160,7 @@ static double cetb_exact_scale_m[CETB_NUM_REGIONS]
 /*
  * Number of rows is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_rows[CETB_NUM_REGIONS]
+static long int cetb_grid_rows[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJECTIONS]
                               [CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_N 25 km */
   { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_S 25 km */
@@ -183,22 +170,22 @@ static long int cetb_grid_rows[CETB_NUM_REGIONS]
   { 406,  812, 1624, 3248,  6496 },  /* row indexed by EASE2_M 36 km */
   { 750, 1500, 3000, 6000, 12000 }, /* row indexed by EASE2_N 24 km */
   { 750, 1500, 3000, 6000, 12000 }, /* row indexed by EASE2_S 24 km */
-  { 609, 1218, 2436, 4872,  9744 }  /* row indexed by EASE2_M 24 km */
+  { 609, 1218, 2436, 4872,  9744 } /* row indexed by EASE2_M 24 km */
 };
 
 /*
  * Number of cols is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_cols[CETB_NUM_REGIONS]
+static long int cetb_grid_cols[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJECTIONS]
                               [CETB_MAX_RESOLUTION_FACTOR+1] = {
-  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_N 25 km */
-  {  720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S 25 km */
+  { 720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_N 25 km */
+  { 720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S 25 km */
   { 1388, 2776, 5552, 11104, 22208 },  /* row indexed by EASE2_T 25 km */
-  {  500, 1000, 2000,  4000,  8000 }, /* row indexed by EASE2_N 36 km */
-  {  500, 1000, 2000,  4000,  8000 }, /* row indexed by EASE2_S 36 km */
-  {  964, 1928, 3856,  7712, 15424 }, /* row indexed by EASE2_M 36 km */
-  {  750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_N 24 km */
-  {  750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_S 24 km */
+  { 500, 1000, 2000,  4000,  8000 }, /* row indexed by EASE2_N 36 km */
+  { 500, 1000, 2000,  4000,  8000 }, /* row indexed by EASE2_S 36 km */
+  { 964, 1928, 3856,  7712, 15424 }, /* row indexed by EASE2_M 36 km */
+  { 750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_N 24 km */
+  { 750, 1500, 3000,  6000, 12000 }, /* row indexed by EASE2_S 24 km */
   { 1446, 2892, 5784, 11568, 23136 }  /* row indexed by EASE2_M 24 km */
 };
 

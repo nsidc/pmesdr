@@ -223,6 +223,8 @@ int main(int argc, char **argv)
    if (fread(&dumb,  sizeof(int)  , 1, imf) == 0) Ferror(3);  /* record header */
    if (fread(&nsx,   sizeof(int)  , 1, imf) == 0) Ferror(4);
    if (fread(&nsy,   sizeof(int)  , 1, imf) == 0) Ferror(5);
+   fprintf( stderr, "%s: ********** value of nsx %d nsy %d ********\n",
+	    __FILE__, nsx, nsy);   
    if (fread(&ascale,sizeof(float), 1, imf) == 0) Ferror(6);
    if (fread(&bscale,sizeof(float), 1, imf) == 0) Ferror(7);
    if (fread(&a0,    sizeof(float), 1, imf) == 0) Ferror(8);
@@ -507,7 +509,9 @@ int main(int argc, char **argv)
 	      cetb_sir->filename );
      exit( -1 );
    } 
-     
+
+   fprintf( stderr, "%s: *****file_init******* base_resolution %d\n",
+	    __FUNCTION__, base_resolution );
    cetb_grd = cetb_file_init( outpath, iregion, base_resolution,
 			      CETB_MIN_RESOLUTION_FACTOR,
 			      platform_id, sensor_id,
@@ -547,7 +551,12 @@ int main(int argc, char **argv)
 /* allocate storage space for image and working arrays
    note: these arrays are re-used multiple times to save memory */
 
-  nsize = nsx * nsy;  
+   fprintf( stderr, "%s: ********** value of nsx %d nsy %d ********\n",
+	    __FILE__, nsx, nsy);
+   
+  nsize = nsx * nsy;
+  fprintf( stderr, "%s: *******allocatingmem******* nsx %d nsy %d \n",
+	   __FUNCTION__, nsx, nsy );
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val,
 						 (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for a_val, setup file=%s\n", __FILE__,

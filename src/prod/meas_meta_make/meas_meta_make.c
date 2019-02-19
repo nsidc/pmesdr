@@ -47,7 +47,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
 static int get_file_names(FILE *mout, int *argn, char *argv[]);
 
 static void get_region_data(int regnum, int resolution_ind, int *iproj, int *dateline, float *latl,
-				float *lonl, float *lath, float *lonh, char *regname);
+			    float *lonl, float *lath, float *lonh, char *regname);
 
 /****************************************************************************/
 /* note: program is designed to be run from command line and NOT interactively
@@ -245,7 +245,7 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
 
 /*
  * get_region_data
- *   this function replaces the original getregdata by retrieving the info
+ *   given the regnum this function replaces the original getregdata by retrieving the info
  *   on the regions from cetb.h
  *
  *   input:
@@ -255,8 +255,10 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
  *   output:
  *         int *iproj - short version of region id (i.e. 8 rather than 308 etc)
  *         int dateline - this is always zero for our projections - might not be needed
- *         float *latl, *lonl - lower left latitude and longitude
- *         float *lath, *lonh - upper right latitude and longitude
+ *         float *latl, *lonl - latitude and longitude of lower left corner
+ *                              of lower left corner pixel
+ *         float *lath, *lonh - latitude and longitude of upper right corner
+ *                              of upper right corner pixel
  *         char *regname - EASE2_N etc.
  */
 static void get_region_data(int regnum, int resolution_ind, int *iproj,
@@ -264,24 +266,19 @@ static void get_region_data(int regnum, int resolution_ind, int *iproj,
 			    float *lath, float *lonh, char *regname)
 {
   cetb_region_id cetb_region;
-  int proj;
-  int index_offset;
+  int projection_offset;
 
-  proj = regnum - CETB_REGION_BASE_NUMBER;
-  index_offset = CETB_NUMBER_BASE_RESOLUTIONS * resolution_ind;
-  cetb_region = (cetb_region_id)( proj + index_offset );
+  projection_offset = regnum - CETB_PROJECTION_BASE_NUMBER;
+  cetb_region = (cetb_region_id)( projection_offset +
+				  (CETB_NUMBER_BASE_RESOLUTIONS * resolution_ind) );
   dateline = 0;
 
-  fprintf( stderr, "%s: proj %d, index_offset %d, cetb_region %d \n", __FUNCTION__,
-	   proj, index_offset, cetb_region );
-  fprintf( stderr, "%s: %s for region_id_name\n", __FUNCTION__,
-	   cetb_region_id_name[ proj + index_offset ] );
-  strncpy( regname, cetb_region_id_name[ proj + index_offset ], 10 );
-  *latl = cetb_latitude_extent[(int)cetb_region][0];
-  *lath = cetb_latitude_extent[(int)cetb_region][1];
-  *lonl = cetb_longitude_extent[(int)cetb_region][0];
-  *lonh = cetb_longitude_extent[(int)cetb_region][1];
-
+  strncpy( regname, cetb_region_id_name[ resolution_ind ][ projection_offset ], 10 );
+  *latl = cetb_latitude_extent[ resolution_ind ][ projection_offset ][0];
+  *lath = cetb_latitude_extent[ resolution_ind ][ projection_offset ][1];
+  *lonl = cetb_longitude_extent[ resolution_ind ][ projection_offset ][0];
+  *lonh = cetb_longitude_extent[ resolution_ind ][ projection_offset ][1];
+  
   switch ( cetb_region ) {
   case CETB_EASE2_N:
   case CETB_EASE2_N36:

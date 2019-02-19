@@ -55,7 +55,8 @@ static int set_dimension( cetb_file_class *this,
 			  int *dim_id );
 static int set_epoch_string( cetb_file_class *this );
 static int valid_date( int year, int doy );
-static int valid_pass_direction( cetb_region_id region_id,
+static int valid_pass_direction( cetb_resolution_id resolution_id,
+				 cetb_region_id region_id,
 				 cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
 static int valid_base_resolution( cetb_resolution_id base );
@@ -130,7 +131,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
   if ( STATUS_OK != valid_date( year, doy ) ) return NULL;
   if ( !( channel_str = channel_name( sensor_id, beam_id ) ) ) return NULL;
-  if ( STATUS_OK != valid_pass_direction( region_id, direction_id ) ) return NULL;
+  if ( STATUS_OK != valid_pass_direction( base_resolution, region_id, direction_id ) ) return NULL;
   if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) return NULL;
   if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
 
@@ -208,7 +209,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
   	    dirname,
 	    cetb_NSIDC_dataset_id[ sensor_id ],
-  	    cetb_region_id_name[ region_id ],
+  	    cetb_region_id_name[(int)base_resolution][ region_id ],
   	    cetb_resolution_name[ (int)base_resolution ][ factor ],
   	    cetb_platform_id_name[ platform_id ],
   	    cetb_sensor_id_name[ sensor_id ],
@@ -1618,7 +1619,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char geospatial_resolution[ MAX_STR_LENGTH ] = "";
   
   /* Copy/set the coordinate reference system (crs) metadata */
-  strcat( crs_name, cetb_region_id_name[ this->region_id ] );
+  strcat( crs_name, cetb_region_id_name[(int)this->resolution_id][ this->region_id ] );
   if ( ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) ) {
     fprintf( stderr, "%s: Error getting template file crs var: %s.\n",
 	     __FUNCTION__, crs_name );
@@ -1661,7 +1662,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
    * long_name = <region_id_name><resolution(km)> (basically the .gpd name)
    * geospatial_resolution = actual value (function of projection and resolution/scale)
    */
-  strcat( long_name, cetb_region_id_name[ this->region_id ] );
+  strcat( long_name, cetb_region_id_name[(int)this->resolution_id][ this->region_id ] );
   strcat( long_name, cetb_resolution_name[ (int)this->resolution_id ]
 	  [ this->factor ] );
   if ( ( status = nc_put_att_text( this->fid, crs_id, "long_name",
@@ -1693,42 +1694,50 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
 
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_min", 
 				     NC_DOUBLE, 1,
-				     &( cetb_latitude_extent[ this->region_id ][0] ) ) ) ) {
+				     &( cetb_latitude_extent[(int)this->resolution_id]
+					[ this->region_id ][0] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lat_min", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_max", 
 				     NC_DOUBLE, 1,
-				     &( cetb_latitude_extent[ this->region_id ][1] ) ) ) ) {
+				     &( cetb_latitude_extent[(int)this->resolution_id]
+					[ this->region_id ][1] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lat_max", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_min", 
 				     NC_DOUBLE, 1,
-				     &( cetb_longitude_extent[ this->region_id ][0] ) ) ) ) {
+				     &( cetb_longitude_extent[(int)this->resolution_id]
+					[ this->region_id ][0] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lon_min", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_max", 
 				     NC_DOUBLE, 1,
-				     &( cetb_longitude_extent[ this->region_id ][1] ) ) ) ) {
+				     &( cetb_longitude_extent[(int)this->resolution_id]
+					[ this->region_id ][1] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lon_max", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds_crs", 
-				   strlen( cetb_geospatial_bounds_crs[ this->region_id ] ),
-				   cetb_geospatial_bounds_crs[ this->region_id ] ) ) ) {
+				   strlen( cetb_geospatial_bounds_crs[(int)this->resolution_id]
+					   [ this->region_id ] ),
+				   cetb_geospatial_bounds_crs[(int)this->resolution_id]
+				   [ this->region_id ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds", 
-				   strlen( cetb_geospatial_bounds[ this->region_id ] ),
-				   cetb_geospatial_bounds[ this->region_id ] ) ) ) {
+				   strlen( cetb_geospatial_bounds[(int)this->resolution_id]
+					   [ this->region_id ] ),
+				   cetb_geospatial_bounds[(int)this->resolution_id]
+				   [ this->region_id ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
@@ -1849,9 +1858,12 @@ int set_all_dimensions( cetb_file_class *this ) {
   size_t rows;
   size_t cols;
 
-  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.0;
-  rows = cetb_grid_rows[ this->region_id ][ this->factor ];
-  cols = cetb_grid_cols[ this->region_id ][ this->factor ];
+  half_pixel_m = cetb_exact_scale_m[this->region_id][this->factor] / 2.0;
+  rows = cetb_grid_rows[this->region_id][this->factor];
+  cols = cetb_grid_cols[this->region_id][this->factor];
+  fprintf( stderr, "%s: resolution_id %d region %d factor %d rows %d cols %d half_pixel_m %f\n",
+	   __FUNCTION__, (int)this->resolution_id, (int)this->region_id, (int)this->factor,
+	   (int)rows, (int)cols, half_pixel_m );
 
   /*
    * Work on the time dimension:
@@ -1893,7 +1905,8 @@ int set_all_dimensions( cetb_file_class *this ) {
   for ( i = 0; i < (int)rows; i++ ) {
     vals[ rows - i - 1 ]
       = ( (double) i - ( (double) rows / 2.0 ) )
-      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+      * cetb_exact_scale_m[this->region_id][this->factor]
+      + half_pixel_m;
   }
   
   valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
@@ -1926,7 +1939,8 @@ int set_all_dimensions( cetb_file_class *this ) {
 
   for ( i = 0; i < (int)cols; i++ ) {
     vals[ i ] = ( (double) i - ( (double) cols / 2.0 ) )
-      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+      * cetb_exact_scale_m[this->region_id][this->factor]
+      + half_pixel_m;
   }
   
   valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
@@ -2157,6 +2171,7 @@ int valid_date( int year, int doy ) {
  *                             and T region with both or asc/des
  *
  *  input :
+ *    resolution_id : resolution index (25, 36, 24 km eg)
  *    region_id : region id
  *    direction_id : pass direction id
  *
@@ -2165,7 +2180,9 @@ int valid_date( int year, int doy ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
+int valid_pass_direction( cetb_resolution_id resolution_id,
+			  cetb_region_id region_id,
+			  cetb_direction_id direction_id ) {
 
   if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ||
        CETB_EASE2_N36 == region_id || CETB_EASE2_S36 == region_id ||
@@ -2176,7 +2193,7 @@ int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_
       return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n",
-	       __FUNCTION__, cetb_region_id_name[ region_id ],
+	       __FUNCTION__, cetb_region_id_name[resolution_id][region_id],
 	       direction_id );
       return STATUS_FAILURE;
     }
@@ -2188,13 +2205,13 @@ int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_
       return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id ],
+	       cetb_region_id_name[resolution_id][region_id],
 	       direction_id );
       return STATUS_FAILURE;
     }
   } else {
       fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id ] );
+	       cetb_region_id_name[resolution_id][region_id] );
       return STATUS_FAILURE;
   }
 
@@ -2258,18 +2275,24 @@ int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  */
 cetb_region_id valid_region_id( int region_number, cetb_resolution_id base_resolution ) {
 
-  int i, istart;
+  //  int i, istart;
   cetb_region_id region_id=CETB_NO_REGION;
 
-  istart = 0 + (int)(base_resolution*(CETB_NUM_REGIONS/CETB_NUMBER_BASE_RESOLUTIONS));
+  region_id = ( cetb_region_id ) ( ( region_number-CETB_PROJECTION_BASE_NUMBER ) +
+				   ( int ) ( base_resolution * CETB_NUMBER_BASE_RESOLUTIONS ) );
+  fprintf( stderr, "%s: region_id %d *****regionid***** \n",
+	   __FUNCTION__, region_id );
+  /*  istart = 0 + (int)(base_resolution*(CETB_NUM_REGIONS/CETB_NUMBER_BASE_RESOLUTIONS));
   for ( i = istart; i < CETB_NUM_REGIONS; i++ ) {
     if ( region_number == cetb_region_number[ i ] ) {
       region_id = ( cetb_region_id ) i;
       break;
     }
   }
-
-  if ( CETB_NO_REGION == region_id ) {
+  */
+  
+  if ( ( region_id <= CETB_NO_REGION ) ||
+       ( region_id >= CETB_NUM_REGIONS ) ) {
     fprintf( stderr, "%s: region_id %d in valid_region_id \n",
 	     __FUNCTION__, region_number );
   }
