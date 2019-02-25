@@ -38,7 +38,7 @@ void setUp( void ) {
   cetb = NULL;
   strcpy( filename, "" );
   strcpy( dirname, "/path_to_file" );
-  region_number = cetb_region_number[ CETB_EASE2_N ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_N ];
   base_resolution = CETB_25KM;
   factor = 1;
   platform_id = CETB_NIMBUS7;
@@ -130,7 +130,7 @@ void test_init_with_bogus_doy( void ) {
 
 void test_init_with_bogus_north_pass_direction( void ) {
 
-  region_number = cetb_region_number[ CETB_EASE2_N ];
+  region_number = cetb_region_number[0][ CETB_EASE2_N ];
   direction_id = CETB_ASC_PASSES;
   cetb = cetb_file_init( dirname,
 			 region_number, base_resolution,
@@ -141,7 +141,7 @@ void test_init_with_bogus_north_pass_direction( void ) {
 
 void test_init_with_bogus_temperate_pass_direction( void ) {
 
-  region_number = cetb_region_number[ CETB_EASE2_T ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_T ];
   direction_id = CETB_EVENING_PASSES;
   cetb = cetb_file_init( dirname,
 			 region_number, base_resolution,
@@ -204,7 +204,7 @@ void test_init_for_valid_cetb_north( void ) {
 
 void test_init_for_valid_cetb_south( void ) {
 
-  region_number = cetb_region_number[ CETB_EASE2_S ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_S ];
   factor = 1;
   platform_id = CETB_AQUA;
   sensor_id = CETB_AMSRE;
@@ -229,7 +229,7 @@ void test_init_for_valid_cetb_south( void ) {
 
 void test_init_for_valid_cetb_temperate( void ) {
 
-  region_number = cetb_region_number[ CETB_EASE2_T ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_T ];
   factor = 2;
   platform_id = CETB_F13;
   sensor_id = CETB_SSMI;

@@ -44,7 +44,7 @@ void setUp( void ) {
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
   strcpy( auth_id, "NSIDC-0738" );
-  region_number = cetb_region_number[ CETB_EASE2_N ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_N ];
   base_resolution = CETB_25KM;
   factor = 1;
   platform_id = CETB_SMAP;

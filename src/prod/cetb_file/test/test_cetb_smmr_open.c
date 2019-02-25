@@ -42,7 +42,7 @@ void setUp( void ) {
   status = 0;
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
-  region_number = cetb_region_number[ CETB_EASE2_N ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_N ];
   base_resolution = CETB_25KM;
   factor = 1;
   platform_id = CETB_NIMBUS7;

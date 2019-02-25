@@ -273,7 +273,8 @@ static void get_region_data(int regnum, int resolution_ind, int *iproj,
 				  (CETB_NUMBER_BASE_RESOLUTIONS * resolution_ind) );
   dateline = 0;
 
-  strncpy( regname, cetb_region_id_name[ resolution_ind ][ projection_offset ], 10 );
+  strncpy( regname, cetb_region_id_name[ resolution_ind ][ projection_offset ],
+	   CETB_MAX_LEN_REGION_ID_NAME );
   *latl = cetb_latitude_extent[ resolution_ind ][ projection_offset ][0];
   *lath = cetb_latitude_extent[ resolution_ind ][ projection_offset ][1];
   *lonl = cetb_longitude_extent[ resolution_ind ][ projection_offset ][0];

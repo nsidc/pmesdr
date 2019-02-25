@@ -21,10 +21,6 @@
 /* Max number of input files that could go into a daily output file */
 #define CETB_MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
 
-/* Hardcoded definition of region 308 from regionsdat.def file */
-#define CETB_PROJECTION_BASE_NUMBER 308
-
-
 /*
  * Grid resolution factor: power of 2 to divide into base resolution of 25 km
  * factor = 0 : 25/2**0 = 25
@@ -44,6 +40,7 @@ typedef enum {
   CETB_NUMBER_BASE_RESOLUTIONS
 } cetb_resolution_id;
 
+/* Hardcoded definition of regions from regionsdat.def file */
 typedef enum {
   CETB_NO_PROJECTION = 307,
   CETB_NORTH_PROJECTION,
@@ -52,8 +49,10 @@ typedef enum {
   CETB_ALL_PROJECTIONS
 } cetb_projection_number;
 
+#define CETB_PROJECTION_BASE_NUMBER (CETB_NO_PROJECTION+1)
+
 /* Number of allowed projections - N, S, T/M */
-#define CETB_NUMBER_PROJECTIONS ((int)CETB_ALL_PROJECTIONS - CETB_PROJECTION_BASE_NUMBER)
+#define CETB_NUMBER_PROJECTIONS (CETB_ALL_PROJECTIONS - CETB_PROJECTION_BASE_NUMBER)
 
 typedef enum {
   CETB_NO_REGION=-1,
@@ -81,9 +80,8 @@ static const int cetb_region_number[CETB_NUMBER_BASE_RESOLUTIONS]
 
 /*
  * CETB Region Names
- * Use the region ID number to index into this array like this:
- * cetb_region_id_name[ num-CETB_EASE2_N ]
  */
+#define CETB_MAX_LEN_REGION_ID_NAME 10
 static const char *cetb_region_id_name[CETB_NUMBER_BASE_RESOLUTIONS]
                                       [CETB_NUMBER_PROJECTIONS] = {
   { "EASE2_N", "EASE2_S", "EASE2_T" },
@@ -111,11 +109,14 @@ static double cetb_longitude_extent[CETB_NUMBER_BASE_RESOLUTIONS]
 static const char *cetb_geospatial_bounds[CETB_NUMBER_BASE_RESOLUTIONS]
                                          [CETB_NUMBER_PROJECTIONS] = {
   { "EPSG:3475", "EPSG:3474",
-    "POLYGON((-67.057541 -180.000000, -67.057541 180.000000, 67.057541 180.000000, 67.057541 -180.000000, -67.057541 -180.000000))" },
+    "POLYGON((-67.057541 -180.000000, -67.057541 180.000000, 67.057541 180.000000,"
+    "67.057541 -180.000000, -67.057541 -180.000000))" },
   { "EPSG:3475", "EPSG:3474",
-    "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, 85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" },
+    "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, "
+    "85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" },
   { "EPSG:3475", "EPSG:3474",
-    "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, 85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" }
+    "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, "
+    "85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" }
 };
 
 static const char *cetb_geospatial_bounds_crs[CETB_NUMBER_BASE_RESOLUTIONS]
@@ -142,7 +143,7 @@ static const char
  * Exact scale is a function of projection (N, S, T/M) and resolution factor
  * N,S grids are exact divisors of 25.0 or 36.0 km, T/M grids are slightly different
  */
-static double cetb_exact_scale_m[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJECTIONS]
+static double cetb_exact_scale_m[CETB_NUM_REGIONS]
                                 [CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_N 25 km*/
   { 25000.00000, 12500.00000, 6250.00000, 3125.00000, 1562.50000 }, /* row indexed by EASE2_S 25 km */
@@ -160,7 +161,7 @@ static double cetb_exact_scale_m[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJEC
 /*
  * Number of rows is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_rows[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJECTIONS]
+static long int cetb_grid_rows[CETB_NUM_REGIONS]
                               [CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_N 25 km */
   { 720, 1440, 2880, 5760, 11510 }, /* row indexed by EASE2_S 25 km */
@@ -176,7 +177,7 @@ static long int cetb_grid_rows[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJECTI
 /*
  * Number of cols is a function of projection (N, S, T) and resolution factor
  */
-static long int cetb_grid_cols[CETB_NUMBER_BASE_RESOLUTIONS*CETB_NUMBER_PROJECTIONS]
+static long int cetb_grid_cols[CETB_NUM_REGIONS]
                               [CETB_MAX_RESOLUTION_FACTOR+1] = {
   { 720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_N 25 km */
   { 720, 1440, 2880,  5760, 11510 }, /* row indexed by EASE2_S 25 km */
