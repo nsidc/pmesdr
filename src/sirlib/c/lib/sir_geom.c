@@ -17,6 +17,7 @@
 #include <math.h>
 
 #include "sir_geom.h"
+#include "cetb.h"
 
 int intfix(float r)
 {
@@ -616,6 +617,7 @@ void ease2_map_info(int iopt, int isc, int ind,
 
   double base;  
   int m, nx, ny;
+  int region_index;
 
   *map_equatorial_radius_m = 6378137.0 ; /* WGS84 */
   *map_eccentricity = 0.081819190843 ;   /* WGS84 */
@@ -623,44 +625,50 @@ void ease2_map_info(int iopt, int isc, int ind,
   *map_reference_longitude = 0.0;
   *epsilon = 1.e-6;
 
-  /* map-specific parameters */
+  /* map-specific parameters  - these all come from cetb.h */
   switch (iopt) {
     case 8:   /* EASE2 grid north */
       *map_reference_latitude = 90.0;
       switch(ind) {
-      case 1:  /* EASE2_N36km.gpd */
-	base=36000.0;      
-	nx=500;
-	ny=500;	
+      case CETB_36KM:  /* EASE2_N36km.gpd */
+	region_index = CETB_36KM*CETB_NUMBER_PROJECTIONS;
+	base=cetb_exact_scale_m[region_index][0]; //36000.0;      
+	nx=cetb_grid_cols[region_index][0]; //500;
+	ny=cetb_grid_rows[region_index][0]; //500;	
 	break;
-      case 2:  /* EASE2_N24km.gpd */
-	base=24000.0;
-	nx=750;
-	ny=750;	
+      case CETB_24KM:  /* EASE2_N24km.gpd */
+	region_index = CETB_24KM*CETB_NUMBER_PROJECTIONS;
+	base=cetb_exact_scale_m[region_index][0]; //24000.0;
+	nx=cetb_grid_cols[region_index][0]; //750;
+	ny=cetb_grid_rows[region_index][0]; //750;	
 	break;
       default: /* EASE2_N25km.gpd */
-	base=25000.0;
-	nx=720;
-	ny=720;	
+	region_index = CETB_25KM*CETB_NUMBER_PROJECTIONS;
+	base=cetb_exact_scale_m[region_index][0]; //25000.0;
+	nx=cetb_grid_cols[region_index][0]; //720;
+	ny=cetb_grid_rows[region_index][0]; //720;	
       }
       break;
     case 9:   /* EASE2 grid south */
       *map_reference_latitude = -90.0;
       switch(ind) {
-      case 1:  /* EASE2_S36km.gpd */
-	base=36000.0;      
-	nx=500;
-	ny=500;	
+      case CETB_36KM:  /* EASE2_S36km.gpd */
+	region_index = (CETB_36KM*CETB_NUMBER_PROJECTIONS)+1;
+	base=cetb_exact_scale_m[region_index][0]; //36000.0;      
+	nx=cetb_grid_cols[region_index][0]; //500;
+	ny=cetb_grid_rows[region_index][0]; //500;	
 	break;
-      case 2:  /* EASE2_S24km.gpd */
-	base=24000.0;
-	nx=750;
-	ny=750;	
+      case CETB_24KM:  /* EASE2_S24km.gpd */
+	region_index = (CETB_24KM*CETB_NUMBER_PROJECTIONS)+1;
+	base=cetb_exact_scale_m[region_index][0]; //24000.0;
+	nx=cetb_grid_cols[region_index][0]; //750;
+	ny=cetb_grid_rows[region_index][0]; //750;	
 	break;
       default: /* EASE2_S25km.gpd */
-	base=25000.0;
-	nx=720;
-	ny=720;	
+	region_index = (CETB_25KM*CETB_NUMBER_PROJECTIONS)+1;
+	base=cetb_exact_scale_m[region_index][0]; //25000.0;
+	nx=cetb_grid_cols[region_index][0]; //720;
+	ny=cetb_grid_rows[region_index][0]; //720;	
       }
       break;
     case 10:  /* EASE2 cylindrical */
@@ -670,20 +678,23 @@ void ease2_map_info(int iopt, int isc, int ind,
       *cos_phi1 = cos( DTR * *map_second_reference_latitude );
       *kz = *cos_phi1 / sqrt( 1.0 - *e2 * *sin_phi1 * *sin_phi1 );
       switch(ind) {
-      case 1:  /* EASE2_M36km.gpd */
-	base=36032.220840584;
-	nx=964;
-	ny=406;	
+      case CETB_36KM:  /* EASE2_M36km.gpd */
+	region_index = (CETB_36KM*CETB_NUMBER_PROJECTIONS)+2;
+	base=cetb_exact_scale_m[region_index][0]; //36032.220840584;
+	nx=cetb_grid_cols[region_index][0]; //964;
+	ny=cetb_grid_rows[region_index][0]; //406;	
 	break;
-      case 2:  /* EASE2_M24km.gpd */
-	base=24021.480560389347;  
-	nx=1446;
-	ny=609;	
+      case CETB_24KM:  /* EASE2_M24km.gpd */
+	region_index = (CETB_24KM*CETB_NUMBER_PROJECTIONS)+2;
+	base=cetb_exact_scale_m[region_index][0]; //24021.480560389347;  
+	nx=cetb_grid_cols[region_index][0]; //1446;
+	ny=cetb_grid_rows[region_index][0]; //609;	
 	break;
       default: /* EASE2_T25km.gpd */
-	base=25025.26000;
-	nx=1388;
-	ny=540;  /* originally was 538 */	
+	region_index = (CETB_25KM*CETB_NUMBER_PROJECTIONS)+2;
+	base=cetb_exact_scale_m[region_index][0]; //25025.26000;
+	nx=cetb_grid_cols[region_index][0]; //1388;
+	ny=cetb_grid_rows[region_index][0]; //540;  /* originally was 538 */	
       }
    }
 
