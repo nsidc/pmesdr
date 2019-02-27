@@ -65,53 +65,7 @@ regression_yyyymmdd=20180920
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 
 # Determine the LOCALE, a function of host and compiler.
-# Janus needs to load compiler-specific modules before building
-if [[ "$HOSTNAME" == *[Jj]"anus"* || `hostname --fqdn` == *"rc.colorado.edu" || "$HOSTNAME" == "node"* ]]; then
-
-  ml slurm
-  export PMESDR_COMPARE_TOLERANCE=0.25
-  export PMESDR_MAX_DIFF_PIXELS=100
-  export PMESDR_TESTDATA_DIR="/projects/maddenp/pmesdr_testdata"
-
-  if [[ "$compiler" == "gcc" ]]; then
-    echo "Setting netcdf for the gcc compiler"
-    ml -intel
-    ml gcc
-    ml netcdf
-    export LOCALE=JANUSgcc
-  fi
-
-  if [[ "$compiler" == "icc" ]]; then
-    echo "Setting netcdf for the icc compiler"
-    ml -gcc
-    ml intel
-    ml netcdf
-    export LOCALE=JANUSicc
-  fi
-
-  ml udunits
-  
-  if [[ $do_anaconda == 1 ]]; then
-    ml python
-    ml netcdf4-python
-  else
-    ml -python
-  fi
-
-  module list
-  echo "Janus Compiler set to $COMPILER" 
-
-
-
-elif [[ "$HOSTNAME" == "snow"* ]]; then
-
-  export LOCALE=NSIDCsnow
-  # Initialize the virtualenv that was built for running on snow
-  . ~brodzik/.virtual_envs_snow/pmesdr/bin/activate
-  export PMESDR_COMPARE_TOLERANCE=0.01
-  export PMESDR_MAX_DIFF_PIXELS=100
-
-elif [[ `hostname -d` =~ "int.nsidc.org" ]]; then
+if [[ `hostname -d` =~ "int.nsidc.org" ]]; then
 
   export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
@@ -124,6 +78,6 @@ else
 
   export LOCALE=BYU
 
-fi # endif janus
+fi # endif hostname
 
 echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."
