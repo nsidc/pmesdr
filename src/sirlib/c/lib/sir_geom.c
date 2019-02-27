@@ -17,6 +17,7 @@
 #include <math.h>
 
 #include "sir_geom.h"
+#include "cetb.h"
 
 int intfix(float r)
 {
@@ -580,15 +581,15 @@ void ease2_map_info(int iopt, int isc, int ind,
  
           NSIDC .grd file for isc=0
            project type    ind=0     ind=1         ind=2
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
+	      N         EASE2_N25km EASE2_N36km EASE2_N24km  
+              S         EASE2_S25km EASE2_S36km EASE2_S24km 
+              T/M       EASE2_T25km EASE2_M36km EASE2_M24km 
 
           cell size (m) for isc=0 (scale is reduced by 2^isc)
            project type    ind=0     ind=1            ind=2
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000   M36032.220840584
+	      N          25000.0     36000.0         24000.0
+              S          25000.0     36000.0         24000.0
+              T/M       T25025.26  M36032.220840584  M24021.4805603
 	      
 	  for a given base cell size isc is related to NSIDC .grd file names
 	     isc        N .grd name   S .grd name   T .grd name
@@ -616,6 +617,7 @@ void ease2_map_info(int iopt, int isc, int ind,
 
   double base;  
   int m, nx, ny;
+  int region_index;
 
   *map_equatorial_radius_m = 6378137.0 ; /* WGS84 */
   *map_eccentricity = 0.081819190843 ;   /* WGS84 */
@@ -623,44 +625,50 @@ void ease2_map_info(int iopt, int isc, int ind,
   *map_reference_longitude = 0.0;
   *epsilon = 1.e-6;
 
-  /* map-specific parameters */
+  /* map-specific parameters  - these all come from cetb.h */
   switch (iopt) {
     case 8:   /* EASE2 grid north */
       *map_reference_latitude = 90.0;
       switch(ind) {
-      case 1:  /* EASE2_N30km.gpd */
-	base=30000.0;
-	nx=600;
-	ny=600;	
+      case CETB_36KM:  /* EASE2_N36km.gpd */
+	region_index = CETB_36KM*CETB_NUMBER_PROJECTIONS;
+	base=cetb_exact_scale_m[region_index][0]; //36000.0;      
+	nx=cetb_grid_cols[region_index][0]; //500;
+	ny=cetb_grid_rows[region_index][0]; //500;	
 	break;
-      case 2:  /* EASE2_N36km.gpd */
-	base=36000.0;      
-	nx=500;
-	ny=500;	
+      case CETB_24KM:  /* EASE2_N24km.gpd */
+	region_index = CETB_24KM*CETB_NUMBER_PROJECTIONS;
+	base=cetb_exact_scale_m[region_index][0]; //24000.0;
+	nx=cetb_grid_cols[region_index][0]; //750;
+	ny=cetb_grid_rows[region_index][0]; //750;	
 	break;
       default: /* EASE2_N25km.gpd */
-	base=25000.0;
-	nx=720;
-	ny=720;	
+	region_index = CETB_25KM*CETB_NUMBER_PROJECTIONS;
+	base=cetb_exact_scale_m[region_index][0]; //25000.0;
+	nx=cetb_grid_cols[region_index][0]; //720;
+	ny=cetb_grid_rows[region_index][0]; //720;	
       }
       break;
     case 9:   /* EASE2 grid south */
       *map_reference_latitude = -90.0;
       switch(ind) {
-      case 1:  /* EASE2_S30km.gpd */
-	base=30000.0;
-	nx=600;
-	ny=600;	
+      case CETB_36KM:  /* EASE2_S36km.gpd */
+	region_index = (CETB_36KM*CETB_NUMBER_PROJECTIONS)+1;
+	base=cetb_exact_scale_m[region_index][0]; //36000.0;      
+	nx=cetb_grid_cols[region_index][0]; //500;
+	ny=cetb_grid_rows[region_index][0]; //500;	
 	break;
-      case 2:  /* EASE2_S36km.gpd */
-	base=36000.0;      
-	nx=500;
-	ny=500;	
+      case CETB_24KM:  /* EASE2_S24km.gpd */
+	region_index = (CETB_24KM*CETB_NUMBER_PROJECTIONS)+1;
+	base=cetb_exact_scale_m[region_index][0]; //24000.0;
+	nx=cetb_grid_cols[region_index][0]; //750;
+	ny=cetb_grid_rows[region_index][0]; //750;	
 	break;
       default: /* EASE2_S25km.gpd */
-	base=25000.0;
-	nx=720;
-	ny=720;	
+	region_index = (CETB_25KM*CETB_NUMBER_PROJECTIONS)+1;
+	base=cetb_exact_scale_m[region_index][0]; //25000.0;
+	nx=cetb_grid_cols[region_index][0]; //720;
+	ny=cetb_grid_rows[region_index][0]; //720;	
       }
       break;
     case 10:  /* EASE2 cylindrical */
@@ -670,20 +678,23 @@ void ease2_map_info(int iopt, int isc, int ind,
       *cos_phi1 = cos( DTR * *map_second_reference_latitude );
       *kz = *cos_phi1 / sqrt( 1.0 - *e2 * *sin_phi1 * *sin_phi1 );
       switch(ind) {
-      case 1:  /* EASE2_M25km.gpd */
-	base=25025.26000;  /* removed 81 from end */
-	nx=1388;
-	ny=584;	
+      case CETB_36KM:  /* EASE2_M36km.gpd */
+	region_index = (CETB_36KM*CETB_NUMBER_PROJECTIONS)+2;
+	base=cetb_exact_scale_m[region_index][0]; //36032.220840584;
+	nx=cetb_grid_cols[region_index][0]; //964;
+	ny=cetb_grid_rows[region_index][0]; //406;	
 	break;
-      case 2:  /* EASE2_M36km.gpd */
-	base=36032.220840584;
-	nx=964;
-	ny=406;	
+      case CETB_24KM:  /* EASE2_M24km.gpd */
+	region_index = (CETB_24KM*CETB_NUMBER_PROJECTIONS)+2;
+	base=cetb_exact_scale_m[region_index][0]; //24021.480560389347;  
+	nx=cetb_grid_cols[region_index][0]; //1446;
+	ny=cetb_grid_rows[region_index][0]; //609;	
 	break;
       default: /* EASE2_T25km.gpd */
-	base=25025.26000;
-	nx=1388;
-	ny=540;  /* originally was 538 */	
+	region_index = (CETB_25KM*CETB_NUMBER_PROJECTIONS)+2;
+	base=cetb_exact_scale_m[region_index][0]; //25025.26000;
+	nx=cetb_grid_cols[region_index][0]; //1388;
+	ny=cetb_grid_rows[region_index][0]; //540;  /* originally was 538 */	
       }
    }
 
@@ -729,26 +740,6 @@ void ease2sf(int iopt, float ascale, float bscale, float *fmap_scale,
     ascale: grid scale factor (0..5)  pixel size is (bscale/2^ascale)
     bscale: base grid scale index (ind=int(bscale))
  
-          NSIDC .grd file for isc=0
-           project type    ind=0     ind=1         ind=2
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
-
-          cell size (m) for isc=0 (scale is reduced by 2^isc)
-           project type    ind=0     ind=1            ind=2
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000  M36032.220840584
-	      
-	  for a given base cell size isc is related to NSIDC .grd file names
-	     isc        N .grd name   S .grd name   T .grd name
-	      0	      EASE2_N25km     EASE2_S25km     EASE2_T25km  
-	      1	      EASE2_N12.5km   EASE2_S12.5km   EASE2_T12.5km  
-	      2	      EASE2_N6.25km   EASE2_S6.25km   EASE2_T6.25km  
-	      3	      EASE2_N3.125km  EASE2_S3.125km  EASE2_T3.125km  
-	      4	      EASE2_N1.5625km EASE2_S1.5625km EASE2_T1.5625km  
-
   outputs
     fmap_scale               EASE2 map projection pixel size (km)
     bcols, brows,            EASE2 grid size in pixels
@@ -792,26 +783,6 @@ void ease2grid(int iopt, float alon, float alat,
           ascale and bscale should be integer valued)
 	  ascale: grid scale factor (0..5)  pixel size is (bscale/2^ascale)
 	  bscale: base grid scale index (ind=int(bscale))
-
-          NSIDC .grd file for isc=0
-           project type    ind=0     ind=1         ind=2
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
-
-          cell size (m) for isc=0 (scale is reduced by 2^isc)
-           project type    ind=0     ind=1            ind=2
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000  M36032.220840584
-	      
-	  for a given base cell size isc is related to NSIDC .grd file names
-	     isc        N .grd name   S .grd name   T .grd name
-	      0	      EASE2_N25km     EASE2_S25km     EASE2_T25km  
-	      1	      EASE2_N12.5km   EASE2_S12.5km   EASE2_T12.5km  
-	      2	      EASE2_N6.25km   EASE2_S6.25km   EASE2_T6.25km  
-	      3	      EASE2_N3.125km  EASE2_S3.125km  EASE2_T3.125km  
-	      4	      EASE2_N1.5625km EASE2_S1.5625km EASE2_T1.5625km  
 
 	outputs:
 	  thelon: X coordinate in pixels (can be outside of image)
@@ -881,7 +852,6 @@ void ease2grid(int iopt, float alon, float alat,
    }
 
    *thelon = (float) (r0 + ( x / map_scale ) + 0.5); 
-   //*thelat = (float) (s0 - ( y / map_scale ) + 0.5);  /* 0 at top (NSIDC) */
    *thelat = (float) (s0 + ( y / map_scale ) + 0.5);  /* 0 at bottom (BYU SIR files) */
 
    return;
@@ -905,26 +875,6 @@ void iease2grid(int iopt, float *alon, float *alat,
           ascale and bscale should be integer valued)
 	  ascale: grid scale factor (0..5)  pixel size is (bscale/2^ascale)
 	  bscale: base grid scale index (ind=int(bscale))
-
-          NSIDC .grd file for isc=0
-           project type    ind=0     ind=1         ind=3
-	      N         EASE2_N25km EASE2_N30km EASE2_N36km  
-              S         EASE2_S25km EASE2_S30km EASE2_S36km 
-              T/M       EASE2_T25km EASE2_M25km EASE2_M36km 
-
-          cell size (m) for isc=0 (scale is reduced by 2^isc)
-           project type    ind=0     ind=1            ind=3
-	      N          25000.0     30000.0         36000.0
-              S          25000.0     30000.0         36000.0
-              T/M       T25025.26   M25025.26000  M36032.220840584
-	      
-	  for a given base cell size isc is related to NSIDC .grd file names
-	     isc        N .grd name   S .grd name   T .grd name
-	      0	      EASE2_N25km     EASE2_S25km     EASE2_T25km  
-	      1	      EASE2_N12.5km   EASE2_S12.5km   EASE2_T12.5km  
-	      2	      EASE2_N6.25km   EASE2_S6.25km   EASE2_T6.25km  
-	      3	      EASE2_N3.125km  EASE2_S3.125km  EASE2_T3.125km  
-	      4	      EASE2_N1.5625km EASE2_S1.5625km EASE2_T1.5625km  
 
 	outputs:
 	  alon, alat: lon, lat location in deg  (can be outside of image)

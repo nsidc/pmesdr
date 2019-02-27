@@ -45,7 +45,7 @@ void setUp( void ) {
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
   region_id = CETB_EASE2_N;
-  region_number = cetb_region_number[ region_id ];
+  region_number = cetb_region_number[ 0 ][ region_id ];
   base_resolution = CETB_25KM;
   factor = 0;
   platform_id = CETB_F13;

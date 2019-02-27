@@ -67,7 +67,7 @@ void test_cetb_N_parameters( void ) {
   double att_double;
   double expected_double;
   
-  region_number = cetb_region_number[ CETB_EASE2_N ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_N ];
   factor = 3;
 
   cetb = cetb_file_init( dirname,
@@ -152,7 +152,7 @@ void test_cetb_S_parameters( void ) {
   double att_double;
   double expected_double;
   
-  region_number = cetb_region_number[ CETB_EASE2_S ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_S ];
   factor = 2;
 
   cetb = cetb_file_init( dirname,
@@ -237,7 +237,7 @@ void test_cetb_T_parameters( void ) {
   double expected_double;
 
   direction_id = CETB_ASC_PASSES;
-  region_number = cetb_region_number[ CETB_EASE2_T ];
+  region_number = cetb_region_number[ 0 ][ CETB_EASE2_T ];
   factor = 1;
 
   cetb = cetb_file_init( dirname,

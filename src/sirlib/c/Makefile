@@ -10,7 +10,7 @@ LIBDIR = $(TOPDIR)/lib
 INCDIR = $(TOPDIR)/include
 
 LIB = libcsir.a
-HDRS = include/sir_geom.h
+HDRS = include/sir_geom.h 
 
 AR = ar
 CC = gcc
@@ -20,7 +20,7 @@ RM = rm -fr
 
 CONFIG_CFLAGS = 
 ARFLAGS = ruv
-CFLAGS = -Iinclude -m64 -O3 $(CONFIG_CFLAGS) 
+CFLAGS = -Iinclude -I$(INCDIR) -m64 -O3 $(CONFIG_CFLAGS) 
 LDFLAGS = -L. -lcsir -lm
 
 ifeq ($(LOCALE),JANUSgcc)

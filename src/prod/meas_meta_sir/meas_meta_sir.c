@@ -337,8 +337,8 @@ int main(int argc, char **argv)
        case 25:
 	 base_resolution = CETB_25KM;
 	 break;
-       case 30:
-	 base_resolution = CETB_NO_RESOLUTION;
+       case 24:
+	 base_resolution = CETB_24KM;
 	 break;
        case 36:
 	 base_resolution = CETB_36KM;
@@ -507,7 +507,7 @@ int main(int argc, char **argv)
 	      cetb_sir->filename );
      exit( -1 );
    } 
-     
+
    cetb_grd = cetb_file_init( outpath, iregion, base_resolution,
 			      CETB_MIN_RESOLUTION_FACTOR,
 			      platform_id, sensor_id,
@@ -547,7 +547,7 @@ int main(int argc, char **argv)
 /* allocate storage space for image and working arrays
    note: these arrays are re-used multiple times to save memory */
 
-  nsize = nsx * nsy;  
+  nsize = nsx * nsy;
   if ( 0 != utils_allocate_clean_aligned_memory( (void**)&a_val,
 						 (size_t)(sizeof(float)*nsize) ) ) {
     fprintf( stderr, "%s: inadequate memory for a_val, setup file=%s\n", __FILE__,

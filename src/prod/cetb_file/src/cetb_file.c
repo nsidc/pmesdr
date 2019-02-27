@@ -55,7 +55,8 @@ static int set_dimension( cetb_file_class *this,
 			  int *dim_id );
 static int set_epoch_string( cetb_file_class *this );
 static int valid_date( int year, int doy );
-static int valid_pass_direction( cetb_region_id region_id,
+static int valid_pass_direction( cetb_resolution_id resolution_id,
+				 cetb_region_id region_id,
 				 cetb_direction_id direction_id );
 static int valid_platform_id( cetb_platform_id platform_id );
 static int valid_base_resolution( cetb_resolution_id base );
@@ -123,23 +124,21 @@ cetb_file_class *cetb_file_init( char *dirname,
 
   if ( STATUS_OK != valid_base_resolution( base_resolution ) ) return NULL;
   if ( CETB_NO_REGION ==
-       ( region_id = valid_region_id( region_number, base_resolution ) ) ) {
-    fprintf( stderr, "%s: bad return from valid_region_id %d, res %d\n",
-	     __FUNCTION__, region_number, base_resolution );
+       ( region_id = valid_region_id( region_number, base_resolution ) ) )
     return NULL;
-  }
   if ( STATUS_OK != valid_resolution_factor( factor ) ) return NULL;
   if ( STATUS_OK != valid_platform_id( platform_id ) ) return NULL;
   if ( STATUS_OK != valid_sensor_id( sensor_id ) ) return NULL;
   if ( STATUS_OK != valid_date( year, doy ) ) return NULL;
   if ( !( channel_str = channel_name( sensor_id, beam_id ) ) ) return NULL;
-  if ( STATUS_OK != valid_pass_direction( region_id, direction_id ) ) return NULL;
+  if ( STATUS_OK != valid_pass_direction(base_resolution, region_id, direction_id) )
+    return NULL;
   if ( STATUS_OK != valid_reconstruction_id( reconstruction_id ) ) return NULL;
   if ( STATUS_OK != valid_swath_producer_id( producer_id ) ) return NULL;
 
   if ( STATUS_OK
-       != utils_allocate_clean_aligned_memory( ( void * )&this,
-					       sizeof( cetb_file_class ) ) ) {
+       != utils_allocate_clean_aligned_memory((void *)&this,
+					       sizeof(cetb_file_class)) ) {
     return NULL;
   }
   
@@ -193,7 +192,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   }
 
   status = utils_allocate_clean_aligned_memory( ( void * )&file_version,
-						( sizeof( char ) * len_version ) + 1 );
+						(sizeof(char) * len_version)+1 );
   
   if ( ( status = nc_get_att_text( template_fid, NC_GLOBAL, "product_version",
 				   file_version ) ) ) {
@@ -211,8 +210,9 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
   	    dirname,
 	    cetb_NSIDC_dataset_id[ sensor_id ],
-  	    cetb_region_id_name[ region_id ],
-  	    cetb_resolution_name[ factor + (CETB_MAX_RESOLUTION_FACTOR+1)*((int)base_resolution)],
+  	    cetb_region_id_name[ base_resolution ]
+	    [ (region_number-CETB_PROJECTION_BASE_NUMBER) ],
+  	    cetb_resolution_name[ base_resolution ][ factor ],
   	    cetb_platform_id_name[ platform_id ],
   	    cetb_sensor_id_name[ sensor_id ],
   	    year,
@@ -462,7 +462,7 @@ int cetb_file_add_var( cetb_file_class *this,
    * follows DIWG convention, with "most rapidly-changing
    * dimension last in C arrays"
    */
-  if ( ( status = nc_def_var( this->fid, var_name, xtype, 3, dim_ids, &var_id ) ) ) {
+  if ( (status = nc_def_var(this->fid, var_name, xtype, 3, dim_ids, &var_id)) ) {
     fprintf( stderr, "%s: Error defining %s variable : %s.\n",
   	     __FUNCTION__, var_name, nc_strerror( status ) );
     return 1;
@@ -486,10 +486,11 @@ int cetb_file_add_var( cetb_file_class *this,
   nc_def_var_deflate( this->fid, var_id, 1, 1, DEFLATE_LEVEL );
 
   if ( NULL != standard_name ) {
-    if ( ( status = nc_put_att_text( this->fid, var_id, "standard_name",
-				     strlen(standard_name), standard_name ) ) ) {
+    if ( (status = nc_put_att_text(this->fid, var_id, "standard_name",
+				   strlen(standard_name), standard_name)) ) {
       fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
-	       __FUNCTION__, var_name, "standard_name", standard_name, nc_strerror( status ) );
+	       __FUNCTION__, var_name, "standard_name", standard_name,
+	       nc_strerror( status ) );
       return 1;
     }
   }
@@ -497,7 +498,8 @@ int cetb_file_add_var( cetb_file_class *this,
   if ( ( status = nc_put_att_text( this->fid, var_id, "long_name",
 				   strlen(long_name), long_name ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
-	     __FUNCTION__, var_name, "long_name", long_name, nc_strerror( status ) );
+	     __FUNCTION__, var_name, "long_name", long_name,
+	     nc_strerror( status ) );
     return 1;
   }
   
@@ -531,15 +533,17 @@ int cetb_file_add_var( cetb_file_class *this,
 
   if ( CETB_PACK == do_pack ) {
     if ( ( status = nc_put_att_text( this->fid, var_id, "packing_convention",
-				     strlen(packing_convention), packing_convention ) ) ) {
+				     strlen(packing_convention),
+				     packing_convention ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 	       __FUNCTION__, var_name, "packing_convention", packing_convention,
 	       nc_strerror( status ) );
       return 1;
     }
   
-    if ( ( status = nc_put_att_text( this->fid, var_id, "packing_convention_description",
-				   strlen(packing_convention_description),
+    if ( ( status = nc_put_att_text( this->fid, var_id,
+				     "packing_convention_description",
+				     strlen(packing_convention_description),
 				     packing_convention_description ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
 	       __FUNCTION__, var_name, "packing_convention_description",
@@ -550,14 +554,16 @@ int cetb_file_add_var( cetb_file_class *this,
     if ( ( status = nc_put_att_float( this->fid, var_id, "scale_factor",
 				      NC_FLOAT, 1, &scale_factor ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %f: %s.\n",
-	       __FUNCTION__, var_name, "scale_factor", scale_factor, nc_strerror( status ) );
+	       __FUNCTION__, var_name, "scale_factor", scale_factor,
+	       nc_strerror( status ) );
       return 1;
     }
 
     if ( ( status = nc_put_att_float( this->fid, var_id, "add_offset",
 				      NC_FLOAT, 1, &add_offset ) ) ) {
       fprintf( stderr, "%s: Error setting %s %s %f: %s.\n",
-	       __FUNCTION__, var_name, "add_offset", add_offset, nc_strerror( status ) );
+	       __FUNCTION__, var_name, "add_offset", add_offset,
+	       nc_strerror( status ) );
       return 1;
     }
 
@@ -572,7 +578,7 @@ int cetb_file_add_var( cetb_file_class *this,
 
       status =
 	utils_allocate_clean_aligned_memory( ( void * )&ushort_data,
-					     sizeof( unsigned short ) * 1 * rows * cols );
+					     sizeof( unsigned short )*1*rows*cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
     		 __FUNCTION__, nc_strerror( status ) );
@@ -591,13 +597,16 @@ int cetb_file_add_var( cetb_file_class *this,
 
       for ( row=0; row<rows; row++ ) {
 	for ( i=0;i <cols; i++ ) {
-	  *( ushort_data + ((row*cols)+i) ) = (unsigned short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
-							( *( (float *)data + (((rows-row-1)*cols)+i) ) ) );
+	  *( ushort_data + ((row*cols)+i) ) = (unsigned short)
+	    CETB_FILE_PACK_DATA( scale_factor, add_offset,
+				 ( *((float *)data + (((rows-row-1)*cols)+i))) );
 	}
       }
 
-      if ( ( status = nc_put_vara_ushort( this->fid, var_id, start, count, ushort_data ) ) ) {
-	  fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
+      if ( ( status = nc_put_vara_ushort( this->fid, var_id, start, count,
+					  ushort_data ) ) ) {
+	  fprintf( stderr, "%s: Error putting short variable %s.\n",
+		   __FUNCTION__, nc_strerror( status ) );
 	  return 1;
 	}
 	
@@ -607,7 +616,7 @@ int cetb_file_add_var( cetb_file_class *this,
 
       status =
 	utils_allocate_clean_aligned_memory( ( void * )&short_data,
-					     sizeof( short ) * 1 * rows * cols );
+					     sizeof( short ) * 1*rows*cols );
       if ( STATUS_OK != status ) {
     	fprintf( stderr, "%s: Error allocating space for packed data: %s.\n",
     		 __FUNCTION__, nc_strerror( status ) );
@@ -624,13 +633,16 @@ int cetb_file_add_var( cetb_file_class *this,
       
       for ( row=0; row<rows; row++ ) {
 	for ( i=0; i<cols; i++ ) {
-	  *( short_data + ((row*cols)+i) ) = (short)CETB_FILE_PACK_DATA( scale_factor, add_offset,
-						    (*( (float *)data + (((rows-row-1)*cols)+i) ) ) );
+	  *( short_data + ((row*cols)+i) ) = (short)
+	    CETB_FILE_PACK_DATA( scale_factor, add_offset,
+				 (*( (float *)data + (((rows-row-1)*cols)+i) ) ) );
 	}
       }
 
-      if ( ( status = nc_put_vara_short( this->fid, var_id, start, count, short_data ) ) ) {
-	fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__, nc_strerror( status ) );
+      if ( ( status = nc_put_vara_short( this->fid, var_id, start, count,
+					 short_data ) ) ) {
+	fprintf( stderr, "%s: Error putting short variable %s.\n", __FUNCTION__,
+		 nc_strerror( status ) );
 	return 1;
       }
 
@@ -657,7 +669,8 @@ int cetb_file_add_var( cetb_file_class *this,
 	utils_allocate_clean_aligned_memory( ( void * )&float_data,
 					     sizeof( float ) * 1 * cols * rows );
       if ( STATUS_OK != status ) {
-    	fprintf( stderr, "%s: Error allocating space for flipped float_data.\n", __FUNCTION__ );
+    	fprintf( stderr, "%s: Error allocating space for flipped float_data.\n",
+		 __FUNCTION__ );
     	return 1;
       }
       for ( row=0; row<rows; row++ ) {
@@ -666,7 +679,8 @@ int cetb_file_add_var( cetb_file_class *this,
 		sizeof( float ) * cols );
       }
 	
-      if ( ( status = nc_put_vara( this->fid, var_id, start, count, ( void * )float_data ) ) ) {
+      if ( ( status = nc_put_vara( this->fid, var_id, start, count,
+				   ( void * )float_data ) ) ) {
 	fprintf( stderr, "%s: Error putting float variable: %s.\n",
 		 __FUNCTION__, nc_strerror( status ) );
 	return 1;
@@ -678,9 +692,10 @@ int cetb_file_add_var( cetb_file_class *this,
 
       status =
 	utils_allocate_clean_aligned_memory( ( void * )&uchar_data,
-					     sizeof( unsigned char ) * 1 * cols * rows );
+					     sizeof(unsigned char) *1*cols*rows );
       if ( STATUS_OK != status ) {
-    	fprintf( stderr, "%s: Error allocating space for flipped uchar_data.\n", __FUNCTION__ );
+    	fprintf( stderr, "%s: Error allocating space for flipped uchar_data.\n",
+		 __FUNCTION__ );
     	return 1;
       }
       for ( row=0; row<rows; row++ ) {
@@ -689,7 +704,8 @@ int cetb_file_add_var( cetb_file_class *this,
 		sizeof( unsigned char ) * cols );
       }
 	
-      if ( ( status = nc_put_vara( this->fid, var_id, start, count, ( void * )uchar_data ) ) ) {
+      if ( ( status = nc_put_vara( this->fid, var_id, start, count,
+				   ( void * )uchar_data ) ) ) {
 	fprintf( stderr, "%s: Error putting uchar variable: %s.\n",
 		 __FUNCTION__, nc_strerror( status ) );
 	return 1;
@@ -697,14 +713,16 @@ int cetb_file_add_var( cetb_file_class *this,
       if ( ( status = nc_put_att( this->fid, var_id, "flag_values", NC_UBYTE,
 				  (size_t)1, &(num_samples_max) ) ) ) {
 	fprintf( stderr, "%s: Error setting %s %s %d: %s.\n",
-		 __FUNCTION__, var_name, "flag_values", CETB_NCATTS_TB_NUM_SAMPLES_MAX, nc_strerror( status ) );
+		 __FUNCTION__, var_name, "flag_values",
+		 CETB_NCATTS_TB_NUM_SAMPLES_MAX, nc_strerror( status ) );
 	return 1;
       }
   
-      if ( ( status = nc_put_att_text( this->fid, var_id, "flag_meanings", 
-				       strlen(flag_meanings), flag_meanings ) ) ) {
+      if ( (status = nc_put_att_text(this->fid, var_id, "flag_meanings", 
+				     strlen(flag_meanings), flag_meanings)) ) {
 	fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
-		 __FUNCTION__, var_name, "flag_meanings", flag_meanings, nc_strerror( status ) );
+		 __FUNCTION__, var_name, "flag_meanings", flag_meanings,
+		 nc_strerror( status ) );
 	return 1;
       }
   
@@ -723,7 +741,8 @@ int cetb_file_add_var( cetb_file_class *this,
 				   strlen(grid_mapping),
 				   grid_mapping ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
-  	     __FUNCTION__, var_name, "grid_mapping", grid_mapping, nc_strerror( status ) );
+  	     __FUNCTION__, var_name, "grid_mapping", grid_mapping,
+	     nc_strerror( status ) );
     return 1;
   }
   
@@ -802,7 +821,8 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
   }
 
   if ( CETB_BGI != this->reconstruction_id ) {
-    fprintf( stderr, "%s: Cannot set BGI parameters on non-BGI file.\n", __FUNCTION__ );
+    fprintf( stderr, "%s: Cannot set BGI parameters on non-BGI file.\n",
+	     __FUNCTION__ );
     return 1;
   }
   
@@ -819,12 +839,14 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
     return 1;
   }
 
-  if ( ( status = nc_put_att_float( this->fid, var_id, "bgi_dimensional_tuning_parameter",
-				    NC_FLOAT, 1, &dimensional_tuning_parameter ) ) ) {
+  if ( (status = nc_put_att_float(this->fid, var_id,
+				  "bgi_dimensional_tuning_parameter",
+				  NC_FLOAT, 1, &dimensional_tuning_parameter)) )
+    {
     fprintf( stderr, "%s: Error setting bgi_dimensional_tuning_parameter: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
-  }
+    }
 
   if ( ( status = nc_put_att_float( this->fid, var_id, "bgi_noise_variance",
 				    NC_FLOAT, 1, &noise_variance ) ) ) {
@@ -886,7 +908,8 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
   }
 
   if ( CETB_SIR != this->reconstruction_id ) {
-    fprintf( stderr, "%s: Cannot set SIR parameters on non-SIR file.\n", __FUNCTION__ );
+    fprintf( stderr, "%s: Cannot set SIR parameters on non-SIR file.\n",
+	     __FUNCTION__ );
     return 1;
   }
 
@@ -940,7 +963,8 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
   }
 
   if ( CETB_GRD != this->reconstruction_id ) {
-    fprintf( stderr, "%s: Cannot set GRD parameters on non-GRD file.\n", __FUNCTION__ );
+    fprintf( stderr, "%s: Cannot set GRD parameters on non-GRD file.\n",
+	     __FUNCTION__ );
     return 1;
   }
   
@@ -1006,14 +1030,16 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
     return 1;
   }
     
-  if ( ( status = nc_put_att_float( this->fid, var_id, "measurement_response_threshold_dB",
+  if ( ( status = nc_put_att_float( this->fid, var_id,
+				    "measurement_response_threshold_dB",
 				    NC_FLOAT, 1, &rthreshold ) ) ) {
     fprintf( stderr, "%s: Error setting sir_response_threshold: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
   }
 
-  if ( ( status = nc_put_att_float( this->fid, var_id, "measurement_search_bounding_box_km",
+  if ( ( status = nc_put_att_float( this->fid, var_id,
+				    "measurement_search_bounding_box_km",
 				    NC_FLOAT, 1, &box_size_km ) ) ) {
     fprintf( stderr, "%s: Error setting measurement_bounding_box: %s.\n",
 	     __FUNCTION__, nc_strerror( status ) );
@@ -1022,9 +1048,11 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
 
   /* Now write out time division information based on the projection,
      pass direction and the times in cetb.h */
-  if ( ( status = nc_put_att_text( this->fid, var_id, "temporal_division",
-				   strlen( cetb_direction_id_name_full[ this->direction_id ] )+1,
-				   cetb_direction_id_name_full[ this->direction_id ] ) ) ) {
+  if ( (status = nc_put_att_text(this->fid, var_id, "temporal_division",
+				 strlen(cetb_direction_id_name_full
+					[this->direction_id])+1,
+				 cetb_direction_id_name_full
+				 [this->direction_id])) ) {
     fprintf( stderr, "%s: Error setting satellite pass direction: %s\n",
 	     __FUNCTION__, nc_strerror( status ) );
     return 1;
@@ -1036,7 +1064,9 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
    * to agree with the same offset actually used in the
    * setup processing when it does the temporal filtering.
    */
-  if ( CETB_EASE2_T != this->region_id ) { 
+  if ( ( CETB_EASE2_T != this->region_id ) &&
+       ( CETB_EASE2_M36 != this->region_id ) &&
+       ( CETB_EASE2_M24 != this->region_id ) ) { 
     if ( CETB_EVENING_PASSES == this->direction_id ) {
       ltod_tmp_morning = ltod_evening;
       ltod_tmp_evening = ltod_morning + HOURS_PER_DAY;
@@ -1046,13 +1076,15 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
     }
     fprintf( stderr, "%s: morning time %f and evening time %f\n", __FUNCTION__,
 	     ltod_tmp_morning, ltod_tmp_evening );
-    if ( ( status = nc_put_att_float( this->fid, var_id, "temporal_division_local_start_time",
+    if ( ( status = nc_put_att_float( this->fid, var_id,
+				      "temporal_division_local_start_time",
 				      NC_FLOAT, 1, &ltod_tmp_morning ) ) ) {
       fprintf( stderr, "%s: Error setting start local time of day: %s\n",
 	       __FUNCTION__, nc_strerror( status ) );
       return 1;
     }
-    if ( ( status = nc_put_att_float( this->fid, var_id, "temporal_division_local_end_time",
+    if ( ( status = nc_put_att_float( this->fid, var_id,
+				      "temporal_division_local_end_time",
 				      NC_FLOAT, 1, &ltod_tmp_evening ) ) ) {
       fprintf( stderr, "%s: Error setting end local time of day: %s\n",
 	       __FUNCTION__, nc_strerror( status ) );
@@ -1062,9 +1094,11 @@ int cetb_file_add_TB_parameters( cetb_file_class *this,
 
   /* Finally write out the channel for these TB values */
   channel_str = channel_name( this->sensor_id, this->beam_id );
-  if ( ( status = nc_put_att_text( this->fid, var_id, "frequency_and_polarization",
+  if ( ( status = nc_put_att_text( this->fid, var_id,
+				   "frequency_and_polarization",
 				   strlen( channel_str )+1, channel_str ) ) ) {
-    fprintf( stderr, "%s: Error setting channel: %s\n", __FUNCTION__, nc_strerror( status ) );
+    fprintf( stderr, "%s: Error setting channel: %s\n", __FUNCTION__,
+	     nc_strerror( status ) );
     return 1;
   }
   
@@ -1132,69 +1166,81 @@ int cetb_file_check_consistency( char *file_name ) {
   unsigned int index;
   
   if ( ( status = nc_open( file_name, NC_WRITE, &nc_fileid ) ) ) {
-    fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
+    fprintf( stderr, "%s: nc_open error=%s: filename=%s\n", __FUNCTION__,
+	     nc_strerror(status), file_name );
     return -1;
   }
 
   if ( ( status = nc_inq_varid( nc_fileid, "TB", &tb_varid ) ) ) {
-    fprintf( stderr, "%s: nc_inq_varid error=%s: TB\n", __FUNCTION__, nc_strerror(status) );
+    fprintf( stderr, "%s: nc_inq_varid error=%s: TB\n", __FUNCTION__,
+	     nc_strerror(status) );
     return -1;
   } 
 
-  if ( ( status = nc_inq_varid( nc_fileid, "TB_std_dev", &tb_std_dev_varid ) ) ) {
-    fprintf( stderr, "%s: nc_inq_varid error=%s: TB_std_dev\n", __FUNCTION__, nc_strerror(status) );
+  if ( (status = nc_inq_varid(nc_fileid, "TB_std_dev", &tb_std_dev_varid)) ) {
+    fprintf( stderr, "%s: nc_inq_varid error=%s: TB_std_dev\n", __FUNCTION__,
+	     nc_strerror(status) );
     return -1;
   } 
 
   if ( ( status = nc_inq_dimid( nc_fileid, "y", &y_varid ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimid error=%s: y\n", __FUNCTION__, nc_strerror(status) );
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: y\n", __FUNCTION__,
+	     nc_strerror(status) );
     return -1;
   }
 
   if ( ( status = nc_inq_dimlen( nc_fileid, y_varid, &rows ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimlen error=%s: y length\n", __FUNCTION__, nc_strerror(status) );
+    fprintf( stderr, "%s: nc_inq_dimlen error=%s: y length\n", __FUNCTION__,
+	     nc_strerror(status) );
     return -1;
   }
 
   if ( ( status = nc_inq_dimid( nc_fileid, "x", &x_varid ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimid error=%s: x\n", __FUNCTION__, nc_strerror(status) );
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: x\n", __FUNCTION__,
+	     nc_strerror(status) );
     return -1;
   }
 
   if ( ( status = nc_inq_dimlen( nc_fileid, x_varid, &cols ) ) ) {
-    fprintf( stderr, "%s: nc_inq_dimid error=%s: x length\n", __FUNCTION__, nc_strerror(status) );
+    fprintf( stderr, "%s: nc_inq_dimid error=%s: x length\n", __FUNCTION__,
+	     nc_strerror(status) );
     return -1;
   }
 
   status =
-    utils_allocate_clean_aligned_memory( ( void * )&tb_ushort_data,
-					 sizeof( *tb_ushort_data ) * 1 * cols * rows );
+    utils_allocate_clean_aligned_memory( (void *)&tb_ushort_data,
+					 sizeof( *tb_ushort_data ) *1*cols*rows );
   if ( status != 0 ) {
     fprintf( stderr, "%s: couldn't allocate memory for TB array\n", __FUNCTION__ );
     return -1;
   }
 
   if ( ( status = nc_get_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
-    fprintf( stderr, "%s: couldn't retrieve temperature data, error=%s\n", __FUNCTION__, nc_strerror(status) );
+    fprintf( stderr, "%s: couldn't retrieve temperature data, error=%s\n",
+	     __FUNCTION__, nc_strerror(status) );
     return -1;
   }
 
   status =
-    utils_allocate_clean_aligned_memory( ( void * )&tb_std_dev_ushort_data,
-					 sizeof( *tb_std_dev_ushort_data ) * 1 * cols * rows );
+    utils_allocate_clean_aligned_memory(( void * )&tb_std_dev_ushort_data,
+					sizeof(*tb_std_dev_ushort_data)*1*cols*rows);
   if ( status != 0 ) {
-    fprintf( stderr, "%s: couldn't allocate memory for TB std dev array\n", __FUNCTION__ );
+    fprintf( stderr, "%s: couldn't allocate memory for TB std dev array\n",
+	     __FUNCTION__ );
     return -1;
   }
 
-  if ( ( status = nc_get_var_ushort( nc_fileid, tb_std_dev_varid, tb_std_dev_ushort_data ) ) ) {
-    fprintf( stderr, "%s: couldn't retrieve temp std dev data, error=%s\n", __FUNCTION__, nc_strerror(status) );
+  if ( ( status = nc_get_var_ushort( nc_fileid, tb_std_dev_varid,
+				     tb_std_dev_ushort_data ) ) ) {
+    fprintf( stderr, "%s: couldn't retrieve temp std dev data, error=%s\n",
+	     __FUNCTION__, nc_strerror(status) );
     return -1;
   }
 
   for ( index=0; index<(int)rows*cols; index++ ) {
     if ( CETB_NCATTS_TB_FILL_VALUE != *(tb_ushort_data+index) ) {
-      if ( ( CETB_NCATTS_TB_MIN > *(tb_ushort_data+index) ) || ( CETB_NCATTS_TB_MAX < *(tb_ushort_data+index) ) ) {
+      if ( ( CETB_NCATTS_TB_MIN > *(tb_ushort_data+index) ) ||
+	   ( CETB_NCATTS_TB_MAX < *(tb_ushort_data+index) ) ) {
 	*(tb_ushort_data+index) = CETB_NCATTS_TB_MISSING_VALUE;
 	*(tb_std_dev_ushort_data+index) = CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
 	missing_flag = 1;
@@ -1203,14 +1249,15 @@ int cetb_file_check_consistency( char *file_name ) {
   }
 
   if ( 1 == missing_flag ) { // need to write out the modified data
-    if ( ( status = nc_put_var_ushort( nc_fileid, tb_varid, tb_ushort_data ) ) ) {
-      fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n", __FUNCTION__,
-	       nc_strerror(status), file_name );
+    if ( (status = nc_put_var_ushort( nc_fileid, tb_varid, tb_ushort_data )) ) {
+      fprintf( stderr, "%s: error=%s re-writing TB data to file=%s\n",
+	       __FUNCTION__, nc_strerror(status), file_name );
       return -1;
     }
-    if ( ( status = nc_put_var_ushort( nc_fileid, tb_std_dev_varid, tb_std_dev_ushort_data ) ) ) {
-      fprintf( stderr, "%s: error=%s re-writing TB std dev data to file=%s\n", __FUNCTION__,
-	       nc_strerror(status), file_name );
+    if ( ( status = nc_put_var_ushort( nc_fileid, tb_std_dev_varid,
+				       tb_std_dev_ushort_data ) ) ) {
+      fprintf( stderr, "%s: error=%s re-writing TB std dev data to file=%s\n",
+	       __FUNCTION__, nc_strerror(status), file_name );
       return -1;
     }
   }
@@ -1219,7 +1266,8 @@ int cetb_file_check_consistency( char *file_name ) {
   free( tb_std_dev_ushort_data );
   
   if ( ( status = nc_close( nc_fileid ) ) ) {
-    fprintf( stderr, "%s: nc_close error=%s: filename=%s\n", __FUNCTION__, nc_strerror(status), file_name );
+    fprintf( stderr, "%s: nc_close error=%s: filename=%s\n", __FUNCTION__,
+	     nc_strerror(status), file_name );
     return -1;
   }
 
@@ -1283,7 +1331,8 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 				   strlen( time_string ),
 				   time_string ) ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "time_coverage_start", time_string, nc_strerror( status ) );
+  	     __FUNCTION__, "time_coverage_start", time_string,
+	     nc_strerror(status) );
     return 1;
   }
   free( time_string );
@@ -1293,7 +1342,7 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 				   strlen( time_string ),
 				   time_string ) ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "time_coverage_end", time_string, nc_strerror( status ) );
+  	     __FUNCTION__, "time_coverage_end", time_string, nc_strerror(status) );
     return 1;
   }
   free( time_string );
@@ -1303,7 +1352,8 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 				   strlen( time_string ),
 				   time_string ) ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "time_coverage_duration", time_string, nc_strerror( status ) );
+  	     __FUNCTION__, "time_coverage_duration", time_string,
+	     nc_strerror(status) );
     return 1;
   }
   free( time_string );
@@ -1368,38 +1418,46 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
   
   if ( CETB_SSMI == sensor_id ) {
     if ( 0 < beam_id && beam_id <= SSMI_NUM_CHANNELS ) {
-      channel_str = strdup( cetb_ssmi_channel_name[ cetb_ibeam_to_cetb_ssmi_channel[ beam_id ] ] );
+      channel_str = strdup( cetb_ssmi_channel_name
+			    [ cetb_ibeam_to_cetb_ssmi_channel[ beam_id ] ] );
     } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__,
+	       sensor_id, beam_id );
     }
   } else if ( CETB_AMSRE == sensor_id ) {
     if ( 0 < beam_id && beam_id <= AMSRE_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_amsre_channel_name[ cetb_ibeam_to_cetb_amsre_channel[ beam_id ] ] );
+      channel_str = strdup ( cetb_amsre_channel_name
+			     [ cetb_ibeam_to_cetb_amsre_channel[ beam_id ] ] );
     } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__,
+	       sensor_id, beam_id );
     }
   } else if ( CETB_SSMIS == sensor_id ) {
     if ( 0 < beam_id && beam_id <= SSMIS_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_ssmis_channel_name[ cetb_ibeam_to_cetb_ssmis_channel[ beam_id ] ] );
+      channel_str = strdup ( cetb_ssmis_channel_name
+			     [ cetb_ibeam_to_cetb_ssmis_channel[ beam_id ] ] );
     } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__,
+	       sensor_id, beam_id );
     }
   } else if ( CETB_SMMR == sensor_id ) {
     if ( 0 < beam_id && beam_id <= SMMR_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_smmr_channel_name[ cetb_ibeam_to_cetb_smmr_channel[ beam_id ] ] );
+      channel_str = strdup ( cetb_smmr_channel_name
+			     [ cetb_ibeam_to_cetb_smmr_channel[ beam_id ] ] );
     } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__,
+	       sensor_id, beam_id );
     }
   } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
     if ( 0 < beam_id && beam_id <= SMAP_NUM_CHANNELS ) {
-      channel_str = strdup ( cetb_smap_channel_name[ cetb_ibeam_to_cetb_smap_channel[ beam_id ] ] );
+      channel_str = strdup ( cetb_smap_channel_name
+			     [ cetb_ibeam_to_cetb_smap_channel[ beam_id ] ] );
     } else {
-      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__, sensor_id, beam_id );
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__,
+	       sensor_id, beam_id );
     }
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
-    fprintf( stderr, "%s: This implementation should be removed when we start using gsx\n",
-	     __FUNCTION__ );
   }
 
   return channel_str;
@@ -1504,22 +1562,25 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
 				   strlen( software_version ),
 				   software_version ) ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "software_version_id", software_version, nc_strerror( status ) );
+  	     __FUNCTION__, "software_version_id", software_version,
+	     nc_strerror( status ) );
     return 1;
   }
   free( software_version );
   
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "platform",
-				   strlen( cetb_gcmd_platform_keyword[ this->platform_id ] ),
-				   cetb_gcmd_platform_keyword[ this->platform_id ] ) ) ) {
+				   strlen( cetb_gcmd_platform_keyword
+					   [ this->platform_id ] ),
+				   cetb_gcmd_platform_keyword
+				   [ this->platform_id ] ) ) ) {
      fprintf( stderr, "%s: Error setting %s: %s.\n",
    	     __FUNCTION__, "platform", nc_strerror( status ) );
      return 1;
   } 
 
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "instrument",
-				   strlen( cetb_gcmd_sensor_keyword[ this->sensor_id ] ),
-				   cetb_gcmd_sensor_keyword[ this->sensor_id ] ) ) ) {
+  if ( status = nc_put_att_text(this->fid, NC_GLOBAL, "instrument",
+				strlen(cetb_gcmd_sensor_keyword[this->sensor_id]),
+				cetb_gcmd_sensor_keyword[ this->sensor_id ]) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "instrument", nc_strerror( status ) );
     return 1;
@@ -1566,12 +1627,12 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   free( time_stamp );
 
   if ( STATUS_OK !=
-       ( status = yyyydoy_to_yyyymmdd( this->year, this->doy, &month, &day ) ) ) {
+       (status = yyyydoy_to_yyyymmdd(this->year, this->doy, &month, &day)) ) {
     fprintf( stderr, "%s: Error converting date to yyyymmdd.\n", __FUNCTION__ );
     return STATUS_FAILURE;
   }
-  sprintf( epoch_date_str, "Epoch date for data in this file: %04d-%02d-%02d 00:00:00Z",
-	   this->year, month, day);
+  sprintf( epoch_date_str, "Epoch date for data in this file: %04d-%02d-%02d "
+	   "00:00:00Z", this->year, month, day);
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "comment", 
 				   strlen( epoch_date_str ), 
 				   epoch_date_str ) ) ) {
@@ -1619,7 +1680,7 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char geospatial_resolution[ MAX_STR_LENGTH ] = "";
   
   /* Copy/set the coordinate reference system (crs) metadata */
-  strcat( crs_name, cetb_region_id_name[ this->region_id ] );
+  strcat( crs_name, cetb_region_id_name[this->resolution_id][this->region_id] );
   if ( ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) ) {
     fprintf( stderr, "%s: Error getting template file crs var: %s.\n",
 	     __FUNCTION__, crs_name );
@@ -1662,10 +1723,8 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
    * long_name = <region_id_name><resolution(km)> (basically the .gpd name)
    * geospatial_resolution = actual value (function of projection and resolution/scale)
    */
-  strcat( long_name, cetb_region_id_name[ this->region_id ] );
-  strcat( long_name, cetb_resolution_name[ this->factor +
-					   ((CETB_MAX_RESOLUTION_FACTOR+1)*
-					    this->resolution_id)] );
+  strcat( long_name, cetb_region_id_name[this->resolution_id][this->region_id] );
+  strcat( long_name, cetb_resolution_name[this->resolution_id][this->factor] );
   if ( ( status = nc_put_att_text( this->fid, crs_id, "long_name",
 				   strlen( long_name ),
 				   long_name ) ) ) {
@@ -1695,42 +1754,50 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
 
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_min", 
 				     NC_DOUBLE, 1,
-				     &( cetb_latitude_extent[ this->region_id ][0] ) ) ) ) {
+				     &(cetb_latitude_extent[this->resolution_id]
+					[this->region_id][0] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lat_min", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_max", 
 				     NC_DOUBLE, 1,
-				     &( cetb_latitude_extent[ this->region_id ][1] ) ) ) ) {
+				     &(cetb_latitude_extent[this->resolution_id]
+					[ this->region_id ][1] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lat_max", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_min", 
 				     NC_DOUBLE, 1,
-				     &( cetb_longitude_extent[ this->region_id ][0] ) ) ) ) {
+				     &(cetb_longitude_extent[this->resolution_id]
+				       [ this->region_id ][0] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lon_min", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lon_max", 
 				     NC_DOUBLE, 1,
-				     &( cetb_longitude_extent[ this->region_id ][1] ) ) ) ) {
+				     &( cetb_longitude_extent[this->resolution_id]
+					[ this->region_id ][1] ) ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "geospatial_lon_max", nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds_crs", 
-				   strlen( cetb_geospatial_bounds_crs[ this->region_id ] ),
-				   cetb_geospatial_bounds_crs[ this->region_id ] ) ) ) {
+				   strlen(cetb_geospatial_bounds_crs
+					  [this->resolution_id][this->region_id ]),
+				   cetb_geospatial_bounds_crs[this->resolution_id]
+				   [this->region_id] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
   }
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds", 
-				   strlen( cetb_geospatial_bounds[ this->region_id ] ),
-				   cetb_geospatial_bounds[ this->region_id ] ) ) ) {
+				   strlen(cetb_geospatial_bounds
+					  [this->resolution_id][this->region_id]),
+				   cetb_geospatial_bounds[this->resolution_id]
+				   [ this->region_id ] ) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, att_name, nc_strerror( status ) );
     return 1;
@@ -1851,9 +1918,9 @@ int set_all_dimensions( cetb_file_class *this ) {
   size_t rows;
   size_t cols;
 
-  half_pixel_m = cetb_exact_scale_m[ this->region_id ][ this->factor ] / 2.0;
-  rows = cetb_grid_rows[ this->region_id ][ this->factor ];
-  cols = cetb_grid_cols[ this->region_id ][ this->factor ];
+  half_pixel_m = cetb_exact_scale_m[this->region_id][this->factor] / 2.0;
+  rows = cetb_grid_rows[this->region_id][this->factor];
+  cols = cetb_grid_cols[this->region_id][this->factor];
 
   /*
    * Work on the time dimension:
@@ -1895,7 +1962,8 @@ int set_all_dimensions( cetb_file_class *this ) {
   for ( i = 0; i < (int)rows; i++ ) {
     vals[ rows - i - 1 ]
       = ( (double) i - ( (double) rows / 2.0 ) )
-      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+      * cetb_exact_scale_m[this->region_id][this->factor]
+      + half_pixel_m;
   }
   
   valid_range[ 0 ] = vals[ rows - 1 ] - half_pixel_m;
@@ -1928,7 +1996,8 @@ int set_all_dimensions( cetb_file_class *this ) {
 
   for ( i = 0; i < (int)cols; i++ ) {
     vals[ i ] = ( (double) i - ( (double) cols / 2.0 ) )
-      * cetb_exact_scale_m[ this->region_id ][ this->factor ] + half_pixel_m;
+      * cetb_exact_scale_m[this->region_id][this->factor]
+      + half_pixel_m;
   }
   
   valid_range[ 0 ] = vals[ 0 ] - half_pixel_m;
@@ -2159,6 +2228,7 @@ int valid_date( int year, int doy ) {
  *                             and T region with both or asc/des
  *
  *  input :
+ *    resolution_id : resolution index (25, 36, 24 km eg)
  *    region_id : region id
  *    direction_id : pass direction id
  *
@@ -2167,34 +2237,38 @@ int valid_date( int year, int doy ) {
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
  *
  */
-int valid_pass_direction( cetb_region_id region_id, cetb_direction_id direction_id ) {
+int valid_pass_direction( cetb_resolution_id resolution_id,
+			  cetb_region_id region_id,
+			  cetb_direction_id direction_id ) {
 
   if ( CETB_EASE2_N == region_id || CETB_EASE2_S == region_id ||
-       CETB_EASE2_N36 == region_id || CETB_EASE2_S36 == region_id ) {
+       CETB_EASE2_N36 == region_id || CETB_EASE2_S36 == region_id ||
+       CETB_EASE2_N24 == region_id || CETB_EASE2_S24 == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_MORNING_PASSES == direction_id
 	 || CETB_EVENING_PASSES == direction_id ) {
       return STATUS_OK;
     } else {
-      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id ],
+      fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n",
+	       __FUNCTION__, cetb_region_id_name[resolution_id][region_id],
 	       direction_id );
       return STATUS_FAILURE;
     }
-  } else if ( CETB_EASE2_T == region_id || CETB_EASE2_M == region_id ) {
+  } else if ( CETB_EASE2_T == region_id || CETB_EASE2_M36 == region_id ||
+	      CETB_EASE2_M24 == region_id ) {
     if ( CETB_ALL_PASSES == direction_id
 	 || CETB_ASC_PASSES == direction_id
 	 || CETB_DES_PASSES == direction_id ) {
       return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id ],
+	       cetb_region_id_name[resolution_id][region_id],
 	       direction_id );
       return STATUS_FAILURE;
     }
   } else {
       fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
-	       cetb_region_id_name[ region_id ] );
+	       cetb_region_id_name[resolution_id][region_id] );
       return STATUS_FAILURE;
   }
 
@@ -2253,21 +2327,24 @@ int valid_reconstruction_id( cetb_reconstruction_id reconstruction_id ) {
  *
  *  output : n/a
  *
- *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
+ *  result : cetb_region_id on success, or CETB_NO_REGION  with error message to stderr
  *
  */
 cetb_region_id valid_region_id( int region_number, cetb_resolution_id base_resolution ) {
 
-  int i, istart;
   cetb_region_id region_id=CETB_NO_REGION;
 
-  istart = 0 + (int)(base_resolution*(CETB_NUM_REGIONS/CETB_NUMBER_BASE_RESOLUTIONS));
-  for ( i = istart; i < CETB_NUM_REGIONS; i++ ) {
-    if ( region_number == cetb_region_number[ i ] ) {
-      region_id = ( cetb_region_id ) i;
-      break;
-    }
+  region_id = ( cetb_region_id ) ( (region_number-CETB_PROJECTION_BASE_NUMBER) +
+				   (base_resolution*CETB_NUMBER_BASE_RESOLUTIONS) );
+  
+  if ( ( region_id <= CETB_NO_REGION ) ||
+       ( region_id >= CETB_NUM_REGIONS ) ) {
+    fprintf( stderr, "%s: region_id %d in valid_region_id \n",
+	     __FUNCTION__, region_number );
   }
+
+  fprintf( stderr, "%s: region_id %d in valid_region_id %d\n",
+	   __FUNCTION__, region_number, region_id );
 
   return region_id;
   
