@@ -1542,9 +1542,6 @@ FILE * get_meta(char *mname, char *outpath,
 		    nsy=atoi(++x);
 		  }
 
-		  fprintf( stderr, "%s: ***frommeta***** nsx %d nsy %d *******\n",
-			   __FUNCTION__, nsx, nsy );
-		  
 		  if (strstr(line,"Grid_projection_origin_x") != NULL) {
 		    x = strchr(line,'=');
 		    ydeg2=(float)atof(++x);
@@ -1670,9 +1667,6 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&nsx,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&nsy,4,1,a->reg_lu[iregion-1]);
-		      fprintf( stderr, "%s: ****fwrite***** nsx %d nsy %d *********\n",
-			       __FUNCTION__, nsx, nsy );
-		      //fwrite(&projt,4,1,a->reg_lu[iregion-1]); //
 		      fwrite(&ascale,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&bscale,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&a0,4,1,a->reg_lu[iregion-1]);
