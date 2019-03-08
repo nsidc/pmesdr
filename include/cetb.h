@@ -388,6 +388,7 @@ typedef enum {
   CETB_CSU,
   CETB_RSS,
   CETB_JPL,
+  CETB_CSU_ICDR,
   CETB_NUM_PRODUCERS
 } cetb_swath_producer_id;
 
@@ -397,7 +398,8 @@ typedef enum {
 static const char *cetb_swath_producer_id_name[] = {
   "CSU",
   "RSS",
-  "JPL"
+  "JPL",
+  "CSU_ICDR"
 };
 
 /*
