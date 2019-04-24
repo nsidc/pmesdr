@@ -128,8 +128,8 @@ static FILE * get_meta(char *mname, char *outpath, int *dstart,
 		       int *year, char *prog_n, float prog_v,
 		       float *response_threshold, int *flatten,
 		       int *median_flag, int *inc_correct, float *b_correct,
-		       float *angle_ref, region_save *save_area,
-		       cetb_platform_id *cetb_platform);
+		       float *angle_ref, int *base_resolution,
+		       region_save *save_area, cetb_platform_id *cetb_platform);
 static int check_for_consistent_regions( region_save *save_area,
 					 setup_ltod_flag *ltdflag );
 static void compute_locations(region_save *a, int *nregions, int **noffset,
@@ -144,7 +144,8 @@ static float km2pix(float *x, float *y, int iopt, float ascale, float bscale,
 		    int *stat);
 static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 			     float ascale, float bscale, float a0, float b0);
-static int box_size_by_channel( int ibeam, cetb_sensor_id id );
+static int box_size_by_channel( int ibeam, cetb_sensor_id id,
+				int base_resolution );
 static void combine_setup_files( region_save *a, int execution_flag );
 static int ltod_split_time( cetb_platform_id platform_id,
 			    cetb_region_id region_id,
@@ -183,6 +184,7 @@ int main(int argc,char *argv[])
   char *s;
   float cen_lat, cen_lon, ctime;
   double cave;  
+  int base_resolution=25;
 
   /* output record information */
   float tb,thetai,azang=0.0;
@@ -327,7 +329,7 @@ int main(int argc,char *argv[])
   file_id = get_meta(mname, outpath, &dstart, &dend, &mstart, &mend, &year,
 		     prog_name, prog_version ,&response_threshold, &flatten, &median_flag,
 		     &inc_correct, &b_correct, &angle_ref, 
-		     &save_area, &cetb_platform);
+		     &base_resolution, &save_area, &cetb_platform);
   if (file_id == NULL) {
     fprintf(stderr,"*** could not open meta file %s/%s\n", outpath, mname);    
     exit(-1);  
@@ -361,7 +363,8 @@ int main(int argc,char *argv[])
 
     if ( box_size_flag == 0 ) {
       box_size = box_size_by_channel( save_area.sav_ibeam[iregion],
-				      cetb_platform_to_sensor[cetb_platform] );
+				      cetb_platform_to_sensor[cetb_platform],
+				      base_resolution );
     }
     box_size_km = box_size/save_area.sav_km[iregion];
     fprintf( stderr, "%s: %s metafile:box size in pixels is %d and in km is %f for channel %d\n",
@@ -1028,7 +1031,7 @@ int main(int argc,char *argv[])
 		   is computed for each pixel in the box and tested to see if
 		   the response exceeds a threshold.  if so, it is used */
 
-		box_size = box_size_by_channel( ibeam, gsx->short_sensor ); 
+		box_size = box_size_by_channel( ibeam, gsx->short_sensor, base_resolution ); 
 		if ( box_size < 0 ) {
 		  exit (-1);
 		}
@@ -1230,7 +1233,7 @@ FILE * get_meta(char *mname, char *outpath,
 		char *prog_n, float prog_v,
 		float *response_threshold, int *flatten, int *median_flag,
 		int *inc_correct, float *b_correct, float *angle_ref, 
-		region_save *a, cetb_platform_id *cetb_platform)
+		int *base_resolution, region_save *a, cetb_platform_id *cetb_platform)
 {
   /* read meta file, open output .setup files, write .setup file headers, and 
      store key parameters in memory */
@@ -1259,7 +1262,6 @@ FILE * get_meta(char *mname, char *outpath,
   float a_init,a_offset;
   int nits;
 
-  int base_resolution=25;
   char *x;
   int z, nsection, isection, cnt;
   float tsplit1=1.0, tsplit2=13.0;
@@ -1377,7 +1379,7 @@ FILE * get_meta(char *mname, char *outpath,
       
       if (strstr(line,"Base_resolution") != NULL) {
 	x = strchr(line,'=');
-	base_resolution=atoi(++x);
+	*base_resolution=atoi(++x);
       }
       
       if (strstr(line,"Num_Regions") != NULL) {
@@ -1812,7 +1814,7 @@ FILE * get_meta(char *mname, char *outpath,
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      for(z=0;z<100;z++)lin[z]=' ';
-		      sprintf(lin," Base_resolution=%d", base_resolution);
+		      sprintf(lin," Base_resolution=%d", *base_resolution);
 		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
@@ -2229,7 +2231,7 @@ static int timedecode(double epochTime,
  * box size determination are located there
  *
  */
-int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
+int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution ) {
   int box_size;
 
   if ( CETB_SSMI == id ) {
@@ -2333,7 +2335,11 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id ) {
     }
   }
   else if ( CETB_SMAP_RADIOMETER == id ) {
-    box_size = 40;
+    if ( CETB_BASE_36_RESOLUTION == base_resolution ) {
+      box_size = 28;
+    } else {
+      box_size = 40;
+    }
   } else {
     box_size = -1;
     fprintf( stderr, "%s: bad sensor id %d\n", __FUNCTION__, id );
@@ -2779,6 +2785,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     case 2015:
     case 2016:
     case 2017:
+    case 2018:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	*split_time = -3.0;
       } else {

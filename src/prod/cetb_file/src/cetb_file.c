@@ -1578,9 +1578,9 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
      return 1;
   } 
 
-  if ( status = nc_put_att_text(this->fid, NC_GLOBAL, "instrument",
-				strlen(cetb_gcmd_sensor_keyword[this->sensor_id]),
-				cetb_gcmd_sensor_keyword[ this->sensor_id ]) ) {
+  if ( ( status = nc_put_att_text(this->fid, NC_GLOBAL, "instrument",
+				  strlen(cetb_gcmd_sensor_keyword[this->sensor_id]),
+				  cetb_gcmd_sensor_keyword[ this->sensor_id ]) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "instrument", nc_strerror( status ) );
     return 1;
