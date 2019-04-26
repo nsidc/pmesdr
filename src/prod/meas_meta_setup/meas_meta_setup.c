@@ -145,7 +145,7 @@ static float km2pix(float *x, float *y, int iopt, float ascale, float bscale,
 static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 			     float ascale, float bscale, float a0, float b0);
 static int box_size_by_channel( int ibeam, cetb_sensor_id id,
-				int base_resolution );
+				int base_resolution, int *box_size );
 static void combine_setup_files( region_save *a, int execution_flag );
 static int ltod_split_time( cetb_platform_id platform_id,
 			    cetb_region_id region_id,
@@ -184,7 +184,7 @@ int main(int argc,char *argv[])
   char *s;
   float cen_lat, cen_lon, ctime;
   double cave;  
-  int base_resolution=25;
+  int base_resolution=CETB_BASE_25_RESOLUTION;
 
   /* output record information */
   float tb,thetai,azang=0.0;
@@ -286,7 +286,10 @@ int main(int argc,char *argv[])
   /*
    * optionally get the box size of pixels to use for calculating MRF for each 
    * box size is determined by a function that sets the value based on the channel
-   * and the EFOV unless the box size is passed in as a cmd line argument
+   * and the EFOV and the base_resolution for SMAP processing
+   * unless the box size is passed in as a cmd line argument
+   *
+   * NOTE: specifying -b overrides box size setting in the code
    */ 
   while (--argc > 0 && (*++argv)[0] == '-') {
     for (option = argv[0]+1; *option != '\0'; option++) {
@@ -362,9 +365,12 @@ int main(int argc,char *argv[])
   /* write out the search box size in km to each setup output file */
 
     if ( box_size_flag == 0 ) {
-      box_size = box_size_by_channel( save_area.sav_ibeam[iregion],
+      status = box_size_by_channel( save_area.sav_ibeam[iregion],
 				      cetb_platform_to_sensor[cetb_platform],
-				      base_resolution );
+				      base_resolution, &box_size );
+      if ( status != 0) {
+	exit (-1);
+      }
     }
     box_size_km = box_size/save_area.sav_km[iregion];
     fprintf( stderr, "%s: %s metafile:box size in pixels is %d and in km is %f for channel %d\n",
@@ -1031,8 +1037,9 @@ int main(int argc,char *argv[])
 		   is computed for each pixel in the box and tested to see if
 		   the response exceeds a threshold.  if so, it is used */
 
-		box_size = box_size_by_channel( ibeam, gsx->short_sensor, base_resolution ); 
-		if ( box_size < 0 ) {
+		status = box_size_by_channel( ibeam, gsx->short_sensor,
+					      base_resolution, &box_size ); 
+		if ( status != 0 ) {
 		  exit (-1);
 		}
 
@@ -2218,10 +2225,13 @@ static int timedecode(double epochTime,
  * input :
  *   ibeam : channel number
  *   sensor : short_sensor id
+ *   base resolution : CETB_BASE_[25/24/36]_RESOLUTION
+ *
+ * output :
+ *   box size is returned as an argument
  *
  * result :
- *   box size in pixels for that channel/sensor combination
- *   returns -1 in case of error - e.g. out of range channel or unknown sensor
+ *   Status is -1 in case of failure or zero if OK
  *
  *
  * a discussion of the process by which the optimum box_size was chosen can be
@@ -2231,8 +2241,7 @@ static int timedecode(double epochTime,
  * box size determination are located there
  *
  */
-int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution ) {
-  int box_size;
+int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int *box_size ) {
 
   if ( CETB_SSMI == id ) {
     
@@ -2240,52 +2249,52 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution ) {
     case SSMI_19H:
     case SSMI_19V:
     case SSMI_22V:
-      box_size = 100;
+      *box_size = 100;
       break;
     case SSMI_37H:
     case SSMI_37V:
-      box_size = 60;
+      *box_size = 60;
       break;
     case SSMI_85H:
     case SSMI_85V:
-      box_size = 20;
+      *box_size = 20;
       break;
     default:
-      box_size = -1;
+      *box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
   } else if ( CETB_AMSRE == id ) {
     switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
     case AMSRE_06H:
     case AMSRE_06V:
-      box_size = 24;
+      *box_size = 24;
       break;
     case AMSRE_10H:
     case AMSRE_10V:
-      box_size = 20;
+      *box_size = 20;
       break;
     case AMSRE_18H:
     case AMSRE_18V:
-      box_size = 22;
+      *box_size = 22;
       break;
     case AMSRE_23H:
     case AMSRE_23V:
-      box_size = 26;
+      *box_size = 26;
       break;
     case AMSRE_36H:
     case AMSRE_36V:
-      box_size = 22;
+      *box_size = 22;
       break;
     case AMSRE_89H_A:
     case AMSRE_89V_A:
-      box_size = 10;
+      *box_size = 10;
       break;
     case AMSRE_89H_B:
     case AMSRE_89V_B:
-      box_size = 12;
+      *box_size = 12;
       break;
     default:
-      box_size = -1;
+      *box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
   } else if ( CETB_SSMIS == id ) {
@@ -2293,59 +2302,64 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution ) {
     case SSMIS_19H:
     case SSMIS_19V:
     case SSMIS_22V:
-      box_size = 100;
+      *box_size = 100;
       break;
     case SSMIS_37H:
     case SSMIS_37V:
-      box_size = 60;
+      *box_size = 60;
       break;
     case SSMIS_91H:
     case SSMIS_91V:
-      box_size = 20;
+      *box_size = 20;
       break;
     default:
-      box_size = -1;
+      *box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
   } else if ( CETB_SMMR == id ) {
     switch ( cetb_ibeam_to_cetb_smmr_channel[ibeam] ) {
     case SMMR_06H:
     case SMMR_06V:
-      box_size = 120;
+      *box_size = 120;
       break;
     case SMMR_10H:
     case SMMR_10V:
-      box_size = 100;
+      *box_size = 100;
       break;
     case SMMR_18H:
     case SMMR_18V:
-      box_size = 100;
+      *box_size = 100;
       break;
     case SMMR_21H:
     case SMMR_21V:
-      box_size = 100;
+      *box_size = 100;
       break;
     case SMMR_37H:
     case SMMR_37V:
-      box_size = 60;
+      *box_size = 60;
       break;
     default:
-      box_size = -1;
+      *box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
   }
   else if ( CETB_SMAP_RADIOMETER == id ) {
     if ( CETB_BASE_36_RESOLUTION == base_resolution ) {
-      box_size = 28;
+      *box_size = 28;
     } else {
-      box_size = 40;
+      *box_size = 40;
     }
   } else {
-    box_size = -1;
-    fprintf( stderr, "%s: bad sensor id %d\n", __FUNCTION__, id );
+    *box_size = -1;
+    fprintf( stderr, "%s: bad sensor id %d box size not known\n", __FUNCTION__, id );
   }
-    
-  return box_size;
+
+  if ( -1 == *box_size ) {
+    return (-1);
+  } else {
+    return (0);
+  }
+      
 }
 
 /*
