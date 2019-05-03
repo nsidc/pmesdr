@@ -1578,9 +1578,9 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
      return 1;
   } 
 
-  if ( status = nc_put_att_text(this->fid, NC_GLOBAL, "instrument",
-				strlen(cetb_gcmd_sensor_keyword[this->sensor_id]),
-				cetb_gcmd_sensor_keyword[ this->sensor_id ]) ) {
+  if ( ( status = nc_put_att_text(this->fid, NC_GLOBAL, "instrument",
+				  strlen(cetb_gcmd_sensor_keyword[this->sensor_id]),
+				  cetb_gcmd_sensor_keyword[ this->sensor_id ]) ) ) {
     fprintf( stderr, "%s: Error setting %s: %s.\n",
   	     __FUNCTION__, "instrument", nc_strerror( status ) );
     return 1;
@@ -2434,7 +2434,8 @@ int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
 
   if ( CETB_CSU == producer_id
        || CETB_RSS == producer_id
-       || CETB_JPL == producer_id ) {
+       || CETB_JPL == producer_id
+       || CETB_CSU_ICDR == producer_id ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
@@ -2652,6 +2653,11 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
     strcat( source_value, "10.5067/VA6W2M0JTK2N " );
+  }
+
+  if ( ( CETB_SSMIS == this->sensor_id ) &&
+       ( CETB_CSU_ICDR == this->producer_id ) ) {
+    strcat( source_value, "CSU SSMIS ICDR " );
   }
 
   strcat( source_value, fixed_source_value );

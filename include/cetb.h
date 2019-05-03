@@ -26,9 +26,9 @@
  * factor = 0 : 25/2**0 = 25
  *          1 : 25/2**1 = 12.5
  */
-#define CETB_BASE_25_RESOLUTION 25.0
-#define CETB_BASE_36_RESOLUTION 36.0
-#define CETB_BASE_24_RESOLUTION 24.0
+#define CETB_BASE_25_RESOLUTION 25
+#define CETB_BASE_36_RESOLUTION 36
+#define CETB_BASE_24_RESOLUTION 24
 #define CETB_MIN_RESOLUTION_FACTOR 0
 #define CETB_MAX_RESOLUTION_FACTOR 4
 
@@ -388,6 +388,7 @@ typedef enum {
   CETB_CSU,
   CETB_RSS,
   CETB_JPL,
+  CETB_CSU_ICDR,
   CETB_NUM_PRODUCERS
 } cetb_swath_producer_id;
 
@@ -397,7 +398,8 @@ typedef enum {
 static const char *cetb_swath_producer_id_name[] = {
   "CSU",
   "RSS",
-  "JPL"
+  "JPL",
+  "CSU_ICDR"
 };
 
 /*
