@@ -17,7 +17,7 @@ https://doi.org/10.5067/QZ3WJNOUZLFK.
 
 
 This project software is licensed under the GNU General Public
-License v3.0.  Please refer to the LICENSE.txg file for details.
+License v3.0.  Please refer to the LICENSE.txt file for details.
 
 
 Base directory for the BYU MEASURES project:
