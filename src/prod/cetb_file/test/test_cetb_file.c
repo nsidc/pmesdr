@@ -441,7 +441,7 @@ void test_init_for_valid_cetb_24_3_temperate( void ) {
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
-  sprintf( filename, "%s/NSIDC-0738-EASE2_M03km-SMAP_LRM-1991365-1.4F-A-SIR-JPL-v0.3.nc",
+  sprintf( filename, "%s/NSIDC-0738-EASE2_M03km-SMAP_LRM-1991365-1.4F-A-SIR-JPL-v1.0.nc",
 	   dirname );
   TEST_ASSERT_EQUAL_STRING( filename,
 			    cetb->filename );
