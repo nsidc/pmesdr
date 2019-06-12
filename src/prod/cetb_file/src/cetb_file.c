@@ -1680,7 +1680,8 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char geospatial_resolution[ MAX_STR_LENGTH ] = "";
   
   /* Copy/set the coordinate reference system (crs) metadata */
-  strcat( crs_name, cetb_region_id_name[this->resolution_id][this->region_id] );
+  strcat( crs_name, cetb_region_id_name[this->resolution_id]
+	  [this->region_id % CETB_NUMBER_BASE_RESOLUTIONS] );
   if ( ( status = nc_inq_varid( template_fid, crs_name, &crs_id ) ) ) {
     fprintf( stderr, "%s: Error getting template file crs var: %s.\n",
 	     __FUNCTION__, crs_name );
@@ -1723,7 +1724,8 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
    * long_name = <region_id_name><resolution(km)> (basically the .gpd name)
    * geospatial_resolution = actual value (function of projection and resolution/scale)
    */
-  strcat( long_name, cetb_region_id_name[this->resolution_id][this->region_id] );
+  strcat( long_name, cetb_region_id_name[this->resolution_id]
+	  [this->region_id % CETB_NUMBER_BASE_RESOLUTIONS] );
   strcat( long_name, cetb_resolution_name[this->resolution_id][this->factor] );
   if ( ( status = nc_put_att_text( this->fid, crs_id, "long_name",
 				   strlen( long_name ),
@@ -2250,7 +2252,8 @@ int valid_pass_direction( cetb_resolution_id resolution_id,
       return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n",
-	       __FUNCTION__, cetb_region_id_name[resolution_id][region_id],
+	       __FUNCTION__, cetb_region_id_name[resolution_id]
+	       [region_id % CETB_NUMBER_BASE_RESOLUTIONS],
 	       direction_id );
       return STATUS_FAILURE;
     }
@@ -2262,13 +2265,13 @@ int valid_pass_direction( cetb_resolution_id resolution_id,
       return STATUS_OK;
     } else {
       fprintf( stderr, "%s: region=%s not valid with pass direction=%d\n", __FUNCTION__,
-	       cetb_region_id_name[resolution_id][region_id],
+	       cetb_region_id_name[resolution_id][region_id % CETB_NUMBER_BASE_RESOLUTIONS],
 	       direction_id );
       return STATUS_FAILURE;
     }
   } else {
       fprintf( stderr, "%s: Invalid region=%s\n", __FUNCTION__,
-	       cetb_region_id_name[resolution_id][region_id] );
+	       cetb_region_id_name[resolution_id][region_id % CETB_NUMBER_BASE_RESOLUTIONS] );
       return STATUS_FAILURE;
   }
 
@@ -2339,7 +2342,7 @@ cetb_region_id valid_region_id( int region_number, cetb_resolution_id base_resol
   
   if ( ( region_id <= CETB_NO_REGION ) ||
        ( region_id >= CETB_NUM_REGIONS ) ) {
-    fprintf( stderr, "%s: region_id %d in valid_region_id \n",
+    fprintf( stderr, "%s: out of range region_id %d in valid_region_id \n",
 	     __FUNCTION__, region_number );
   }
 

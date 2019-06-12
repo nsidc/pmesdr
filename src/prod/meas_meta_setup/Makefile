@@ -149,17 +149,17 @@ csu_ease_36 :
 	$(RM) $(TESTDIR)/setupCSU/e2n
 	$(MKDIR) $(TESTDIR)/setupCSU/e2n
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_36_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n_36/e2ntest_36_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
 	)
 	$(RM) $(TESTDIR)/setupCSU/e2s
 	$(MKDIR) $(TESTDIR)/setupCSU/e2s
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_36_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s_36/e2stest_36_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
 	)
 	$(RM) $(TESTDIR)/setupCSU/e2t
 	$(MKDIR) $(TESTDIR)/setupCSU/e2t
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t_36/e2ttest_36_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
 	)
 
 csu_ease_24 :
@@ -204,13 +204,13 @@ csu_quick_36 :
 	$(RM) $(TESTDIR)/setupCSU/e2t
 	$(MKDIR) $(TESTDIR)/setupCSU/e2t
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_36_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n_36/e2ntest_36_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
 	)
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_36_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s_36/e2stest_36_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
 	)
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t_36/e2ttest_36_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
 	)
 
 csu_quick_24 :

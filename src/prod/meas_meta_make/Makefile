@@ -158,18 +158,18 @@ csu_ease :
 	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
 
 csu_ease_36 :
-	$(RM) $(TESTDIR)/csu_e2n
-	$(MKDIR) $(TESTDIR)/csu_e2n
-	$(RM) $(TESTDIR)/csu_e2s
-	$(MKDIR) $(TESTDIR)/csu_e2s
-	$(RM) $(TESTDIR)/csu_e2t
-	$(MKDIR) $(TESTDIR)/csu_e2t
+	$(RM) $(TESTDIR)/csu_e2n_36
+	$(MKDIR) $(TESTDIR)/csu_e2n_36
+	$(RM) $(TESTDIR)/csu_e2s_36
+	$(MKDIR) $(TESTDIR)/csu_e2s_36
+	$(RM) $(TESTDIR)/csu_e2t_36
+	$(MKDIR) $(TESTDIR)/csu_e2t_36
 	$(CD) $(TOPDIR)/sample_data
-	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2n/e2ntest_36_CSU.meta F13 \
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2n_36/e2ntest_36_CSU.meta F13 \
 	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2s/e2stest_36_CSU.meta F13 \
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2s_36/e2stest_36_CSU.meta F13 \
 	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta F13 \
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2t_36/e2ttest_36_CSU.meta F13 \
 	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
 
 csu_ease_24 :
@@ -233,18 +233,18 @@ csu_quick :
 	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 
 csu_quick_36 :
-	$(RM) $(TESTDIR)/csu_e2n
-	$(MKDIR) $(TESTDIR)/csu_e2n
-	$(RM) $(TESTDIR)/csu_e2s
-	$(MKDIR) $(TESTDIR)/csu_e2s
-	$(RM) $(TESTDIR)/csu_e2t
-	$(MKDIR) $(TESTDIR)/csu_e2t
+	$(RM) $(TESTDIR)/csu_e2n_36
+	$(MKDIR) $(TESTDIR)/csu_e2n_36
+	$(RM) $(TESTDIR)/csu_e2s_36
+	$(MKDIR) $(TESTDIR)/csu_e2s_36
+	$(RM) $(TESTDIR)/csu_e2t_36
+	$(MKDIR) $(TESTDIR)/csu_e2t_36
 	$(CD) $(TOPDIR)/sample_data		 
-	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2n/e2ntest_36_CSU.meta F13 	\
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2n_36/e2ntest_36_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2s/e2stest_36_CSU.meta F13 	\
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2s_36/e2stest_36_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2t/e2ttest_36_CSU.meta F13 	\
+	$(BINDIR)/$(BIN)  -r 1 $(TESTDIR)/csu_e2t_36/e2ttest_36_CSU.meta F13 	\
 	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
 
 csu_quick_24 :
