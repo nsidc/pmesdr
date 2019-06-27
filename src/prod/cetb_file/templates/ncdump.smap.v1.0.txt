@@ -66,7 +66,7 @@ variables:
 		:history = "" ;
 		:comment = "" ;
 		:source = "" ;
-		string :references = "Long, D. G., M. J. Brodzik and M. A. Hardman. 2018. Enhanced Resolution SMAP Brightness Temperature Image Products. IEEE Transactions on Geoscience and Remote Sensing, 1-13. doi:10.1109/TGRS.2018.2889427.\n", "Algorithm Theoretical Basis Document:  https://nsidc.org/sites/nsidc.org/files/technical-references/\n" ;
+		string :references = "Long, D. G., M. J. Brodzik and M. A. Hardman. 2019. Enhanced Resolution SMAP Brightness Temperature Image Products. IEEE Transactions on Geoscience and Remote Sensing, 1-13. doi:10.1109/TGRS.2018.2889427.\n", "Algorithm Theoretical Basis Document:  https://nsidc.org/sites/nsidc.org/files/technical-references/\n" ;
 		:metadata_link = "http://nsidc.org/data/nsidc-0738.html" ;
 		:summary = "Enhanced-resolution, gridded SMAP L-band radiometer passive microwave brightness temperatures\n" ;
 		string :institution = "National Snow and Ice Data Center\n", "Cooperative Institute for Research in Environmental Sciences\n", "University of Colorado at Boulder\n", "Boulder, CO" ;
@@ -117,5 +117,5 @@ variables:
 		string :creator_institution = "National Snow and Ice Data Center\n", "Cooperative Institute for Research in Environmental Sciences\n", "University of Colorado at Boulder\n", "Boulder, CO" ;
 		:contributor_name = "Mary J. Brodzik, David G. Long, Molly A. Hardman" ;
 		:contributor_role = "Principal Investigator, Co-Investigator, Developer" ;
-		string :citation = "Brodzik, M. J., D. G. Long, M. A. Hardman. 2018.\n", "SMAP Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness Temperatures.\n", "Version 1.0.\n", "[Indicate subset used].\n", "Boulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
+		string :citation = "Brodzik, M. J., D. G. Long, M. A. Hardman. 2019.\n", "SMAP Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness Temperatures.\n", "Version 1.0.\n", "[Indicate subset used].\n", "Boulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
 }
