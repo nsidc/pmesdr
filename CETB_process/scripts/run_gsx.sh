@@ -10,7 +10,7 @@
 #SBATCH --partition=shas
 #SBATCH --time=04:30:00
 #SBATCH --ntasks=120
-#SBATCH --account=ucb13_summit2
+#SBATCH --account=ucb135_summit1
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/gsx_lb-%j.out
 # Set the system up to notify upon completion
