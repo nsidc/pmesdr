@@ -19,7 +19,8 @@
 year=$1
 src=$2
 envpath=$3
-file=/scratch/summit/${USER}/${src}_scripts/${src}_sir_list_${year}
+suffix=$4
+file=/scratch/summit/${USER}/${src}_scripts/${src}_sir_list_${year}_${suffix}
 source ${envpath}/summit_set_pmesdr_environment.sh
 ml impi
 ml loadbalance
