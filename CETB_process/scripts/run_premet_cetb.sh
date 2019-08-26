@@ -8,7 +8,7 @@
 #SBATCH --job-name CETB_platform_premet
 #SBATCH --partition=shas
 #SBATCH --time=01:20:00
-#SBATCH --account=ucb13_summit2
+#SBATCH --account=ucb135_summit1
 #SBATCH --ntasks 120
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/premet_lb-%j.out
