@@ -3,6 +3,7 @@
 # Arguments:
 #  src : sensor source (F08, F10, etc)
 #  envpath : location of summit_set_pmesdr_environment.sh script
+#  suffix : resolution is either 25, 24 or 36
 #
 #SBATCH --qos normal
 #SBATCH --job-name CETB_make

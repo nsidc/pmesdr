@@ -3,6 +3,7 @@
 # Arguments:
 #  src : sensor source (F08, F10, etc)
 #  condaenv : name of conda env where gsx is installed
+#  suffix : resolution is either 25, 24 or 36
 #
 #SBATCH --qos normal
 #SBATCH --job-name CETB_platform_premet
