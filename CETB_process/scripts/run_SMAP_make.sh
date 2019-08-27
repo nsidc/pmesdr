@@ -10,7 +10,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --ntasks=24
 #SBATCH --cpus-per-task=1
-#SBATCH --account=ucb13_summit2
+#SBATCH --account=ucb135_summit1
 #SBATCH -o output/make_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL

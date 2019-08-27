@@ -11,7 +11,7 @@
 #SBATCH --time=04:00:00
 #SBATCH --cpus-per-task=3
 #SBATCH --ntasks=80
-#SBATCH --account=ucb13_summit2
+#SBATCH --account=ucb135_summit1
 #SBATCH -o output/setup_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
