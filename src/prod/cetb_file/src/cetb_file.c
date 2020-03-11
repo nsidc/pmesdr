@@ -2419,7 +2419,7 @@ int valid_base_resolution( cetb_resolution_id base ) {
  */
 int valid_sensor_id( cetb_sensor_id sensor_id ) {
 
-  if ( 0 <= sensor_id && sensor_id < CETB_NUM_SENSORS ) {
+  if ( CETB_NO_SENSOR < sensor_id && sensor_id < CETB_NUM_SENSORS ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
@@ -2441,10 +2441,7 @@ int valid_sensor_id( cetb_sensor_id sensor_id ) {
  */
 int valid_swath_producer_id( cetb_swath_producer_id producer_id ) {
 
-  if ( CETB_CSU == producer_id
-       || CETB_RSS == producer_id
-       || CETB_JPL == producer_id
-       || CETB_CSU_ICDR == producer_id ) {
+  if ( CETB_NO_PRODUCER < producer_id && producer_id < CETB_NUM_PRODUCERS ) {
     return STATUS_OK;
   } else {
     fprintf( stderr, "%s: Invalid producer_id=%d\n", __FUNCTION__, producer_id );
