@@ -1386,7 +1386,7 @@ char *cetb_template_filename( cetb_sensor_id sensor_id ) {
   strncpy( filename, ptr_path, FILENAME_MAX );
 
   if ( CETB_SMMR <= sensor_id && sensor_id <= CETB_SSMIS ) {
-    strcat( filename, "/src/prod/cetb_file/templates/cetb_global_template.nc" );
+    strcat( filename, "/src/prod/cetb_file/templates/pm-cetb_global_template.nc" );
   } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
     strcat( filename, "/src/prod/cetb_file/templates/smap_global_template.nc" );
   } else {
