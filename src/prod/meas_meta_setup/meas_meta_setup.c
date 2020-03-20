@@ -2800,6 +2800,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     case 2016:
     case 2017:
     case 2018:
+    case 2019:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	*split_time = -3.0;
       } else {
@@ -2856,6 +2857,8 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     case 2015:
     case 2016:
     case 2017:
+    case 2018:
+    case 2019:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	*split_time = -2.0;
       } else {
