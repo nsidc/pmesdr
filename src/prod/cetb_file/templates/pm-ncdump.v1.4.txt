@@ -117,5 +117,5 @@ variables:
 		string :creator_institution = "NASA National Snow and Ice Data Center Distributed Active Archive Center\n", "National Snow and Ice Data Center\n", "Cooperative Institute for Research in Environmental Sciences\n", "University of Colorado at Boulder\n", "Boulder, CO" ;
 		string :contributor_name = "Mary J. Brodzik, David G. Long, Richard L. Armstrong, Molly A. Hardman, Aaron C. Paget\n", "NASA NSIDC DAAC Passive Microwave Team" ;
 		:contributor_role = "Principal Investigator, Co-Investigator, Co-Investigator, Developer, Contributor, Data Producer" ;
-		string :citation = "Brodzik, M. J., D. G. Long, M. A. Hardman, A. C. Paget, R. L. Armstrong. 2016, updated 2018.\n", "MEaSUREs Calibrated Passive Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR.\n", "Version 1.4.\n", "[Indicate subset used].\n", "Boulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
+		string :citation = "Brodzik, M. J., D. G. Long, M. A. Hardman, A. C. Paget, R. L. Armstrong. 2016, updated 2020.\n", "MEaSUREs Calibrated Passive Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR.\n", "Version 1.4.\n", "[Indicate subset used].\n", "Boulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
 }
