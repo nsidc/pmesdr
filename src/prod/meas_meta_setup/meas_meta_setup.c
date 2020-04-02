@@ -151,7 +151,7 @@ static int ltod_split_time( cetb_platform_id platform_id,
 			    cetb_region_id region_id,
 			    cetb_direction_id direction_id,
 			    int year, float *split_time );
-static int get_search_period( int year, int dstart, int mstart, 
+static int get_search_period( int year, int dstart, int dend, int mstart, 
 			      ut_unit *epochUnits, calcalcs_cal *calendar,
 			      double *startEpochTime, double *imageEpochTime,
 			      double *endEpochTime );
@@ -604,7 +604,7 @@ int main(int argc,char *argv[])
 	       "%s: unable to parse unit string=%s\n", 
 	       __FILE__, unitString );
     }
-    if (0 != get_search_period( year, dstart, mstart,
+    if (0 != get_search_period( year, dstart, dend, mstart,
 				epochUnits, calendar,
 				&searchStartEpochTime,
 				&imageStartEpochTime,
@@ -2890,6 +2890,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
  *  Input:
  *    year - integer, year for target start
  *    dstart - integer, day for target start
+ *    dend - integer, end day for period
  *    mstart - integer, minutes of day for target start
  *    epochUnits - pointer to ut_units, epoch information
  *    calendar - pointer to calcalcs_cal calendar information
@@ -2906,7 +2907,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
  *    if LTOD, set search span to target day +/- 1 full day
  *    else, set search span to target day
  */
-static int get_search_period( int year, int dstart, int mstart,
+static int get_search_period( int year, int dstart, int dend, int mstart,
 			      ut_unit *epochUnits, calcalcs_cal *calendar,
 			      double *startEpochTime, double *imageEpochTime,
 			      double *endEpochTime) {
@@ -2916,23 +2917,32 @@ static int get_search_period( int year, int dstart, int mstart,
   int hour = 0;
   double second = 0.0;
   int startDayOffset, imageDayOffset, endDayOffset;
-  int startYear, imageYear, endYear;
+  int midDay, startYear, imageYear, endYear;
   int startMonth, imageMonth, endMonth;
   int startDay, imageDay, endDay;
 
   /* Convert yyyydoy to yyyymmdd */
-  if ( 0 != ccs_doy2date( calendar, year, dstart, &month, &day) ) {
+  midDay = dstart + round((dend-dstart)/2);
+  if ( 0 != ccs_doy2date( calendar, year, midDay, &month, &day) ) {
     fprintf( stderr, "%s: Error converting yyyydoy=%4d%03d to yyyymmdd\n",
 	     __FUNCTION__, year, dstart );
     return 1;
   }
 
   /*
-   * Set search start and end to 1 day on either side of image date,
+   * Set search start and end to 1 day on either side of image date
+   * depending on the range of days required
    */
-  startDayOffset = -1;
-  imageDayOffset = 0;
-  endDayOffset = 2;
+  if ( dstart == dend ) {
+    startDayOffset = -1;
+    imageDayOffset = 0;
+    endDayOffset = 2;
+  } else {
+    startDayOffset = -1*(midDay - dstart + 1);
+    imageDayOffset = 0;
+    endDayOffset = dend - midDay + 1;
+  }
+    
 
   /* Get search start, relative to requested epoch time */
   if ( 0 != day_offset_from( year, month, day, 
