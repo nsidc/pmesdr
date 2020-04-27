@@ -51,6 +51,7 @@
 #define MINUTES_PER_HOUR 60
 #define HOURS_PER_DAY 24
 #define MINUTES_PER_DAY ( HOURS_PER_DAY * MINUTES_PER_HOUR )
+#define SECONDS_PER_DAY ( ( MINUTES_PER_DAY ) a* SECONDS_PER_MINUTE )
 
 #define min(a,b) (((a) <= (b)) ? (a) : (b))
 #define max(a,b) (((a) >= (b)) ? (a) : (b))
@@ -980,7 +981,11 @@ int main(int argc,char *argv[])
 		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime_minutes; 
 
 		  if ( iasc == (int)CETB_MORNING_PASSES ) { /* morning */
-		    if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
+		    if (dstart == dend) {
+		      if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
+		    } else {
+		      /* we have to get the morning data from the days before and after */
+		      if (
 		  } 
 		  if ( iasc == (int)CETB_EVENING_PASSES ) {  /* evening */
 		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY)
@@ -2887,7 +2892,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
  *    from the meta file; returns the search period (start/end) and
  *    the image date, relative to the requested epoch time
  *
- *  Input:
+ *  Input:  Note that these inputs come from the input metafile read in get_meta
  *    year - integer, year for target start
  *    dstart - integer, day for target start
  *    dend - integer, end day for period
@@ -2921,29 +2926,23 @@ static int get_search_period( int year, int dstart, int dend, int mstart,
   int startMonth, imageMonth, endMonth;
   int startDay, imageDay, endDay;
 
-  /* Convert yyyydoy to yyyymmdd */
-  midDay = dstart + round((dend-dstart)/2);
-  if ( 0 != ccs_doy2date( calendar, year, midDay, &month, &day) ) {
-    fprintf( stderr, "%s: Error converting yyyydoy=%4d%03d to yyyymmdd\n",
-	     __FUNCTION__, year, dstart );
-    return 1;
-  }
 
   /*
    * Set search start and end to 1 day on either side of image date
    * depending on the range of days required
    */
-  if ( dstart == dend ) {
-    startDayOffset = -1;
-    imageDayOffset = 0;
-    endDayOffset = 2;
-  } else {
-    startDayOffset = -1*(midDay - dstart + 1);
-    imageDayOffset = 0;
-    endDayOffset = dend - midDay + 1;
+  if ( 0 != ltod_day_offset( dstart, dend, &midDay, &startDayOffset,
+			     &endDayOffset, &imageDayOffset ) ) {
+    fprintf( stderr, "%s: Error getting offset days\n", __FUNCTION__ );
+    return 1;
   }
-    
-
+  
+  /* Convert yyyydoy to yyyymmdd */
+  if ( 0 != ccs_doy2date( calendar, year, midDay, &month, &day) ) {
+    fprintf( stderr, "%s: Error converting yyyydoy=%4d%03d to yyyymmdd\n",
+	     __FUNCTION__, year, dstart );
+    return 1;
+  }
   /* Get search start, relative to requested epoch time */
   if ( 0 != day_offset_from( year, month, day, 
 			     hour, mstart, second,
@@ -2985,6 +2984,37 @@ static int get_search_period( int year, int dstart, int dend, int mstart,
   
   return 0;
   
+}
+
+/* ***********************************************************************
+ * ltod_day_offset - given the start and end days, calculates the search
+ *    offset days - used in determining the range for input scans and
+ *    also the ctime ltod calculation when doing multi-day processing
+ *
+ *  Input:
+ *    dstart - integer, start doy
+ *    dend - integer, end doy
+ *
+ *  Output:
+ *    midDay - integer, doy in middle of range
+ *    start doy offset
+ *    end doy offset
+ *    image doy offset
+ *
+ */
+static int ltod_day_offset( int dstart, int dend, int *midDay,
+			    int *startDayOffset, int *endDayOffset,
+			    int *imageDayOffset ) {
+
+  if ( dstart == dend ) {
+    *startDayOffset = -1;
+    *imageDayOffset = 0;
+    *endDayOffset = 2;
+  } else {
+    *startDayOffset = dstart - midDay - 1;
+    *imageDayOffset = 0;
+    *endDayOffset = dend - midDay + 1;
+  }
 }
 
 /* ***********************************************************************
