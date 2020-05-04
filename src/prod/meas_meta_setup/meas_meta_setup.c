@@ -51,7 +51,7 @@
 #define MINUTES_PER_HOUR 60
 #define HOURS_PER_DAY 24
 #define MINUTES_PER_DAY ( HOURS_PER_DAY * MINUTES_PER_HOUR )
-#define SECONDS_PER_DAY ( ( MINUTES_PER_DAY ) a* SECONDS_PER_MINUTE )
+#define SECONDS_PER_DAY ( ( MINUTES_PER_DAY ) * SECONDS_PER_MINUTE )
 
 #define min(a,b) (((a) <= (b)) ? (a) : (b))
 #define max(a,b) (((a) >= (b)) ? (a) : (b))
@@ -163,6 +163,9 @@ static int day_offset_from( int year, int month, int day,
 			    int *offsetYear, int *offsetMonth,
 			    int *offsetDay,
 			    double *offsetEpochTime );
+static int ltod_day_offset( int dstart, int dend, int *midDay,
+			    int *startDayOffset, int *endDayOffset,
+			    int *imageDayOffset );
 
 /****************************************************************************/
 
@@ -202,6 +205,7 @@ int main(int argc,char *argv[])
   int iday,iyear,imon,ihour,imin,jday;
   int idaye,iyeare,imone,ihoure,imine,jdaye;
   double isec,isece;
+  int midDay, startDayOffset, endDayOffset, imageDayOffset;
 
   float theta;
   
@@ -980,16 +984,40 @@ int main(int argc,char *argv[])
 		  /* calculate the relative local time of day in minutes */
 		  ctime = cx * MINUTES_PER_DEG_LONGITUDE + ktime_minutes; 
 
+		  if ( 0 != ltod_day_offset( dstart, dend, &midDay, &startDayOffset,
+					     &endDayOffset, &imageDayOffset ) ) {
+		    fprintf( stderr, "%s: Error getting offset days\n", __FUNCTION__ );
+		    return 1;
+		  }
+		  
 		  if ( iasc == (int)CETB_MORNING_PASSES ) { /* morning */
 		    if (dstart == dend) {
-		      if (ctime < tsplit1_mins || ctime >= tsplit2_mins) goto label_3400;
+		      if (ctime < tsplit1_mins || ctime >= tsplit2_mins) {
+			goto label_3400;
+		      }
 		    } else {
 		      /* we have to get the morning data from the days before and after */
-		      if (
+		      for (count = startDayOffset; count <= endDayOffset; count++) {
+			//fprintf( stderr, "%s: count = %d", __FUNCTION__, count );
+			if (ctime >  (tsplit1_mins + (count * MINUTES_PER_DAY)) &&
+			    ctime <= (tsplit2_mins + (count * MINUTES_PER_DAY))) break;
+			if (count == endDayOffset) goto label_3400;
+		      }
+		    }
 		  } 
 		  if ( iasc == (int)CETB_EVENING_PASSES ) {  /* evening */
-		    if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY)
-		      goto label_3400;
+		    if (dstart == dend) {
+		      if (ctime < tsplit2_mins || ctime >= tsplit1_mins+MINUTES_PER_DAY) {
+			goto label_3400;
+		      }
+		    } else {
+		      /* we have to get the evening data from the days before and after */
+		      for (count = startDayOffset; count <= endDayOffset; count++) {
+			if (ctime >  (tsplit2_mins + (count * MINUTES_PER_DAY)) &&
+			    ctime <= (tsplit1_mins + ((count+1) * MINUTES_PER_DAY))) break;
+			if (count == endDayOffset) goto label_3400;
+		      }
+		    }
 		  }
 		}
 
@@ -3006,15 +3034,18 @@ static int ltod_day_offset( int dstart, int dend, int *midDay,
 			    int *startDayOffset, int *endDayOffset,
 			    int *imageDayOffset ) {
 
+  *midDay = dstart + round((dend-dstart)/2);
+  
   if ( dstart == dend ) {
     *startDayOffset = -1;
     *imageDayOffset = 0;
     *endDayOffset = 2;
   } else {
-    *startDayOffset = dstart - midDay - 1;
+    *startDayOffset = dstart - *midDay - 1;
     *imageDayOffset = 0;
-    *endDayOffset = dend - midDay + 1;
+    *endDayOffset = dend - *midDay + 1;
   }
+  return 0;
 }
 
 /* ***********************************************************************
