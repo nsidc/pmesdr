@@ -119,7 +119,7 @@ $(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
 meas_meta_setup.o : $(SRCS) $(HDRS)
-	$(CC) -c $(CFLAGS) -o $@ $(SRCS)
+	$(CC) -c -g $(CFLAGS) -o $@ $(SRCS)
 
 install :
 	$(MKDIR) $(BINDIR)
@@ -373,5 +373,12 @@ smmr_quick :
 	)
 	($(CD) $(TOPDIR)/sample_data;		\
 	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2t/e2ttest_SMMR.meta  $(TESTDIR)/setupSMMR/e2t 	\
+	)
+
+smap_quick :
+	$(RM) $(TESTDIR)/setupSMAP/e2n
+	$(MKDIR) $(TESTDIR)/setupSMAP/e2n
+	($(CD) $(TOPDIR)/sample_data;		\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smap_e2n/e2ntest_SMAP.meta  $(TESTDIR)/setupSMAP/e2n 	\
 	)
 

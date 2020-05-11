@@ -148,6 +148,7 @@ SSMISFILES = $(wildcard $(TESTDIR)/setupSSMIS/e2*/I*E2*.setup)
 SSMISE2NFILES = $(wildcard $(TESTDIR)/setupSSMIS/e2n/I*E2N*.setup)
 SMMRFILES = $(wildcard $(TESTDIR)/setupSMMR/e2*/R*E2*.setup)
 SMMRE2NFILES = $(wildcard $(TESTDIR)/setupSMMR/e2n/R*E2N*.setup)
+SMAPFILES = $(wildcard $(TESTDIR)/setupSMAP/e2*/S*E2*.setup)
 
 all : $(BIN)
 
@@ -356,5 +357,17 @@ else
 	for file in $(SMMRFILES); do \
 	   echo "running  $$file"; \
 	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSMMR; \
+	done
+endif
+
+smap_quick :
+	$(RM) $(TESTDIR)/sirSMAP
+	$(MKDIR) $(TESTDIR)/sirSMAP
+ifeq ($(SMAPFILES),)
+	$(error	No setup files found)
+else
+	for file in $(SMAPFILES); do \
+	   echo "running  $$file"; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSMAP; \
 	done
 endif
