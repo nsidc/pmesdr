@@ -395,7 +395,7 @@ smap_quick :
 	$(MKDIR) $(TESTDIR)/smap_e2n
 	$(CD) $(TOPDIR)/sample_data		 
 	$(BINDIR)/$(BIN)  $(TESTDIR)/smap_e2n/e2ntest_SMAP.meta SMAP 	\
-	         322 322 2016 $(TOPDIR)/ref/E2N_smap_quick.def $(TOPDIR)/testing/SMAP_regress_list
+	         206 206 2016 $(TOPDIR)/ref/E2N_smap_quick.def $(TOPDIR)/testing/SMAP_regress_list
 
 
 
