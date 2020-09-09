@@ -19,7 +19,7 @@
 #define CETB_AMSRE_FIRST_MEASUREMENT 14
 
 /* Max number of input files that could go into a daily output file */
-#define CETB_MAX_INPUT_FILES 100 /* maximum number of input files to process onto a single grid */
+#define CETB_MAX_INPUT_FILES 250 /* maximum number of input files to process onto a single grid */
 
 /*
  * Grid resolution factor: power of 2 to divide into base resolution of 25 km
