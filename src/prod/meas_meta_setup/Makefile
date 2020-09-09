@@ -119,7 +119,7 @@ $(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
 meas_meta_setup.o : $(SRCS) $(HDRS)
-	$(CC) -c -g $(CFLAGS) -o $@ $(SRCS)
+	$(CC) -c $(CFLAGS) -o $@ $(SRCS)
 
 install :
 	$(MKDIR) $(BINDIR)
