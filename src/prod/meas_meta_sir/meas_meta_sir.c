@@ -1104,7 +1104,7 @@ int main(int argc, char **argv)
   for (irec = 0; irec < ncnt; irec++) {
 
     get_vars_from_store( store, &tbval, &ang, &count, tb_or_stokes_SIR_offset,
-			 &dummy_ktime, &iadd, HASAZANG, &azang );
+			 &ktime, &iadd, HASAZANG, &azang );
 
     store = store+HS;
     store = store+4*count;

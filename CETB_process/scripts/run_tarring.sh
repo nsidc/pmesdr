@@ -3,7 +3,7 @@
 #SBATCH --job-name tarring
 #SBATCH --partition=shas
 #SBATCH --time=04:15:00
-#SBATCH --account=ucb135_summit1
+#SBATCH --account=ucb135_summit2
 #SBATCH --ntasks-per-node 24
 #SBATCH --nodes 2
 #SBATCH -o output/tarring-%j.out

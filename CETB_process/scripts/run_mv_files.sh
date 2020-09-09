@@ -8,7 +8,7 @@
 #SBATCH --job-name CETB_mv_files
 #SBATCH --partition=shas
 #SBATCH --time=01:15:00
-#SBATCH --account=ucb135_summit1
+#SBATCH --account=ucb135_summit2
 #SBATCH --ntasks=24
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/mv_lb-%j.out
