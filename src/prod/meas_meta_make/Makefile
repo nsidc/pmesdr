@@ -390,3 +390,12 @@ smmr_ease :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2t/e2ttest_SMMR.meta NIMBUS7 	\
 	         360 360 1984 $(TOPDIR)/ref/E2T_smmr_test.def $(TOPDIR)/testing/SMMR_regress_list_full
 
+smap_quick :
+	$(RM) $(TESTDIR)/smap_e2n
+	$(MKDIR) $(TESTDIR)/smap_e2n
+	$(CD) $(TOPDIR)/sample_data		 
+	$(BINDIR)/$(BIN)  $(TESTDIR)/smap_e2n/e2ntest_SMAP.meta SMAP 	\
+	         204 208 2016 $(TOPDIR)/ref/E2N_smap_quick.def $(TOPDIR)/testing/SMAP_regress_list
+
+
+
