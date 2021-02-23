@@ -21,7 +21,7 @@
 # Select the summit QOS
 #SBATCH --qos normal
 #SBATCH --partition=shas
-#SBATCH --account=ucb135_summit1
+#SBATCH --account=ucb135_summit2
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
 
