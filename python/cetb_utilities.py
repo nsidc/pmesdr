@@ -151,7 +151,7 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     # Figure out which variable name is in the first file, and
     # then always look for "TB" in the second one
     f1 = Dataset( file1, 'r', 'NETCDF4' )
-    keys = f1.variables.keys()
+    keys = list(f1.variables.keys())
     var_name = 'none'
     for key in keys:
         if ( 'a_image' == key ):
@@ -230,7 +230,7 @@ def dump_image_statistics( filename, image ):
     try:
         sys.stderr.write('{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f}\n'
                          .format(filename, np.amin(image), np.amax(image), np.mean(image), np.std(image)))
-    except ValueError, e:
+    except ValueError as e:
         # I'll bet there's a better way to do this, but when the array is all fill-values,
         # the np.min/max etc functions return a string which makes the formatting {1:8.4f} to float
         # break...
@@ -260,7 +260,7 @@ def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, toler
         sys.stderr.write('{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f} num[|diff|>{5:.6f}]={6:8d} {7}\n'
                          .format("difference", np.amin( my_diff ), np.amax( my_diff ),
                                  np.mean( my_diff ), np.std( my_diff ), tolerance, num_diffs, label))
-    except ValueError, e:
+    except ValueError as e:
         sys.stderr.write('{0}:\n\tmin={1:8} max={2:8} mean={3:8} std={4:8} num[|diff|>{5:.6f}]={6:8d} {7}\n'
                          .format("difference", np.amin( my_diff ), np.amax( my_diff ),
                                  np.mean( my_diff ), np.std( my_diff ), tolerance, num_diffs, label))
@@ -273,7 +273,7 @@ def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, toler
             try:
                 sys.stderr.write( '{0:d}\tdiff={1:8.4f} img1={2:8.4f} img2={3:8.4f}\n'
                               .format( i, my_diff[ i ], my_image1[ i ], my_image2[ i ] ) )
-            except ValueError, e:
+            except ValueError as e:
                 sys.stderr.write( '{0:d}\tdiff={1:8} img1={2:8} img2={3:8}\n'
                               .format( i, my_diff[ i ], my_image1[ i ], my_image2[ i ] ) )
 

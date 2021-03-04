@@ -54,6 +54,8 @@ ifeq ($(LOCALE),int.nsidc.org)
   NETCDF4_LIBDIR = $(SYSTEM_BASEDIR)/lib
   HDF5_INCDIR = $(SYSTEM_BASEDIR)/include
   HDF5_LIBDIR = $(SYSTEM_BASEDIR)/lib
+  HDFLIB1 = hdf5_serial_hl
+  HDFLIB2 = hdf5_serial
   UDUNITS_INCDIR  = $(SYSTEM_BASEDIR)/include
   UDUNITS_LIBDIR  = $(SYSTEM_BASEDIR)/lib/x86_64-linux-gnu
 else ifeq ($(LOCALE),SUMMITicc)
@@ -62,6 +64,8 @@ else ifeq ($(LOCALE),SUMMITicc)
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  HDFLIB1 = hdf5_hl
+  HDFLIB2 = hdf5
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else ifeq ($(LOCALE),SUMMITgcc)
@@ -88,7 +92,7 @@ MEAS_INCDIR = ../../sirlib/c/include
 MEAS_LIBDIR = ../../sirlib/c
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
 	-L$(MEAS_LIBDIR) -lgsx -lutils -lcalcalcs -ludunits2 -lcsir \
-	-lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
+	-lnetcdf -l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) \
 	-I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),SUMMITicc)
