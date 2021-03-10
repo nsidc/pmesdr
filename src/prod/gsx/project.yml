@@ -71,8 +71,8 @@
       - -L#{ENV['PMESDR_TOP_DIR']}/lib
       - -lutils
       - -lnetcdf
-      - -lhdf5_hl
-      - -lhdf5
+      - -lhdf5_serial_hl
+      - -lhdf5_serial
       - -lz
       - -o ${2}
 

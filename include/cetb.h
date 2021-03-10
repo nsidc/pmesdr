@@ -383,13 +383,12 @@ static const char *cetb_reconstruction_id_name[] = {
 /*
  * Input swath data producer
  */
-typedef enum {
-  CETB_NO_PRODUCER=-1,
+typedef enum { CETB_NO_PRODUCER=-1,
   CETB_CSU,
   CETB_RSS,
   CETB_JPL,
   CETB_CSU_ICDR,
-  CETB_FNMOC,
+  CETB_PPS_XCAL,
   CETB_NUM_PRODUCERS
 } cetb_swath_producer_id;
 
@@ -401,7 +400,7 @@ static const char *cetb_swath_producer_id_name[] = {
   "RSS",
   "JPL",
   "CSU_ICDR",
-  "FNMOC"
+  "PPS_XCAL"
 };
 
 /*

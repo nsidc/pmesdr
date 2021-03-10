@@ -81,8 +81,8 @@
       - -lutils
       - -lcalcalcs
       - -lnetcdf
-      - -lhdf5_hl
-      - -lhdf5
+      - -lhdf5_serial_hl
+      - -lhdf5_serial
       - -lz
       - -ludunits2
       - -o ${2}      

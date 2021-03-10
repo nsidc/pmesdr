@@ -34,7 +34,8 @@
 
 static int cetb_file_set_time_coverage( cetb_file_class *this,
 					float *tb_data, int xdim, int ydim ); 
-static char *cetb_template_filename( cetb_sensor_id sensor_id );
+static char *cetb_template_filename( cetb_sensor_id sensor_id,
+				     cetb_swath_producer_id producer_id );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -177,7 +178,7 @@ cetb_file_class *cetb_file_init( char *dirname,
    * Find and open the CETB template file with the global attribute data
    * - all we need here is the file format version
    */
-  if ( !( filename = cetb_template_filename( this->sensor_id ) ) ) return 0;
+  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id ) ) ) return 0;
   	  
   if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template filename=%s: %s.\n",
@@ -278,7 +279,7 @@ int cetb_file_open( cetb_file_class *this ) {
   /*
    * Find and open the CETB template file with the global attribute data
    */
-  if ( !( filename = cetb_template_filename( this->sensor_id ) ) ) return 0;
+  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id ) ) ) return 0;
   
   if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
@@ -1364,14 +1365,17 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 
 /*
  * cetb_template_filename - Return the file template to use, based on sensor_id
+ *                          and producer_id
  *
  *  input :
  *    sensor_id : sensor_id (determines which template to use)
+ *    producer_id : producer_id (determines which template to use)
  *
  *  result : (newly-allocated) template_filename string (includes absolute path)
  *           or NULL on error
  */
-char *cetb_template_filename( cetb_sensor_id sensor_id ) {
+char *cetb_template_filename( cetb_sensor_id sensor_id,
+			      cetb_swath_producer_id producer_id ) {
 
   char *ptr_path;
   char *filename = NULL;
@@ -1386,9 +1390,15 @@ char *cetb_template_filename( cetb_sensor_id sensor_id ) {
   strncpy( filename, ptr_path, FILENAME_MAX );
 
   if ( CETB_SMMR <= sensor_id && sensor_id <= CETB_SSMIS ) {
-    strcat( filename, "/src/prod/cetb_file/templates/pm-cetb_global_template.nc" );
+    if ( CETB_CSU == producer_id ) {
+      strcat( filename, "/src/prod/cetb_file/templates/nsidc-0630_template.nc" );
+    } else if ( CETB_CSU_ICDR == producer_id ) {
+      strcat( filename, "/src/prod/cetb_file/templates/nsidc-0757_template.nc" );
+    } else if ( CETB_PPS_XCAL == producer_id ) {
+      strcat( filename, "/src/prod/cetb_file/templates/nsidc-0763_template.nc" );
+    }
   } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
-    strcat( filename, "/src/prod/cetb_file/templates/smap_global_template.nc" );
+    strcat( filename, "/src/prod/cetb_file/templates/nsidc-0738_template.nc" );
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     return NULL;
