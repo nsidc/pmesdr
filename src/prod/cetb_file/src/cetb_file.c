@@ -1390,12 +1390,16 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
   strncpy( filename, ptr_path, FILENAME_MAX );
 
   if ( CETB_SMMR <= sensor_id && sensor_id <= CETB_SSMIS ) {
-    if ( CETB_CSU == producer_id ) {
+    if ( CETB_CSU == producer_id || CETB_JPL == producer_id ) {
       strcat( filename, "/src/prod/cetb_file/templates/nsidc-0630_template.nc" );
     } else if ( CETB_CSU_ICDR == producer_id ) {
       strcat( filename, "/src/prod/cetb_file/templates/nsidc-0757_template.nc" );
     } else if ( CETB_PPS_XCAL == producer_id ) {
       strcat( filename, "/src/prod/cetb_file/templates/nsidc-0763_template.nc" );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	       __FUNCTION__, sensor_id, producer_id );
+      return NULL;
     }
   } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
     strcat( filename, "/src/prod/cetb_file/templates/nsidc-0738_template.nc" );
@@ -2642,43 +2646,66 @@ static char *set_source_value( cetb_file_class *this ) {
 
   char *source_value;
   char *fixed_source_value = ": See input_fileN list and number_of_input_files attributes";
+  int valid_flag=1;
 
   if ( STATUS_OK != utils_allocate_clean_aligned_memory( ( void * )&source_value,
 							 MAX_STR_LENGTH + 1 ) ) {
     return NULL;
   }
   if ( CETB_AMSRE == this->sensor_id ) {
-    strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+    if ( CETB_RSS == this->producer_id ) {
+      strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+    } else {
+      valid_flag = 0;
+    }
   }
 
-  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    strcat( source_value, "CSU SSM/I FCDR " );
+  if ( CETB_SSMI == this->sensor_id ) {
+    if ( CETB_CSU == this->producer_id ) {
+      strcat( source_value, "CSU SSM/I FCDR " );
+    } else if ( CETB_RSS == this->producer_id ) {
+      strcat( source_value, "RSS SSM/I V7 " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
-  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_RSS == this->producer_id ) ) {
-    strcat( source_value, "RSS SSM/I V7 " );
-  }
-
-  if ( ( CETB_SSMIS == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    strcat( source_value, "CSU SSMIS FCDR " );
+  if ( CETB_SSMIS == this->sensor_id ) {
+    if ( CETB_CSU == this->producer_id ) {
+      strcat( source_value, "CSU SSMIS FCDR " );
+    } else if ( CETB_RSS == this->producer_id ) {
+      strcat( source_value, "RSS SSMIS V7 " );
+    } else if ( CETB_PPS_XCAL == this->producer_id ) {
+      strcat( source_value, "PPS XCAL " );
+    } else if ( CETB_CSU_ICDR == this->producer_id ) {
+      strcat( source_value, "CSU SSMIS ICDR " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
   if ( ( CETB_SMMR == this->sensor_id ) ) {
-    strcat( source_value, "JPL SMMR " );
+    if ( CETB_JPL == this->producer_id ) {
+      strcat( source_value, "JPL SMMR " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
-    strcat( source_value, "10.5067/VA6W2M0JTK2N " );
+    if ( CETB_JPL == this->producer_id ) {
+      strcat( source_value, "10.5067/VA6W2M0JTK2N " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
-  if ( ( CETB_SSMIS == this->sensor_id ) &&
-       ( CETB_CSU_ICDR == this->producer_id ) ) {
-    strcat( source_value, "CSU SSMIS ICDR " );
+  if ( valid_flag == 1 ) {
+    strcat( source_value, fixed_source_value );
+    return source_value;
+  } else {
+    return NULL;
   }
-
-  strcat( source_value, fixed_source_value );
-  
-  return source_value;
   
 }
   
