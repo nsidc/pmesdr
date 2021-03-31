@@ -453,8 +453,10 @@ int main(int argc,char *argv[])
     if ( strstr(fname,"End_input_file_list") || feof(file_id) ) {
       /* proper end of meta file */
       flag=0;
-      gsx_close( gsx );
-      gsx = NULL;
+      if ( NULL != gsx ) { // protects against no files in list
+	gsx_close( gsx );
+	gsx = NULL;
+      }
     } else {
       /* read name of input swath file */
       s=strstr(fname,"Input_file");
@@ -490,12 +492,22 @@ int main(int argc,char *argv[])
     }
   }
 
-  if ( 0 == nfile ) { /* there are no input files in the meta file */
+  /* check to see if there are no input files in the meta file
+   * if that's the case, write out the end header, close the setup files
+   * and quit the program
+   */
+  if ( 0 == nfile ) { 
       status = write_end_header( &save_area );
       if ( 0 != status ) {
 	fprintf( stderr, "%s: *** couldn't write out end header information\n", __FILE__ );
 	exit (-1);
       }
+      fprintf( stderr, "%s: *** There are no input files so exit\n", __FILE__ );
+      for (iregion=0; iregion<save_area.nregions; iregion++) {
+	fclose(save_area.reg_lu[iregion]);
+	save_area.reg_lu[iregion] = NULL;
+      }
+      exit(0);
   }
 
   /*
