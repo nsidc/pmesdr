@@ -35,7 +35,8 @@
 static int cetb_file_set_time_coverage( cetb_file_class *this,
 					float *tb_data, int xdim, int ydim ); 
 static char *cetb_template_filename( cetb_sensor_id sensor_id,
-				     cetb_swath_producer_id producer_id );
+				     cetb_swath_producer_id producer_id,
+				     int *cetb_dataset_id_index );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -118,6 +119,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   char *channel_str=NULL;
   cetb_region_id region_id;
   char *filename;
+  int cetb_dataset_id_index;
   int template_fid;
   int status;
   char *file_version=NULL;
@@ -178,7 +180,8 @@ cetb_file_class *cetb_file_init( char *dirname,
    * Find and open the CETB template file with the global attribute data
    * - all we need here is the file format version
    */
-  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id ) ) ) return 0;
+  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id,
+					     &cetb_dataset_id_index ) ) ) return 0;
   	  
   if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template filename=%s: %s.\n",
@@ -210,7 +213,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
   	    dirname,
-	    cetb_NSIDC_dataset_id[ sensor_id ],
+	    cetb_NSIDC_dataset_id[ cetb_dataset_id_index ],
   	    cetb_region_id_name[ base_resolution ]
 	    [ (region_number-CETB_PROJECTION_BASE_NUMBER) ],
   	    cetb_resolution_name[ base_resolution ][ factor ],
@@ -256,6 +259,7 @@ int cetb_file_open( cetb_file_class *this ) {
   int status;
   char *filename;
   int template_fid;
+  int cetb_dataset_id_index;
 
   if ( !this->filename ) {
     fprintf( stderr, "%s: Cannot open cetb file with empty filename.\n",
@@ -279,7 +283,8 @@ int cetb_file_open( cetb_file_class *this ) {
   /*
    * Find and open the CETB template file with the global attribute data
    */
-  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id ) ) ) return 0;
+  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id,
+					     &cetb_dataset_id_index ) ) ) return 0;
   
   if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
@@ -1365,7 +1370,7 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 
 /*
  * cetb_template_filename - Return the file template to use, based on sensor_id
- *                          and producer_id
+ *                          and producer_id - also return the Dataset ID
  *
  *  input :
  *    sensor_id : sensor_id (determines which template to use)
@@ -1375,7 +1380,8 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
  *           or NULL on error
  */
 char *cetb_template_filename( cetb_sensor_id sensor_id,
-			      cetb_swath_producer_id producer_id ) {
+			      cetb_swath_producer_id producer_id,
+			      int *cetb_dataset_id_index ) {
 
   char *ptr_path;
   char *filename = NULL;
@@ -1390,12 +1396,15 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
   strncpy( filename, ptr_path, FILENAME_MAX );
 
   if ( CETB_SMMR <= sensor_id && sensor_id <= CETB_SSMIS ) {
-    if ( CETB_CSU == producer_id || CETB_JPL == producer_id ) {
+    if ( CETB_CSU == producer_id || CETB_JPL == producer_id || CETB_RSS == producer_id ) {
       strcat( filename, "/src/prod/cetb_file/templates/nsidc-0630_template.nc" );
+      *cetb_dataset_id_index = 0;
     } else if ( CETB_CSU_ICDR == producer_id ) {
       strcat( filename, "/src/prod/cetb_file/templates/nsidc-0757_template.nc" );
+      *cetb_dataset_id_index = 1;
     } else if ( CETB_PPS_XCAL == producer_id ) {
       strcat( filename, "/src/prod/cetb_file/templates/nsidc-0763_template.nc" );
+      *cetb_dataset_id_index = 2;
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
 	       __FUNCTION__, sensor_id, producer_id );
@@ -1403,6 +1412,7 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
     }
   } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
     strcat( filename, "/src/prod/cetb_file/templates/nsidc-0738_template.nc" );
+    *cetb_dataset_id_index = 3;
   } else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
     return NULL;
