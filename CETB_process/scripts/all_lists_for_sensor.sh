@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 5 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 5 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC"
     echo "  Makes daily and concatenated 3-day file lists of GSX input files for the "
@@ -10,6 +10,7 @@ if [ "$1" == "-h" ] || [ "$#" -ne 5 ] ; then
     echo "  YEAR_END: end 4-digit year"
     echo "  DOY_END: end day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  TOP_LEVEL: top level directory for NRT processing (optional)"
     echo ""
     exit 1
 fi
@@ -19,6 +20,7 @@ startdoy=$2
 endyear=$3
 enddoy=$4
 sensor=$5
+top_level=$6
 
 # Do all the daily lists first, then do the 3-day lists, which just concatenate
 # them in rolling groups of 3 days
@@ -41,8 +43,9 @@ do
 	fi
     fi
     
-    echo "$0: 1day set: $year $thisbegindoy $thisenddoy $sensor"
-    source $PMESDR_RUN/daily_file_lists.sh $year $thisbegindoy $thisenddoy $sensor
+    echo "$0: 1day set: $year $thisbegindoy $thisenddoy $sensor $top_level"
+    source $PMESDR_RUN/daily_file_lists.sh $year $thisbegindoy $thisenddoy $sensor $top_level
+    echo " exit status $?"
     
 done    
 
@@ -66,8 +69,9 @@ do
 	fi
     fi
     
-    echo "$0: 3day set: $year $thisbegindoy $thisenddoy $sensor"
-    source $PMESDR_RUN/file_3day.sh $year $thisbegindoy $thisenddoy $sensor
+    echo "$0: 3day set: $year $thisbegindoy $thisenddoy $sensor $top_level"
+    source $PMESDR_RUN/file_3day.sh $year $thisbegindoy $thisenddoy $sensor $top_level
+    echo " exit status $?"
     
 done    
 	    

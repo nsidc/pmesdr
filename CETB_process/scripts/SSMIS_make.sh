@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 5 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 5 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR DOY_START DOY_STOP SRC ENVPATH"
     echo "  Creates an sbatch file to create meas_meta_make files."
@@ -13,6 +13,7 @@ if [ "$1" == "-h" ] || [ "$#" -ne 5 ] ; then
     echo "  DOY_STOP: stop day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
     echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  top_level: used for NRT processing"
     echo ""
     exit 1
 fi
@@ -22,15 +23,17 @@ echo "doy1 $2"
 echo "doy2 $3"
 echo "SRC $4"
 echo "path $5"
+echo "top_level $6"
 YEAR=$1
 SRC=$4
 DOY1=$2
 DOY2=$3
 envpath=$5
+top_level=$6
 source ${envpath}/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/${USER}/${SRC}_make/
+OUTDIR=/scratch/summit/${USER}/${top_level}/${SRC}_make/
 #
 #
 # run meas_meta_make with specific parameters

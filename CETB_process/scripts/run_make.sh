@@ -17,12 +17,12 @@
 #SBATCH --mail-user=mhardman@nsidc.org
 src=$1
 envpath=$2
-file=/scratch/summit/${USER}/${src}_scripts/${src}_make_list
+file=/scratch/summit/${USER}/${top_level}${src}_scripts/${src}_make_list
 source ${envpath}/summit_set_pmesdr_environment.sh
 ml impi
 ml loadbalance
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb $file
+mpirun -genv I_MPI_FABRICS=shm:ofi  lb $file
 date
 
