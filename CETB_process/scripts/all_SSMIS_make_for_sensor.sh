@@ -27,7 +27,7 @@ top_level=$7
 
 # Delete the output file.  It will be appended to by each iteration of the
 # year loop, below.
-outfile=/scratch/summit/${USER}/${top_level}/${sensor}_make_list
+outfile=/scratch/summit/${USER}/${top_level}/${sensor}_scripts/${sensor}_make_list
 rm -f ${outfile}
 echo "$0: removing make file: $outfile"
 
