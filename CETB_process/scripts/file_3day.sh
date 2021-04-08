@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 4 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 4 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR DOY_START DOY_STOP SRC"
     echo "  Make a new list of input files for the NS lists, "
@@ -9,11 +9,13 @@ if [ "$1" == "-h" ] || [ "$#" -ne 4 ] ; then
     echo "  DOY_START: start day of year"
     echo "  DOY_STOP: stop day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  TOP_LEVEL: for NRT processing"
     echo ""
     exit 1
 fi
 
 year=$1
+top_level=$5
 for doy in `seq $2 $3`
 do
 
@@ -42,10 +44,10 @@ do
 	monthp1=01
     fi
            
-    cat /scratch/summit/${USER}/$4_lists/$4.$yearm1$monthm1$dayminus1 \
-	/scratch/summit/${USER}/$4_lists/$4.$year$month$day \
-	/scratch/summit/${USER}/$4_lists/$4.$yearp$monthp1$dayplus1 \
-	>& /scratch/summit/${USER}/$4_lists/$4.$year$month$day.NS
+    cat /scratch/summit/${USER}/${top_level}/$4_lists/$4.$yearm1$monthm1$dayminus1 \
+	/scratch/summit/${USER}/${top_level}/$4_lists/$4.$year$month$day \
+	/scratch/summit/${USER}/${top_level}/$4_lists/$4.$yearp$monthp1$dayplus1 \
+	>& /scratch/summit/${USER}/${top_level}/$4_lists/$4.$year$month$day.NS
 done
 
 
