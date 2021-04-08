@@ -58,15 +58,15 @@ variables:
 		crs_EASE2_M:crs_wkt = "PROJCRS[\"WGS 84 / NSIDC EASE-Grid 2.0 Global\", BASEGEODCRS[\"WGS 84\", DATUM[\"World Geodetic System 1984\", ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1.0]]]], CONVERSION[\"US NSIDC EASE-Grid 2.0 Global\", METHOD[\"Lambert Cylindrical Equal Area\",ID[\"EPSG\",9835]], PARAMETER[\"Latitude of 1st standard parallel\",30,ANGLEUNIT[\"degree\",0.01745329252]], PARAMETER[\"Longitude of natural origin\",0,ANGLEUNIT[\"degree\",0.01745329252]], PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1.0]], PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1.0]]], CS[cartesian,2], AXIS[\"easting (X)\",east,ORDER[1]], AXIS[\"northing (Y)\",north,ORDER[2]], LENGTHUNIT[\"metre\",1.0], ID[\"EPSG\",6933]]" ;
 
 // global attributes:
-		:references = "Long, D. G., M. J. Brodzik and M. A. Hardman. 2019. Enhanced Resolution SMAP Brightness Temperature Image Products. IEEE Transactions on Geoscience and Remote Sensing, 1-13. doi:10.1109/TGRS.2018.2889427.\nAlgorithm Theoretical Basis Document:  https://nsidc.org/sites/nsidc.org/files/technical-references/ATBD_rSIR_SMAP.v1.0.pdf\n" ;
+		string :references = "Long, D. G., M. J. Brodzik and M. A. Hardman. 2019. Enhanced Resolution SMAP Brightness Temperature Image Products. IEEE Transactions on Geoscience and Remote Sensing, 1-13. doi:10.1109/TGRS.2018.2889427.\n", "Algorithm Theoretical Basis Document:  https://nsidc.org/sites/nsidc.org/files/technical-references/ATBD_rSIR_SMAP.v1.0.pdf\n" ;
 		:title = "SMAP Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness Temperatures" ;
-		:id = "TBD" ;
+		:id = "10.5067/YAMX52BXFL10" ;
 		:summary = "Enhanced-resolution, gridded SMAP L-band radiometer passive microwave brightness temperatures\n" ;
 		:project = "Improved, enhanced-resolution SMAP soil moisture using image reconstruction" ;
 		:contributor_name = "Mary J. Brodzik, David G. Long, Molly A. Hardman, NASA NSIDC DAAC Passive Microwave Team" ;
 		:contributor_role = "Principal Investigator, Co-Investigator, Developer, Data Producer" ;
-		:citation = "Brodzik, M. J., D. G. Long, M. A. Hardman. 2021.\nSMAP Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness Temperatures.\nVersion 2.0.\n[Indicate subset used].\nBoulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
-		:license = "These data are freely, openly, and fully available to use without\nrestrictions, provided that you cite the data according to the\ncitation provided in this file. For more information on the\nNASA EOSDIS Data Use Policy, see\nhttps://earthdata.nasa.gov/earth-observation-data/data-use-policy.\n\nNear-real-time data provide an estimate of conditions based on\ninformation and algorithms available at the time the data are collected\n(typically within 24 hours). They are processed as data become\navailable, and are not reviewed prior to release. Data may be replaced\nor removed without notice, and generally will not be reprocessed to\ncorrect or remove erroneous data, or to fill in missing data that may\nbecome available.\n" ;
+		string :citation = "Brodzik, M. J., D. G. Long, M. A. Hardman. 2021.\n", "SMAP Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness Temperatures.\n", "Version 2.0.\n", "[Indicate subset used].\n", "Boulder, Colorado USA: NASA DAAC at the National Snow and Ice Data Center." ;
+		string :license = "These data are freely, openly, and fully available to use without\n", "restrictions, provided that you cite the data according to the\n", "citation provided in this file. For more information on the\n", "NASA EOSDIS Data Use Policy, see\n", "https://earthdata.nasa.gov/earth-observation-data/data-use-policy.\n", "\n", "Near-real-time data provide an estimate of conditions based on\n", "information and algorithms available at the time the data are collected\n", "(typically within 24 hours). They are processed as data become\n", "available, and are not reviewed prior to release. Data may be replaced\n", "or removed without notice, and generally will not be reprocessed to\n", "correct or remove erroneous data, or to fill in missing data that may\n", "become available.\n" ;
 		:Conventions = "CF-1.6, ACDD-1.3" ;
 		:product_version = "v2.0" ;
 		:software_version_id = "" ;
@@ -75,7 +75,7 @@ variables:
 		:comment = "" ;
 		:source = "" ;
 		:metadata_link = "http://nsidc.org/data/nsidc-0738.html" ;
-		:institution = "NASA National Snow and Ice Data Center Distributed Active Archive Center\nNational Snow and Ice Data Center\nCooperative Institute for Research in Environmental Sciences\nUniversity of Colorado at Boulder\nBoulder, CO" ;
+		string :institution = "NASA National Snow and Ice Data Center Distributed Active Archive Center\n", "National Snow and Ice Data Center\n", "Cooperative Institute for Research in Environmental Sciences\n", "University of Colorado at Boulder\n", "Boulder, CO" ;
 		:publisher_name = "NASA National Snow and Ice Data Center Distributed Active Archive Center" ;
 		:publisher_type = "institution" ;
 		:publisher_url = "http://nsidc.org" ;
@@ -111,11 +111,11 @@ variables:
 		:date_issued = "" ;
 		:date_metadata_modified = "" ;
 		:input_data_quality_filtering = "Only used highest-quality input data." ;
-		:acknowledgement = "This data set was created with funding from NASA MEaSUREs Grant #NNX13AI23A and\nU.S. Army Corps of Engineers ERDC (Engineer Research and Development Center) Contract #W913E518C0014.\nNASA 2016 ROSES (Research Opportunities in Space and Earth Science) SUSMAP (Science Utilization of SMAP) Grant #NNX16AN02G\nNASA 2019 ROSES (Research Opportunities in Space and Earth Science) SMAP Science Team Grant #80NSSC20K1806\nData archiving and distribution supported by the NASA NSIDC Distributed Active Archive Center (DAAC)." ;
+		string :acknowledgement = "This data set was created with funding from NASA MEaSUREs Grant #NNX13AI23A and\n", "U.S. Army Corps of Engineers ERDC (Engineer Research and Development Center) Contract #W913E518C0014.\n", "NASA 2016 ROSES (Research Opportunities in Space and Earth Science) SUSMAP (Science Utilization of SMAP) Grant #NNX16AN02G\n", "NASA 2019 ROSES (Research Opportunities in Space and Earth Science) SMAP Science Team Grant #80NSSC20K1806\n", "Data archiving and distribution supported by the NASA NSIDC Distributed Active Archive Center (DAAC)." ;
 		:processing_level = "Level 3" ;
 		:creator_name = "Mary J. Brodzik" ;
 		:creator_type = "person" ;
 		:creator_email = "brodzik@nsidc.org" ;
 		:creator_url = "http://nsidc.org/pmesdr" ;
-		:creator_institution = "National Snow and Ice Data Center\nCooperative Institute for Research in Environmental Sciences\nUniversity of Colorado at Boulder\nBoulder, CO" ;
+		string :creator_institution = "National Snow and Ice Data Center\n", "Cooperative Institute for Research in Environmental Sciences\n", "University of Colorado at Boulder\n", "Boulder, CO" ;
 }
