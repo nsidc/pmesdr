@@ -62,51 +62,55 @@ date
 
 shift $(($OPTIND - 1))
 [[ "$#" -eq 1 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
-platform=$1
+src=$1
 
 module purge
 date
 
 direc=/scratch/summit/${USER}/${top_level}/
-#source /projects/${USER}/measures-byu/src/prod/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-MAKEDIR=${direc}/${platform}_make/
-SETUPDIR=${direc}/${platform}_setup/
-SCRIPTDIR=${direc}/${platform}_scripts/
+MAKEDIR=${direc}/${src}_make/
+SETUPDIR=${direc}/${src}_setup/
+SCRIPTDIR=${direc}/${src}_scripts/
 
 # create the list of the latest make files
 date
-if [[ -f ${SCRIPTDIR}/${platform}_setup_list ]]; then
-    rm ${SCRIPTDIR}/${platform}_setup_list
-    echo "removed old setup file for ${platform}"
+if [[ -f ${SCRIPTDIR}/${src}_setup_list ]]; then
+    rm ${SCRIPTDIR}/${src}_setup_list
+    echo "removed old setup file for ${src}"
 fi
+
 for FILE in `find ${MAKEDIR}/* -mtime 0`
 do
-    echo "$BINDIR/meas_meta_setup $FILE ${SETUPDIR}" >> ${SCRIPTDIR}/${platform}_setup_list
+    echo "$BINDIR/meas_meta_setup $FILE ${SETUPDIR}" >> ${SCRIPTDIR}/${src}_setup_list
 done
+
+ml intel
+ml netcdf/4.4.1.1
+ml udunits
 ml impi
 ml loadbalance
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${platform}_setup_list || \
-    error_exit "Line $LINENO: mpirun setup ${platform} error."
+mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_setup_list || \
+    error_exit "Line $LINENO: mpirun setup ${src} error."
 
 # now create list of newly created setup files to feed to rSIR processing
 date
-if [[ -f ${SCRIPTDIR}/${platform}_sir_list ]]; then
-    rm ${SCRIPTDIR}/${platform}_sir_list
-    echo "removed old sir file for ${platform}"
+if [[ -f ${SCRIPTDIR}/${src}_sir_list ]]; then
+    rm ${SCRIPTDIR}/${src}_sir_list
+    echo "removed old sir file for ${src}"
 fi
 for FILE in `find ${SETUPDIR}/* -mtime 0`
 do
-    echo "$BINDIR/meas_meta_sir $FILE ${direc}/${platform}_sir" >> ${SCRIPTDIR}/${platform}_sir_list
+    echo "$BINDIR/meas_meta_sir $FILE ${direc}/${src}_sir" >> ${SCRIPTDIR}/${src}_sir_list
 done
-mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${platform}_sir_list || \
-    error_exit "Line $LINENO: mpirun sir ${platform} error."
+mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_sir_list || \
+    error_exit "Line $LINENO: mpirun sir ${src} error."
 
 # set off step 2 which copies files to the peta library and deletes the setup files
-sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_SCRIPT_DIR}/runNRTdailyStep2.sh -t ${top_level} ${platform}
+sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh -t ${top_level} ${src}
 
 
 

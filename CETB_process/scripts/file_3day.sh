@@ -15,8 +15,13 @@ if [ "$1" == "-h" ] || [ "$#" -lt 4 ] ; then
 fi
 
 year=$1
+startdoy=$2
+stopdoy=$3
+src=$4
 top_level=$5
-for doy in `seq $2 $3`
+direc=/scratch/summit/${USER}/${top_level}/
+
+for doy in `seq ${startdoy} ${stopdoy}`
 do
 
     realdoy=$(( $doy - 1 ))
@@ -44,10 +49,10 @@ do
 	monthp1=01
     fi
            
-    cat /scratch/summit/${USER}/${top_level}/$4_lists/$4.$yearm1$monthm1$dayminus1 \
-	/scratch/summit/${USER}/${top_level}/$4_lists/$4.$year$month$day \
-	/scratch/summit/${USER}/${top_level}/$4_lists/$4.$yearp$monthp1$dayplus1 \
-	>& /scratch/summit/${USER}/${top_level}/$4_lists/$4.$year$month$day.NS
+    cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
+	${direc}/${src}_lists/${src}.$year$month$day \
+	${direc}/${src}_lists/${src}.$yearp$monthp1$dayplus1 \
+	>& ${direc}/${src}_lists/${src}.$year$month$day.NS
 done
 
 

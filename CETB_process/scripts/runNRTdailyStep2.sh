@@ -61,27 +61,36 @@ esac
 shift $(($OPTIND - 1))
 [[ "$#" -eq 1 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
 src=$1
+direc=/scratch/summit/${USER}/${top_level}/
+SETUPDIR=${direc}/${src}_setup/
+SCRIPTDIR=${direc}/${src}_scripts/
 
-outfile=/scratch/summit/${USER}/${top_level}/${src}_scripts/${src}_moving_files
+outfile=${SCRIPTDIR}/${src}_moving_files
+outfile_rm=${SCRIPTDIR}/${src}_rm_sir_files
 if [[ -f ${outfile} ]]; then
     rm ${outfile}
     echo "removed old move file for ${src}"
 fi
+if [[ -f ${outfile_rm} ]]; then
+    rm ${outfile_rm}
+    echo "removed old delete *.nc file for ${src}"
+fi
 
-for file in `find /scratch/summit/${USER}/${top_level}/${src}_sir/*.nc`
+for file in `find ${direc}/${src}_sir/*.nc`
 do
     basen=`basename $file`
     year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`
     hemi=`echo $basen | grep -o EASE2_. | sed 's/^.*_//'`
     echo "cp $file /pl/active/PMESDR/${pl_top}/${src}_SSMIS/${hemi}/EASE2_${hemi}/${year}/" >> ${outfile}
+    echo "rm $file" >> ${outfile_rm}
 done
 
-setup_rm_file=/scratch/summit/${USER}/${top_level}/${src}_scripts/${src}_setup_rm
+setup_rm_file=${SCRIPTDIR}/${src}_setup_rm
 if [[ -f ${setup_rm_file} ]]; then
     rm ${setup_rm_file}
-    echo "removed old move file for ${src}"
+    echo "removed old rm setup file for ${src}"
 fi
-for file in `find /scratch/summit/${USER}/${top_level}/${src}_setup/*.setup`
+for file in `find ${SETUPDIR}/*.setup`
 do
     echo "rm $file" >> ${setup_rm_file}
 done
@@ -95,6 +104,8 @@ mpirun -genv I_MPI_FABRICS=shm:ofi lb $outfile || \
     error_exit "Line $LINENO: mpirun cp *.nc files"
 mpirun -genv I_MPI_FABRICS=shm:ofi lb $setup_rm_file || \
     error_exti "Line $LINENO: mpirun remove setup and scratch output files"
+mpirun -genv I_MPI_FABRICS=shm:ofi lb $outfile_rm || \
+    error_exit "Line $LINENO: mpirun rm *.nc files"
 date
 
 

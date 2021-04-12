@@ -71,7 +71,7 @@ fi
 date
 # Now set up sensor based on GSX type
 
-echo $top_level
+echo "$PROGNAME: top_level = $top_level"
 direc=/scratch/summit/${USER}/${top_level}
 echo "$PROGNAME: scratch directory $direc"
 
@@ -83,7 +83,7 @@ gsx_type=$1
 condaenv=$2
 source activate $condaenv
 # start sbatch for the next day
-sbatch  --begin=08:30:00 /projects/${USER}/NRTdaily/scripts/runNRTdailyStep0.sh -ft ${top_level} ${gsx_type} ${condaenv}
+sbatch  --begin=08:30:00 ${PMESDR_RUN}/runNRTdailyStep0.sh -ft ${top_level} ${gsx_type} ${condaenv}
 ml purge
 ml intel
 ml impi
@@ -94,10 +94,10 @@ date
 
 thisHost=$(hostname)
 thisDate=$(date)
-echo "$0: Begin on hostname=$thisHost on $thisDate"
-echo "$0: SLURM_SCRATCH=$SLURM_SCRATCH"
-echo "$0: SLURM_JOB_ID=$SLURM_JOB_ID"
-echo "$0: with gsx_type=$gsx_type and condaenv=$condaenv"
+echo "$PROGNAME: Begin on hostname=$thisHost on $thisDate"
+echo "$PROGNAME: SLURM_SCRATCH=$SLURM_SCRATCH"
+echo "$PROGNAME: SLURM_JOB_ID=$SLURM_JOB_ID"
+echo "$PROGNAME: with gsx_type=$gsx_type and condaenv=$condaenv"
 
 
 case $gsx_type in
@@ -118,8 +118,8 @@ case $gsx_type in
     platforms="SMAP";;
 
 esac
-echo "$0: $suffix"
-echo "$0: $platforms"
+echo "$PROGNAME: $suffix"
+echo "$PROGNAME: $platforms"
 
 # if -f is set download files from ftp
 if [[ $do_ftp ]]; then
@@ -128,7 +128,6 @@ if [[ $do_ftp ]]; then
     python ${fetch_file} || error_exit "Line $LINENO: ftp error."
     echo "Done with ftp fetch from ${fetch_file}"
 fi
-cd /projects/${USER}/NRTdaily/scripts
 
 #after files are retrieved, create input file list for gsx of files with
 # modification date less than 1 day old
@@ -143,8 +142,8 @@ do
     fi
     for file in `find ${direc}/${src} -name "${suffix}" -mtime 0`
     do
-	basen=`basename $file`
-	echo "gsx $gsx_type $file ${direc}/${src}_GSX/GSX_$basen.nc" \
+	basen=`basename ${file}`
+	echo "gsx ${gsx_type} ${file} ${direc}/${src}_GSX/GSX_${basen}.nc" \
 	     >> ${direc}/${src}_scripts/gsx_lb_list_summit
     done
     echo "mpirun -genv I_MPI_FABRICS=shm:ofi lb ${direc}/${src}_scripts/gsx_lb_list_summit"
@@ -162,7 +161,7 @@ startdoy=`date '+%j' -d "7 days ago"`
 # Note the CSU ICDR data stream is 1-2 days behind today
 # This workaround gets around a bug in meas_meta_setup that fails if there
 # are no input files in the make file
-if $gsx_type -eq SSMIS-CSU-ICDR; then
+if ${gsx_type} -eq SSMIS-CSU-ICDR; then
     endyear=`date '+%Y' -d "2 days ago"`
     enddoy=`date '+%j' -d "2 days ago"`
 else
@@ -170,11 +169,11 @@ else
     enddoy=`date '+%j'`
 fi
 
-echo "$0: $startyear=start year $startdoy=start doy $endyear=end year $enddoy=end doy"
+echo "$PROGNAME: $startyear=start year $startdoy=start doy $endyear=end year $enddoy=end doy"
 
 for src in ${platforms}
 do
-    echo "$0: $src - platform "
+    echo "$PROGNAME: $src - platform "
     source ${PMESDR_RUN}/all_lists_for_sensor.sh $startyear $startdoy $endyear $enddoy $src $top_level \
 	|| error_exit "Line $LINENO: all_lists_for_sensor ${src} error."
     grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d' \
@@ -182,6 +181,9 @@ do
     source $PMESDR_RUN/all_SSMIS_make_for_sensor.sh $startyear $startdoy $endyear \
 	   $enddoy $src ${PMESDR_SCRIPT_DIR} $top_level || \
 	error_exit "Line $LINENO: all_SSMIS_make_for_sensor ${src} error."
+    ml intel
+    ml netcdf/4.4.1.1
+    ml udunits
     ml impi
     ml loadbalance
     echo "mpirun lb ${direc}/${src}_scripts/${src}_make_list"
@@ -193,8 +195,8 @@ done
 for src in $platforms
 do
     echo "Start Step1 for ${src}"
-    sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_SCRIPT_DIR}/runNRTdailyStep1.sh -t ${top_level} ${src}
+    sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh -t ${top_level} ${src}
 done
 
 thisDate=$(date)
-echo "$0: Done on hostname=$thisHost on $thisDate"
+echo "$PROGNAME: Done on hostname=$thisHost on $thisDate"
