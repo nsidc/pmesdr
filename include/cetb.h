@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 /* alignment is needed for memory allocations across applications in this system */
 #define CETB_MEM_ALIGNMENT 64
@@ -298,10 +299,18 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
 /* Need to be able to map sensor ID and producer ID to NSIDC dataset ID */
 static const char *cetb_NSIDC_dataset_id[] = {
   "NSIDC-0630",
-  "NSIDC-0757",
   "NSIDC-0763",
   "NSIDC-0738"
 };
+
+/* enum to index into the cetb_NSIDC_dataset_id array */
+typedef enum {
+  CETB_NSIDC_0000=-1,
+  CETB_NSIDC_0630,
+  CETB_NSIDC_0763,
+  CETB_NSIDC_0738
+} cetb_dataset_id;
+
 /*
  * GCMD sensor name keywords
  * Ref: http://gcmdservices.gsfc.nasa.gov/static/kms/instruments/instruments.csv

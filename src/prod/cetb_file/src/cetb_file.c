@@ -36,7 +36,7 @@ static int cetb_file_set_time_coverage( cetb_file_class *this,
 					float *tb_data, int xdim, int ydim ); 
 static char *cetb_template_filename( cetb_sensor_id sensor_id,
 				     cetb_swath_producer_id producer_id,
-				     int *cetb_dataset_id_index );
+				     cetb_dataset_id *cetb_dataset_id_index );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -119,7 +119,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   char *channel_str=NULL;
   cetb_region_id region_id;
   char *filename;
-  int cetb_dataset_id_index;
+  cetb_dataset_id cetb_dataset_id_index;
   int template_fid;
   int status;
   char *file_version=NULL;
@@ -1381,7 +1381,7 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
  */
 char *cetb_template_filename( cetb_sensor_id sensor_id,
 			      cetb_swath_producer_id producer_id,
-			      int *cetb_dataset_id_index ) {
+			      cetb_dataset_id *cetb_dataset_id_index ) {
 
   char *ptr_path;
   char *filename = NULL;
@@ -1393,30 +1393,64 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
   					       FILENAME_MAX + 1 ) ) {
     return NULL;
   }
-  strncpy( filename, ptr_path, FILENAME_MAX );
 
-  if ( CETB_SMMR <= sensor_id && sensor_id <= CETB_SSMIS ) {
-    if ( CETB_CSU == producer_id || CETB_JPL == producer_id || CETB_RSS == producer_id ) {
-      strcat( filename, "/src/prod/cetb_file/templates/nsidc-0630_template.nc" );
-      *cetb_dataset_id_index = 0;
-    } else if ( CETB_CSU_ICDR == producer_id ) {
-      strcat( filename, "/src/prod/cetb_file/templates/nsidc-0757_template.nc" );
-      *cetb_dataset_id_index = 1;
-    } else if ( CETB_PPS_XCAL == producer_id ) {
-      strcat( filename, "/src/prod/cetb_file/templates/nsidc-0763_template.nc" );
-      *cetb_dataset_id_index = 2;
+  strncpy( filename, ptr_path, FILENAME_MAX );
+  strcat( filename, "/src/prod/cetb_file/templates/";
+
+  if ( CETB_SMMR == sensor_id ) {
+    if (CETB_JPL == producer_id ) {
+      *cetb_dataset_index = CETB_NSIDC_0630;
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
 	       __FUNCTION__, sensor_id, producer_id );
       return NULL;
     }
-  } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
-    strcat( filename, "/src/prod/cetb_file/templates/nsidc-0738_template.nc" );
-    *cetb_dataset_id_index = 3;
-  } else {
-    fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
-    return NULL;
   }
+	  
+  if (CETB_SSMI == sensor_id ) {
+    if ( CETB_RSS == producer_id || CETB_CSU == producer_id || CETB_CSU_ICDR == producer_id ) {
+      *cetb_dataset_Index = CETB_NSIDC_0630;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	       __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+
+  if (CETB_SSMIS == sensor_id ) {
+    if ( CETB_RSS == producer_id || CETB_CSU == producer_id || CETB_CSU_ICDR == producer_id ) {
+      *cetb_dataset_index = CETB_NSIDC_0630;
+    } else if ( CETB_PPS_XCAL == producer_id ) {
+      *cetb_dataset_index = CETB_NSIDC_0763;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	       __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+
+  if ( CETB_AMSRE == sensor_id ) {
+    if ( CETB_RSS == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	 __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+
+  if ( CETB_SMAP_RADIOMETER == sensor_id ) {
+    if ( CETB_JPL == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0738;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	 __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+	  
+  strcat( filename, tolower(cetb_NSIDC_dataset_id[*cetb_dataset_id_index]) );
+  strcat( filename, "_template.nc" );
 
   return filename;
 
