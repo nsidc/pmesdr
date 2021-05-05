@@ -14,7 +14,7 @@
 #SBATCH --cpus-per-task=2
 #SBATCH -o /scratch/summit/moha2290/NRTdaily_output/runNRTdailyStep1-%j.out
 # Set the system up to notify upon completion
-#SBATCH --mail-type=END,FAIL,REQUEUE,STAGE_OUT
+#SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
 
 usage() {
@@ -30,6 +30,8 @@ usage() {
     echo "" 1>&2
 }
 
+list_of_emails="molly\\.hardman\\@colorado\\.edu jessica\\.calme\\@colorado\\.edu"
+
 PROGNAME=$(basename $0)
 
 error_exit() {
@@ -39,6 +41,9 @@ error_exit() {
     #   if no error message, prints "Unknown Error"
 
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
+    echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
+	mailx -s "NRT Step1 error" \
+	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
     exit 1
 }
 

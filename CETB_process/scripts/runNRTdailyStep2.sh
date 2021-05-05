@@ -13,7 +13,7 @@
 #SBATCH --nodes=1
 #SBATCH -o /scratch/summit/moha2290/NRTdaily_output/runNRTdailyStep2-%j.out
 # Set the system up to notify upon completion
-#SBATCH --mail-type=END,FAIL,REQUEUE,STAGE_OUT
+#SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
 
 usage() {
@@ -28,6 +28,8 @@ usage() {
     echo "" 1>&2
 }
 
+list_of_emails="molly\\.hardman\\@colorado\\.edu jessica\\.calme\\@colorado\\.edu"
+
 PROGNAME=$(basename $0)
 
 error_exit() {
@@ -37,6 +39,9 @@ error_exit() {
     #   if no error message, prints "Unknown Error"
 
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
+    echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
+	mailx -s "NRT Step2 error" \
+	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
     exit 1
 }
 
@@ -119,6 +124,10 @@ mpirun -genv I_MPI_FABRICS=shm:ofi lb $setup_rm_file || \
     error_exti "Line $LINENO: mpirun remove setup and scratch output files"
 mpirun -genv I_MPI_FABRICS=shm:ofi lb $outfile_rm || \
     error_exit "Line $LINENO: mpirun rm *.nc files"
+
+echo "${PROGNAME}: Step2 for ${pl_top} {src} completed" | \
+	mailx -s "NRT Step2 Completed" \
+	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
 date
 
 
