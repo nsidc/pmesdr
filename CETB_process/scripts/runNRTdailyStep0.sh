@@ -13,7 +13,7 @@
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep0
 #SBATCH --account=ucb135_summit2
-#SBATCH --time=00:25:00
+#SBATCH --time=00:30:00
 #SBATCH --ntasks-per-node=24
 #SBATCH --nodes=1
 #SBATCH -o /scratch/summit/moha2290/NRTdaily_output/runNRTdailyStep0-%j.out
@@ -50,12 +50,14 @@ error_exit() {
 }
 
 top_level=""
+arg_string=""
 do_ftp=
 
 while getopts "ft:h" opt; do
     case $opt in
 	f) do_ftp=1;;
-	t) top_level=$OPTARG;;
+	t) top_level=$OPTARG
+	   arg_string="-t ${top_level}";;
 	h) usage
 	   exit 1;;
 	?) printf "Usage: %s: [-tf] args\n" $0
@@ -83,7 +85,7 @@ gsx_type=$1
 condaenv=$2
 source activate $condaenv
 # start sbatch for the next day
-sbatch  --begin=08:30:00 ${PMESDR_RUN}/runNRTdailyStep0.sh -ft ${top_level} ${gsx_type} ${condaenv}
+sbatch  --begin=08:30:00 ${PMESDR_RUN}/runNRTdailyStep0.sh -f ${arg_string} ${gsx_type} ${condaenv}
 ml purge
 ml intel
 ml impi
@@ -103,30 +105,40 @@ echo "$PROGNAME: with gsx_type=$gsx_type and condaenv=$condaenv"
 case $gsx_type in
     
     SSMIS-L1C)
-    fetch_file="ftp_nrt_l1c.py"
+    fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_l1c.py"
     suffix="*.RT-H5"
+    run_dir="/projects/${USER}/swathfetcher"
+    make_file="all_SSMIS_make_for_sensor.sh"
     platforms="F16 F17 F18";;
     
     SSMIS-CSU-ICDR)
-    fetch_file="ftp_nrt_csu.py"
+    fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_csu.py"
     suffix="*.nc"
+    run_dir="/projects/${USER}/swathfetcher"
+    make_file="all_SSMIS_make_for_sensor.sh"
     platforms="F16 F17 F18";;
     
     SMAP)
-    fetch_file="ftp_nrt_smap.py"
+    fetch_file="/projects/${USER}/swathfetcher/ecs_smap_get.py"
     suffix="*.h5"
+    run_dir="${direc}/SMAP"
+    make_file="all_SMAP_make.sh"
     platforms="SMAP";;
 
 esac
+
+cur_dir=${PWD}
 echo "$PROGNAME: $suffix"
 echo "$PROGNAME: $platforms"
 
 # if -f is set download files from ftp
 if [[ $do_ftp ]]; then
-#Go here so that correct secret files are used
-    cd /projects/${USER}/swathfetcher
+#Go here so that correct secret files are used or SMAP downloaded to correct location
+    cd ${run_dir}
     python ${fetch_file} || error_exit "Line $LINENO: ftp error."
     echo "Done with ftp fetch from ${fetch_file}"
+# Change back to original directory
+    cd ${cur_dir}
 fi
 
 #after files are retrieved, create input file list for gsx of files with
@@ -157,16 +169,15 @@ date
 #source /projects/${USER}/measures-byu/src/prod/summit_set_pmesdr_environment.sh
 startyear=`date '+%Y' -d "7 days ago"`
 startdoy=`date '+%j' -d "7 days ago"`
+endyear=`date '+%Y'`
+enddoy=`date '+%j'`
 
 # Note the CSU ICDR data stream is 1-2 days behind today
 # This workaround gets around a bug in meas_meta_setup that fails if there
 # are no input files in the make file
-if ${gsx_type} -eq SSMIS-CSU-ICDR; then
+if [[ ${gsx_type} -eq SSMIS-CSU-ICDR ]]; then
     endyear=`date '+%Y' -d "2 days ago"`
     enddoy=`date '+%j' -d "2 days ago"`
-else
-    endyear=`date '+%Y'`
-    enddoy=`date '+%j'`
 fi
 
 echo "$PROGNAME: $startyear=start year $startdoy=start doy $endyear=end year $enddoy=end doy"
@@ -176,11 +187,10 @@ do
     echo "$PROGNAME: $src - platform "
     source ${PMESDR_RUN}/all_lists_for_sensor.sh $startyear $startdoy $endyear $enddoy $src $top_level \
 	|| error_exit "Line $LINENO: all_lists_for_sensor ${src} error."
-    grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d' \
-	|| error_exit "Line $LINENO: grep ${src} error."
-    source $PMESDR_RUN/all_SSMIS_make_for_sensor.sh $startyear $startdoy $endyear \
+    grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d' 
+    source $PMESDR_RUN/${make_file} $startyear $startdoy $endyear \
 	   $enddoy $src ${PMESDR_SCRIPT_DIR} $top_level || \
-	error_exit "Line $LINENO: all_SSMIS_make_for_sensor ${src} error."
+	error_exit "Line $LINENO: all_SSMIS(or SMAP)_make_for_sensor ${src} error."
     ml intel
     ml netcdf/4.4.1.1
     ml udunits
@@ -195,7 +205,8 @@ done
 for src in $platforms
 do
     echo "Start Step1 for ${src}"
-    sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh -t ${top_level} ${src}
+    echo "sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${arg_string} ${src}"
+    sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${arg_string} ${src}
 done
 
 thisDate=$(date)

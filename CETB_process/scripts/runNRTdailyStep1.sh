@@ -43,9 +43,11 @@ error_exit() {
 }
 
 top_level=""
+arg_string=""
 while getopts "t:h" opt; do
     case $opt in
-	t) top_level=$OPTARG;;
+	t) top_level=$OPTARG
+	   arg_string="-t ${top_level}";;
 	h) usage
 	   exit 1;;
 	?) printf "Usage: %s: [-tf] args\n" $0
@@ -110,7 +112,9 @@ mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_sir_list || \
     error_exit "Line $LINENO: mpirun sir ${src} error."
 
 # set off step 2 which copies files to the peta library and deletes the setup files
-sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh -t ${top_level} ${src}
+echo "sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${arg_string} ${src}"
+sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${arg_string} ${src}
+
 
 
 

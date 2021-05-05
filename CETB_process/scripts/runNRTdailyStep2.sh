@@ -8,7 +8,7 @@
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep2
 #SBATCH --account=ucb135_summit2
-#SBATCH --time=00:30:00
+#SBATCH --time=00:50:00
 #SBATCH --ntasks-per-node=6
 #SBATCH --nodes=1
 #SBATCH -o /scratch/summit/moha2290/NRTdaily_output/runNRTdailyStep2-%j.out
@@ -53,14 +53,24 @@ done
 
 date
 
-case $top_level in
-    nsidc0751_CSU_ICDR) pl_top=nsidc0757_v1;;
-    nsidc0752_CSU_GPM_XCAL_NRT_Tbs) pl_top=nsidc0763_v1;;
-esac
-
 shift $(($OPTIND - 1))
 [[ "$#" -eq 1 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
 src=$1
+suffix=LRM
+sat_top=${src}_${suffix}
+# Note that SMAP doesn't use a top_level directory
+pl_top=nsidc0738_v2
+case $top_level in
+    nsidc0751_CSU_ICDR)
+	suffix=SSMIS
+	sat_top=${src}_${suffix}
+	pl_top=nsidc0757_v1;;
+    nsidc0752_CSU_GPM_XCAL_NRT_Tbs)
+	suffix=SSMIS
+	sat_top=${src}_${suffix}
+	pl_top=nsidc0763_v1;;
+esac
+
 direc=/scratch/summit/${USER}/${top_level}/
 SETUPDIR=${direc}/${src}_setup/
 SCRIPTDIR=${direc}/${src}_scripts/
@@ -70,7 +80,10 @@ outfile_rm=${SCRIPTDIR}/${src}_rm_sir_files
 if [[ -f ${outfile} ]]; then
     rm ${outfile}
     echo "removed old move file for ${src}"
+else
+    echo " no old move file to remove for ${src}"
 fi
+
 if [[ -f ${outfile_rm} ]]; then
     rm ${outfile_rm}
     echo "removed old delete *.nc file for ${src}"
@@ -79,16 +92,16 @@ fi
 for file in `find ${direc}/${src}_sir/*.nc`
 do
     basen=`basename $file`
-    year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`
+    year=`echo $basen | grep -o ${src}_${suffix}-.... | sed 's/^.*-//'`
     hemi=`echo $basen | grep -o EASE2_. | sed 's/^.*_//'`
-    echo "cp $file /pl/active/PMESDR/${pl_top}/${src}_SSMIS/${hemi}/EASE2_${hemi}/${year}/" >> ${outfile}
+    echo "cp $file /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/EASE2_${hemi}/${year}/" >> ${outfile}
     echo "rm $file" >> ${outfile_rm}
 done
 
 setup_rm_file=${SCRIPTDIR}/${src}_setup_rm
 if [[ -f ${setup_rm_file} ]]; then
     rm ${setup_rm_file}
-    echo "removed old rm setup file for ${src}"
+    echo "removed old rm setup file for ${src} ${top_level}"
 fi
 for file in `find ${SETUPDIR}/*.setup`
 do
