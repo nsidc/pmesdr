@@ -34,6 +34,7 @@ source ${envpath}/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
 OUTDIR=/scratch/summit/${USER}/${top_level}/${SRC}_make/
+direc=/scratch/summit/${USER}/${top_level}
 #
 #
 # run meas_meta_make with specific parameters
@@ -49,22 +50,23 @@ do
     DOYA=$( printf "%03g" $DOY )
 
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.19-22.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi19-22hv_NS.def \
-	    /scratch/summit/${USER}/${top_level}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
-	 >> /scratch/summit/${USER}/${top_level}/${SRC}_scripts/${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
+	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.19-22.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi19-22hv_T.def \
-	    /scratch/summit/${USER}/${top_level}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
-	 >> /scratch/summit/${USER}/${top_level}/${SRC}_scripts/${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
+	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37hv_NS.def \
-	    /scratch/summit/${USER}/${top_level}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
-	 >> /scratch/summit/${USER}/${top_level}/${SRC}_scripts/${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
+	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.37.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi37hv_T.def \
-	    /scratch/summit/${USER}/${top_level}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
-	 >> /scratch/summit/${USER}/${top_level}/${SRC}_scripts/${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
+	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.91.NS.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi85hv_NS.def \
-	    /scratch/summit/${USER}/${top_level}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
+	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make -t -12 $OUTDIR/$SRC.$DOYA.${YEAR}.91.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/ssmi85hv_T.def \
-	    /scratch/summit/${USER}/${top_level}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
-	 >> /scratch/summit/${USER}/${top_level}/${SRC}_scripts/${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
+	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
 
 done
 #

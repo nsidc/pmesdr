@@ -21,6 +21,18 @@ src=$4
 top_level=$5
 direc=/scratch/summit/${USER}/${top_level}/
 
+error_exit() {
+    # Use for fatal program error
+    # Argument:
+    #   optional string containing descriptive error message
+    #   if no error message, prints "Unknown Error"
+
+    echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
+    exit 1
+}
+
+enddaydate=`date -d "$year-01-01 + $(( ${stopdoy} - 1 )) days" +%d`
+startdaydate=`date -d "$year-01-01 + $(( ${startdoy} - 1 )) days" +%d`
 for doy in `seq ${startdoy} ${stopdoy}`
 do
 
@@ -38,7 +50,7 @@ do
     yearp=$year
     if [ $day == 01 -a $month == 01 ]
     then
-	dayminus1=31
+ 	dayminus1=31
         monthm1=12
 	yearm1=$(( $year - 1 ))
     fi
@@ -48,11 +60,19 @@ do
 	dayplus1=01
 	monthp1=01
     fi
-           
-    cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
-	${direc}/${src}_lists/${src}.$year$month$day \
-	${direc}/${src}_lists/${src}.$yearp$monthp1$dayplus1 \
-	>& ${direc}/${src}_lists/${src}.$year$month$day.NS
+
+    if [[ ${doy} -lt ${stopdoy} ]]
+    then
+	cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
+	    ${direc}/${src}_lists/${src}.$year$month$day \
+	    ${direc}/${src}_lists/${src}.$yearp$monthp1$dayplus1 \
+	    >& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
+    else
+	cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
+	    ${direc}/${src}_lists/${src}.$year$month$day \
+	    >& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
+    fi
+	
 done
 
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 5 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 5 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR DOY_START DOY_STOP SRC ENVPATH"
     echo "  Creates an sbatch file to create meas_meta_make files."
@@ -26,10 +26,12 @@ SRC=$4
 DOY1=$2
 DOY2=$3
 envpath=$5
+top_level=$6
 source ${envpath}/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/${USER}/${SRC}_make/
+OUTDIR=/scratch/summit/${USER}/${top_level}/${SRC}_make/
+direc=/scratch/summit/${USER}/${top_level}
 #
 #
 # run meas_meta_make with specific parameters
@@ -45,11 +47,11 @@ do
     DOYA=$( printf "%03g" $DOY )
 
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.N.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2N_smap.def \
-	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.T.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2T_smap.def \
-	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.S.meta $SRC $DOYA $DOYA $YEAR $TOPDIR/ref/E2S_smap.def \
-	    /scratch/summit/${USER}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${SRC}_make_list
+	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" >> ${direc}/${SRC}_scripts/${SRC}_make_list
 
 done
 #

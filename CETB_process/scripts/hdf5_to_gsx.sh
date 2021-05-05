@@ -11,9 +11,10 @@
 # second argument is the name of the platform, SMAP etc
 gsx_type=$1
 src=$2
+rm -f /scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
 for file in `find ../${src} -name "*.h5"`
 do
     basen=`basename $file`
-    echo "gsx $gsx_type $file /scratch/summit/moha2290/${src}_GSX/GSX_$basen.nc" >> /scratch/summit/moha2290/${src}_scripts/gsx_lb_list_summit
+    echo "gsx $gsx_type $file /scratch/summit/${USER}/${src}_GSX/GSX_$basen.nc" >> /scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
 done
 

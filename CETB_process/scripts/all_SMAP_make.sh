@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 6 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 6 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC ENVPATH"
     echo "  Makes a list of meas_meta_make commands"
@@ -22,10 +22,11 @@ endyear=$3
 enddoy=$4
 sensor=$5
 envpath=$6
+top_level=$7
 
 # Delete the output file.  It will be appended to by each iteration of the
 # year loop, below.
-outfile=${sensor}_make_list
+outfile=/scratch/summit/${USER}/${top_level}/${sensor}_scripts/${sensor}_make_list
 rm -f ${outfile}
 echo "$0: removing make file: $outfile"
 
@@ -50,7 +51,7 @@ do
     fi
     
     echo "$0: SMAP_make for: $year $thisbegindoy $thisenddoy $sensor"
-    source $PMESDR_RUN/SMAP_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath
+    source $PMESDR_RUN/SMAP_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
     
 done    
 

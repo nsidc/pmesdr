@@ -22,6 +22,16 @@ enddoy=$4
 sensor=$5
 top_level=$6
 
+error_exit() {
+    # Use for fatal program error
+    # Argument:
+    #   optional string containing descriptive error message
+    #   if no error message, prints "Unknown Error"
+
+    echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
+    exit 1
+}
+
 # Do all the daily lists first, then do the 3-day lists, which just concatenate
 # them in rolling groups of 3 days
 for year in `seq $startyear $endyear`
@@ -44,8 +54,8 @@ do
     fi
     
     echo "$0: 1day set: $year $thisbegindoy $thisenddoy $sensor $top_level"
-    source $PMESDR_RUN/daily_file_lists.sh $year $thisbegindoy $thisenddoy $sensor $top_level
-    echo " exit status $?"
+    source $PMESDR_RUN/daily_file_lists.sh $year $thisbegindoy $thisenddoy $sensor $top_level || \
+	error_exit "LINENO: daily_file_lists.sh error "
     
 done    
 
@@ -70,8 +80,8 @@ do
     fi
     
     echo "$0: 3day set: $year $thisbegindoy $thisenddoy $sensor $top_level"
-    source $PMESDR_RUN/file_3day.sh $year $thisbegindoy $thisenddoy $sensor $top_level
-    echo " exit status $?"
+    source $PMESDR_RUN/file_3day.sh $year $thisbegindoy $thisenddoy $sensor $top_level || \
+	error_exit "$LINENO: file_3day.sh error"
     
 done    
 	    

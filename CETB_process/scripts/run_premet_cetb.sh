@@ -23,5 +23,5 @@ ml impi
 ml loadbalance
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb $file
+mpirun -genv I_MPI_FABRICS=shm:ofi  lb $file
 date
