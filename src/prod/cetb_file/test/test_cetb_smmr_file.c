@@ -188,7 +188,7 @@ void test_init_for_valid_cetb_north( void ) {
   year = 1984;
   doy = 1;
   direction_id = CETB_MORNING_PASSES;
-  producer_id = CETB_CSU;
+  producer_id = CETB_JPL;
   
   cetb = cetb_file_init( dirname,
 			 region_number, base_resolution,
@@ -196,7 +196,7 @@ void test_init_for_valid_cetb_north( void ) {
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-NIMBUS7_SMMR-1984001-06H-M-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-NIMBUS7_SMMR-1984001-06H-M-SIR-JPL-v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   
