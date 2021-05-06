@@ -1395,11 +1395,11 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
   }
 
   strncpy( filename, ptr_path, FILENAME_MAX );
-  strcat( filename, "/src/prod/cetb_file/templates/";
+  strcat( filename, "/src/prod/cetb_file/templates/" );
 
   if ( CETB_SMMR == sensor_id ) {
     if (CETB_JPL == producer_id ) {
-      *cetb_dataset_index = CETB_NSIDC_0630;
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
 	       __FUNCTION__, sensor_id, producer_id );
@@ -1409,7 +1409,7 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
 	  
   if (CETB_SSMI == sensor_id ) {
     if ( CETB_RSS == producer_id || CETB_CSU == producer_id || CETB_CSU_ICDR == producer_id ) {
-      *cetb_dataset_Index = CETB_NSIDC_0630;
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
 	       __FUNCTION__, sensor_id, producer_id );
@@ -1419,9 +1419,9 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
 
   if (CETB_SSMIS == sensor_id ) {
     if ( CETB_RSS == producer_id || CETB_CSU == producer_id || CETB_CSU_ICDR == producer_id ) {
-      *cetb_dataset_index = CETB_NSIDC_0630;
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
     } else if ( CETB_PPS_XCAL == producer_id ) {
-      *cetb_dataset_index = CETB_NSIDC_0763;
+      *cetb_dataset_id_index = CETB_NSIDC_0763;
     } else {
       fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
 	       __FUNCTION__, sensor_id, producer_id );
@@ -1448,8 +1448,8 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
       return NULL;
     }
   }
-	  
-  strcat( filename, tolower(cetb_NSIDC_dataset_id[*cetb_dataset_id_index]) );
+  
+  strcat( filename, (cetb_NSIDC_dataset_id[(int)*cetb_dataset_id_index]) );
   strcat( filename, "_template.nc" );
 
   return filename;
