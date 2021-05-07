@@ -125,7 +125,7 @@ mpirun -genv I_MPI_FABRICS=shm:ofi lb $setup_rm_file || \
 mpirun -genv I_MPI_FABRICS=shm:ofi lb $outfile_rm || \
     error_exit "Line $LINENO: mpirun rm *.nc files"
 
-echo "${PROGNAME}: Step2 for ${pl_top} {src} completed" | \
+echo "${PROGNAME}: Step2 for ${pl_top} ${src} completed" | \
 	mailx -s "NRT Step2 Completed" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
 date
