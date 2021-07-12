@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -le 6 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 6 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC ENVPATH"
     echo "  Makes a list of meas_meta_make commands"

@@ -18,7 +18,7 @@
 src=$1
 envpath=$2
 top_level=$3
-file=/scratch/summit/${USER}/${top_level}${src}_scripts/${src}_make_list
+file=/scratch/summit/${USER}/${top_level}/${src}_scripts/${src}_make_list
 source ${envpath}/summit_set_pmesdr_environment.sh
 ml impi
 ml loadbalance

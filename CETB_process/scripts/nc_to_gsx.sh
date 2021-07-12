@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 2 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 2 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] GSX_TYPE SRC"
     echo "  Rips through all of the CSU .nc files for a particular"
@@ -14,9 +14,10 @@ fi
 
 gsx_type=$1
 src=$2
-for file in `find ../${src} -name "*.nc"`
+top_level=$3
+for file in `find /scratch/summit/${USER}/${top_level}/${src} -name "*.nc"`
 do
     basen=`basename $file`
-    echo "gsx $gsx_type $file /scratch/summit/${USER}/${src}_GSX/GSX_$basen" >> /scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
+    echo "gsx $gsx_type $file /scratch/summit/${USER}/${top_level}/${src}_GSX/GSX_$basen" >> /scratch/summit/${USER}/${top_level}/${src}_scripts/gsx_lb_list_summit
 done
 

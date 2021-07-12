@@ -9,20 +9,21 @@
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep1
 #SBATCH --account=ucb135_summit2
-#SBATCH --time=05:30:00
+#SBATCH --time=04:30:00
 #SBATCH --ntasks-per-node=6
-#SBATCH --cpus-per-task=2
-#SBATCH -o /scratch/summit/moha2290/NRTdaily_output/runNRTdailyStep1-%j.out
+#SBATCH --cpus-per-task=3
+#SBATCH -o /scratch/summit/%u/NRTdaily_output/runNRTdailyStep1-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
 
 usage() {
     echo "" 1>&2
-    echo "Usage: `basename $0` [-t] [-h] PLATFORM" 1>&2
+    echo "Usage: `basename $0` [-t] [-r] [-h] PLATFORM" 1>&2
     echo "  PLATFORM" 1>&2
     echo "Options: "  1>&2
     echo "  -t: top level data location under /scratch/summit/${USER}" 1>&2
+    echo "  -r: optional for different base resolution, -r 1 is 36km and -r 2 is 24km" 1>&2
     echo "  -h: display help message and exit" 1>&2
     echo "  PLATFORM : F16, F17, F18 AMSRE, SMAP" 1>&2
     echo "Prior to running this script, do:" 1>&2
@@ -49,10 +50,15 @@ error_exit() {
 
 top_level=""
 arg_string=""
-while getopts "t:h" opt; do
+resolution=0
+res_string=""
+
+while getopts "r:t:h" opt; do
     case $opt in
 	t) top_level=$OPTARG
 	   arg_string="-t ${top_level}";;
+	r) resolution=$OPTARG
+	   res_string="-r ${resolution}";;
 	h) usage
 	   exit 1;;
 	?) printf "Usage: %s: [-tf] args\n" $0
@@ -74,23 +80,33 @@ src=$1
 module purge
 date
 
+suffix=""
+if [[ resolution -eq 1 ]]
+then
+    suffix="_36"
+elif [[ resolution -eq 2 ]]
+then
+    suffix="_24"
+fi
+
 direc=/scratch/summit/${USER}/${top_level}/
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-MAKEDIR=${direc}/${src}_make/
-SETUPDIR=${direc}/${src}_setup/
+MAKEDIR=${direc}/${src}_make${suffix}/
+SETUPDIR=${direc}/${src}_setup${suffix}/
+SIRDIR=${direc}/${src}_sir${suffix}/
 SCRIPTDIR=${direc}/${src}_scripts/
 
 # create the list of the latest make files
 date
-if [[ -f ${SCRIPTDIR}/${src}_setup_list ]]; then
-    rm ${SCRIPTDIR}/${src}_setup_list
-    echo "removed old setup file for ${src}"
+if [[ -f ${SCRIPTDIR}/${src}_setup_list${suffix} ]]; then
+    rm ${SCRIPTDIR}/${src}_setup_list${suffix}
+    echo "removed old setup file for ${src} ${res_string}"
 fi
 
 for FILE in `find ${MAKEDIR}/* -mtime 0`
 do
-    echo "$BINDIR/meas_meta_setup $FILE ${SETUPDIR}" >> ${SCRIPTDIR}/${src}_setup_list
+    echo "$BINDIR/meas_meta_setup $FILE ${SETUPDIR}" >> ${SCRIPTDIR}/${src}_setup_list${suffix}
 done
 
 ml intel
@@ -100,29 +116,22 @@ ml impi
 ml loadbalance
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_setup_list || \
+mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_setup_list${suffix} || \
     error_exit "Line $LINENO: mpirun setup ${src} error."
 
 # now create list of newly created setup files to feed to rSIR processing
 date
-if [[ -f ${SCRIPTDIR}/${src}_sir_list ]]; then
-    rm ${SCRIPTDIR}/${src}_sir_list
-    echo "removed old sir file for ${src}"
+if [[ -f ${SCRIPTDIR}/${src}_sir_list${suffix} ]]; then
+    rm ${SCRIPTDIR}/${src}_sir_list${suffix}
+    echo "removed old sir file for ${src} ${res_string}"
 fi
 for FILE in `find ${SETUPDIR}/* -mtime 0`
 do
-    echo "$BINDIR/meas_meta_sir $FILE ${direc}/${src}_sir" >> ${SCRIPTDIR}/${src}_sir_list
+    echo "$BINDIR/meas_meta_sir $FILE ${SIRDIR}" >> ${SCRIPTDIR}/${src}_sir_list${suffix}
 done
-mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_sir_list || \
+mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_sir_list${suffix} || \
     error_exit "Line $LINENO: mpirun sir ${src} error."
 
-# set off step 2 which copies files to the peta library and deletes the setup files
-echo "sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${arg_string} ${src}"
-sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${arg_string} ${src}
-
-
-
-
-    
-
-
+#set off step 2 which copies files to the peta library and deletes the setup files
+echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${res_string} ${arg_string} ${src}"
+sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${res_string} ${arg_string} ${src}

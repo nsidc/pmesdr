@@ -13,20 +13,23 @@
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep0
 #SBATCH --account=ucb135_summit2
-#SBATCH --time=00:30:00
-#SBATCH --ntasks-per-node=24
-#SBATCH --nodes=1
-#SBATCH -o /scratch/summit/moha2290/NRTdaily_output/runNRTdailyStep0-%j.out
+#SBATCH --time=01:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=20
+#SBATCH -o /scratch/summit/%u/NRTdaily_output/runNRTdailyStep0-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
 
+OPTIND=1
+
 usage() {
     echo "" 1>&2
-    echo "Usage: `basename $0` [-tf] [-h] GSX_TYPE CONDAENV" 1>&2
+    echo "Usage: `basename $0` [-trf] [-h] GSX_TYPE CONDAENV" 1>&2
     echo "  GSX_TYPE CONDAENV" 1>&2
     echo "Options: "  1>&2
     echo "  -t: top level data location under /scratch/summit/${USER}" 1>&2
+    echo "  -r: set base resolution default is 25km r -1 is 36km r -2 is 24km" 1>&2
     echo "  -h: display help message and exit" 1>&2
     echo "  -f: do the ftp pull(default is no ftp pull)" 1>&2
     echo "  GSX_TYPE : type of gsx translation to do (see gsx --help)" 1>&2
@@ -56,13 +59,19 @@ error_exit() {
 
 top_level=""
 arg_string=""
+res_string=""
+base_resolution=0
 do_ftp=
+ftp_string=""
 
-while getopts "ft:h" opt; do
+while getopts "fr:t:h" opt; do
     case $opt in
-	f) do_ftp=1;;
+	f) do_ftp=1
+	   ftp_string="-f";;
 	t) top_level=$OPTARG
 	   arg_string="-t ${top_level}";;
+	r) base_resolution=$OPTARG
+	   res_string="-r ${base_resolution}";;
 	h) usage
 	   exit 1;;
 	?) printf "Usage: %s: [-tf] args\n" $0
@@ -90,7 +99,7 @@ gsx_type=$1
 condaenv=$2
 source activate $condaenv
 # start sbatch for the next day
-sbatch  --begin=08:30:00 ${PMESDR_RUN}/runNRTdailyStep0.sh -f ${arg_string} ${gsx_type} ${condaenv}
+sbatch --begin=08:30:00 --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
 ml purge
 ml intel
 ml impi
@@ -104,7 +113,7 @@ thisDate=$(date)
 echo "$PROGNAME: Begin on hostname=$thisHost on $thisDate"
 echo "$PROGNAME: SLURM_SCRATCH=$SLURM_SCRATCH"
 echo "$PROGNAME: SLURM_JOB_ID=$SLURM_JOB_ID"
-echo "$PROGNAME: with gsx_type=$gsx_type and condaenv=$condaenv"
+echo "$PROGNAME: with gsx_type=$gsx_type and condaenv=$condaenv base_resolution=$base_resolution"
 
 
 case $gsx_type in
@@ -144,30 +153,29 @@ if [[ $do_ftp ]]; then
     echo "Done with ftp fetch from ${fetch_file}"
 # Change back to original directory
     cd ${cur_dir}
-fi
 
 #after files are retrieved, create input file list for gsx of files with
 # modification date less than 1 day old
 
-date
-for src in $platforms
-do
-    echo "working this src ${src}"
-    if [[ -f ${direc}/${src}_scripts/gsx_lb_list_summit ]]; then
-	rm ${direc}/${src}_scripts/gsx_lb_list_summit
-	echo "removed old gsx_lb_file for ${src}"
-    fi
-    for file in `find ${direc}/${src} -name "${suffix}" -mtime 0`
+    date
+    for src in $platforms
     do
-	basen=`basename ${file}`
-	echo "gsx ${gsx_type} ${file} ${direc}/${src}_GSX/GSX_${basen}.nc" \
-	     >> ${direc}/${src}_scripts/gsx_lb_list_summit
+	echo "working this src ${src}"
+	if [[ -f ${direc}/${src}_scripts/gsx_lb_list_summit ]]; then
+	    rm ${direc}/${src}_scripts/gsx_lb_list_summit
+	    echo "removed old gsx_lb_file for ${src}"
+	fi
+	for file in `find ${direc}/${src} -name "${suffix}" -mtime 0`
+	do
+	    basen=`basename ${file}`
+	    echo "gsx ${gsx_type} ${file} ${direc}/${src}_GSX/GSX_${basen}.nc" \
+		 >> ${direc}/${src}_scripts/gsx_lb_list_summit
+	done
+	echo "mpirun -genv I_MPI_FABRICS=shm:ofi lb ${direc}/${src}_scripts/gsx_lb_list_summit"
+	mpirun -genv I_MPI_FABRICS=shm:ofi lb ${direc}/${src}_scripts/gsx_lb_list_summit || \
+	    error_exit "Line $LINENO: mpirun gsx ${src} error."
     done
-    echo "mpirun -genv I_MPI_FABRICS=shm:ofi lb ${direc}/${src}_scripts/gsx_lb_list_summit"
-    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${direc}/${src}_scripts/gsx_lb_list_summit || \
-	error_exit "Line $LINENO: mpirun gsx ${src} error."
-done
-
+fi
 date
 
 #next sort the files into daily lists
@@ -187,13 +195,23 @@ fi
 
 echo "$PROGNAME: $startyear=start year $startdoy=start doy $endyear=end year $enddoy=end doy"
 
+suffix=""
+if [[ "${resolution}" == "1" ]]
+then
+    suffix="_36"
+fi
+if [[ "$resolution" == "2" ]]
+then
+    suffix="_24"
+fi
+
 for src in ${platforms}
 do
     echo "$PROGNAME: $src - platform "
     source ${PMESDR_RUN}/all_lists_for_sensor.sh $startyear $startdoy $endyear $enddoy $src $top_level \
 	|| error_exit "Line $LINENO: all_lists_for_sensor ${src} error."
     grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d' 
-    source $PMESDR_RUN/${make_file} $startyear $startdoy $endyear \
+    source $PMESDR_RUN/${make_file} ${res_string} $startyear $startdoy $endyear \
 	   $enddoy $src ${PMESDR_SCRIPT_DIR} $top_level || \
 	error_exit "Line $LINENO: all_SSMIS(or SMAP)_make_for_sensor ${src} error."
     ml intel
@@ -201,8 +219,8 @@ do
     ml udunits
     ml impi
     ml loadbalance
-    echo "mpirun lb ${direc}/${src}_scripts/${src}_make_list"
-    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${direc}/${src}_scripts/${src}_make_list || \
+    echo "mpirun lb ${direc}/${src}_scripts/${src}_make_list${suffix}"
+    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${direc}/${src}_scripts/${src}_make_list${suffix} || \
 	error_exit "Line $LINENO: mpirun meas_meta_make ${src} error."
 done
 
@@ -210,8 +228,8 @@ done
 for src in $platforms
 do
     echo "Start Step1 for ${src}"
-    echo "sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${arg_string} ${src}"
-    sbatch --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${arg_string} ${src}
+    echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${arg_string} ${src}"
+    sbatch --dependency=afterok:$SLURM_JOB_ID --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}
 done
 
 thisDate=$(date)
