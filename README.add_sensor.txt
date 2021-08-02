@@ -15,3 +15,7 @@ id etc.
 single letter identifier that is used in the setup files - see
 the section in the code that compares F_num to the CETB_platform
 enum
+
+4.  Edit the function cetb_template_filename in cetb_file.c to
+get the correct template file for the platform and provider
+combination 

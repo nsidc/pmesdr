@@ -8,9 +8,9 @@ output at 12.5, 6.25, 3.125 etc km
 The system can also produce data with a base resolution of 36 km
 or 24 km.  These are achieved with an optional parameter on the
 command line when calling meas_meta_make
--r 0  is the default and gets the 25 km base resolution
--r 1  gets 36 km base resolution (and hence 18, 9, 4.5, 2.25 etc)
--r 2  gets 24 km base resolution (and 12, 6 and 3)
+-r 0  is the default and uses the 25 km base resolution
+-r 1  uses 36 km base resolution (and hence 18, 9, 4.5, 2.25 etc)
+-r 2  uses 24 km base resolution (and 12, 6 and 3)
 
 Currently this is only used in SMAP processing where for the
 NSIDC-0738 dataset we also produce 36, 9 and 3 km resolution
