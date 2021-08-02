@@ -9,12 +9,15 @@
 #
 # first argument is the type of gsx translation to do
 # second argument is the name of the platform, SMAP etc
+# third argument is optional top_level directory under /scratch/summit/${USER}
 gsx_type=$1
 src=$2
-rm -f /scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
-for file in `find ../${src} -name "*.h5"`
+top_level=$3
+direc=/scratch/summit/${USER}/${top_level}/
+rm -f ${direc}/${src}_scripts/gsx_lb_list_summit
+for file in `find ${direc}/${src} -name "*.h5"`
 do
     basen=`basename $file`
-    echo "gsx $gsx_type $file /scratch/summit/${USER}/${src}_GSX/GSX_$basen.nc" >> /scratch/summit/${USER}/${src}_scripts/gsx_lb_list_summit
+    echo "gsx $gsx_type $file ${direc}/${src}_GSX/GSX_$basen.nc" >> ${direc}/${src}_scripts/gsx_lb_list_summit
 done
 

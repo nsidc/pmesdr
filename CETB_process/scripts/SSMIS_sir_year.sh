@@ -21,15 +21,16 @@ shortyear=${longyear:2:2}
 source ${envpath}/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
+direc=/scratch/summit/${USER}/${top_level}/
 OUTDIR=/scratch/summit/${USER}/${top_level}/${src}_setup/
 
 # run meas_meta_sir with specific parameters
-rm -f /scratch/summit/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${longyear}
-mkdir /scratch/summit/${USER}/${top_level}/${src}_sir/${longyear}
+rm -f ${direc}/${src}_scripts/${src}_sir_list_${longyear}
+mkdir ${direc}/${src}_sir/${longyear}
 date
-for FILE in `find /scratch/summit/${USER}/${top_level}/${src}_setup/ -name *E2[NST]${shortyear}*`
+for FILE in `find ${direc}/${src}_setup/ -name *E2[NST]${shortyear}*`
 do
-    echo "$BINDIR/meas_meta_sir $FILE /scratch/summit/${USER}/${top_level}/${src}_sir/${longyear}" >> /scratch/summit/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${longyear}
+    echo "$BINDIR/meas_meta_sir $FILE ${direc}/${src}_sir/${longyear}" >> ${direc}/${src}_scripts/${src}_sir_list_${longyear}
 done
 #
 date
