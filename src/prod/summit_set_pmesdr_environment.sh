@@ -57,7 +57,7 @@ if [[ "$thisHostname" == *"shas"* \
       module purge all
       ml intel
       ml netcdf/4.4.1.1
-      ml udunits
+      ml udunits/2.2.25
       export LOCALE=SUMMITicc
       echo "Summit Compiler set to $PMESDR_COMPILER"
       module list
