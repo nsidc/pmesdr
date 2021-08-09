@@ -2738,7 +2738,7 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
     if ( CETB_JPL == this->producer_id ) {
-      strcat( source_value, "10.5067/VA6W2M0JTK2N " );
+      strcat( source_value, "10.5067/ZHHBN1KQLI20 " );
     } else {
       valid_flag = 0;
     }
