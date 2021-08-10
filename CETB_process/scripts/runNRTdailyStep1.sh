@@ -111,7 +111,7 @@ done
 
 ml intel
 ml netcdf/4.4.1.1
-ml udunits
+ml udunits/2.2.25
 ml impi
 ml loadbalance
 ml

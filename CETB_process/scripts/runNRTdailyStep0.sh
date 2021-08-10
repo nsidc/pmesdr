@@ -216,7 +216,7 @@ do
 	error_exit "Line $LINENO: all_SSMIS(or SMAP)_make_for_sensor ${src} error."
     ml intel
     ml netcdf/4.4.1.1
-    ml udunits
+    ml udunits/2.2.25
     ml impi
     ml loadbalance
     echo "mpirun lb ${direc}/${src}_scripts/${src}_make_list${suffix}"
@@ -228,7 +228,7 @@ done
 for src in $platforms
 do
     echo "Start Step1 for ${src}"
-    echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${arg_string} ${src}"
+    echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}"
     sbatch --dependency=afterok:$SLURM_JOB_ID --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}
 done
 

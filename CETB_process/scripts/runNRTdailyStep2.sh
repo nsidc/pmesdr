@@ -49,11 +49,13 @@ error_exit() {
 }
 
 top_level=""
+res_string=""
 resolution=0
 while getopts "r:t:h" opt; do
     case $opt in
 	t) top_level=$OPTARG;;
-	r) resolution=$OPTARG;;
+	r) resolution=$OPTARG
+	   res_string="resolution ${resolution}";;
 	h) usage
 	   exit 1;;
 	?) printf "Usage: %s: [-t] args\n" $0
@@ -114,7 +116,8 @@ do
     year=`echo $basen | grep -o ${src}_${suffix}-.... | sed 's/^.*-//'`
     hemi=`echo $basen | grep -o EASE2_. | sed 's/^.*_//'`
     if [[ $SLURM_JOB_ACCOUNT == "jeca4282" ]]; then
-	echo 'rsync -avz -e "ssh -i home/jeca4282/.ssh/id_ecdsa_summit_archive" ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/' >> ${outfile}
+	echo 'rsync -avz -e "ssh -i home/jeca4282/.ssh/id_ecdsa_summit_archive" ${file}
+ archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/' >> ${outfile}
     else
 	echo "cp $file /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/EASE2_${hemi}/${year}/" >> ${outfile}
     fi
@@ -125,7 +128,7 @@ done
 setup_rm_file=${SCRIPTDIR}/${src}_setup_rm${resolution_suffix}
 if [[ -f ${setup_rm_file} ]]; then
     rm ${setup_rm_file}
-    echo "removed old rm setup file for ${src} ${top_level}"
+    echo "removed old rm setup file for ${src} ${top_level} ${res_string}"
 fi
 for file in `find ${SETUPDIR}/*.setup`
 do
@@ -144,7 +147,7 @@ mpirun -genv I_MPI_FABRICS=shm:ofi lb $setup_rm_file || \
 #mpirun -genv I_MPI_FABRICS=shm:ofi lb $outfile_rm || \
 #    error_exit "Line $LINENO: mpirun rm *.nc files"
 
-echo "${PROGNAME}: Step2 for ${pl_top} ${src} completed" | \
+echo "${PROGNAME}: Step2 for ${pl_top} ${res_string} ${src} completed" | \
 	mailx -s "NRT Step2 Completed" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
 date
