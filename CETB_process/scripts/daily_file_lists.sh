@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 4 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 4 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR DOY_START DOY_STOP SRC"
     echo "  Make a list of all GSX input files available for each "
@@ -9,19 +9,26 @@ if [ "$1" == "-h" ] || [ "$#" -ne 4 ] ; then
     echo "  DOY_START: start day of year"
     echo "  DOY_STOP: stop day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  TOP_LEVEL: directory for NRT processing - optional"
     echo ""
     exit 1
 fi
 
 year=$1
-for doy in `seq $2 $3`
+startdoy=$2
+stopdoy=$3
+src=$4
+top_level=$5
+direc=/scratch/summit/${USER}/${top_level}/
+
+for doy in `seq ${startdoy} ${stopdoy}`
 do
     #    echo $doy
     realdoy=$(( $doy - 1 ))
     day=`date -d "$year-01-01 + $realdoy days" +%d`
     month=`date -d "$year-01-01 + $realdoy days" +%m`
     
-    ls /scratch/summit/${USER}/$4_GSX/*$year$month$day* >& /scratch/summit/${USER}/$4_lists/$4.$year$month$day
+    ls ${direc}/${src}_GSX/*$year$month$day* >& ${direc}/${src}_lists/${src}.$year$month$day
 done
 
 echo $year$month$day

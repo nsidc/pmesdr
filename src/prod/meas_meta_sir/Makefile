@@ -76,6 +76,8 @@ else ifeq ($(LOCALE),int.nsidc.org)
   $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib
   HDF5_LIBDIR = /usr/lib
+  HDFLIB1 = hdf5_serial_hl
+  HDFLIB2 = hdf5_serial
 else ifeq ($(LOCALE),JANUSicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
@@ -98,6 +100,8 @@ else ifeq ($(LOCALE),SUMMITicc)
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  HDFLIB1 = hdf5_hl
+  HDFLIB2 = hdf5
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else ifeq ($(LOCALE),SUMMITgcc)
@@ -119,7 +123,7 @@ endif
 #------------------------------------------------------------------------
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
 	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
-	-lhdf5_hl -lhdf5 -lz $(SYSLIBS) 
+	-l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS) 
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) \
 	-Wall -Wno-unused-variable -Wno-unused-but-set-variable
 ifeq ($(LOCALE),SUMMITicc)

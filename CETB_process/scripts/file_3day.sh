@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 4 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 4 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR DOY_START DOY_STOP SRC"
     echo "  Make a new list of input files for the NS lists, "
@@ -9,12 +9,31 @@ if [ "$1" == "-h" ] || [ "$#" -ne 4 ] ; then
     echo "  DOY_START: start day of year"
     echo "  DOY_STOP: stop day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
+    echo "  TOP_LEVEL: for NRT processing"
     echo ""
     exit 1
 fi
 
 year=$1
-for doy in `seq $2 $3`
+startdoy=$2
+stopdoy=$3
+src=$4
+top_level=$5
+direc=/scratch/summit/${USER}/${top_level}/
+
+error_exit() {
+    # Use for fatal program error
+    # Argument:
+    #   optional string containing descriptive error message
+    #   if no error message, prints "Unknown Error"
+
+    echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
+    exit 1
+}
+
+enddaydate=`date -d "$year-01-01 + $(( ${stopdoy} - 1 )) days" +%d`
+startdaydate=`date -d "$year-01-01 + $(( ${startdoy} - 1 )) days" +%d`
+for doy in `seq ${startdoy} ${stopdoy}`
 do
 
     realdoy=$(( $doy - 1 ))
@@ -31,7 +50,7 @@ do
     yearp=$year
     if [ $day == 01 -a $month == 01 ]
     then
-	dayminus1=31
+ 	dayminus1=31
         monthm1=12
 	yearm1=$(( $year - 1 ))
     fi
@@ -41,11 +60,19 @@ do
 	dayplus1=01
 	monthp1=01
     fi
-           
-    cat /scratch/summit/${USER}/$4_lists/$4.$yearm1$monthm1$dayminus1 \
-	/scratch/summit/${USER}/$4_lists/$4.$year$month$day \
-	/scratch/summit/${USER}/$4_lists/$4.$yearp$monthp1$dayplus1 \
-	>& /scratch/summit/${USER}/$4_lists/$4.$year$month$day.NS
+
+    if [[ ${doy} -lt ${stopdoy} ]]
+    then
+	cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
+	    ${direc}/${src}_lists/${src}.$year$month$day \
+	    ${direc}/${src}_lists/${src}.$yearp$monthp1$dayplus1 \
+	    >& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
+    else
+	cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
+	    ${direc}/${src}_lists/${src}.$year$month$day \
+	    >& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
+    fi
+	
 done
 
 

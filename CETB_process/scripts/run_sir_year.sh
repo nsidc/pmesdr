@@ -8,10 +8,10 @@
 #SBATCH --qos normal
 #SBATCH --job-name CETB_run_sir_year
 #SBATCH --partition=shas
-#SBATCH --account=ucb135_summit2
+#SBATCH --account=ucb135_summit3
 #SBATCH --time=04:00:00
 #SBATCH --ntasks=120
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=2
 #SBATCH -o output/sir_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
@@ -19,7 +19,8 @@
 year=$1
 src=$2
 envpath=$3
-file=/scratch/summit/${USER}/${src}_scripts/${src}_sir_list_${year}
+top_level=$4
+file=/scratch/summit/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}
 source ${envpath}/summit_set_pmesdr_environment.sh
 ml impi
 ml loadbalance

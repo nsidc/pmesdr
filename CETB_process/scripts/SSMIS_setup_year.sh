@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 3 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR SRC ENVPATH"
     echo "  Creates an sbatch script to run meas_meta_setup for 1 year of data"
@@ -14,18 +14,20 @@ fi
 YEAR=$1
 SRC=$2
 envpath=$3
+top_level=$4
 source ${envpath}/summit_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/${USER}/${SRC}_make/
+direc=/scratch/summit/${USER}/${top_level}/
+OUTDIR=${direc}/${SRC}_make/
 #
 #
 # run meas_meta_setup with specific parameters
 #
 date
-for FILE in `find ../${SRC}_make/*.${YEAR}.*`
+for FILE in `find ${OUTDIR}/*.${YEAR}.*`
 do
-    echo "$BINDIR/meas_meta_setup $OUTDIR/$FILE /scratch/summit/${USER}/${SRC}_setup" >> ${SRC}_setup_list_${YEAR}
+    echo "$BINDIR/meas_meta_setup $FILE ${direc}/${SRC}_setup" >> ${direc}/${SRC}_scripts/${SRC}_setup_list_${YEAR}
 done
 #
 date

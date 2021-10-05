@@ -8,19 +8,56 @@
 #SBATCH --qos normal
 #SBATCH --job-name CETB_run_sir_year
 #SBATCH --partition=shas
-#SBATCH --account=ucb135_summit2
+#SBATCH --account=ucb135_summit3
 #SBATCH --time=23:59:00
-#SBATCH --ntasks=40
+#SBATCH --ntasks=120
 #SBATCH --cpus-per-task=3
 #SBATCH -o output/sir_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mhardman@nsidc.org
+OPTIND=1
+usage() {
+    echo "" 1>&2
+    echo "Usage: `basename $0`[-r resolution] [-h] YEAR SRC ENVPATH" 1>&2
+    echo "  Creates an sbatch script to run meas_meta_setup for 1 year of data" 1>&2
+    echo "Arguments:" 1>&2
+    echo "  YEAR: 4-digit year" 1>&2
+    echo "  SRC: input sensor source of data: F08, F10, etc" 1>&2
+    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script" 1>&2
+    echo "  -r 1 and -r 2 use 36 and 24 km base resolutions respectively" 1>&2
+    echo "  -r 0 or nothing is the default 25 km base resolution" 1>&2
+    echo "" 1>&2
+}
+
+while getopts "r:h" opt; do
+    case $opt in
+	r) base_resolution=$OPTARG;;
+	h) usage
+	   exit 1;;
+	?) printf "Usage: %s: [-r] args\n" $0
+           exit 1;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
+[[ "$#" -eq 3 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
 year=$1
 src=$2
 envpath=$3
-suffix=$4
-file=/scratch/summit/${USER}/${src}_scripts/${src}_sir_list_${year}_${suffix}
+
+suffix=""
+if [[ "${base_resolution}" == "1" ]]
+then
+    suffix="_36"
+fi
+if [[ "${base_resolution}" == "2" ]]
+then
+    suffix="_24"
+fi
+
+file=/scratch/summit/${USER}/${src}_scripts/${src}_sir_list_${year}${suffix}
 source ${envpath}/summit_set_pmesdr_environment.sh
 ml impi
 ml loadbalance

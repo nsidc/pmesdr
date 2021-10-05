@@ -67,5 +67,10 @@ scripts/  control scripts
 src/      source code for production and display
 testing/  directory of testing code and data files
 
+Please also see the 2 further README's in this directory that
+explain adding a new sensor and changing the base resolution,
+viz. README.add_sensor.txt and README.change_resolution.txt
+respectively. 
+
 
 

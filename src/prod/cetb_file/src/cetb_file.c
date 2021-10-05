@@ -34,7 +34,9 @@
 
 static int cetb_file_set_time_coverage( cetb_file_class *this,
 					float *tb_data, int xdim, int ydim ); 
-static char *cetb_template_filename( cetb_sensor_id sensor_id );
+static char *cetb_template_filename( cetb_sensor_id sensor_id,
+				     cetb_swath_producer_id producer_id,
+				     cetb_dataset_id *cetb_dataset_id_index );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
 static char *current_time_stamp( void );
 static int fetch_crs( cetb_file_class *this, int template_fid );
@@ -117,6 +119,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   char *channel_str=NULL;
   cetb_region_id region_id;
   char *filename;
+  cetb_dataset_id cetb_dataset_id_index;
   int template_fid;
   int status;
   char *file_version=NULL;
@@ -177,7 +180,8 @@ cetb_file_class *cetb_file_init( char *dirname,
    * Find and open the CETB template file with the global attribute data
    * - all we need here is the file format version
    */
-  if ( !( filename = cetb_template_filename( this->sensor_id ) ) ) return 0;
+  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id,
+					     &cetb_dataset_id_index ) ) ) return 0;
   	  
   if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template filename=%s: %s.\n",
@@ -209,7 +213,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   snprintf( this->filename, FILENAME_MAX,
   	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
   	    dirname,
-	    cetb_NSIDC_dataset_id[ sensor_id ],
+	    cetb_NSIDC_dataset_id[ cetb_dataset_id_index ],
   	    cetb_region_id_name[ base_resolution ]
 	    [ (region_number-CETB_PROJECTION_BASE_NUMBER) ],
   	    cetb_resolution_name[ base_resolution ][ factor ],
@@ -255,6 +259,7 @@ int cetb_file_open( cetb_file_class *this ) {
   int status;
   char *filename;
   int template_fid;
+  int cetb_dataset_id_index;
 
   if ( !this->filename ) {
     fprintf( stderr, "%s: Cannot open cetb file with empty filename.\n",
@@ -278,7 +283,8 @@ int cetb_file_open( cetb_file_class *this ) {
   /*
    * Find and open the CETB template file with the global attribute data
    */
-  if ( !( filename = cetb_template_filename( this->sensor_id ) ) ) return 0;
+  if ( !( filename = cetb_template_filename( this->sensor_id, this->producer_id,
+					     &cetb_dataset_id_index ) ) ) return 0;
   
   if ( ( status = nc_open( filename, NC_NOWRITE, &template_fid ) ) ) {
     fprintf( stderr, "%s: Error opening template_filename=%s: %s.\n",
@@ -1364,14 +1370,18 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 
 /*
  * cetb_template_filename - Return the file template to use, based on sensor_id
+ *                          and producer_id - also return the Dataset ID
  *
  *  input :
  *    sensor_id : sensor_id (determines which template to use)
+ *    producer_id : producer_id (determines which template to use)
  *
  *  result : (newly-allocated) template_filename string (includes absolute path)
  *           or NULL on error
  */
-char *cetb_template_filename( cetb_sensor_id sensor_id ) {
+char *cetb_template_filename( cetb_sensor_id sensor_id,
+			      cetb_swath_producer_id producer_id,
+			      cetb_dataset_id *cetb_dataset_id_index ) {
 
   char *ptr_path;
   char *filename = NULL;
@@ -1383,16 +1393,64 @@ char *cetb_template_filename( cetb_sensor_id sensor_id ) {
   					       FILENAME_MAX + 1 ) ) {
     return NULL;
   }
-  strncpy( filename, ptr_path, FILENAME_MAX );
 
-  if ( CETB_SMMR <= sensor_id && sensor_id <= CETB_SSMIS ) {
-    strcat( filename, "/src/prod/cetb_file/templates/pm-cetb_global_template.nc" );
-  } else if ( CETB_SMAP_RADIOMETER == sensor_id ) {
-    strcat( filename, "/src/prod/cetb_file/templates/smap_global_template.nc" );
-  } else {
-    fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
-    return NULL;
+  strncpy( filename, ptr_path, FILENAME_MAX );
+  strcat( filename, "/src/prod/cetb_file/templates/" );
+
+  if ( CETB_SMMR == sensor_id ) {
+    if (CETB_JPL == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	       __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
   }
+	  
+  if (CETB_SSMI == sensor_id ) {
+    if ( CETB_RSS == producer_id || CETB_CSU == producer_id || CETB_CSU_ICDR == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	       __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+
+  if (CETB_SSMIS == sensor_id ) {
+    if ( CETB_RSS == producer_id || CETB_CSU == producer_id || CETB_CSU_ICDR == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
+    } else if ( CETB_PPS_XCAL == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0763;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	       __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+
+  if ( CETB_AMSRE == sensor_id ) {
+    if ( CETB_RSS == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0630;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	 __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+
+  if ( CETB_SMAP_RADIOMETER == sensor_id ) {
+    if ( CETB_JPL == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0738;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	 __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+  
+  strcat( filename, (cetb_NSIDC_dataset_id[(int)*cetb_dataset_id_index]) );
+  strcat( filename, "_template.nc" );
 
   return filename;
 
@@ -2632,43 +2690,66 @@ static char *set_source_value( cetb_file_class *this ) {
 
   char *source_value;
   char *fixed_source_value = ": See input_fileN list and number_of_input_files attributes";
+  int valid_flag=1;
 
   if ( STATUS_OK != utils_allocate_clean_aligned_memory( ( void * )&source_value,
 							 MAX_STR_LENGTH + 1 ) ) {
     return NULL;
   }
   if ( CETB_AMSRE == this->sensor_id ) {
-    strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+    if ( CETB_RSS == this->producer_id ) {
+      strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+    } else {
+      valid_flag = 0;
+    }
   }
 
-  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    strcat( source_value, "CSU SSM/I FCDR " );
+  if ( CETB_SSMI == this->sensor_id ) {
+    if ( CETB_CSU == this->producer_id ) {
+      strcat( source_value, "CSU SSM/I FCDR " );
+    } else if ( CETB_RSS == this->producer_id ) {
+      strcat( source_value, "RSS SSM/I V7 " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
-  if ( ( CETB_SSMI == this->sensor_id ) && ( CETB_RSS == this->producer_id ) ) {
-    strcat( source_value, "RSS SSM/I V7 " );
-  }
-
-  if ( ( CETB_SSMIS == this->sensor_id ) && ( CETB_CSU == this->producer_id ) ) {
-    strcat( source_value, "CSU SSMIS FCDR " );
+  if ( CETB_SSMIS == this->sensor_id ) {
+    if ( CETB_CSU == this->producer_id ) {
+      strcat( source_value, "CSU SSMIS FCDR " );
+    } else if ( CETB_RSS == this->producer_id ) {
+      strcat( source_value, "RSS SSMIS V7 " );
+    } else if ( CETB_PPS_XCAL == this->producer_id ) {
+      strcat( source_value, "PPS XCAL " );
+    } else if ( CETB_CSU_ICDR == this->producer_id ) {
+      strcat( source_value, "CSU SSMIS ICDR " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
   if ( ( CETB_SMMR == this->sensor_id ) ) {
-    strcat( source_value, "JPL SMMR " );
+    if ( CETB_JPL == this->producer_id ) {
+      strcat( source_value, "JPL SMMR " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
-    strcat( source_value, "10.5067/VA6W2M0JTK2N " );
+    if ( CETB_JPL == this->producer_id ) {
+      strcat( source_value, "10.5067/ZHHBN1KQLI20 " );
+    } else {
+      valid_flag = 0;
+    }
   }
 
-  if ( ( CETB_SSMIS == this->sensor_id ) &&
-       ( CETB_CSU_ICDR == this->producer_id ) ) {
-    strcat( source_value, "CSU SSMIS ICDR " );
+  if ( valid_flag == 1 ) {
+    strcat( source_value, fixed_source_value );
+    return source_value;
+  } else {
+    return NULL;
   }
-
-  strcat( source_value, fixed_source_value );
-  
-  return source_value;
   
 }
   

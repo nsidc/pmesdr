@@ -8,7 +8,7 @@
 #SBATCH --job-name CETB_platform_premet
 #SBATCH --partition=shas
 #SBATCH --time=01:20:00
-#SBATCH --account=ucb135_summit2
+#SBATCH --account=ucb135_summit3
 #SBATCH --ntasks 120
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/premet_lb-%j.out
@@ -23,5 +23,5 @@ ml impi
 ml loadbalance
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb $file
+mpirun -genv I_MPI_FABRICS=shm:ofi  lb $file
 date
