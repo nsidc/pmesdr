@@ -12,7 +12,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep0
-#SBATCH --account=ucb135_summit2
+#SBATCH --account=ucb135_summit3
 #SBATCH --time=01:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks=20
@@ -42,7 +42,16 @@ usage() {
 
 list_of_emails="molly\\.hardman\\@colorado\\.edu jessica\\.calme\\@colorado\\.edu"
 
-PROGNAME=$(basename $0)
+isBatch=
+if [[ ${BASH_SOURCE} == *"slurm_script"* ]]; then
+    # Running as slurm
+    echo "Running batch job..."
+    PROGNAME=(`scontrol show job ${SLURM_JOB_ID} | grep Command | tr -s ' ' | cut -d = -f 2`)
+    isBatch=1
+else
+    echo "Not running as sbatch..."
+    PROGNAME=${BASH_SOURCE[0]}
+fi
 
 error_exit() {
     # Use for fatal program error
@@ -52,7 +61,7 @@ error_exit() {
 
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
-	mailx -s "NRT Step0 error" \
+	mailx -s "NRT Step0 error jobid ${SLURM_JOB_ID}" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
     exit 1
 }
@@ -99,7 +108,7 @@ gsx_type=$1
 condaenv=$2
 source activate $condaenv
 # start sbatch for the next day
-sbatch --begin=08:30:00 --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
+sbatch --begin=04:30:00 --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
 ml purge
 ml intel
 ml impi
@@ -233,4 +242,4 @@ do
 done
 
 thisDate=$(date)
-echo "$PROGNAME: Done on hostname=$thisHost on $thisDate"
+echo "$PROGNAME: Done on hostname=$thisHost on $thisDate with this jobid=$SLURM_JOB_ID"
