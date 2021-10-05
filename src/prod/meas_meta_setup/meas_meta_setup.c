@@ -2846,6 +2846,8 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     case 2017:
     case 2018:
     case 2019:
+    case 2020:
+    case 2021:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	*split_time = -3.0;
       } else {
@@ -2922,7 +2924,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
   }
 
   if ( ((*split_time + 1.0) < FLT_EPSILON) && (negative_flag == 0) ) {
-    fprintf( stderr, "%s: Bad satellite, year combination for platform %d and year %d\n",
+    fprintf( stderr, "%s: ERROR: Bad satellite, year combination for platform %d and year %d\n",
 	     __FUNCTION__, platform_id, year );
     return (1);
   } else {
