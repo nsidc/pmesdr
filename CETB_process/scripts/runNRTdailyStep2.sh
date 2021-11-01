@@ -79,6 +79,7 @@ shift $(($OPTIND - 1))
 src=$1
 suffix=LRM
 sat_top=${src}_${suffix}_NRT
+smap_top=${src}_${suffix}
 resolution_suffix=""
 # Note that SMAP doesn't use a top_level directory
 pl_top=nsidc0738_v2
@@ -132,6 +133,7 @@ do
 	echo "generate_premetandspatial.py ${file}" >> ${outfile_ps}
     else
 	echo "cp $file /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/${year}/" >> ${outfile}
+	echo "chmod 664 /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/${year}/${basen}" >> ${outfile}
     fi
 done
 
@@ -155,9 +157,10 @@ if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
     source activate /projects/jeca4282/miniconda3/envs/cetb3
     mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile_ps} || \
 	error_exit "Line $LINENO: mpirun premetandspatial"
-# Jessica doesn't run SMAP - only 16, 17 and 18 elseif [[ ${src} -ne "SMAP" ]]; 
-    sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep3.sh ${src}
+else
+    sbatch ${PMESDR_RUN}/runNRTdailyStep3.sh ${src}
 fi
+
 mpirun -genv I_MPI_FABRICS=shm:ofi lb $outfile || \
     error_exit "Line $LINENO: mpirun cp *.nc files"
 mpirun -genv I_MPI_FABRICS=shm:ofi lb $setup_rm_file || \

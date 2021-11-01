@@ -76,11 +76,14 @@ date
 
 echo "argument is $1"
 src=$1
-for file in `find /scratch/summit/jeca4282/${src}_sir/*.nc -mtime 0`
-do
-    basen=`basename $file`
-    year=`echo $basen | grep -o ${src}_${suffix}-.... | sed 's/^.*-//'`
-    hemi=`echo $basen | grep -o EASE2_.*km`
+if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
+    for file in `find /scratch/summit/jeca4282/${src}_sir/*.nc -mtime 0`
+    do
+	basen=`basename $file`
+	year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`
+	hemi=`echo $basen | grep -o EASE2_.*km`
 
-    rsync -avz ${file} /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/
-done
+	rsync -avz ${file} /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/
+    done
+fi
+
