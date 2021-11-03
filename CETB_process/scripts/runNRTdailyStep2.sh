@@ -120,18 +120,17 @@ if [[ -f ${outfile_ps} ]]; then
     echo "removed old premetandspatial file for ${src}"
 fi
 
-for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc`
+for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -2`
 do
     basen=`basename $file`
     year=`echo $basen | grep -o ${src}_${suffix}-.... | sed 's/^.*-//'`
     hemi=`echo $basen | grep -o EASE2_.*km`
     if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
-	pl_top=
+	pl_top=nsidc0763_v1
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.premet archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.spatial archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
 	echo "generate_premetandspatial.py ${file}" >> ${outfile_ps}
-    else
 	echo "cp $file /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/${year}/" >> ${outfile}
 	echo "chmod 664 /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/${year}/${basen}" >> ${outfile}
     fi
