@@ -156,8 +156,7 @@ if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
     source activate /projects/jeca4282/miniconda3/envs/cetb3
     mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile_ps} || \
 	error_exit "Line $LINENO: mpirun premetandspatial"
-else
-    sbatch ${PMESDR_RUN}/runNRTdailyStep3.sh ${src}
+    sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep3.sh ${src}
 fi
 
 mpirun -genv I_MPI_FABRICS=shm:ofi lb $outfile || \
