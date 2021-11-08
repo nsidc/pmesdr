@@ -52,7 +52,7 @@ error_exit() {
 
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
-	mailx -s "NRT Step2 error jobid ${SLURM_JOB_ID}" \
+	mailx -s "NRT Step3 error jobid ${SLURM_JOB_ID}" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
     exit 1
 }
@@ -76,14 +76,39 @@ date
 
 echo "argument is $1"
 src=$1
+direc=/scratch/summit/${USER}/${top_level}/
+SCRIPTDIR=${direc}/${src}_scripts/
+
 if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
-    for file in `find /scratch/summit/jeca4282/${src}_sir/*.nc -mtime 0`
+
+    outfile=${SCRIPTDIR}/${src}_moving_files_to_pl
+    if [[ -f ${outfile} ]]; then
+	rm ${outfile}
+	echo "removed old move file for ${src}"
+    else
+	echo " no old move file to remove for ${src}"
+    fi
+
+    for file in `find /scratch/summit/jeca4282/${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
+#    for file in `find /scratch/summit/jeca4282/${src}_sir/*.nc -mtime 0` This line will copy all files
     do
 	basen=`basename $file`
 	year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`
 	hemi=`echo $basen | grep -o EASE2_.*km`
 
-	rsync -avz ${file} /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/
+	echo "rsync -avz $file /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/" >> ${outfile}
+	echo "chmod 664 /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/${basen}" >> ${outfile}
+
     done
+    ml intel
+    ml impi
+    ml loadbalance
+    ml
+    date
+    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile} || error_exit "Line $LINENO: Step3 ${src}"
 fi
+echo "${PROGNAME}: Step3 for ${src} completed" | \
+	mailx -s "NRT Step3 Completed jobid ${SLURM_JOB_ID}" \
+	      -r "molly\.hardman\@colorado\.edu" 
+
 
