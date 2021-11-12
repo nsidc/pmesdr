@@ -81,12 +81,19 @@ SCRIPTDIR=${direc}/${src}_scripts/
 
 if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
 
-    outfile=${SCRIPTDIR}/${src}_moving_files_to_pl
-    if [[ -f ${outfile} ]]; then
-	rm ${outfile}
+    outfile1=${SCRIPTDIR}/${src}_moving_files_to_pl
+    outfile2=${SCRIPTDIR}/${src}_chmod_files_in_pl
+    if [[ -f ${outfile1} ]]; then
+	rm ${outfile1}
 	echo "removed old move file for ${src}"
     else
 	echo " no old move file to remove for ${src}"
+    fi
+    if [[ -f ${outfile2} ]]; then
+	rm ${outfile2}
+	echo "removed old chmod file for ${src}"
+    else
+	echo " no old chmod file to remove for ${src}"
     fi
 
     for file in `find /scratch/summit/jeca4282/${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
@@ -96,8 +103,8 @@ if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
 	year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`
 	hemi=`echo $basen | grep -o EASE2_.*km`
 
-	echo "rsync -avz $file /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/" >> ${outfile}
-	echo "chmod 664 /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/${basen}" >> ${outfile}
+	echo "rsync -avz --chown=jeca4282:moha2290grp $file /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/" >> ${outfile1}
+	echo "chmod 664 /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/${basen}" >> ${outfile2}
 
     done
     ml intel
@@ -105,10 +112,11 @@ if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
     ml loadbalance
     ml
     date
-    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile} || error_exit "Line $LINENO: Step3 ${src}"
+    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile1} || error_exit "Line $LINENO: Step3 ${src}"
+    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile2} || error_exit "Line $LINENO: Step3 ${src}"
 fi
 echo "${PROGNAME}: Step3 for ${src} completed" | \
 	mailx -s "NRT Step3 Completed jobid ${SLURM_JOB_ID}" \
-	      -r "molly\.hardman\@colorado\.edu" 
+	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
 
 
