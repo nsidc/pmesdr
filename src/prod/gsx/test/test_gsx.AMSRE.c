@@ -20,7 +20,7 @@ char *get_pathname(const char *envvar, const char *filename) {
 
 void setUp(void)
 {
-  const char *fn = "GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200308080121_D.nc";
+  const char *fn = "GSX_AMSR_E_L2A_BrightnessTemperatures_V12_200604090129_A.nc";
   file_name = get_pathname("PMESDR_TESTDATA_DIR", fn);
 }
 
