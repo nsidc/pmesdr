@@ -651,9 +651,10 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       if ( CETB_NIMBUS7 == F_num ) sen='R';
       if ( CETB_AQUA == F_num ) sen='A';
       if ( CETB_F08 <= F_num && F_num <= CETB_F15 ) sen='F';
-      if ( CETB_F16 <= F_num && F_num < CETB_NUM_PLATFORMS ) sen='I';
+      if ( CETB_F16 <= F_num && F_num <= CETB_F19 ) sen='I';
       if ( CETB_SMAP == F_num ) sen='S';
-      /* F=ssmi, A=AMSRE, R=SMMR, I=SSMIS, S=SMAP */
+      if ( CETB_GCOMW1 == F_num ) sen = 'G';
+      /* F=ssmi, A=AMSRE/AQUA, R=SMMR, I=SSMIS, S=SMAP, G=GCOMW1/AMSR2 */
       if (F_num < 10.0) /* code the sensor number based on cetb_platform_id*/
 	cegg=(char) (F_num+48);  /* 0...9 */
       else

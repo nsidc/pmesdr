@@ -209,6 +209,7 @@ typedef enum {
   CETB_F18,
   CETB_F19,
   CETB_SMAP,
+  CETB_GCOMW1,
   CETB_NUM_PLATFORMS
 } cetb_platform_id;
 
@@ -228,7 +229,8 @@ static const char *cetb_platform_id_name[] = {
   "F17",
   "F18",
   "F19",
-  "SMAP"
+  "SMAP",
+  "GCOM-W1"
 };
 
 /*
@@ -252,7 +254,8 @@ static const char *cetb_gcmd_platform_keyword[] = {
   "DMSP 5D-3/F17 > Defense Meteorological Satellite Program-F17",
   "DMSP 5D-3/F18 > Defense Meteorological Satellite Program-F18",
   "DMSP 5D-3/F19 > Defense Meteorological Satellite Program-F19",
-  "SMAP > Soil Moisture Active and Passive Observatory"
+  "SMAP > Soil Moisture Active and Passive Observatory",
+  "GCOM-W1 > Global Change Observation Mission 1st-Water"
 };
 
 /*
@@ -265,6 +268,7 @@ typedef enum {
   CETB_SSMI,
   CETB_SSMIS,
   CETB_SMAP_RADIOMETER,
+  CETB_AMSR2,
   CETB_NUM_SENSORS
 } cetb_sensor_id;
 
@@ -276,7 +280,8 @@ static const char *cetb_sensor_id_name[] = {
   "AMSRE",
   "SSMI",
   "SSMIS",
-  "LRM"
+  "LRM",
+  "AMSR2"
 };
 
 /* need to be able to map platform ID to sensor ID in meas_meta_setup */
@@ -293,7 +298,8 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
   CETB_SSMIS,
   CETB_SSMIS,
   CETB_SSMIS,
-  CETB_SMAP_RADIOMETER
+  CETB_SMAP_RADIOMETER,
+  CETB_AMSR2
 };
 
 /* Need to be able to map sensor ID and producer ID to NSIDC dataset ID */
@@ -324,7 +330,8 @@ static const char *cetb_gcmd_sensor_keyword[] = {
   "AMSR-E > Advanced Microwave Scanning Radiometer-EOS",
   "SSM/I > Special Sensor Microwave/Imager",
   "SSMIS > Special Sensor Microwave Imager/Sounder",
-  "SMAP L-BAND RADIOMETER > SMAP L-Band Radiometer"
+  "SMAP L-BAND RADIOMETER > SMAP L-Band Radiometer",
+  "AMSR2 > Advanced Microwave Scanning Radiometer 2"
 };
 
 /*
@@ -651,6 +658,65 @@ static const cetb_smap_channel_id cetb_ibeam_to_cetb_smap_channel[] = {
   SMAP_1d41H,
   SMAP_1d41V,
   SMAP_1d41F
+};
+
+/*
+ * AMSR2 channel IDs
+ */
+typedef enum {
+  AMSR2_NO_CHANNEL=-1,
+  AMSR2_10H,
+  AMSR2_10V,
+  AMSR2_18H,
+  AMSR2_18V,
+  AMSR2_23H,
+  AMSR2_23V,
+  AMSR2_36H,
+  AMSR2_36V,
+  AMSR2_89H_A,
+  AMSR2_89V_A,
+  AMSR2_89H_B,
+  AMSR2_89V_B,
+  AMSR2_NUM_CHANNELS
+} cetb_amsr2_channel_id;
+  
+/*
+ * AMSR2 channel ID names
+ * these are only used for file naming - note that the A and B channels
+ * for 89 GHz map into the same output grid
+ */
+static const char *cetb_amsr2_channel_name[] = {
+  "10.7H",
+  "10.7V",
+  "18H",
+  "18V",
+  "23H",
+  "23V",
+  "36H",
+  "36V",
+  "89H",
+  "89V",
+  "89H",
+  "89V"
+};
+
+/*
+ * See notes for using cetb_ibeam_to_cetb_ssmi_channel, above.
+ */
+static const cetb_amsr2_channel_id cetb_ibeam_to_cetb_amsr2_channel[] = {
+  AMSR2_NO_CHANNEL,
+  AMSR2_10H,
+  AMSR2_10V,
+  AMSR2_18H,
+  AMSR2_18V,
+  AMSR2_23H,
+  AMSR2_23V,
+  AMSR2_36H,
+  AMSR2_36V,
+  AMSR2_89H_A,
+  AMSR2_89V_A,
+  AMSR2_89H_B,
+  AMSR2_89V_B
 };
 
 #endif // cetb_H

@@ -578,10 +578,10 @@ int main(int argc,char *argv[])
 	exit (-1);
       }
       /*
-       * If this is AMSRE, combine the output setup files for a
+       * If this is AMSRE or AMSR2, combine the output setup files for a
        * and b scans and close the unneeded output file
        */
-      if ( CETB_AQUA == cetb_platform ) {
+      if ( CETB_AQUA == cetb_platform || CETB_GCOMW1 == cetb_platform ) {
 	combine_setup_files( &save_area, 1 );
       }
       fprintf( stderr, "%s: First file to be read\n", __FILE__ );
@@ -898,6 +898,8 @@ int main(int argc,char *argv[])
 		gsx_count = cetb_ibeam_to_cetb_smmr_channel[ibeam];
 	      else if ( CETB_SMAP_RADIOMETER == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_smap_channel[ibeam];
+	      else if ( CETB_AMSR2 == gsx->short_sensor )
+		gsx_count = cetb_ibeam_to_cetb_amsr2_channel[ibeam];
 	      else {
 		fprintf( stderr, "%s ****ERROR: Invalid short sensor name %d\n",
 			 __FUNCTION__, gsx->short_sensor );
@@ -2387,12 +2389,41 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
       *box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
-  }
-  else if ( CETB_SMAP_RADIOMETER == id ) {
+  } else if ( CETB_SMAP_RADIOMETER == id ) {
     if ( CETB_BASE_36_RESOLUTION == base_resolution ) {
       *box_size = 28;
     } else {
       *box_size = 40;
+    }
+  } else if ( CETB_GCOMW1 == id ) {
+    switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
+    case AMSRE_10H:
+    case AMSRE_10V:
+      *box_size = 20;
+      break;
+    case AMSRE_18H:
+    case AMSRE_18V:
+      *box_size = 22;
+      break;
+    case AMSRE_23H:
+    case AMSRE_23V:
+      *box_size = 26;
+      break;
+    case AMSRE_36H:
+    case AMSRE_36V:
+      *box_size = 22;
+      break;
+    case AMSRE_89H_A:
+    case AMSRE_89V_A:
+      *box_size = 10;
+      break;
+    case AMSRE_89H_B:
+    case AMSRE_89V_B:
+      *box_size = 12;
+      break;
+    default:
+      *box_size = -1;
+      fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
   } else {
     *box_size = -1;
@@ -2705,7 +2736,8 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F19 platform, N or S projection */
-    { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_SMAP platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_SMAP platform, N or S projection */
+    { {-4.0, 8.0}, {-4.0, 8.0} }  /* CETB_GCOMW1 platform, N or S projection */
   };
 
   /* note that the degenerative case of the satellite/year
@@ -2716,7 +2748,8 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
      negative value.  In those cases, the negative_flag is set to
      1 and the negative ltod time is NOT flagged as an error
   */
-  if ( platform_id == CETB_NIMBUS7 || platform_id == CETB_AQUA ) {
+  if ( platform_id == CETB_NIMBUS7 || platform_id == CETB_AQUA ||
+       platform_id == CETB_GCOMW1 ) {
     negative_flag = 1;
   } else {
     /*
