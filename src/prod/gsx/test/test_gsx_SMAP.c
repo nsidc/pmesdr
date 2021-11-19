@@ -21,7 +21,7 @@ char *get_pathname(const char *envvar, const char *filename) {
 void setUp(void)
 {
   //const char *fn = "c.nc";
-  const char *fn = "GSX_SMAP_L1B_TB_09588_A_20161117T030831_R13080_001.h5.nc";
+  const char *fn = "GSX_SMAP_L1B_TB_36256_D_20211114T144732_R17030_001.h5.nc";
   file_name = get_pathname("PMESDR_TESTDATA_DIR", fn);
   fprintf(stderr, "%s - full file name\n", file_name);
 }
@@ -113,14 +113,7 @@ void test_gsx_dim_scans_loc1 ( void ) {
   gsx = gsx_init( file_name );
   fprintf( stderr, "\n%s: netcdf file %s with id %d has %d lo res scans\n",\
 	   __FUNCTION__, file_name, gsx->fileid, gsx->scans[loc] );
-  switch (gsx->short_sensor) {
-  case CETB_SMAP_RADIOMETER:
-    TEST_ASSERT_TRUE( gsx->scans[loc] > 750 );
-    break;
-  case CETB_AMSRE:
-    TEST_ASSERT_TRUE( gsx->scans[loc] > 1000 );
-    break;
-  }
+    TEST_ASSERT_TRUE( gsx->scans[loc] > 500 );
   gsx_close( gsx );
 }
 
@@ -133,14 +126,7 @@ void test_gsx_dim_measurements_loc1 ( void ) {
     fprintf( stderr, "\n%s: netcdf file %s with id %d has %d loc1 res measurements per scan\n", \
 	     __FUNCTION__, file_name, gsx->fileid, gsx->measurements[loc] );
   }
-  switch (gsx->short_sensor) {
-  case CETB_SMAP_RADIOMETER:
-    TEST_ASSERT_TRUE( gsx->measurements[loc] == 241 );
-    break;
-  case CETB_AMSRE:
-    TEST_ASSERT_TRUE( gsx->measurements[loc] > 100 );
-    break;
-  }
+  TEST_ASSERT_TRUE( gsx->measurements[loc] == 241 );
   gsx_close( gsx );
 }
   
@@ -316,8 +302,7 @@ void test_gsx_loc1_variables ( void ) {
   if ( NULL != gsx ) {
     fprintf( stderr, "\n%s: netcdf file '%s' has these loc1 variables\n", __FUNCTION__, gsx->source_file ); 
     fprintf( stderr, "\t on latitude_loc1, longitude_loc1 eia_loc1, eaz_loc1, scantime" );
-    if ( CETB_AQUA != gsx->short_sensor )
-      fprintf( stderr, ", sc_lat_loc1, sc_lon_loc1" );
+    fprintf( stderr, ", sc_lat_loc1, sc_lon_loc1" );
     fprintf( stderr, "\n");
     fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t ",	\
 	     *(gsx->latitude[i]+1000), \
@@ -325,32 +310,30 @@ void test_gsx_loc1_variables ( void ) {
 	     *(gsx->eia[i]+1000),	\
 	     *(gsx->eaz[i]+1000), \
 	     *(gsx->scantime[i]+(1000/gsx->measurements[i])) );
-    if ( CETB_AQUA != gsx->short_sensor )
-      fprintf( stderr, "%f \t %f",  \
-	       *(gsx->sc_latitude[i]+(1000/gsx->measurements[i])), \
-	       *(gsx->sc_longitude[i]+(1000/gsx->measurements[i])) );
-    fprintf( stderr, "\n" );
+   fprintf( stderr, "%f \t %f",  \
+	    *(gsx->sc_latitude[i]+(1000/gsx->measurements[i])),		\
+	    *(gsx->sc_longitude[i]+(1000/gsx->measurements[i])) );
+   fprintf( stderr, "\n" );
 
-    fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t ", \
-	     *(gsx->latitude[i]+1001), \
-	     *(gsx->longitude[i]+1001), \
-	     *(gsx->eia[i]+1001),	\
-	     *(gsx->eaz[i]+1001),  \
-	     *(gsx->scantime[i]+(1001/gsx->measurements[i])) );
-    if ( CETB_AQUA != gsx->short_sensor )
-      fprintf( stderr, "%f \t %f",  \
-	       *(gsx->sc_latitude[i]+(1001/gsx->measurements[i])), \
-	       *(gsx->sc_longitude[i]+(1001/gsx->measurements[i])) );
-    fprintf( stderr, "\n" );
+   fprintf( stderr, "\t %f \t %f \t %f \t %f \t %f \t ", \
+	    *(gsx->latitude[i]+1001),			 \
+	    *(gsx->longitude[i]+1001),			 \
+	    *(gsx->eia[i]+1001),			 \
+	    *(gsx->eaz[i]+1001),				\
+	    *(gsx->scantime[i]+(1001/gsx->measurements[i])) );
+   fprintf( stderr, "%f \t %f",					   \
+	    *(gsx->sc_latitude[i]+(1001/gsx->measurements[i])),		\
+	    *(gsx->sc_longitude[i]+(1001/gsx->measurements[i])) );
+   fprintf( stderr, "\n" );
 
 
-    TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->sc_latitude[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->sc_longitude[i] );
-    TEST_ASSERT_TRUE( NULL != gsx->scantime[i] );
+   TEST_ASSERT_TRUE( NULL != gsx->latitude[i] );
+   TEST_ASSERT_TRUE( NULL != gsx->longitude[i] );
+   TEST_ASSERT_TRUE( NULL != gsx->eia[i] );
+   TEST_ASSERT_TRUE( NULL != gsx->eaz[i] );
+   TEST_ASSERT_TRUE( NULL != gsx->sc_latitude[i] );
+   TEST_ASSERT_TRUE( NULL != gsx->sc_longitude[i] );
+   TEST_ASSERT_TRUE( NULL != gsx->scantime[i] );
   }
 
   gsx_close( gsx );
@@ -365,7 +348,7 @@ void test_gsx_orbit_direction ( void ) {
     if (CETB_AQUA == gsx->short_sensor) {
       TEST_ASSERT_TRUE( CETB_DES_PASSES == gsx->pass_direction );
     } else if (CETB_SMAP_RADIOMETER == gsx->short_sensor) {
-      TEST_ASSERT_TRUE( CETB_ASC_PASSES == gsx->pass_direction );
+      TEST_ASSERT_TRUE( CETB_DES_PASSES == gsx->pass_direction );
     } else {
       TEST_ASSERT_TRUE( CETB_NO_DIRECTION == gsx->pass_direction );
     }
