@@ -2395,30 +2395,30 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
     } else {
       *box_size = 40;
     }
-  } else if ( CETB_GCOMW1 == id ) {
-    switch ( cetb_ibeam_to_cetb_amsre_channel[ibeam] ) {
-    case AMSRE_10H:
-    case AMSRE_10V:
+  } else if ( CETB_AMSR2 == id ) {
+    switch ( cetb_ibeam_to_cetb_amsr2_channel[ibeam] ) {
+    case AMSR2_10H:
+    case AMSR2_10V:
       *box_size = 20;
       break;
-    case AMSRE_18H:
-    case AMSRE_18V:
+    case AMSR2_18H:
+    case AMSR2_18V:
       *box_size = 22;
       break;
-    case AMSRE_23H:
-    case AMSRE_23V:
+    case AMSR2_23H:
+    case AMSR2_23V:
       *box_size = 26;
       break;
-    case AMSRE_36H:
-    case AMSRE_36V:
+    case AMSR2_36H:
+    case AMSR2_36V:
       *box_size = 22;
       break;
-    case AMSRE_89H_A:
-    case AMSRE_89V_A:
+    case AMSR2_89H_A:
+    case AMSR2_89V_A:
       *box_size = 10;
       break;
-    case AMSRE_89H_B:
-    case AMSRE_89V_B:
+    case AMSR2_89H_B:
+    case AMSR2_89V_B:
       *box_size = 12;
       break;
     default:

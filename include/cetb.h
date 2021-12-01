@@ -230,7 +230,7 @@ static const char *cetb_platform_id_name[] = {
   "F18",
   "F19",
   "SMAP",
-  "GCOM-W1"
+  "GCOMW1"
 };
 
 /*
