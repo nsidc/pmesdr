@@ -1449,6 +1449,16 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
     }
   }
   
+  if ( CETB_AMSR2 == sensor_id ) {
+    if (CETB_PPS_XCAL == producer_id ) {
+      *cetb_dataset_id_index = CETB_NSIDC_0763;
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d producer_id=%d combination\n",
+	       __FUNCTION__, sensor_id, producer_id );
+      return NULL;
+    }
+  }
+	  
   strcat( filename, (cetb_NSIDC_dataset_id[(int)*cetb_dataset_id_index]) );
   strcat( filename, "_template.nc" );
 
@@ -1514,7 +1524,16 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
       fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__,
 	       sensor_id, beam_id );
     }
-  } else {
+  } else if ( CETB_AMSR2 == sensor_id ) {
+    if ( 0 < beam_id && beam_id <= AMSR2_NUM_CHANNELS ) {
+      channel_str = strdup ( cetb_amsr2_channel_name
+			     [ cetb_ibeam_to_cetb_amsr2_channel[ beam_id ] ] );
+    } else {
+      fprintf( stderr, "%s: Invalid sensor_id=%d/beam_id=%d\n", __FUNCTION__,
+	       sensor_id, beam_id );
+    }
+  }
+    else {
     fprintf( stderr, "%s: Invalid sensor_id=%d\n", __FUNCTION__, sensor_id );
   }
 
@@ -2739,6 +2758,14 @@ static char *set_source_value( cetb_file_class *this ) {
   if ( ( CETB_SMAP_RADIOMETER == this->sensor_id ) ) {
     if ( CETB_JPL == this->producer_id ) {
       strcat( source_value, "10.5067/ZHHBN1KQLI20 " );
+    } else {
+      valid_flag = 0;
+    }
+  }
+
+  if ( ( CETB_AMSR2 == this->sensor_id ) ) {
+    if ( CETB_PPS_XCAL == this->producer_id ) {
+      strcat( source_value, "PPS XCAL " );
     } else {
       valid_flag = 0;
     }

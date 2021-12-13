@@ -147,7 +147,8 @@ static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 			     float ascale, float bscale, float a0, float b0);
 static int box_size_by_channel( int ibeam, cetb_sensor_id id,
 				int base_resolution, int *box_size );
-static void combine_setup_files( region_save *a, int execution_flag );
+static void combine_setup_files( region_save *a, int execution_flag,
+					 int list_of_channels[], int chanA, int chanB );
 static int ltod_split_time( cetb_platform_id platform_id,
 			    cetb_region_id region_id,
 			    cetb_direction_id direction_id,
@@ -578,11 +579,19 @@ int main(int argc,char *argv[])
 	exit (-1);
       }
       /*
-       * If this is AMSRE, combine the output setup files for a
+       * If this is AMSRE or AMSR2, combine the output setup files for a
        * and b scans and close the unneeded output file
        */
       if ( CETB_AQUA == cetb_platform ) {
-	combine_setup_files( &save_area, 1 );
+	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+				     (int)AMSRE_89H_A, (int)AMSRE_89H_B);
+	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+				     (int)AMSRE_89V_A, (int)AMSRE_89V_B);
+      } else if ( CETB_GCOMW1 == cetb_platform ) {
+	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+				     (int)AMSR2_89H_A, (int)AMSR2_89H_B);
+	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+				     (int)AMSR2_89V_A, (int)AMSR2_89V_B);
       }
       fprintf( stderr, "%s: First file to be read\n", __FILE__ );
     } else {
@@ -898,6 +907,8 @@ int main(int argc,char *argv[])
 		gsx_count = cetb_ibeam_to_cetb_smmr_channel[ibeam];
 	      else if ( CETB_SMAP_RADIOMETER == gsx->short_sensor )
 		gsx_count = cetb_ibeam_to_cetb_smap_channel[ibeam];
+	      else if ( CETB_AMSR2 == gsx->short_sensor )
+		gsx_count = cetb_ibeam_to_cetb_amsr2_channel[ibeam];
 	      else {
 		fprintf( stderr, "%s ****ERROR: Invalid short sensor name %d\n",
 			 __FUNCTION__, gsx->short_sensor );
@@ -1251,10 +1262,23 @@ int main(int argc,char *argv[])
       fclose(save_area.reg_lu[j]);
       save_area.reg_lu[j] = NULL;
     } else {
-        if ( CETB_AQUA == cetb_platform ) {
+        if ( CETB_AQUA == cetb_platform || CETB_GCOMW1 == cetb_platform ) {
 	  /* now check to see if you have b channels for 89H or 89V and if you also
 	     have A channels then combine */
-	  combine_setup_files( &save_area, 2 );
+	  if ( CETB_AQUA == cetb_platform ) {
+	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+					 (int)AMSRE_89H_A, (int)AMSRE_89H_B);
+	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+					 (int)AMSRE_89V_A, (int)AMSRE_89V_B);
+	  }
+	    
+	  if ( CETB_GCOMW1 == cetb_platform ) {
+	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+					 (int)AMSR2_89H_A, (int)AMSR2_89H_B);
+	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+					 (int)AMSR2_89V_A, (int)AMSR2_89V_B);
+	  }
+	    
 	  if ( NULL != save_area.reg_lu[j] ) {
 	    fprintf( stderr, "%s: back from combin with fileid != NULL", __FUNCTION__ );
 	    fclose( save_area.reg_lu[j] );
@@ -2387,12 +2411,41 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
       *box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
-  }
-  else if ( CETB_SMAP_RADIOMETER == id ) {
+  } else if ( CETB_SMAP_RADIOMETER == id ) {
     if ( CETB_BASE_36_RESOLUTION == base_resolution ) {
       *box_size = 28;
     } else {
       *box_size = 40;
+    }
+  } else if ( CETB_AMSR2 == id ) {
+    switch ( cetb_ibeam_to_cetb_amsr2_channel[ibeam] ) {
+    case AMSR2_10H:
+    case AMSR2_10V:
+      *box_size = 20;
+      break;
+    case AMSR2_18H:
+    case AMSR2_18V:
+      *box_size = 22;
+      break;
+    case AMSR2_23H:
+    case AMSR2_23V:
+      *box_size = 26;
+      break;
+    case AMSR2_36H:
+    case AMSR2_36V:
+      *box_size = 24;
+      break;
+    case AMSR2_89H_A:
+    case AMSR2_89V_A:
+      *box_size = 20;
+      break;
+    case AMSR2_89H_B:
+    case AMSR2_89V_B:
+      *box_size = 20;
+      break;
+    default:
+      *box_size = -1;
+      fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
   } else {
     *box_size = -1;
@@ -2586,52 +2639,32 @@ int write_end_header( region_save *save_area ){
  * Input:
  *   region_save pointer holds the file-ids to be manipulated
  *   execution flag tells what operation should be performed
+ *   The ibeam to channel array for decoding the region_save pointer - cast to int
+ *   The enum for the channels to be checked - cast to int
  *
  */
-void combine_setup_files( region_save *a, int execution_flag ) {
+void combine_setup_files( region_save *a, int execution_flag, int *ibeam_channel, int chanA, int chanB ) {
 
   int count;
   int sub_count;
   
-  /* Here is where you check to see if both AMSRE 89 a and b scans are requested, if so
+  /* Here is where you check to see if both AMSRE/AMSR2 89 a and b scans are requested, if so
      they need to be written into only 1 output setup file, i.e. 89Ha and 89Hb go into the same file
      and 89Va and 89Vb go into the same file.  The check needs to be done here so that you don't
      have to rely on the regions in the file going in a specific order - also note that this only works
      in the first place if you put all of the 89 channels into the same def file
-     Use the save_area (a in this routine) structure to check for a and b scans if AMSRE */
+     Use the save_area (a in this routine) structure to check for a and b scans if AMSRE/AMSR2
+     Note - call the function separately for H and V channels
+  */
   fprintf( stderr, "%s: into manipulating fileids with %d execution flag\n", __FUNCTION__, execution_flag );
     for ( count=0; count < a->nregions; count++ ) {
       /* now check to see if you have b channels for 89H or 89V and if you also have A channels
 	 then combine if they use the same projection */
-      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89H_B ) {
+      if ( ibeam_channel[a->sav_ibeam[count]] == chanB ) {
 	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
-	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89H_A )
+	  if ( ( ibeam_channel[a->sav_ibeam[sub_count]] == chanA )
 	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
 	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) ) {
-	    /* depending on the execution_flag either
-	       - close and delete the file that won't be used and save file id
-	         for the setup file for AMSRE_89H_A to the file id for
-		 AMSRE_89H_B or
-	       - set the file id to NULL */
-	    if ( execution_flag == 1 ) {
-	      fclose( a->reg_lu[count] );
-	      remove( a->sav_fname2[count] );
-	      a->reg_lu[count] = a->reg_lu[sub_count];
-	      fprintf( stderr, "%s: closed region file count %d in favor of "
-		       "sub_count %d\n", __FUNCTION__,
-		       count, sub_count );
-	    }
-	    if ( execution_flag == 2 ) {
-	      a->reg_lu[count] = NULL;
-	    }
-	  }
-	}
-      }
-      if ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[count]] == AMSRE_89V_B ) {
-	for ( sub_count=0; sub_count < a->nregions; sub_count++ ) {
-	  if ( ( cetb_ibeam_to_cetb_amsre_channel[a->sav_ibeam[sub_count]] == AMSRE_89V_A )
-	       && ( a->sav_regnum[sub_count] == a->sav_regnum[count] )
-	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) )  {
 	    /* depending on the execution_flag either
 	       - close and delete the file that won't be used and save file id
 	         for the setup file for AMSRE_89H_A to the file id for
@@ -2705,7 +2738,8 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F19 platform, N or S projection */
-    { {0.0, 12.0}, {0.0, 12.0} }  /* CETB_SMAP platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_SMAP platform, N or S projection */
+    { {-4.0, 8.0}, {-4.0, 8.0} }  /* CETB_GCOMW1 platform, N or S projection */
   };
 
   /* note that the degenerative case of the satellite/year
@@ -2716,7 +2750,8 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
      negative value.  In those cases, the negative_flag is set to
      1 and the negative ltod time is NOT flagged as an error
   */
-  if ( platform_id == CETB_NIMBUS7 || platform_id == CETB_AQUA ) {
+  if ( platform_id == CETB_NIMBUS7 || platform_id == CETB_AQUA ||
+       platform_id == CETB_GCOMW1 ) {
     negative_flag = 1;
   } else {
     /*
