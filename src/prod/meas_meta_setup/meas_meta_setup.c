@@ -2437,11 +2437,11 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
       break;
     case AMSR2_89H_A:
     case AMSR2_89V_A:
-      *box_size = 100;
+      *box_size = 20;
       break;
     case AMSR2_89H_B:
     case AMSR2_89V_B:
-      *box_size = 100;
+      *box_size = 20;
       break;
     default:
       *box_size = -1;
