@@ -52,8 +52,13 @@ do
     fi
     
     echo "$0: SSMIS_make for: $year $thisbegindoy $thisenddoy $sensor $envpath $top_level"
-    source $PMESDR_RUN/SSMIS_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
-    echo "$? exit from SSMIS-make.sh called from all_SSMIS-make"
+    if [[ ${src} == AMSR2 ]]; then
+	source $PMESDR_RUN/AMSR2_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
+    else
+	source $PMESDR_RUN/SSMIS_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
+    fi
+    
+    echo "$? exit from SSMIS[AMSR2]-make.sh called from all_SSMIS-make"
     
 done    
 

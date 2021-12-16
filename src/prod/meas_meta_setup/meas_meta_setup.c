@@ -83,7 +83,6 @@ static void no_trailing_blanks(char *s)
 }
 
 /****************************************************************************/
-
 typedef enum {
   UNKNOWN_LTOD=-1,
   ASCDES,
@@ -147,8 +146,8 @@ static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
 			     float ascale, float bscale, float a0, float b0);
 static int box_size_by_channel( int ibeam, cetb_sensor_id id,
 				int base_resolution, int *box_size );
-static void combine_setup_files( region_save *a, int execution_flag,
-					 int list_of_channels[], int chanA, int chanB );
+static void combine_setup_files( char *outpath, region_save *a, int execution_flag,
+				 int list_of_channels[], int chanA, int chanB );
 static int ltod_split_time( cetb_platform_id platform_id,
 			    cetb_region_id region_id,
 			    cetb_direction_id direction_id,
@@ -583,15 +582,15 @@ int main(int argc,char *argv[])
        * and b scans and close the unneeded output file
        */
       if ( CETB_AQUA == cetb_platform ) {
-	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-				     (int)AMSRE_89H_A, (int)AMSRE_89H_B);
-	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-				     (int)AMSRE_89V_A, (int)AMSRE_89V_B);
+	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+			     (int)AMSRE_89H_A, (int)AMSRE_89H_B);
+	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+			     (int)AMSRE_89V_A, (int)AMSRE_89V_B);
       } else if ( CETB_GCOMW1 == cetb_platform ) {
-	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-				     (int)AMSR2_89H_A, (int)AMSR2_89H_B);
-	combine_setup_files( &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-				     (int)AMSR2_89V_A, (int)AMSR2_89V_B);
+	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+			     (int)AMSR2_89H_A, (int)AMSR2_89H_B);
+	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+			     (int)AMSR2_89V_A, (int)AMSR2_89V_B);
       }
       fprintf( stderr, "%s: First file to be read\n", __FILE__ );
     } else {
@@ -1266,17 +1265,17 @@ int main(int argc,char *argv[])
 	  /* now check to see if you have b channels for 89H or 89V and if you also
 	     have A channels then combine */
 	  if ( CETB_AQUA == cetb_platform ) {
-	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-					 (int)AMSRE_89H_A, (int)AMSRE_89H_B);
-	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-					 (int)AMSRE_89V_A, (int)AMSRE_89V_B);
+	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+				 (int)AMSRE_89H_A, (int)AMSRE_89H_B);
+	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
+				 (int)AMSRE_89V_A, (int)AMSRE_89V_B);
 	  }
 	    
 	  if ( CETB_GCOMW1 == cetb_platform ) {
-	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-					 (int)AMSR2_89H_A, (int)AMSR2_89H_B);
-	    combine_setup_files( &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-					 (int)AMSR2_89V_A, (int)AMSR2_89V_B);
+	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+				 (int)AMSR2_89H_A, (int)AMSR2_89H_B);
+	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
+				 (int)AMSR2_89V_A, (int)AMSR2_89V_B);
 	  }
 	    
 	  if ( NULL != save_area.reg_lu[j] ) {
@@ -2634,19 +2633,21 @@ int write_end_header( region_save *save_area ){
 }
 
 /*
- * manipulate_setup_files - called if we have to combine channels into a single output setup file
+ * combine_setup_files - called if we have to combine channels into a single output setup file
  *
  * Input:
+ *   path to setup file to be deleted or combined
  *   region_save pointer holds the file-ids to be manipulated
  *   execution flag tells what operation should be performed
  *   The ibeam to channel array for decoding the region_save pointer - cast to int
  *   The enum for the channels to be checked - cast to int
  *
  */
-void combine_setup_files( region_save *a, int execution_flag, int *ibeam_channel, int chanA, int chanB ) {
+void combine_setup_files( char *outpath, region_save *a, int execution_flag, int *ibeam_channel, int chanA, int chanB ) {
 
   int count;
   int sub_count;
+  char outname[350];
   
   /* Here is where you check to see if both AMSRE/AMSR2 89 a and b scans are requested, if so
      they need to be written into only 1 output setup file, i.e. 89Ha and 89Hb go into the same file
@@ -2672,11 +2673,18 @@ void combine_setup_files( region_save *a, int execution_flag, int *ibeam_channel
 	       - set the file id to NULL */
 	    if ( execution_flag == 1 ) {
 	      fclose( a->reg_lu[count] );
-	      remove( a->sav_fname2[count] );
+	      sprintf( outname, "%s/%s", outpath, a->sav_fname2[count] );
+	      if ( remove( outname ) == 0 ) {
+		fprintf( stderr, "%s: %s successfully closed\n", __FUNCTION__,
+			 a->sav_fname2[count] );
+	      } else {
+		fprintf( stderr, "%s: %s NOT closed\n", __FUNCTION__,
+			 a->sav_fname2[count] );
+	      }
 	      a->reg_lu[count] = a->reg_lu[sub_count];
-	      fprintf( stderr, "%s: closed region file count %d in favor of "
-		       "sub_count %d\n", __FUNCTION__,
-		       count, sub_count );
+	      fprintf( stderr, "%s: closed region file count %s in favor of "
+		       "sub_count %s\n", __FUNCTION__,
+		       a->sav_fname2[count], a->sav_fname2[sub_count] );
 	    }
 	    if ( execution_flag == 2 ) {
 	      a->reg_lu[count] = NULL;
