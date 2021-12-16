@@ -134,6 +134,13 @@ case $gsx_type in
     make_file="all_SSMIS_make_for_sensor.sh"
     platforms="F16 F17 F18";;
     
+    AMSR2-L1C)
+    fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c.py"
+    suffix="*.RT-H5"
+    run_dir="/projects/${USER}/swathfetcher"
+    make_file="all_SSMIS_make_for_sensor.sh"
+    platforms="AMSR2";;
+    
     SSMIS-CSU-ICDR)
     fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_csu.py"
     suffix="*.nc"

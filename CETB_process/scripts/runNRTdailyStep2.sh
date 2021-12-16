@@ -77,12 +77,24 @@ date
 shift $(($OPTIND - 1))
 [[ "$#" -eq 1 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
 src=$1
-suffix=LRM
-sat_top=${src}_${suffix}_NRT
-smap_top=${src}_${suffix}
-resolution_suffix=""
 # Note that SMAP doesn't use a top_level directory
 pl_top=nsidc0738_v2
+
+if [[ ${src} == SMAP ]]
+then
+    suffix=LRM
+    sat_top=${src}_${suffix}_NRT
+    smap_top=${src}_${suffix}
+fi
+
+if [[ ${src} == AMSR2 ]]
+then
+    suffix=""
+    sat_top=${src}
+    pl_top=nsidc0763_v1
+fi
+
+resolution_suffix=""
 case $top_level in
     nsidc0751_CSU_ICDR)
 	suffix=SSMIS
@@ -124,12 +136,17 @@ for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -2`
 do
     basen=`basename $file`
     year=`echo $basen | grep -o ${src}_${suffix}-.... | sed 's/^.*-//'`
+    if [[ ${src} == AMSR2 ]]; then
+	year=`echo $basen | grep -o ${src}-.... | sed 's/^.*-//'`
+    fi
     hemi=`echo $basen | grep -o EASE2_.*km`
     if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.premet archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.spatial archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
 	echo "generate_premetandspatial.py ${file}" >> ${outfile_ps}
+    else
+	echo "rsync -avz ${file} /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/${year}/" >> ${outfile}
     fi
 done
 
