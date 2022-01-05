@@ -90,7 +90,7 @@ fi
 if [[ ${src} == AMSR2 ]]
 then
     suffix=""
-    sat_top=${src}
+    sat_top=GCOMW1_${src}
     pl_top=nsidc0763_v1
 fi
 

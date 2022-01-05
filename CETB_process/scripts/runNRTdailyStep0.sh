@@ -195,7 +195,7 @@ fi
 date
 
 #next sort the files into daily lists
-#source /projects/${USER}/measures-byu/src/prod/summit_set_pmesdr_environment.sh
+
 startyear=`date '+%Y' -d "7 days ago"`
 startdoy=`date '+%j' -d "7 days ago"`
 endyear=`date '+%Y'`
@@ -224,11 +224,11 @@ fi
 for src in ${platforms}
 do
     echo "$PROGNAME: $src - platform "
-    source ${PMESDR_RUN}/all_lists_for_sensor.sh $startyear $startdoy $endyear $enddoy $src $top_level \
+    out=$(${PMESDR_RUN}/all_lists_for_sensor.sh $startyear $startdoy $endyear $enddoy $src $top_level) \
 	|| error_exit "Line $LINENO: all_lists_for_sensor ${src} error."
     grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d' 
-    source $PMESDR_RUN/${make_file} ${res_string} $startyear $startdoy $endyear \
-	   $enddoy $src ${PMESDR_SCRIPT_DIR} $top_level || \
+    out=$(${PMESDR_RUN}/${make_file} ${res_string} $startyear $startdoy $endyear \
+	   $enddoy $src ${PMESDR_SCRIPT_DIR} $top_level) || \
 	error_exit "Line $LINENO: all_SSMIS(or SMAP)_make_for_sensor ${src} error."
     ml intel
     ml netcdf/4.4.1.1
