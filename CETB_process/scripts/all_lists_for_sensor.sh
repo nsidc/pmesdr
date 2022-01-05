@@ -59,7 +59,8 @@ do
     
 done    
 
-# Now do 3-day lists
+# Now do 3-day lists - but reset startdoy back to the original in case you cross over years
+startdoy=$2
 for year in `seq $startyear $endyear`
 do
     if [ "$year" -eq "$startyear" ]; then
