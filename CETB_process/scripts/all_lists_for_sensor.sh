@@ -53,14 +53,13 @@ do
 	fi
     fi
     
-    echo "$0: 1day set: $year $thisbegindoy $thisenddoy $sensor $top_level"
-    source $PMESDR_RUN/daily_file_lists.sh $year $thisbegindoy $thisenddoy $sensor $top_level || \
+    echo "$0: 1day set: $year $thisbegindoy $thisenddoy $sensor $top_level $startdoy $enddoy"
+    out=$(${PMESDR_RUN}/daily_file_lists.sh $year $thisbegindoy $thisenddoy $sensor $top_level) || \
 	error_exit "LINENO: daily_file_lists.sh error "
     
 done    
 
 # Now do 3-day lists - but reset startdoy back to the original in case you cross over years
-startdoy=$2
 for year in `seq $startyear $endyear`
 do
     if [ "$year" -eq "$startyear" ]; then
@@ -81,7 +80,7 @@ do
     fi
     
     echo "$0: 3day set: $year $thisbegindoy $thisenddoy $sensor $top_level"
-    source $PMESDR_RUN/file_3day.sh $year $thisbegindoy $thisenddoy $sensor $top_level || \
+    out=$(${PMESDR_RUN}/file_3day.sh $year $thisbegindoy $thisenddoy $sensor $top_level) || \
 	error_exit "$LINENO: file_3day.sh error"
     
 done    
