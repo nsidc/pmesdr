@@ -210,23 +210,28 @@ if [[ ${gsx_type} -eq SSMIS-CSU-ICDR ]]; then
 fi
 
 echo "$PROGNAME: $startyear=start year $startdoy=start doy $endyear=end year $enddoy=end doy"
+echo "$PROGRAME: $platforms=platforms $src=src"
 
 suffix=""
-if [[ "${resolution}" == "1" ]]
+if [[ "${base_resolution}" == "1" ]]
 then
     suffix="_36"
 fi
-if [[ "$resolution" == "2" ]]
+if [[ "$base_resolution" == "2" ]]
 then
     suffix="_24"
 fi
 
+echo "$PROGNAME: suffix = $suffix"
+
 for src in ${platforms}
 do
+    echo "$PROGNAME: starty startd endy endd $startyear $startdoy $endyear $enddoy"
     echo "$PROGNAME: $src - platform "
     out=$(${PMESDR_RUN}/all_lists_for_sensor.sh $startyear $startdoy $endyear $enddoy $src $top_level) \
 	|| error_exit "Line $LINENO: all_lists_for_sensor ${src} error."
-    grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d' 
+    grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d'
+    echo "$PROGNAME: $make_file $startyear $startdoy $endyear $enddoy"
     out=$(${PMESDR_RUN}/${make_file} ${res_string} $startyear $startdoy $endyear \
 	   $enddoy $src ${PMESDR_SCRIPT_DIR} $top_level) || \
 	error_exit "Line $LINENO: all_SSMIS(or SMAP)_make_for_sensor ${src} error."

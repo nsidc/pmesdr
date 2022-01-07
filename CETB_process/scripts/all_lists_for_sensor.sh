@@ -32,6 +32,7 @@ error_exit() {
     exit 1
 }
 
+echo "${PROGNAME}: $startyear $startdoy $endyear $enddoy"
 # Do all the daily lists first, then do the 3-day lists, which just concatenate
 # them in rolling groups of 3 days
 for year in `seq $startyear $endyear`
@@ -59,7 +60,7 @@ do
     
 done    
 
-# Now do 3-day lists - but reset startdoy back to the original in case you cross over years
+# Now do 3-day lists 
 for year in `seq $startyear $endyear`
 do
     if [ "$year" -eq "$startyear" ]; then
