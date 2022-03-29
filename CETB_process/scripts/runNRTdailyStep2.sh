@@ -120,6 +120,7 @@ SCRIPTDIR=${direc}/${src}_scripts/
 
 outfile=${SCRIPTDIR}/${src}_moving_files${resolution_suffix}
 outfile_ps=${SCRIPTDIR}/${src}_premet_files${resolution_suffix}
+outfile_premet_fix=${SCRIPTDIR}/${src}_premet_fix${resolution_suffix}
 if [[ -f ${outfile} ]]; then
     rm ${outfile}
     echo "removed old move file for ${src}"
@@ -170,6 +171,14 @@ if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
     source activate /projects/jeca4282/miniconda3/envs/cetb3
     mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile_ps} || \
 	error_exit "Line $LINENO: mpirun premetandspatial"
+    grep :60 ${direc}/${src}_sir${resolution_suffix}/*.premet > ${outfile_premet_fix}
+    sed -i '/CSU-v1/d' ${outfile_premet_fix}
+    sed -i 's/nc.premet:Begin.*$/nc/' ${outfile_premet_fix}
+    python /projects/moha2290/testing/coverage_list.py ${outfile_premet_fix}
+    echo "${PROGNAME}: rerun premet and spatial after *.nc time metadata corrected"
+    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile_ps} || \
+	error_exit "Line $LINENO: mpirun premetandspatial"
+    echo "${PROGNAME}: premet fix has run"
     sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep3.sh ${src}
 fi
 
