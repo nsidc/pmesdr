@@ -21,13 +21,14 @@
 # Select the summit QOS
 #SBATCH --qos normal
 #SBATCH --partition=shas
-#SBATCH --account=ucb135_summit2
+#SBATCH --account=ucb135_summit3
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
 
 #
 # Set the system up to notify upon completion
-#SBATCH --mail-type=ALL
+# Don't notify when job starts
+#SBATCH --mail-type=END,FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org,brodzik@nsidc.org
 #
 # The following commands will be executed when this script is run.
