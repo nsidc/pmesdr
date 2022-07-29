@@ -41,6 +41,17 @@ export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression
 
 # Determine the LOCALE, a function of host and compiler.
 thisHostname=`hostname --fqdn`
+if [[ "$thisHostname"  == *"int.nsidc.org"* ]]; then
+
+  export LOCALE=int.nsidc.org
+  export PATH=/opt/anaconda/bin:$PATH
+  export PMESDR_COMPARE_TOLERANCE=0.01
+  export PMESDR_MAX_DIFF_PIXELS=100
+  export PMESDR_REGRESS_DIR=/projects/PMESDR/pmesdr_regression_data/${regression_yyyymmdd}
+  export PMESDR_TESTDATA_DIR=$PMESDR_TOP_DIR/sample_data/test_gsx
+
+fi # endif hostname
+
 if [[ "$thisHostname" == *"shas"* \
 	  || "$thisHostname" == *"rc.colorado.edu" \
 	  || "$thisHostname" == *"c3"* \
