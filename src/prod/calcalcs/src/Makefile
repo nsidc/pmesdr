@@ -38,6 +38,12 @@ ifeq ($(LOCALE),SUMMITicc)
   AR = xiar
   ARFLAGS = crs
 endif
+ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  CC = icc
+  AR = xiar
+  ARFLAGS = crs
+endif
 
 #
 #	system libraries and include directories
@@ -50,7 +56,13 @@ ifeq ($(LOCALE),int.nsidc.org)
   UDUNITS_INCDIR = /usr/include
 else ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_LIB}
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
+  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+else ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
@@ -77,6 +89,12 @@ CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
+	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
+	-Wremarks -wd981 -wd869 -wd2415
+endif
+ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
 	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
 	-Wremarks -wd981 -wd869 -wd2415
 endif

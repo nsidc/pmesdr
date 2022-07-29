@@ -28,12 +28,12 @@ LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
-ifeq ($(LOCALE),JANUSicc)
+ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
 endif
-ifeq ($(LOCALE),SUMMITicc)
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
@@ -53,39 +53,20 @@ SYSLIBS = -lm
 #
 #	system libraries and include directories
 #
-ifeq ($(LOCALE),NSIDCsnow)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  NETCDF4_LIBDIR = /usr/lib64
-  HDF5_INCDIR = /usr/include
-  HDF5_LIBDIR = /usr/lib64
-  ZLIB_LIBDIR = /usr/lib64
-else ifeq ($(LOCALE),int.nsidc.org)
+ifeq ($(LOCALE),int.nsidc.org)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib
   ZLIB_LIBDIR = /usr/lib
-else ifeq ($(LOCALE),JANUSicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_INCDIR = ${CURC_HDF5_INC}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
-else ifeq ($(LOCALE),JANUSgcc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_INCDIR = ${CURC_HDF5_INC}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
 else ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
-else ifeq ($(LOCALE),SUMMITgcc)
+else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
@@ -105,29 +86,18 @@ endif
 #------------------------------------------------------------------------
 CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ARFLAGS = ruv
-ifeq ($(LOCALE),JANUSicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'JANUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
-  ARFLAGS = crs
-endif
-ifeq ($(LOCALE),JANUSgcc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall
-endif
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
-#  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -g -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
   ARFLAGS = crs
 endif
-ifeq ($(LOCALE),SUMMITgcc)
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -Wall
+  CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
+  ARFLAGS = crs
 endif
 
 
-#DEPEND_LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(ZLIB_LIBDIR) -L$(MEAS_LIBDIR) \
-	-lgsx -lcsir -lnetcdf -lhdf5_hl -lhdf5 -lz $(SYSLIBS)
 DEPEND_LIBS = 
 
 SRCS = gsx.c

@@ -33,6 +33,11 @@ ifeq ($(LOCALE),SUMMITicc)
   CC = icc
   AR = xiar
 endif
+ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  CC = icc
+  AR = xiar
+endif
 
 #
 #       debug or optimization settings
@@ -56,7 +61,13 @@ ifeq ($(LOCALE),int.nsidc.org)
   UDUNITS_INCDIR = /usr/include
 else ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_LIB}
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
+  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
+  HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+else ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
@@ -75,6 +86,13 @@ ARFLAGS = ruv
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) \
+	-I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost \
+	-no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
+  ARFLAGS = crs
+endif
+ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) \
 	-I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost \
 	-no-prec-div -Wall -Wremarks -wd981 -wd869 -wd2415
   ARFLAGS = crs

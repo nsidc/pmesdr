@@ -22,6 +22,9 @@ AMSRE_INPUT_FILES = AMSRE_regress_list_VM
 ifeq ($(LOCALE),SUMMITicc)
   AMSRE_INPUT_FILES = AMSRE_regress_list_SUMMIT
 endif
+ifeq ($(LOCALE),ALPINEicc)
+  AMSRE_INPUT_FILES = AMSRE_regress_list_SUMMIT
+endif
 #
 #	commands
 #
@@ -33,6 +36,10 @@ MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
 ifeq ($(LOCALE),SUMMITicc)
+  $(info Build location: $(LOCALE))
+  CC = icc
+endif
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
@@ -58,6 +65,10 @@ CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-va
 ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
+endif
+ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
 endif
 
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
