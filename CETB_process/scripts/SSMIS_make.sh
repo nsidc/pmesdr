@@ -30,11 +30,11 @@ DOY1=$2
 DOY2=$3
 envpath=$5
 top_level=$6
-source ${envpath}/summit_set_pmesdr_environment.sh
+source ${envpath}/alpine_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/${USER}/${top_level}/${SRC}_make/
-direc=/scratch/summit/${USER}/${top_level}
+OUTDIR=/scratch/alpine/${USER}/${top_level}/${SRC}_make/
+direc=/scratch/alpine/${USER}/${top_level}
 #
 #
 # run meas_meta_make with specific parameters
