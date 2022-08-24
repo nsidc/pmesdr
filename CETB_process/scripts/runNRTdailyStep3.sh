@@ -6,12 +6,14 @@
 #
 
 #SBATCH --qos normal
-#SBATCH --job-name runNRTdailyStep2
-#SBATCH --account=ucb135_summit3
+#SBATCH --job-name runNRTdailyStep3
+#SBATCH --account=ucb-general
+#SBATCH --constraint=ib
+#SBATCH --partition=amilan
 #SBATCH --time=01:50:00
 #SBATCH --ntasks-per-node=6
 #SBATCH --nodes=1
-#SBATCH -o /scratch/summit/%u/NRTdaily_output/runNRTdailyStep3-%j.out
+#SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep3-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
@@ -26,7 +28,7 @@ usage() {
     echo "  -t: top level data location under /scratch/summit/${USER}" 1>&2
     echo "  -r: -r 0 is default base resolution (25km) -r 1 is 36km -r 2 is 24km" 1>&2
     echo "  -h: display help message and exit" 1>&2
-    echo "  PLATFORM : F16, F17, F18 AMSRE, SMAP" 1>&2
+    echo "  PLATFORM : F16, F17, F18 AMSR2, SMAP" 1>&2
     echo "Prior to running this script, do:" 1>&2
     echo "" 1>&2
 }
@@ -76,10 +78,10 @@ date
 
 echo "argument is $1"
 src=$1
-direc=/scratch/summit/${USER}/${top_level}/
+direc=/scratch/alpine/${USER}/${top_level}/
 SCRIPTDIR=${direc}/${src}_scripts/
 
-if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
+if [[ -d /scratch/alpine/jeca4282/${src}_sir ]]; then
 
     outfile1=${SCRIPTDIR}/${src}_moving_files_to_pl
     outfile2=${SCRIPTDIR}/${src}_chmod_files_in_pl
@@ -96,7 +98,7 @@ if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
 	echo " no old chmod file to remove for ${src}"
     fi
 
-    for file in `find /scratch/summit/jeca4282/${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
+    for file in `find /scratch/alpine/jeca4282/${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
 #    for file in `find /scratch/summit/jeca4282/${src}_sir/*.nc -mtime 0` This line will copy all files
     do
 	basen=`basename $file`
@@ -107,13 +109,11 @@ if [[ -d /scratch/summit/jeca4282/${src}_sir ]]; then
 	echo "chmod 664 /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/${basen}" >> ${outfile2}
 
     done
-    ml intel
-    ml impi
-    ml loadbalance
+    ml gnu_parallel
     ml
     date
-    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile1} || error_exit "Line $LINENO: Step3 ${src}"
-    mpirun -genv I_MPI_FABRICS=shm:ofi lb ${outfile2} || error_exit "Line $LINENO: Step3 ${src}"
+    parallel -a ${outfile1} || error_exit "Line $LINENO: Step3 ${src}"
+    parallel -a ${outfile2} || error_exit "Line $LINENO: Step3 ${src}"
 fi
 echo "${PROGNAME}: Step3 for ${src} completed" | \
 	mailx -s "NRT Step3 Completed jobid ${SLURM_JOB_ID}" \
