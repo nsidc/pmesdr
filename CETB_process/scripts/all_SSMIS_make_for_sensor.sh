@@ -52,10 +52,11 @@ do
     fi
     
     echo "$0: SSMIS_make for: $year $thisbegindoy $thisenddoy $sensor $envpath $top_level"
-    if [[ ${src} -eq AMSR2 ]]; then
+    if [[ ${sensor} == "AMSR2" ]]; then
 	echo "source is AMSR2"
 	source $PMESDR_RUN/AMSR2_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
     else
+	echo "source is not AMSR2"
 	source $PMESDR_RUN/SSMIS_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
     fi
     

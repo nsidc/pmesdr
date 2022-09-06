@@ -15,10 +15,11 @@ fi
 gsx_type=$1
 src=$2
 top_level=$3
-direc=/scratch/summit/${USER}/${top_level}/
+
+direc=/scratch/alpine/${USER}/${top_level}/
 for file in `find ${direc}/${src} -name "*.nc"`
 do
     basen=`basename $file`
-    echo "gsx $gsx_type $file ${direc}/${src}_GSX/GSX_$basen" >> ${direc}/${src}_scripts/gsx_lb_list_summit
+    echo "gsx $gsx_type $file ${direc}/${src}_GSX/GSX_$basen" >> ${direc}/${src}_scripts/gsx_lb_list_alpine
 done
 

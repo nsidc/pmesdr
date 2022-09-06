@@ -9,7 +9,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep0
-#SBATCH --account=ucb-general
+#SBATCH --account=ucb265_alpine1
 #SBATCH --partition=amilan
 #SBATCH --constraint=ib
 #SBATCH --time=01:00:00
@@ -136,7 +136,7 @@ case $gsx_type in
     platforms="AMSR2";;
     
     SSMIS-CSU-ICDR)
-    fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_csu.py"
+    fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_csu_alpine.py"
     suffix="*.nc"
     run_dir="/projects/${USER}/swathfetcher"
     make_file="all_SSMIS_make_for_sensor.sh"
@@ -227,13 +227,16 @@ do
     echo "$PROGNAME: $src - platform "
     out=$(${PMESDR_RUN}/all_lists_for_sensor.sh $startyear $startdoy $endyear $enddoy $src $top_level) \
 	|| error_exit "Line $LINENO: all_lists_for_sensor ${src} error."
+    echo "back from all_lists_for_sensor.sh"
     grep -l such $direc/${src}_lists/* | xargs sed -i '/such/d'
-    echo "$PROGNAME: $make_file $startyear $startdoy $endyear $enddoy"
+    echo "$PROGNAME: $make_file $startyear ${res_string} $startdoy $endyear $enddoy $src"
+    echo "$PROGNAME: ${PMESDR_SCRIPT_DIR} $top_level"
     out=$(${PMESDR_RUN}/${make_file} ${res_string} $startyear $startdoy $endyear \
 	   $enddoy $src ${PMESDR_SCRIPT_DIR} $top_level) || \
 	error_exit "Line $LINENO: all_SSMIS(or SMAP)_make_for_sensor ${src} error."
     ml netcdf/4.8.1
     ml udunits/2.2.25
+    ml
     echo "parallel -a ${direc}/${src}_scripts/${src}_make_list${suffix}"
     parallel -a ${direc}/${src}_scripts/${src}_make_list${suffix} || \
 	error_exit "Line $LINENO: parallel meas_meta_make ${src} error."
