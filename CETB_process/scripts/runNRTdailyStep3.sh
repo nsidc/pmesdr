@@ -7,7 +7,7 @@
 
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep3
-#SBATCH --account=ucb-general
+#SBATCH --account=ucb265_alpine1
 #SBATCH --constraint=ib
 #SBATCH --partition=amilan
 #SBATCH --time=01:50:00
@@ -25,7 +25,7 @@ usage() {
     echo "Usage: `basename $0` [-t] [-r] [-h] PLATFORM" 1>&2
     echo "  PLATFORM" 1>&2
     echo "Options: "  1>&2
-    echo "  -t: top level data location under /scratch/summit/${USER}" 1>&2
+    echo "  -t: top level data location under /scratch/alpine/${USER}" 1>&2
     echo "  -r: -r 0 is default base resolution (25km) -r 1 is 36km -r 2 is 24km" 1>&2
     echo "  -h: display help message and exit" 1>&2
     echo "  PLATFORM : F16, F17, F18 AMSR2, SMAP" 1>&2
@@ -99,7 +99,6 @@ if [[ -d /scratch/alpine/jeca4282/${src}_sir ]]; then
     fi
 
     for file in `find /scratch/alpine/jeca4282/${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
-#    for file in `find /scratch/summit/jeca4282/${src}_sir/*.nc -mtime 0` This line will copy all files
     do
 	basen=`basename $file`
 	year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`

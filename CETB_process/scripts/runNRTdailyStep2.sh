@@ -10,7 +10,7 @@
 #SBATCH --partition=amilan
 #SBATCH --constraint=ib
 #SBATCH --time=01:50:00
-#SBATCH --ntasks-per-node=6
+#SBATCH --ntasks=6
 #SBATCH --nodes=1
 #SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep2-%j.out
 # Set the system up to notify upon completion
@@ -134,9 +134,9 @@ do
     fi
     hemi=`echo $basen | grep -o EASE2_.*km`
     if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
-	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
-	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.premet archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
-	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.spatial archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630/${src}/" >> ${outfile}
+	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_alpine/${src}/" >> ${outfile}
+	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.premet archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_alpine/${src}/" >> ${outfile}
+	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.spatial archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_alpine/${src}/" >> ${outfile}
 	echo "generate_premetandspatial.py ${file}" >> ${outfile_ps}
     else
 	echo "rsync -avz ${file} /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/${year}/" >> ${outfile}
@@ -160,19 +160,19 @@ ml
 date
 if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
     source activate /projects/jeca4282/miniconda3/envs/cetb3
-    parallel -a ${outfile_ps} || error_exit "Line $LINENO: parallel premetandspatial"
+    parallel -j $SLURM_NTASKS -a ${outfile_ps} || error_exit "Line $LINENO: parallel premetandspatial"
     grep :60 ${direc}/${src}_sir${resolution_suffix}/*.premet > ${outfile_premet_fix}
     sed -i '/CSU-v1/d' ${outfile_premet_fix}
     sed -i 's/nc.premet:Begin.*$/nc/' ${outfile_premet_fix}
     python /projects/moha2290/testing/coverage_list.py ${outfile_premet_fix}
     echo "${PROGNAME}: rerun premet and spatial after *.nc time metadata corrected"
-    parallel -a ${outfile_ps} || error_exit "Line $LINENO: parallel premetandspatial"
+    parallel -j $SLURM_NTASKS -a ${outfile_ps} || error_exit "Line $LINENO: parallel premetandspatial"
     echo "${PROGNAME}: premet fix has run"
     sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep3.sh ${src}
 fi
 
-parallel -a $outfile || error_exit "Line $LINENO: parallel cp *.nc files"
-parallel -a $setup_rm_file || \
+parallel -j $SLURM_NTASKS -a $outfile || error_exit "Line $LINENO: parallel cp *.nc files"
+parallel -j $SLURM_NTASKS -a $setup_rm_file || \
     error_exit "Line $LINENO: parallel remove setup and scratch output files"
 
 echo "${PROGNAME}: Step2 for ${pl_top} ${res_string} ${src} completed" | \

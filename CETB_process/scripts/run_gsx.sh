@@ -8,10 +8,11 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name CETB_GSX
-#SBATCH --partition=shas
+#SBATCH --partition=amilan
+#SBATCH --constraint=ib
 #SBATCH --time=04:30:00
 #SBATCH --ntasks=120
-#SBATCH --account=ucb135_summit3
+#SBATCH --account=ucb-general
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/gsx_lb-%j.out
 # Set the system up to notify upon completion
@@ -20,13 +21,12 @@
 src=$1
 condaenv=$2
 top_level=$3
-file=/scratch/summit/${USER}/${top_level}/${src}_scripts/gsx_lb_list_summit
+file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/gsx_lb_list_alpine
 source activate $condaenv
-ml intel
-ml impi
-ml loadbalance
+ml intel/2022.1.2
+ml gnu_parallel
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:ofi lb $file
+parallel -a $file
 date
 

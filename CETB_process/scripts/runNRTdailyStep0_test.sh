@@ -11,15 +11,13 @@
 #SBATCH --job-name runNRTdailyStep0
 #SBATCH --account=ucb265_alpine1
 #SBATCH --partition=amilan
-# SBATCH --constraint=ib
-#SBATCH --time=01:00:00
+#SBATCH --constraint=ib
+#SBATCH --time=00:01:00
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=1
 #SBATCH --ntasks=20
 #SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep0-%j.out
 # Set the system up to notify upon completion
-#SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
-#SBATCH --mail-user=mhardman@nsidc.org
 
 OPTIND=1
 
@@ -32,7 +30,6 @@ usage() {
     echo "  -r: set base resolution default is 25km r -1 is 36km r -2 is 24km" 1>&2
     echo "  -h: display help message and exit" 1>&2
     echo "  -f: do the ftp pull(default is no ftp pull)" 1>&2
-    echo "  -s: start time for the next run" 1>&2
     echo "  GSX_TYPE : type of gsx translation to do (see gsx --help)" 1>&2
     echo "           : also controls which platforms to process, eg F17 or AQUA etc" 1>&2
     echo "  CONDAENV : conda environment for gsx translation" 1>&2
@@ -71,9 +68,8 @@ res_string=""
 base_resolution=0
 do_ftp=
 ftp_string=""
-start_string="now+24hour"
 
-while getopts "fr:t:s:h" opt; do
+while getopts "fr:t:h" opt; do
     case $opt in
 	f) do_ftp=1
 	   ftp_string="-f";;
@@ -81,7 +77,6 @@ while getopts "fr:t:s:h" opt; do
 	   arg_string="-t ${top_level}";;
 	r) base_resolution=$OPTARG
 	   res_string="-r ${base_resolution}";;
-	s) start_string=$OPTARG;;
 	h) usage
 	   exit 1;;
 	?) printf "Usage: %s: [-tf] args\n" $0
@@ -106,11 +101,11 @@ gsx_type=$1
 condaenv=$2
 
 # start sbatch for the next day
-sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
+sbatch --begin=04:30:00 --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
 ml purge
 ml intel/2022.1.2
+ml python/3
 ml gnu_parallel
-source /projects/${USER}/miniconda3/bin/activate
 ml
 date
 
@@ -139,9 +134,9 @@ case $gsx_type in
     platforms="AMSR2";;
     
     SSMIS-CSU-ICDR)
-    fetch_file="/projects/moha2290/swathfetcher/ftp_nrt_csu_alpine.py"
+    fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_csu_alpine.py"
     suffix="*.nc"
-    run_dir="/projects/moha2290/swathfetcher"
+    run_dir="/projects/${USER}/swathfetcher"
     make_file="all_SSMIS_make_for_sensor.sh"
     platforms="F16 F17 F18";;
     
@@ -187,7 +182,7 @@ if [[ $do_ftp ]]; then
 	done
 	echo "parallel -a ${direc}/${src}_scripts/gsx_lb_list_alpine"
 	parallel -a ${direc}/${src}_scripts/gsx_lb_list_alpine || \
-	    error_exit "Line $LINENO: parallel gsx ${src} error."
+	    error_exit "Line $LINENO: mpirun gsx ${src} error."
     done
 fi
 date

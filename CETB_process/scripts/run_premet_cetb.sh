@@ -6,22 +6,20 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name CETB_platform_premet
-#SBATCH --partition=shas
+#SBATCH --partition=amilan
 #SBATCH --time=01:20:00
-#SBATCH --account=ucb135_summit3
+#SBATCH --account=ucb-general
 #SBATCH --ntasks 120
 #SBATCH --cpus-per-task=1
-#SBATCH -o output/premet_lb-%j.out
+#SBATCH --constraint=ib
+#SBATCH -o premet_lb-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mhardman@nsidc.org
-SRC=$1
-condaenv=$2
-file=/scratch/summit/${USER}/${SRC}_scripts/${SRC}_premet_list_cetb
-source activate $condaenv
-ml impi
-ml loadbalance
+file=/scratch/alpine/${USER}/data/premet_script
+source activate cetb
+ml gnu_parallel
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:ofi  lb $file
+parallel -a $file
 date

@@ -15,7 +15,7 @@ usage() {
     echo "  YEAR_END: end 4-digit year" 1>&2
     echo "  DOY_END: end day of year" 1>&2
     echo "  SRC: input sensor source of data: F08, F10, etc" 1>&2
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script" 1>&2
+    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script" 1>&2
     echo "" 1>&2
 }
 
@@ -69,7 +69,7 @@ fi
 
 # Delete the output file.  It will be appended to by each iteration of the
 # year loop, below.
-outfile=/scratch/summit/${USER}/${top_level}/${sensor}_scripts/${sensor}_make_list${suffix}
+outfile=/scratch/alpine/${USER}/${top_level}/${sensor}_scripts/${sensor}_make_list${suffix}
 rm -f ${outfile}
 echo "$0: removing make file: $outfile"
 
