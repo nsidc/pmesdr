@@ -8,7 +8,7 @@
 #SBATCH --qos normal
 #SBATCH --job-name CETB_run_sir_year
 #SBATCH --partition=shas
-#SBATCH --account=ucb135_summit3
+#SBATCH --account=ucb286_asc1
 #SBATCH --time=23:59:00
 #SBATCH --ntasks=120
 #SBATCH --cpus-per-task=3

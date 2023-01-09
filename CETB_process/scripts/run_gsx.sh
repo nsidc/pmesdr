@@ -12,7 +12,7 @@
 #SBATCH --constraint=ib
 #SBATCH --time=04:30:00
 #SBATCH --ntasks=120
-#SBATCH --account=ucb-general
+#SBATCH --account=ucb286_asc1
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/gsx_lb-%j.out
 # Set the system up to notify upon completion
