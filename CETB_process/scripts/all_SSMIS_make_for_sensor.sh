@@ -11,7 +11,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 6 ] ; then
     echo "  YEAR_END: end 4-digit year"
     echo "  DOY_END: end day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script"
     echo "  top_level: path for top_level in scratch used in NRT processing"
     echo ""
     exit 1
@@ -27,7 +27,7 @@ top_level=$7
 
 # Delete the output file.  It will be appended to by each iteration of the
 # year loop, below.
-outfile=/scratch/summit/${USER}/${top_level}/${sensor}_scripts/${sensor}_make_list
+outfile=/scratch/alpine/${USER}/${top_level}/${sensor}_scripts/${sensor}_make_list
 rm -f ${outfile}
 echo "$0: removing make file: $outfile"
 
@@ -52,9 +52,11 @@ do
     fi
     
     echo "$0: SSMIS_make for: $year $thisbegindoy $thisenddoy $sensor $envpath $top_level"
-    if [[ ${src} == AMSR2 ]]; then
+    if [[ ${sensor} == "AMSR2" ]]; then
+	echo "source is AMSR2"
 	source $PMESDR_RUN/AMSR2_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
     else
+	echo "source is not AMSR2"
 	source $PMESDR_RUN/SSMIS_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
     fi
     

@@ -10,7 +10,7 @@
 #SBATCH --job-name CETB_rm
 #SBATCH --partition=shas
 #SBATCH --time=00:15:00
-#SBATCH --account=ucb135_summit3
+#SBATCH --account=ucb286_asc1
 #SBATCH --ntasks=24
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/rm_lb-%j.out

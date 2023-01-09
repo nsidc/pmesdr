@@ -32,6 +32,10 @@ ifeq ($(LOCALE),SUMMITicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
+ifeq ($(LOCALE),ALPINEicc)
+  $(info Build location: $(LOCALE))
+  CC = icc
+endif
 #
 #       debug or optimization settings
 #       these may be things that are machine-specific
@@ -68,12 +72,14 @@ else ifeq ($(LOCALE),SUMMITicc)
   HDFLIB2 = hdf5
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
-else ifeq ($(LOCALE),SUMMITgcc)
+else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+  HDFLIB1 = hdf5_hl
+  HDFLIB2 = hdf5
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else
@@ -89,9 +95,9 @@ endif
 # end configuration section
 #------------------------------------------------------------------------
 MEAS_INCDIR = ../../sirlib/c/include
-MEAS_LIBDIR = ../../sirlib/c
+MEAS_LIBDIR = 
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
-	-L$(MEAS_LIBDIR) -lgsx -lutils -lcalcalcs -ludunits2 -lcsir \
+	-lgsx -lutils -lcalcalcs -ludunits2 -lcsir \
 	-lnetcdf -l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) \
 	-I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
@@ -100,16 +106,17 @@ ifeq ($(LOCALE),SUMMITicc)
   CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
 	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -ipo -xHost -no-prec-div \
 	-Wall -Wremarks -wd981 -wd2415
-else ifeq ($(LOCALE),SUMMITgcc)
+else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
-	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -Wall
+  CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
+	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -ipo -xHost -no-prec-div \
+	-Wall -Wremarks -wd981 -wd2415 -inline-level=0
 endif
 
 DEPEND_LIBS = $(LIBDIR)/libutils.a \
 	$(LIBDIR)/libcalcalcs.a \
 	$(UDUNITS_LIBDIR)/libudunits2.a \
-	$(LIBDIR)/libgsx.a $(MEAS_LIBDIR)/libcsir.a
+	$(LIBDIR)/libgsx.a $(LIBDIR)/libcsir.a
 
 SRCS = meas_meta_setup.c
 OBJS = meas_meta_setup.o

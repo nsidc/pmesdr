@@ -7,12 +7,13 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name CETB_run_sir_year
-#SBATCH --partition=shas
-#SBATCH --account=ucb135_summit3
+#SBATCH --partition=amilan
+#SBATCH --account=ucb286_asc1
 #SBATCH --time=04:00:00
 #SBATCH --ntasks=120
 #SBATCH --cpus-per-task=2
 #SBATCH -o output/sir_lb-%j.out
+#SBATCH --constraint=ib
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mhardman@nsidc.org
@@ -20,11 +21,11 @@ year=$1
 src=$2
 envpath=$3
 top_level=$4
-file=/scratch/summit/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}
-source ${envpath}/summit_set_pmesdr_environment.sh
-ml impi
-ml loadbalance
+file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}
+source ${envpath}/alpine_set_pmesdr_environment.sh
+ml intel/2022.1.2
+ml gnu_parallel
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb ${file}
+parallel -a ${file}
 date

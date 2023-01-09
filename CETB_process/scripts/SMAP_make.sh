@@ -17,7 +17,7 @@ usage() {
     echo "  DOY_START: start day of year" 1>&2
     echo "  DOY_STOP: stop day of year" 1>&2
     echo "  SRC: input sensor source of data: F08, F10, etc" 1>&2
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script" 1>&2
+    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script" 1>&2
     echo "" 1>&2
 }
 
@@ -79,11 +79,11 @@ fi
 
 echo "suffix=${suffix} resolution=${resolution} res_string=${res_string} ${top_level}"
 
-source ${envpath}/summit_set_pmesdr_environment.sh
+source ${envpath}/alpine_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/${USER}/${top_level}/${SRC}_make${suffix}/
-direc=/scratch/summit/${USER}/${top_level}
+OUTDIR=/scratch/alpine/${USER}/${top_level}/${SRC}_make${suffix}/
+direc=/scratch/alpine/${USER}/${top_level}
 #
 #
 # run meas_meta_make with specific parameters

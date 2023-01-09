@@ -5,14 +5,16 @@
 #   setup and sir run in this process
 #   arguments are
 #
-
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep1
-#SBATCH --account=ucb135_summit3
+#SBATCH --account=ucb286_asc1
+#SBATCH --partition=amilan
+#SBATCH --constraint=ib
 #SBATCH --time=04:30:00
-#SBATCH --ntasks-per-node=6
-#SBATCH --cpus-per-task=3
-#SBATCH -o /scratch/summit/%u/NRTdaily_output/runNRTdailyStep1-%j.out
+#SBATCH --nodes=1
+#SBATCH --ntasks=12
+#SBATCH --cpus-per-task=4
+#SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep1-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
@@ -75,11 +77,7 @@ while getopts "r:t:h" opt; do
 	esac
 done
 
-if [[ -z ${PMESDR_TOP_DIR} ]];
-then
-    error_exit "$LINENO: First set the PMESDR environment run summit_set_pmesdr_environment.sh"
-fi
-    
+source /projects/moha2290/measures-byu-alpine/src/prod/alpine_set_pmesdr_environment.sh
 date
 
 shift $(($OPTIND - 1))
@@ -98,7 +96,7 @@ then
     suffix="_24"
 fi
 
-direc=/scratch/summit/${USER}/${top_level}/
+direc=/scratch/alpine/${USER}/${top_level}/
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
 MAKEDIR=${direc}/${src}_make${suffix}/
@@ -118,15 +116,16 @@ do
     echo "$BINDIR/meas_meta_setup $FILE ${SETUPDIR}" >> ${SCRIPTDIR}/${src}_setup_list${suffix}
 done
 
-ml intel
-ml netcdf/4.4.1.1
+ml purge
+ml intel/2022.1.2
+ml netcdf/4.8.1
 ml udunits/2.2.25
-ml impi
-ml loadbalance
+ml gnu_parallel
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_setup_list${suffix} || \
-    error_exit "Line $LINENO: mpirun setup ${src} error."
+echo "Running parallel setup with ${SLURM_NTASKS} cpus-per-task"
+parallel -j $SLURM_NTASKS -a ${SCRIPTDIR}/${src}_setup_list${suffix} || \
+    error_exit "Line $LINENO: parallel setup ${src} error."
 
 # now create list of newly created setup files to feed to rSIR processing
 date
@@ -138,8 +137,9 @@ for FILE in `find ${SETUPDIR}/* -mtime 0`
 do
     echo "$BINDIR/meas_meta_sir $FILE ${SIRDIR}" >> ${SCRIPTDIR}/${src}_sir_list${suffix}
 done
-mpirun -genv I_MPI_FABRICS=shm:ofi lb ${SCRIPTDIR}/${src}_sir_list${suffix} || \
-    error_exit "Line $LINENO: mpirun sir ${src} error."
+echo "Running parallel sir with ${SLURM_NTASKS} cpus-per-task"
+parallel -j $SLURM_NTASKS -a ${SCRIPTDIR}/${src}_sir_list${suffix} || \
+    error_exit "Line $LINENO: parallel sir ${src} error."
 
 #set off step 2 which copies files to the peta library and deletes the setup files
 echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${res_string} ${arg_string} ${src}"

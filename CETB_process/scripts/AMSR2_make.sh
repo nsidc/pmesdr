@@ -12,7 +12,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 5 ] ; then
     echo "  DOY_START: start day of year"
     echo "  DOY_STOP: stop day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script"
     echo "  top_level: used for NRT processing"
     echo ""
     exit 1
@@ -30,11 +30,11 @@ DOY1=$2
 DOY2=$3
 envpath=$5
 top_level=$6
-source ${envpath}/summit_set_pmesdr_environment.sh
+source ${envpath}/alpine_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/${USER}/${top_level}/${SRC}_make/
-direc=/scratch/summit/${USER}/${top_level}
+OUTDIR=/scratch/alpine/${USER}/${top_level}/${SRC}_make/
+direc=/scratch/alpine/${USER}/${top_level}
 #
 #
 # run meas_meta_make with specific parameters

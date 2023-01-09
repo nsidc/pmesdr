@@ -28,7 +28,7 @@ BINDIR = $(TOPDIR)/bin
 #	C compiler options, debug or optimization settings
 #
 #
-CONFIG_CFLAGS =
+CONFIG_CFLAGS = 
 
 #
 #	system libraries and include directories
@@ -48,7 +48,7 @@ else ifeq ($(LOCALE),SUMMITicc)
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
-else ifeq ($(LOCALE),SUMMITgcc)
+else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}

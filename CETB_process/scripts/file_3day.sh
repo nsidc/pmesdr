@@ -19,7 +19,7 @@ startdoy=$2
 stopdoy=$3
 src=$4
 top_level=$5
-direc=/scratch/summit/${USER}/${top_level}/
+direc=/scratch/alpine/${USER}/${top_level}/
 
 error_exit() {
     # Use for fatal program error
