@@ -2952,6 +2952,7 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     case 2020:
     case 2021:
     case 2022:
+    case 2023:
       if ( direction_id == CETB_MORNING_PASSES ) {
 	*split_time = -2.0;
       } else {
