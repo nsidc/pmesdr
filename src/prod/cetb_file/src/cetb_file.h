@@ -25,8 +25,10 @@
 #define CETB_FILE_TB_STANDARD_NAME "brightness_temperature"
 #define CETB_FILE_INCIDENCE_ANGLE_STANDARD_NAME "angle_of_incidence"
 #define CETB_FILE_TB_TIME_STANDARD_NAME "time"
+#define CETB_FILE_NUM_SAMPLES_STANDARD_NAME "number_of_observations"
 #define CETB_FILE_TB_UNIT "K"
 #define CETB_FILE_ANGULAR_UNIT "degree"
+#define CETB_FILE_TB_ANCILLARY_VARIABLES "TB_num_samples TB_time incidence_angle TB_std_dev"
 
 /* Needs to hold "minutes since yyyy-dd-mm 00:00:00" */
 #define CETB_FILE_EPOCH_STRING_LENGTH 34

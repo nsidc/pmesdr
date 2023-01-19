@@ -304,7 +304,7 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
 
 /* Need to be able to map sensor ID and producer ID to NSIDC dataset ID */
 static const char *cetb_NSIDC_dataset_id[] = {
-  "NSIDC-0630",
+  "NSIDC0630",
   "NSIDC-0763",
   "NSIDC-0738"
 };

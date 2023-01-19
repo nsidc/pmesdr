@@ -124,6 +124,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   int status;
   char *file_version=NULL;
   size_t len_version;
+  int month, day;
 
   if ( STATUS_OK != valid_base_resolution( base_resolution ) ) return NULL;
   if ( CETB_NO_REGION ==
@@ -175,6 +176,11 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->cols_dim_id = INT_MIN;
   this->rows_dim_id = INT_MIN;
   this->time_dim_id = INT_MIN;
+  if ( STATUS_OK !=
+       (status = yyyydoy_to_yyyymmdd(this->year, this->doy, &month, &day)) ) {
+    fprintf( stderr, "%s: Error converting date to yyyymmdd.\n", __FUNCTION__ );
+    return STATUS_FAILURE;
+  }
 
   /*
    * Find and open the CETB template file with the global attribute data
@@ -211,20 +217,20 @@ cetb_file_class *cetb_file_init( char *dirname,
   }
 
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s-%s%s-%s_%s-%4.4d%3.3d-%s-%s-%s-%s-%s.nc",
+  	    "%s/%s_%s_%s%s_%s_%s_%s_%s_%4.4d%2.2d%2.2d_%s.nc",
   	    dirname,
 	    cetb_NSIDC_dataset_id[ cetb_dataset_id_index ],
+  	    cetb_reconstruction_id_name[ reconstruction_id ],
   	    cetb_region_id_name[ base_resolution ]
 	    [ (region_number-CETB_PROJECTION_BASE_NUMBER) ],
   	    cetb_resolution_name[ base_resolution ][ factor ],
   	    cetb_platform_id_name[ platform_id ],
   	    cetb_sensor_id_name[ sensor_id ],
-  	    year,
-  	    doy,
-  	    channel_str,
   	    cetb_direction_id_name[ direction_id ],
-  	    cetb_reconstruction_id_name[ reconstruction_id ],
-  	    cetb_swath_producer_id_name[ producer_id ],
+  	    channel_str,
+  	    year,
+	    month,
+  	    day,
   	    file_version );
 
   snprintf( this->progname, MAX_STR_LENGTH, "%s", progname );
@@ -480,6 +486,18 @@ int cetb_file_add_var( cetb_file_class *this,
 	     __FUNCTION__, var_name );
     if ( 0 != cetb_file_set_time_coverage( this, (float*)data, cols, rows ) ) {
       fprintf( stderr, "%s: couldn't set time coverage\n", __FUNCTION__ );
+      return 1;
+    }
+  }
+
+  /* Check to see if you're setting the TB variable and then set auxillary variable attribute */
+  if ( 0 == strcmp( "TB", var_name ) ) {
+    if ( (status = nc_put_att_text(this->fid, var_id, "ancillary_variables",
+				    strlen(CETB_FILE_TB_ANCILLARY_VARIABLES),
+				    CETB_FILE_TB_ANCILLARY_VARIABLES)) ) {
+      fprintf( stderr, "%s: Error setting %s %s %s: %s.\n",
+	       __FUNCTION__, var_name, "ancillary variables",
+	       CETB_FILE_TB_ANCILLARY_VARIABLES, nc_strerror( status ) );
       return 1;
     }
   }
@@ -1152,14 +1170,13 @@ void cetb_file_close( cetb_file_class *this ) {
  *
  *  output: status variable
  *
- *  result: OOR values are set to missing 
+ *  result: OOR values are set to fill value 
  *
  *  this function retrieves the TB values from the file and
  *  checks them all to make sure they are within the required
- *  range.  Any values outside the required range, but != the
- *  fill value should be set to missing.  IFF any TB values are
- *  set to missing, then the corresponding TB_std_dev value
- *  should be set to missing.
+ *  range.  Any values outside the required range are set to the
+ *  fill value.  IFF any TB values are changed, then the corresponding
+ *  TB_std_dev value should be set to fill.
  *
  */
 int cetb_file_check_consistency( char *file_name ) {
@@ -1247,8 +1264,8 @@ int cetb_file_check_consistency( char *file_name ) {
     if ( CETB_NCATTS_TB_FILL_VALUE != *(tb_ushort_data+index) ) {
       if ( ( CETB_NCATTS_TB_MIN > *(tb_ushort_data+index) ) ||
 	   ( CETB_NCATTS_TB_MAX < *(tb_ushort_data+index) ) ) {
-	*(tb_ushort_data+index) = CETB_NCATTS_TB_MISSING_VALUE;
-	*(tb_std_dev_ushort_data+index) = CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
+	*(tb_ushort_data+index) = CETB_NCATTS_TB_FILL_VALUE;
+	*(tb_std_dev_ushort_data+index) = CETB_NCATTS_TB_STDDEV_FILL_VALUE;
 	missing_flag = 1;
       }
     }
