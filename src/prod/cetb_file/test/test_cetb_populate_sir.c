@@ -55,7 +55,7 @@ void setUp( void ) {
   reconstruction_id = CETB_SIR;
   producer_id = CETB_CSU;
 
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N25km_F13_SSMI_M_19H_19910101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,
@@ -86,11 +86,12 @@ void test_cetb_populate_sir_parameters( void ) {
   float expected_box_size_km=625.0;
   float ltod_start = 0.0;
   float ltod_end = 12.0;
+  size_t att_len;
+  char *ancillary;
   float expected_ltod_start = 0;
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
     CETB_NCATTS_TB_MIN,
     CETB_NCATTS_TB_MAX
@@ -111,7 +112,6 @@ void test_cetb_populate_sir_parameters( void ) {
 			      "SIR TB",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
@@ -155,7 +155,15 @@ void test_cetb_populate_sir_parameters( void ) {
   TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status,
 			    "Error on median_filter attribute" );
   TEST_ASSERT_EQUAL_INT_MESSAGE( expected_median_filter, median_filter,
-			    "Wrong value for median_filter." );
+			         "Wrong value for median_filter." );
+
+  status = nc_inq_attlen( nc_fileid, varid, "ancillary_variables", &att_len );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "Error getting att_len on ancillary."  );
+  ancillary = (char *) malloc( att_len + 1 );
+  status = nc_get_att_text( nc_fileid, varid, "ancillary_variables", ancillary );
+  TEST_ASSERT_TRUE_MESSAGE( NC_NOERR == status, "Error getting ancillary_variables value."  );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_TB_ANCILLARY_VARIABLES, ancillary,
+		                    "wrong ancillary values" );
   nc_close( nc_fileid );
   
 }

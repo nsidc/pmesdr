@@ -53,7 +53,7 @@ void setUp( void ) {
   reconstruction_id = CETB_SIR;
   producer_id = CETB_CSU;
 
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N25km_F13_SSMI_M_19H_19910101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,

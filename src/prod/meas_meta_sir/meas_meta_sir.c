@@ -148,16 +148,12 @@ int main(int argc, char **argv)
   unsigned short tb_fill_value=CETB_NCATTS_TB_FILL_VALUE;
   unsigned short stokes_fill_value=CETB_NCATTS_STOKES_FILL_VALUE;
   unsigned short tb_or_stokes_fill_value;
-  unsigned short tb_missing_value=CETB_NCATTS_TB_MISSING_VALUE;
-  unsigned short stokes_missing_value=CETB_NCATTS_STOKES_MISSING_VALUE;
-  unsigned short tb_or_stokes_missing_value;
   unsigned short tb_valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
   unsigned short stokes_valid_range[ 2 ] = { CETB_NCATTS_STOKES_MIN, CETB_NCATTS_STOKES_MAX };
   unsigned short tb_or_stokes_valid_range[ 2 ];
   short tb_time_fill_value=CETB_NCATTS_TB_TIME_FILL_VALUE;
   short tb_time_valid_range[ 2 ] = { CETB_NCATTS_TB_TIME_MIN, CETB_NCATTS_TB_TIME_MAX };
   unsigned short tb_stddev_fill_value=CETB_NCATTS_TB_STDDEV_FILL_VALUE;
-  unsigned short tb_stddev_missing_value=CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
   unsigned short tb_stddev_valid_range[ 2 ] = { CETB_NCATTS_TB_STDDEV_MIN, CETB_NCATTS_TB_STDDEV_MAX };
   unsigned char tb_num_samples_fill_value=CETB_NCATTS_TB_NUM_SAMPLES_FILL_VALUE;
   unsigned char tb_num_samples_valid_range[ 2 ] = { CETB_NCATTS_TB_NUM_SAMPLES_MIN,
@@ -851,7 +847,6 @@ int main(int argc, char **argv)
 			       tb_or_stokes_SIR_long_name,
 			       CETB_FILE_TB_UNIT,
 			       &tb_fill_value,
-			       &tb_missing_value,
 			       &tb_or_stokes_valid_range,
 			       CETB_PACK,
 			       (float) tb_or_stokes_scale_factor,
@@ -872,7 +867,6 @@ int main(int argc, char **argv)
 			       "SIR TB Number of Measurements",
 			       "count",
 			       &tb_num_samples_fill_value,
-			       NULL,
 			       &tb_num_samples_valid_range,
 			       CETB_NO_PACK,
 			       0.0,
@@ -892,7 +886,6 @@ int main(int argc, char **argv)
 			       "SIR Incidence Angle",
 			       CETB_FILE_ANGULAR_UNIT,
 			       &theta_fill_value,
-			       NULL,
 			       &theta_valid_range,
 			       CETB_PACK,
 			       (float) CETB_NCATTS_THETA_SCALE_FACTOR,
@@ -983,7 +976,6 @@ int main(int argc, char **argv)
 			       "SIR TB Std Deviation",
 			       CETB_FILE_TB_UNIT,
 			       &tb_stddev_fill_value,
-			       &tb_stddev_missing_value,
 			       &tb_stddev_valid_range,
 			       CETB_PACK,
 			       (float) tb_or_stokes_stddev_scale_factor,
@@ -1058,7 +1050,6 @@ int main(int argc, char **argv)
   			       "SIR TB Time of Day",
   			       cetb_sir->epoch_string,
   			       &tb_time_fill_value,
-  			       NULL,
   			       &tb_time_valid_range,
   			       CETB_PACK,
   			       (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
@@ -1215,7 +1206,6 @@ int main(int argc, char **argv)
 			       tb_or_stokes_GRD_long_name,
 			       CETB_FILE_TB_UNIT,
 			       &tb_fill_value,
-			       &tb_missing_value,
 			       &tb_or_stokes_valid_range,
 			       CETB_PACK,
 			       (float) tb_or_stokes_scale_factor,
@@ -1237,7 +1227,6 @@ int main(int argc, char **argv)
 			       "GRD TB Number of Measurements",
 			       "count",
 			       &tb_num_samples_fill_value,
-			       NULL,
 			       &tb_num_samples_valid_range,
 			       CETB_NO_PACK,
 			       0.0,
@@ -1258,7 +1247,6 @@ int main(int argc, char **argv)
 			       "GRD TB Std Deviation",
 			       CETB_FILE_TB_UNIT,
 			       &tb_stddev_fill_value,
-			       &tb_stddev_missing_value,
 			       &tb_stddev_valid_range,
 			       CETB_PACK,
 			       (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
@@ -1275,11 +1263,10 @@ int main(int argc, char **argv)
   if ( 0 != cetb_file_add_var( cetb_grd, "Incidence_angle",
 			       NC_SHORT, sx,
 			       ( size_t )nsx2, ( size_t )nsy2,
-			       NULL,
+			       CETB_FILE_INCIDENCE_ANGLE_STANDARD_NAME,
 			       "GRD Incidence Angle",
 			       CETB_FILE_ANGULAR_UNIT,
 			       &theta_fill_value,
-			       NULL,
 			       &theta_valid_range,
 			       CETB_PACK,
 			       (float) CETB_NCATTS_THETA_SCALE_FACTOR,
@@ -1295,11 +1282,10 @@ int main(int argc, char **argv)
   if ( 0 != cetb_file_add_var( cetb_grd, "TB_time",
   			       NC_SHORT, a_temp,
   			       ( size_t )nsx2, ( size_t )nsy2,
-  			       NULL,
+  			       CETB_FILE_TB_TIME_STANDARD_NAME,
   			       "GRD TB Time of Day",
   			       cetb_sir->epoch_string,
   			       &tb_time_fill_value,
-  			       NULL,
   			       &tb_time_valid_range,
   			       CETB_PACK,
   			       (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
@@ -1333,7 +1319,7 @@ int main(int argc, char **argv)
   strcpy( cetb_grd_filename, cetb_grd->filename );
   cetb_file_close( cetb_grd );
 
-  /* Now check to make sure that there are no OOR temps and set to MISSING if so */
+  /* Now check to make sure that there are no OOR temps and set to FILL if so */
   if ( 0 != cetb_file_check_consistency( cetb_grd_filename ) ) {
     fprintf( stderr, "%s: Error running file consistency check file %s\n",
 	     __FILE__, cetb_grd_filename );
@@ -1361,7 +1347,7 @@ int main(int argc, char **argv)
   
   cetb_file_close( cetb_sir );
 
-  /* Now check to make sure that there are no OOR temps and set to MISSING if so */
+  /* Now check to make sure that there are no OOR temps and set to FILL if so */
   if ( 0 != cetb_file_check_consistency( cetb_sir_filename ) ) {
     fprintf( stderr, "%s: Error running file consistency check file %s\n", __FILE__,
 	     cetb_sir_filename );

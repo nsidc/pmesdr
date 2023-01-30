@@ -65,7 +65,7 @@ void setUp( void ) {
 			 sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_T25km_F13_SSMI_A_19H_19910602_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename,
 			    cetb->filename );

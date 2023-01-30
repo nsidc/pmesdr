@@ -73,7 +73,7 @@ void setUp( void ) {
 			 direction_id, reconstruction_id, producer_id,
 			 basename( progname ) );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_T25km_F13_SSMI_A_19H_19910602_v%.1f.nc",
 	   dir, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   status = cetb_file_open( cetb );
@@ -87,9 +87,9 @@ void tearDown( void ) {
 /*
  * This function is to test the file_consistency function of cetb_file
  *
- * Insert temperatures that are OOR and ensure that they come back as set to missing
+ * Insert temperatures that are OOR and ensure that they come back as set to fill
  *
- * Also check that TB_std_dev has the corresponding value set to missing
+ * Also check that TB_std_dev has the corresponding value set to fill
  *
  */
 void test_cetb_file_consistency( void ) {
@@ -113,7 +113,6 @@ void test_cetb_file_consistency( void ) {
   float *float_data;
   unsigned short *tb_data;
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
     CETB_NCATTS_TB_MIN,
     CETB_NCATTS_TB_MAX
@@ -157,7 +156,6 @@ void test_cetb_file_consistency( void ) {
   float sample_tb_std_dev1 = 2.0;
   float sample_tb_std_dev2 = 3.1;
   float float_fill_value=-1.;
-  float float_missing_value=-2.;
   float float_valid_range[ 2 ] = {
     0.0,
     10000.
@@ -177,7 +175,6 @@ void test_cetb_file_consistency( void ) {
 			      "SIR TB",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
@@ -189,7 +186,6 @@ void test_cetb_file_consistency( void ) {
   float_data[ cols ] = sample_tb_std_dev1;  // First column of array (row=1)
   float_data[ (rows*cols) - 1 ] = sample_tb_std_dev2; // Last element of array 
   fill_value = CETB_NCATTS_TB_STDDEV_FILL_VALUE;
-  missing_value = CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
   valid_range[ 0 ] = CETB_NCATTS_TB_STDDEV_MIN;
   valid_range[ 1 ] = CETB_NCATTS_TB_STDDEV_MAX;
   status = cetb_file_add_var( cetb, "TB_std_dev",
@@ -200,7 +196,6 @@ void test_cetb_file_consistency( void ) {
 			      "SIR TB Std Dev",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
@@ -257,7 +252,7 @@ void test_cetb_file_consistency( void ) {
   fprintf( stderr, "%s: This is the data value %d\n", __FUNCTION__, tb_data[cols * (rows - 2)] );
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_FILE_PACK_DATA( CETB_NCATTS_TB_SCALE_FACTOR,
 						      CETB_NCATTS_TB_ADD_OFFSET,
-						      600.0 ),
+						      0.0 ),
 				 tb_data[ cols-1 ],     // Last element of first row array
 				 "sample2 tb_data element" );
   fprintf( stderr, "%s: This is the data value %d\n", __FUNCTION__, tb_data[cols-1] );
@@ -288,7 +283,7 @@ void test_cetb_file_consistency( void ) {
 						      sample_tb_std_dev1 ),
 				 tb_data[ cols * (rows - 2 ) ], // First element of second-to-last row
 				 "sample1 tb_std_dev element" );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_STDDEV_MISSING_VALUE,
+  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_STDDEV_FILL_VALUE,
 				 tb_data[ cols-1 ], // Last element at end of first row
 				 "sample2 tb_std_dev element" );
 

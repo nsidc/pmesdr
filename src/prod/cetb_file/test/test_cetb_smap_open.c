@@ -43,7 +43,7 @@ void setUp( void ) {
   status = 0;
   strcpy( dirname, getenv( "PMESDR_TOP_DIR" ) );
   strcat( dirname, "/src/prod/cetb_file/test" );
-  strcpy( auth_id, "NSIDC-0738" );
+  strcpy( auth_id, "NSIDC0738" );
   region_number = cetb_region_number[ 0 ][ CETB_EASE2_N ];
   base_resolution = CETB_25KM;
   factor = 1;
@@ -61,7 +61,7 @@ void setUp( void ) {
 			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( filename, "%s/%s-EASE2_N12.5km-SMAP_LRM-2016001-1.4H-M-SIR-JPL-v%.1f.nc",
+  sprintf( filename, "%s/%s_SIR_EASE2_N12.5km_SMAP_LRM_M_1.4H_20160101_v%.1f.nc",
 	   dirname, auth_id, SMAP_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   TEST_ASSERT_EQUAL_INT( direction_id, cetb->direction_id );

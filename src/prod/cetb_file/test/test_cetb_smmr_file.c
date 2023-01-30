@@ -196,7 +196,7 @@ void test_init_for_valid_cetb_north( void ) {
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-NIMBUS7_SMMR-1984001-06H-M-SIR-JPL-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N25km_NIMBUS7_SMMR_M_06H_19840101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   
@@ -221,7 +221,7 @@ void test_init_for_valid_cetb_south( void ) {
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_S12.5km-AQUA_AMSRE-1991031-06V-E-BGI-RSS-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_BGI_EASE2_S12.5km_AQUA_AMSRE_E_06V_19910131_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   
@@ -245,7 +245,7 @@ void test_init_for_valid_cetb_temperate( void ) {
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
   TEST_ASSERT_EQUAL_INT( 0, cetb->fid );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_T6.25km-F13_SSMI-1991365-85V-A-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_T6.25km_F13_SSMI_A_85V_19911231_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   

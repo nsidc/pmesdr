@@ -54,7 +54,7 @@ void setUp( void ) {
   reconstruction_id = CETB_GRD;
   producer_id = CETB_CSU;
 
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-GRD-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_GRD_EASE2_N25km_F13_SSMI_M_19H_19910101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
 
   cetb = cetb_file_init( dirname,
@@ -81,7 +81,6 @@ void test_cetb_populate_grd_parameters( void ) {
   size_t rows=cetb_grid_rows[ region_id ][ factor ];
   size_t cols=cetb_grid_cols[ region_id ][ factor ];
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
     CETB_NCATTS_TB_MIN,
     CETB_NCATTS_TB_MAX
@@ -102,7 +101,6 @@ void test_cetb_populate_grd_parameters( void ) {
 			      "SIR TB",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_SCALE_FACTOR,

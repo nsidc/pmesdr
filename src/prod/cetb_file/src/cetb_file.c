@@ -164,6 +164,11 @@ cetb_file_class *cetb_file_init( char *dirname,
     fprintf( stderr, "%s: Error setting %s.\n", __FUNCTION__, "epoch_string" );
     return NULL;
   }
+  if ( STATUS_OK !=
+       (status = yyyydoy_to_yyyymmdd(this->year, this->doy, &month, &day)) ) {
+    fprintf( stderr, "%s: Error converting date to yyyymmdd.\n", __FUNCTION__ );
+    return NULL;
+  }
   this->producer_id = producer_id;
   this->platform_id = platform_id;
   this->region_id = region_id;
@@ -176,11 +181,6 @@ cetb_file_class *cetb_file_init( char *dirname,
   this->cols_dim_id = INT_MIN;
   this->rows_dim_id = INT_MIN;
   this->time_dim_id = INT_MIN;
-  if ( STATUS_OK !=
-       (status = yyyydoy_to_yyyymmdd(this->year, this->doy, &month, &day)) ) {
-    fprintf( stderr, "%s: Error converting date to yyyymmdd.\n", __FUNCTION__ );
-    return STATUS_FAILURE;
-  }
 
   /*
    * Find and open the CETB template file with the global attribute data
@@ -397,7 +397,6 @@ int cetb_file_add_filenames( cetb_file_class *this, int input_file_number,
  *    cols, rows : number of columns/rows (must match expected dimensions
  *                 in the cetb_file)
  *    fill_value : data fill_value
- *    missing_value : data missing_value
  *    min_value, max_value : data valid_range
  *
  * output :
@@ -421,7 +420,6 @@ int cetb_file_add_var( cetb_file_class *this,
 		       char *long_name,
 		       char *units,
 		       void *fill_value_p,
-		       void *missing_value_p,
 		       void *valid_range_p,
 		       int do_pack,
 		       float scale_factor,
@@ -540,14 +538,6 @@ int cetb_file_add_var( cetb_file_class *this,
     return 1;
   }
 
-  if ( NULL != missing_value_p ) {
-    if ( ( status = nc_put_att( this->fid, var_id, "missing_value",
-				xtype, 1, missing_value_p ) ) ) {
-      fprintf( stderr, "%s: Error setting %s %s: %s.\n",
-	       __FUNCTION__, var_name, "missing_value", nc_strerror( status ) );
-      return 1;
-    }
-  }
   if ( ( status = nc_put_att( this->fid, var_id, "valid_range",
 			      xtype, 2, valid_range_p ) ) ) {
     fprintf( stderr, "%s: Error setting %s %s: %s.\n",

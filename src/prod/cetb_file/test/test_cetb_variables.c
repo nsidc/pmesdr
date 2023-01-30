@@ -67,7 +67,7 @@ void setUp( void ) {
 			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_T25km-F13_SSMI-1991153-19H-A-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_T25km_F13_SSMI_A_19H_19910602_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   status = cetb_file_open( cetb );
@@ -140,7 +140,6 @@ void test_cetb_tbs_wrong_dims( void ) {
   size_t cols=3;
   float *data;
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
   status = allocate_clean_aligned_memory( ( void * )&data, sizeof( float ) * rows * cols );
   TEST_ASSERT_EQUAL_INT( 0, status );
@@ -153,7 +152,6 @@ void test_cetb_tbs_wrong_dims( void ) {
 			      "SIR TB",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
@@ -185,7 +183,6 @@ void test_cetb_tbs( void ) {
   float *float_data;
   unsigned short *tb_data;
   unsigned short fill_value=CETB_NCATTS_TB_FILL_VALUE;
-  unsigned short missing_value=CETB_NCATTS_TB_MISSING_VALUE;
   unsigned short valid_range[ 2 ] = {
     CETB_NCATTS_TB_MIN,
     CETB_NCATTS_TB_MAX
@@ -228,7 +225,6 @@ void test_cetb_tbs( void ) {
   float sample_num_samples0 = 254;
   float sample_num_samples1 = 100;
   float float_fill_value=-1.;
-  float float_missing_value=-2.;
   float float_valid_range[ 2 ] = {
     0.0,
     10000.
@@ -247,7 +243,6 @@ void test_cetb_tbs( void ) {
 			      "SIR TB",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
@@ -256,7 +251,6 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_INT_MESSAGE( 0, status, "adding TB" );
   
   fill_value = CETB_NCATTS_TB_STDDEV_FILL_VALUE;
-  missing_value = CETB_NCATTS_TB_STDDEV_MISSING_VALUE;
   valid_range[ 0 ] = CETB_NCATTS_TB_STDDEV_MIN;
   valid_range[ 1 ] = CETB_NCATTS_TB_STDDEV_MAX;
   status = cetb_file_add_var( cetb, "TB_std_dev",
@@ -267,7 +261,6 @@ void test_cetb_tbs( void ) {
 			      "SIR TB Std Dev",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_STDDEV_SCALE_FACTOR,
@@ -283,7 +276,6 @@ void test_cetb_tbs( void ) {
 			      "SIR TB Dump Variable",
 			      CETB_FILE_TB_UNIT,
 			      &float_fill_value,
-			      &float_missing_value,
 			      &float_valid_range,
 			      CETB_NO_PACK,
 			      0.0,
@@ -303,7 +295,6 @@ void test_cetb_tbs( void ) {
 			      "SIR TB Number of Measurements",
 			      "count",
 			      &ubyte_fill_value,
-			      NULL,
 			      &ubyte_valid_range,
 			      CETB_NO_PACK,
 			      0.0,
@@ -323,7 +314,6 @@ void test_cetb_tbs( void ) {
 			      "SIR TB Time of Day",
 			      "minutes since 1987-01-01 00:00:00",
 			      &short_fill_value,
-			      NULL,
 			      &short_valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
@@ -373,13 +363,9 @@ void test_cetb_tbs( void ) {
   TEST_ASSERT_EQUAL_STRING_MESSAGE( CETB_FILE_TB_UNIT, att_p, "TB units" );
   free( att_p );
 
-  /* _FillValue, missing_value and valid_range */
+  /* _FillValue and valid_range */
   status = nc_inq_var_fill( nc_fileid, tb_var_id, NULL, &fill_value );
   TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_FILL_VALUE, fill_value, "TB _FillValue" );
-  status = nc_get_att_ushort( nc_fileid, tb_var_id, "missing_value", &missing_value );
-  TEST_ASSERT_EQUAL_INT_MESSAGE( CETB_NCATTS_TB_MISSING_VALUE, missing_value,
-				 "TB missing_value" );
-  
 
   status = nc_get_att_ushort( nc_fileid, tb_var_id, "valid_range", valid_range );
   TEST_ASSERT_EQUAL_INT_MESSAGE( NC_NOERR, status, nc_strerror( status ) );

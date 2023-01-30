@@ -93,7 +93,7 @@ void test_cetb_morning_ltod( void ) {
 			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N25km_F13_SSMI_M_19H_19910101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename,
 			    cetb->filename );
@@ -113,7 +113,6 @@ void test_cetb_morning_ltod( void ) {
 			      "SIR TB",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
@@ -129,7 +128,7 @@ void test_cetb_morning_ltod( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-M-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N25km_F13_SSMI_M_19H_19910101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );
@@ -163,7 +162,7 @@ void test_cetb_evening_ltod( void ) {
 			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-E-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N25km_F13_SSMI_E_19H_19910101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   
@@ -182,7 +181,6 @@ void test_cetb_evening_ltod( void ) {
 			      "SIR TB",
 			      CETB_FILE_TB_UNIT,
 			      &fill_value,
-			      &missing_value,
 			      &valid_range,
 			      CETB_PACK,
 			      (float) CETB_NCATTS_TB_SCALE_FACTOR,
@@ -198,7 +196,7 @@ void test_cetb_evening_ltod( void ) {
   cetb_file_close( cetb );
 
   /* Confirm the expected values are in the output file */
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N25km-F13_SSMI-1991001-19H-E-SIR-CSU-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N25km_F13_SSMI_E_19H_19910101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   TEST_ASSERT_TRUE( NC_NOERR == status );

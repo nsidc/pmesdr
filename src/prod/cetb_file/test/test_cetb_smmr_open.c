@@ -59,7 +59,7 @@ void setUp( void ) {
 			 factor, platform_id, sensor_id, year, doy, beam_id,
 			 direction_id, reconstruction_id, producer_id, "test" );
   TEST_ASSERT_NOT_NULL( cetb );
-  sprintf( filename, "%s/NSIDC-0630-EASE2_N12.5km-NIMBUS7_SMMR-1984001-06H-M-SIR-JPL-v%.1f.nc",
+  sprintf( filename, "%s/NSIDC0630_SIR_EASE2_N12.5km_NIMBUS7_SMMR_M_06H_19840101_v%.1f.nc",
 	   dirname, CETB_VERSION_ID );
   TEST_ASSERT_EQUAL_STRING( filename, cetb->filename );
   TEST_ASSERT_EQUAL_INT( direction_id, cetb->direction_id );
