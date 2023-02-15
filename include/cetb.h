@@ -306,7 +306,7 @@ static const cetb_sensor_id cetb_platform_to_sensor[] = {
 static const char *cetb_NSIDC_dataset_id[] = {
   "NSIDC0630",
   "NSIDC-0763",
-  "NSIDC-0738"
+  "NSIDC0738"
 };
 
 /* enum to index into the cetb_NSIDC_dataset_id array */
