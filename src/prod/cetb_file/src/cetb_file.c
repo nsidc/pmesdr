@@ -2725,6 +2725,8 @@ static char *set_source_value( cetb_file_class *this ) {
   if ( CETB_AMSRE == this->sensor_id ) {
     if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
+    } else if ( CETB_PPS_XCAL == this->producer_id ) {
+      strcat( source_value, "PPS XCAL " );
     } else {
       valid_flag = 0;
     }
@@ -2735,6 +2737,8 @@ static char *set_source_value( cetb_file_class *this ) {
       strcat( source_value, "CSU SSM/I FCDR " );
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSM/I V7 " );
+    } else if ( CETB_PPS_XCAL == this->producer_id ) {
+      strcat( source_value, "PPS XCAL " );
     } else {
       valid_flag = 0;
     }
