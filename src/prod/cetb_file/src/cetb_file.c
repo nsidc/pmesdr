@@ -2031,7 +2031,7 @@ int set_all_dimensions( cetb_file_class *this ) {
   status = set_dimension( this, "time", NC_UNLIMITED, &days_since_epoch,
 			  "time", "ANSI date",
 			  units,
-			  "gregorian",
+			  "standard",
 			  "T",
 			  valid_range,
 			  &( this->time_dim_id ) );
@@ -2590,7 +2590,7 @@ int yyyydoy_to_days_since_epoch( int year, int doy,
 }
 
 /*
- * yyyydoy_to_yyyymmdd - convert day-of-year to gregorian date
+ * yyyydoy_to_yyyymmdd - convert day-of-year to gregorian/standard date
  *
  *  input :
  *    year : year
@@ -2726,7 +2726,7 @@ static char *set_source_value( cetb_file_class *this ) {
     if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "PPS XCAL " );
+      strcat( source_value, "10.5067/GPM " );
     } else {
       valid_flag = 0;
     }
@@ -2738,7 +2738,7 @@ static char *set_source_value( cetb_file_class *this ) {
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSM/I V7 " );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "PPS XCAL " );
+      strcat( source_value, "10.5067/GPM " );
     } else {
       valid_flag = 0;
     }
@@ -2750,7 +2750,7 @@ static char *set_source_value( cetb_file_class *this ) {
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSMIS V7 " );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "PPS XCAL " );
+      strcat( source_value, "10.5067/GPM " );
     } else if ( CETB_CSU_ICDR == this->producer_id ) {
       strcat( source_value, "CSU SSMIS ICDR " );
     } else {
@@ -2776,7 +2776,7 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_AMSR2 == this->sensor_id ) ) {
     if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "PPS XCAL " );
+      strcat( source_value, "10.5067/GPM " );
     } else {
       valid_flag = 0;
     }
