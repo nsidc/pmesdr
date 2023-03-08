@@ -109,29 +109,25 @@ static double cetb_longitude_extent[CETB_NUMBER_BASE_RESOLUTIONS]
 
 static const char *cetb_geospatial_bounds[CETB_NUMBER_BASE_RESOLUTIONS]
                                          [CETB_NUMBER_PROJECTIONS] = {
-  { "EPSG:3475", "EPSG:3474",
+  { "POLYGON((0.0 -180.0, 90.0 -180.0, 90.0 180.0, 0.0 180.0, 0.0 -180.0))",
+    "POLYGON((-90.0 -180.0, 0.0 -180.0, 0.0 180.0, -90.0 180.0, -90.0 -180.0))",
     "POLYGON((-67.057541 -180.000000, -67.057541 180.000000, 67.057541 180.000000,"
     "67.057541 -180.000000, -67.057541 -180.000000))" },
-  { "EPSG:3475", "EPSG:3474",
+  { "POLYGON((0.0 -180.0, 90.0 -180.0, 90.0 180.0, 0.0 180.0, 0.0 -180.0))",
+    "POLYGON((-90.0 -180.0, 0.0 -180.0, 0.0 180.0, -90.0 180.0, -90.0 -180.0))",
     "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, "
     "85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" },
-  { "EPSG:3475", "EPSG:3474",
+  { "POLYGON((0.0 -180.0, 90.0 -180.0, 90.0 180.0, 0.0 180.0, 0.0 -180.0))",
+    "POLYGON((-90.0 -180.0, 0.0 -180.0, 0.0 180.0, -90.0 180.0, -90.0 -180.0))",
     "POLYGON((-85.0445664 -180.000000, -85.0445664 180.000000, "
     "85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" }
-};
-
-static const char *cetb_geospatial_bounds_crs[CETB_NUMBER_BASE_RESOLUTIONS]
-                                             [CETB_NUMBER_PROJECTIONS] = {
-  { "EPSG:6931", "EPSG:6932", "EPSG:6933" },
-  { "EPSG:6931", "EPSG:6932", "EPSG:6933" },
-  { "EPSG:6931", "EPSG:6932", "EPSG:6933" }
 };
 
 /*
  * Grid resolution strings: string to match the names specified on the ATBD,
  * which in turn match the authoritative gpd filenames
  * In the case of N or S projections, these are exact.
- * For T projections, they are nominal (but used tin the gpd names, nonetheless).
+ * For T projections, they are nominal (but used in the gpd names, nonetheless).
  */
 static const char
 *cetb_resolution_name[CETB_NUMBER_BASE_RESOLUTIONS][CETB_MAX_RESOLUTION_FACTOR+1] = {
