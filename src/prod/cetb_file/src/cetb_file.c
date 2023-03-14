@@ -1874,6 +1874,16 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   	     __FUNCTION__, "geospatial_lon_max", nc_strerror( status ) );
     return 1;
   }
+  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds_crs", 
+				   strlen(cetb_geospatial_bounds_crs
+					  [this->resolution_id]
+					  [this->region_id% CETB_NUMBER_BASE_RESOLUTIONS]),
+				   cetb_geospatial_bounds_crs[this->resolution_id]
+				   [ this->region_id% CETB_NUMBER_BASE_RESOLUTIONS ] ) ) ) {
+    fprintf( stderr, "%s: Error setting %s: %s.\n",
+  	     __FUNCTION__, att_name, nc_strerror( status ) );
+    return 1;
+  }
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "geospatial_bounds", 
 				   strlen(cetb_geospatial_bounds
 					  [this->resolution_id]

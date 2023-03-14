@@ -123,6 +123,13 @@ static const char *cetb_geospatial_bounds[CETB_NUMBER_BASE_RESOLUTIONS]
     "85.0445664 180.000000, 85.0445664 -180.000000, -85.0445664 -180.000000))" }
 };
 
+static const char *cetb_geospatial_bounds_crs[CETB_NUMBER_BASE_RESOLUTIONS]
+                                             [CETB_NUMBER_PROJECTIONS] = {
+  { "EPSG:6931", "EPSG:6932", "EPSG:6933" },
+  { "EPSG:6931", "EPSG:6932", "EPSG:6933" },
+  { "EPSG:6931", "EPSG:6932", "EPSG:6933" }
+};
+  
 /*
  * Grid resolution strings: string to match the names specified on the ATBD,
  * which in turn match the authoritative gpd filenames
