@@ -134,9 +134,9 @@ do
     fi
     hemi=`echo $basen | grep -o EASE2_.*km`
     if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
-	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_alpine/${src}/" >> ${outfile}
-	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.premet archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_alpine/${src}/" >> ${outfile}
-	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.spatial archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_alpine/${src}/" >> ${outfile}
+	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_v2/${src}/" >> ${outfile}
+	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.premet archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_v2/${src}/" >> ${outfile}
+	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file}.spatial archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_v2/${src}/" >> ${outfile}
 	echo "generate_premetandspatial.py ${file}" >> ${outfile_ps}
     else
 	echo "rsync -avz ${file} /pl/active/PMESDR/${pl_top}/${sat_top}/${hemi}/${year}/" >> ${outfile}

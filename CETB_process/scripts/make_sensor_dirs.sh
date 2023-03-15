@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 1 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -gt 2 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] SRC"
     echo "  Creates all the required sensor directories for running"
@@ -13,7 +13,8 @@ if [ "$1" == "-h" ] || [ "$#" -ne 1 ] ; then
 fi
 
 SRC=$1
-scratchdir=/scratch/summit/${USER}
+top_level=$2
+scratchdir=/scratch/alpine/${USER}/${top_level}
 echo "Making ${scratchdir} processing directories for ${SRC}..."
 
 for subdir in ${SRC} \

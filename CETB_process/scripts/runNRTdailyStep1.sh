@@ -77,7 +77,7 @@ while getopts "r:t:h" opt; do
 	esac
 done
 
-source /projects/moha2290/measures-byu-alpine/src/prod/alpine_set_pmesdr_environment.sh
+source /projects/moha2290/measures-byu-v2/src/prod/alpine_set_pmesdr_environment.sh
 date
 
 shift $(($OPTIND - 1))
