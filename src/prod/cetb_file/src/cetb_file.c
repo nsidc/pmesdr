@@ -1819,25 +1819,15 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
     return 1;
   }
   
-  sprintf( geospatial_resolution, "%.2f",
-	   cetb_exact_scale_m[ this->region_id ][ this->factor ] );
-  strcpy( att_name, "geospatial_x_resolution" );
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, att_name, 
-				   strlen( geospatial_resolution ),
-				   geospatial_resolution ) ) ) {
-    fprintf( stderr, "%s: Error setting %s: %s.\n",
-  	     __FUNCTION__, att_name, nc_strerror( status ) );
+  if ( ( status = nc_put_att_text( this->fid, crs_id, "GeoTransform",
+				   strlen( cetb_geotransform[this->region_id][this->resolution_id] ),
+				   cetb_geotransform[this->region_id][this->resolution_id] ) ) ) {
+    fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
+  	     __FUNCTION__, "GeoTransform", cetb_geotransform[this->region_id][this->resolution_id],
+	     nc_strerror( status ) );
     return 1;
   }
-  strcpy( att_name, "geospatial_y_resolution" );
-  if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, att_name, 
-				   strlen( geospatial_resolution ),
-				   geospatial_resolution ) ) ) {
-    fprintf( stderr, "%s: Error setting %s: %s.\n",
-  	     __FUNCTION__, att_name, nc_strerror( status ) );
-    return 1;
-  }
-
+  
   if ( ( status = nc_put_att_double( this->fid, NC_GLOBAL, "geospatial_lat_min", 
 				     NC_DOUBLE, 1,
 				     &(cetb_latitude_extent[this->resolution_id]
@@ -2726,7 +2716,7 @@ static char *set_source_value( cetb_file_class *this ) {
     if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM " );
+      strcat( source_value, "10.5067/GPM/AQUA/AMSRE/1C/07" );
     } else {
       valid_flag = 0;
     }
@@ -2738,7 +2728,9 @@ static char *set_source_value( cetb_file_class *this ) {
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSM/I V7 " );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM " );
+      strcat( source_value, "10.5067/GPM/SSMI/" );
+      strcat( source_value, cetb_platform_id_name[this->platform_id] );
+      strcat( source_value, "/1C/07" );
     } else {
       valid_flag = 0;
     }
@@ -2750,7 +2742,9 @@ static char *set_source_value( cetb_file_class *this ) {
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSMIS V7 " );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM " );
+      strcat( source_value, "10.5067/GPM/SSMIS" );
+      strcat( source_value, cetb_platform_id_name[this->platform_id] );
+      strcat( source_value, "/1C/07" );
     } else if ( CETB_CSU_ICDR == this->producer_id ) {
       strcat( source_value, "CSU SSMIS ICDR " );
     } else {
@@ -2776,7 +2770,7 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_AMSR2 == this->sensor_id ) ) {
     if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM " );
+      strcat( source_value, "10.5067/GPM/GCOMW1/AMSR2/1C/07" );
     } else {
       valid_flag = 0;
     }
