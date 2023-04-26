@@ -583,14 +583,14 @@ int main(int argc,char *argv[])
        */
       if ( CETB_AQUA == cetb_platform ) {
 	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-			     (int)AMSRE_89H_A, (int)AMSRE_89H_B);
+			     (int)AMSRE_89AH, (int)AMSRE_89BH);
 	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-			     (int)AMSRE_89V_A, (int)AMSRE_89V_B);
+			     (int)AMSRE_89AV, (int)AMSRE_89BV);
       } else if ( CETB_GCOMW1 == cetb_platform ) {
 	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-			     (int)AMSR2_89H_A, (int)AMSR2_89H_B);
+			     (int)AMSR2_89AH, (int)AMSR2_89BH);
 	combine_setup_files( outpath, &save_area, 1 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-			     (int)AMSR2_89V_A, (int)AMSR2_89V_B);
+			     (int)AMSR2_89AV, (int)AMSR2_89BV);
       }
       fprintf( stderr, "%s: First file to be read\n", __FILE__ );
     } else {
@@ -1266,16 +1266,16 @@ int main(int argc,char *argv[])
 	     have A channels then combine */
 	  if ( CETB_AQUA == cetb_platform ) {
 	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-				 (int)AMSRE_89H_A, (int)AMSRE_89H_B);
+				 (int)AMSRE_89AH, (int)AMSRE_89BH);
 	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsre_channel,
-				 (int)AMSRE_89V_A, (int)AMSRE_89V_B);
+				 (int)AMSRE_89AV, (int)AMSRE_89BV);
 	  }
 	    
 	  if ( CETB_GCOMW1 == cetb_platform ) {
 	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-				 (int)AMSR2_89H_A, (int)AMSR2_89H_B);
+				 (int)AMSR2_89AH, (int)AMSR2_89BH);
 	    combine_setup_files( outpath, &save_area, 2 , (int *)cetb_ibeam_to_cetb_amsr2_channel,
-				 (int)AMSR2_89V_A, (int)AMSR2_89V_B);
+				 (int)AMSR2_89AV, (int)AMSR2_89BV);
 	  }
 	    
 	  if ( NULL != save_area.reg_lu[j] ) {
@@ -2353,19 +2353,19 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
     case AMSRE_36V:
       *box_size = 22;
       break;
-    case AMSRE_89H_A:
-    case AMSRE_89V_A:
+    case AMSRE_89AH:
+    case AMSRE_89AV:
       *box_size = 10;
       break;
-    case AMSRE_89H_B:
-    case AMSRE_89V_B:
+    case AMSRE_89BH:
+    case AMSRE_89BV:
       *box_size = 12;
       break;
     default:
       *box_size = -1;
       fprintf( stderr, "%s: bad channel number %d\n", __FUNCTION__, ibeam );
     }
-  } else if ( CETB_SSMIS == id ) {
+  }  else if ( CETB_SSMIS == id ) {
     switch ( cetb_ibeam_to_cetb_ssmis_channel[ibeam] ) {
     case SSMIS_19H:
     case SSMIS_19V:
@@ -2418,6 +2418,10 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
     }
   } else if ( CETB_AMSR2 == id ) {
     switch ( cetb_ibeam_to_cetb_amsr2_channel[ibeam] ) {
+    case AMSR2_06H:
+    case AMSR2_06V:
+      *box_size = 20;
+      break;
     case AMSR2_10H:
     case AMSR2_10V:
       *box_size = 20;
@@ -2434,12 +2438,12 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
     case AMSR2_36V:
       *box_size = 24;
       break;
-    case AMSR2_89H_A:
-    case AMSR2_89V_A:
+    case AMSR2_89AH:
+    case AMSR2_89AV:
       *box_size = 20;
       break;
-    case AMSR2_89H_B:
-    case AMSR2_89V_B:
+    case AMSR2_89BH:
+    case AMSR2_89BV:
       *box_size = 20;
       break;
     default:
@@ -2668,8 +2672,8 @@ void combine_setup_files( char *outpath, region_save *a, int execution_flag, int
 	       && ( a->sav_ascdes[sub_count] == a->sav_ascdes[count] ) ) {
 	    /* depending on the execution_flag either
 	       - close and delete the file that won't be used and save file id
-	         for the setup file for AMSRE_89H_A to the file id for
-		 AMSRE_89H_B or
+	         for the setup file for AMSRE_89AH to the file id for
+		 AMSRE_89BH or
 	       - set the file id to NULL */
 	    if ( execution_flag == 1 ) {
 	      fclose( a->reg_lu[count] );

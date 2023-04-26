@@ -963,7 +963,7 @@ int assign_channels( gsx_class *this, char *channel ) {
     strcpy( this->channel_names[count], channel );
     *(this->channel_names[count]+strlen(channel)) = '\0';
   } else {
-    fprintf( stderr, "%s: channel name not found in list\n", __FUNCTION__ );
+    fprintf( stderr, "%s: channel name %s not found in list\n", __FUNCTION__, channel );
   }
 
   return status;

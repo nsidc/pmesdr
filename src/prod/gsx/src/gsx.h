@@ -90,8 +90,6 @@ static const char *gsx_ssmis_channel_name[] = {
 };
 
 static const char *gsx_amsre_channel_name[] = {
-  "brightness_temperature_7H",
-  "brightness_temperature_7V",
   "brightness_temperature_10.7H",
   "brightness_temperature_10.7V",
   "brightness_temperature_18H",
@@ -100,10 +98,10 @@ static const char *gsx_amsre_channel_name[] = {
   "brightness_temperature_23V",
   "brightness_temperature_37H",
   "brightness_temperature_37V",
-  "brightness_temperature_89H_A",
-  "brightness_temperature_89V_A",
-  "brightness_temperature_89H_B",
-  "brightness_temperature_89V_B"
+  "brightness_temperature_89AH",
+  "brightness_temperature_89AV",
+  "brightness_temperature_89BH",
+  "brightness_temperature_89BV"
 };
 
 static const char *gsx_smmr_channel_name[] = {
@@ -126,6 +124,8 @@ static const char *gsx_smap_channel_name[] = {
 };
 
 static const char *gsx_amsr2_channel_name[] = {
+  "brightness_temperature_6.9H",
+  "brightness_temperature_6.9V",
   "brightness_temperature_10.7H",
   "brightness_temperature_10.7V",
   "brightness_temperature_18H",
