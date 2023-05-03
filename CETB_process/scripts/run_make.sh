@@ -21,10 +21,9 @@ envpath=$2
 top_level=$3
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_make_list
 source ${envpath}/alpine_set_pmesdr_environment.sh
-ml intel/2022.1.2
-ml gnu_parallel
+ml loadbalance/0.2
 ml
 date
-parallel -a $file
+mpirun lb $file
 date
 

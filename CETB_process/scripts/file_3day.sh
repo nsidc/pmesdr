@@ -31,8 +31,8 @@ error_exit() {
     exit 1
 }
 
-enddaydate=`date -d "$year-01-01 + $(( ${stopdoy} - 1 )) days" +%d`
-startdaydate=`date -d "$year-01-01 + $(( ${startdoy} - 1 )) days" +%d`
+enddaydate=`date -d "$year-01-01 + $(( 10#${stopdoy} - 1 )) days" +%d`
+startdaydate=`date -d "$year-01-01 + $(( 10#${startdoy} - 1 )) days" +%d`
 for doy in `seq ${startdoy} ${stopdoy}`
 do
 
@@ -61,7 +61,7 @@ do
 	monthp1=01
     fi
 
-    if [[ ${doy} -lt ${stopdoy} ]]
+    if [[ 10#${doy} -lt 10#${stopdoy} ]]
     then
 	cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
 	    ${direc}/${src}_lists/${src}.$year$month$day \

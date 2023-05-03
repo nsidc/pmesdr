@@ -77,7 +77,7 @@ if [[ "$thisHostname" == *"shas"* \
 
   if [[ "$thisHostname" == *"c3"* ]]; then
       echo "Setting netcdf for the icc compiler on Alpine"
-      module purge all
+#      module purge all
       ml intel/2022.1.2
       ml netcdf/4.8.1
       ml udunits/2.2.25

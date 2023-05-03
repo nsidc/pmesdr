@@ -19,12 +19,12 @@
 year=$1
 src=$2
 envpath=$3
-FILE=/scratch/summit/${USER}/${src}_scripts/${src}_setup_rm_${year}
-source ${envpath}/summit_set_pmesdr_environment.sh
-ml impi
-ml loadbalance
+FILE=/scratch/alpine/${USER}/${src}_scripts/${src}_setup_rm_${year}
+source ${envpath}/alpine_set_pmesdr_environment.sh
+ml intel/2022.1.2
+ml gnu_parallel
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb $FILE
+parallel -a $FILE
 date
 

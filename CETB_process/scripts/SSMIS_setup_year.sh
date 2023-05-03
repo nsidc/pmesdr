@@ -15,10 +15,10 @@ YEAR=$1
 SRC=$2
 envpath=$3
 top_level=$4
-source ${envpath}/summit_set_pmesdr_environment.sh
+source ${envpath}/alpine_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-direc=/scratch/summit/${USER}/${top_level}/
+direc=/scratch/alpine/${USER}/${top_level}/
 OUTDIR=${direc}/${SRC}_make/
 #
 #

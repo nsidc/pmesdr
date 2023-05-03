@@ -22,7 +22,7 @@ src=$1
 condaenv=$2
 top_level=$3
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/gsx_lb_list_alpine
-source activate $condaenv
+conda activate $condaenv
 ml intel/2022.1.2
 ml gnu_parallel
 ml

@@ -8,9 +8,9 @@
 #SBATCH --qos normal
 #SBATCH --job-name CETB_platform_setup
 #SBATCH --partition=amilan
-#SBATCH --time=04:00:00
-#SBATCH --ntasks=120
-#SBATCH --cpus-per-task=1
+#SBATCH --time=01:00:00
+#SBATCH --ntasks=16
+#SBATCH --cpus-per-task=3
 #SBATCH --account=ucb286_asc1
 #SBATCH -o output/setup_lb-%j.out
 #SBATCH --constraint=ib
@@ -23,10 +23,12 @@ envpath=$3
 top_level=$4
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_setup_list_${year}
 source ${envpath}/alpine_set_pmesdr_environment.sh
-ml intel/2022.1.2
-ml gnu_parallel
+module unload intel/2022.1.2
+ml
+ml gcc/11.2.0
+ml loadbalance/0.2
 ml
 date
-parallel -a ${file}
+mpirun lb ${file}
 date
 

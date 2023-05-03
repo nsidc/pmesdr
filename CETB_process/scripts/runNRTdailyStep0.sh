@@ -157,10 +157,11 @@ esac
 cur_dir=${PWD}
 echo "$PROGNAME: $suffix"
 echo "$PROGNAME: $platforms"
+echo "$PROGNAME: $fetch_file"
 
 # if -f is set download files from ftp
 if [[ $do_ftp ]]; then
-    source activate base
+    conda activate base
 #Go here so that correct secret files are used or SMAP downloaded to correct location
     cd ${run_dir}
     python ${fetch_file} || error_exit "Line $LINENO: ftp error."
