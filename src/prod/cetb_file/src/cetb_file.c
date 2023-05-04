@@ -2716,7 +2716,11 @@ static char *set_source_value( cetb_file_class *this ) {
     if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM/AQUA/AMSRE/1C/07" );
+      if ( AMSRE_06H == this->beam_id || AMSRE_06V == this->beam_id ) {
+	strcat( source_value, "JAXA" );
+      } else {
+	strcat( source_value, "https://doi.org/10.5067/GPM/AQUA/AMSRE/1C/07" );
+      }
     } else {
       valid_flag = 0;
     }
@@ -2728,7 +2732,7 @@ static char *set_source_value( cetb_file_class *this ) {
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSM/I V7 " );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM/SSMI/" );
+      strcat( source_value, "https://doi.org/10.5067/GPM/SSMI/" );
       strcat( source_value, cetb_platform_id_name[this->platform_id] );
       strcat( source_value, "/1C/07" );
     } else {
@@ -2742,7 +2746,7 @@ static char *set_source_value( cetb_file_class *this ) {
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSMIS V7 " );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM/SSMIS" );
+      strcat( source_value, "https://doi.org/10.5067/GPM/SSMIS" );
       strcat( source_value, cetb_platform_id_name[this->platform_id] );
       strcat( source_value, "/1C/07" );
     } else if ( CETB_CSU_ICDR == this->producer_id ) {
@@ -2770,7 +2774,11 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_AMSR2 == this->sensor_id ) ) {
     if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "10.5067/GPM/GCOMW1/AMSR2/1C/07" );
+      if ( AMSR2_06H == this->beam_id || AMSR2_06V == this->beam_id ) {
+	strcat( source_value, "JAXA" );
+      } else {
+	strcat( source_value, "https://doi.org/10.5067/GPM/GCOMW1/AMSR2/1C/07" );
+      }
     } else {
       valid_flag = 0;
     }
