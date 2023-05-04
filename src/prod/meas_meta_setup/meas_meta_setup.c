@@ -182,6 +182,7 @@ int main(int argc,char *argv[])
   char prog_name[250];
   char ftempname[250];
   char *option;
+  char outname[350];
   
   int j,n;
   int nrec, iscan, iasc;
@@ -504,7 +505,9 @@ int main(int argc,char *argv[])
       }
       fprintf( stderr, "%s: *** There are no input files so exit\n", __FILE__ );
       for (iregion=0; iregion<save_area.nregions; iregion++) {
-	fclose(save_area.reg_lu[iregion]);
+	fclose( save_area.reg_lu[iregion] );
+	sprintf( outname, "%s/%s", outpath, save_area.sav_fname2[iregion] );
+	remove( outname );
 	save_area.reg_lu[iregion] = NULL;
       }
       exit(0);
