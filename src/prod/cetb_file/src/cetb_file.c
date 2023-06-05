@@ -2746,7 +2746,7 @@ static char *set_source_value( cetb_file_class *this ) {
     } else if ( CETB_RSS == this->producer_id ) {
       strcat( source_value, "RSS SSMIS V7 " );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
-      strcat( source_value, "https://doi.org/10.5067/GPM/SSMIS" );
+      strcat( source_value, "https://doi.org/10.5067/GPM/SSMIS/" );
       strcat( source_value, cetb_platform_id_name[this->platform_id] );
       strcat( source_value, "/1C/07" );
     } else if ( CETB_CSU_ICDR == this->producer_id ) {
