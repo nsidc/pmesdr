@@ -14,7 +14,7 @@ fi
 
 src=$1
 envpath=$2
-source ${envpath}/summit_set_pmesdr_environment.sh
+source ${envpath}/alpine_set_pmesdr_environment.sh
 
 # Clean up any prior sbatch file with same name
 outfile=${src}_premet_list_cetb

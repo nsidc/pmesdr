@@ -107,6 +107,7 @@ condaenv=$2
 
 # start sbatch for the next day
 sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
+echo "sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}"
 ml purge
 ml intel/2022.1.2
 ml gnu_parallel
