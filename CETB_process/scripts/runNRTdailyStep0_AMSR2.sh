@@ -18,7 +18,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
 #SBATCH --ntasks=20
-#SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep0AMSR2-%j.out
+#SBATCH -o /scratch/alpine/%u/NRTdaily_output/%x-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
@@ -71,7 +71,7 @@ do_ftp=
 ftp_string=""
 start_string="now+24hour"
 
-while getopts "f:t:h" opt; do
+while getopts "ft:h" opt; do
     case $opt in
 	f) do_ftp=1
 	   ftp_string="-f";;
@@ -95,12 +95,13 @@ echo "$PROGNAME: scratch directory $direc"
 
 shift $(($OPTIND - 1))
 
-# [[ "$#" -eq 1 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
+[[ "$#" -eq 1 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
 
-condaenv=gsx_test
+condaenv=$1
 echo "conda environment $condaenv"
 
 # start sbatch for the next day
+echo "sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0_AMSR2.sh ${ftp_string} ${arg_string} ${condaenv}"
 sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0_AMSR2.sh ${ftp_string} ${arg_string} ${condaenv}
 ml purge
 ml intel/2022.1.2
@@ -114,16 +115,13 @@ thisDate=$(date)
 echo "$PROGNAME: Begin on hostname=$thisHost on $thisDate"
 echo "$PROGNAME: SLURM_SCRATCH=$SLURM_SCRATCH"
 echo "$PROGNAME: SLURM_JOB_ID=$SLURM_JOB_ID"
-echo "$PROGNAME: with gsx_type=$gsx_type and condaenv=$condaenv base_resolution=$base_resolution"
+echo "$PROGNAME: running AMSR2 and condaenv=$condaenv"
 
-
-suffix="*.RT-H5"
 make_file="all_SSMIS_make_for_sensor.sh"
 platforms="AMSR2-L1C AMSR2-JAXA"
     
 
 cur_dir=${PWD}
-echo "$PROGNAME: $suffix"
 echo "$PROGNAME: $platforms"
 
 # if -f is set download files from ftp
@@ -132,9 +130,11 @@ if [[ $do_ftp ]]; then
     source activate base
 #Go here so that correct secret files are used or SMAP downloaded to correct location
     cd ${run_dir}
+    echo "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2_alpine.py"
     python  "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2_alpine.py" || error_exit "Line $LINENO: ftp error."
     echo "Done with ftp fetch for L1C"
-    source activate gsx_test
+    source activate $condaenv
+    echo "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_jaxa_v2_alpine.py"
     python "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_jaxa_v2_alpine.py" || error_exit "Line $LINENO: ftp error."
 # Change back to original directory
     echo "Done with ftp fetch for JAXA"    
@@ -151,7 +151,18 @@ if [[ $do_ftp ]]; then
 	    rm ${direc}/${src}_scripts/gsx_lb_list_alpine
 	    echo "removed old gsx_lb_file for ${src}"
 	fi
-	for file in `find ${direc}/${src} -name "*" -mtime 0`
+	case $src in
+	    *"L1C"*)
+		suffix="*.RT-H5"
+		echo "L1C suffix ${suffix}"
+		;;
+	    *"JAXA"*)
+		suffix="*.h5"
+		echo "JAXA suffix ${suffix}"
+		;;
+	esac
+	echo "suffix is ${suffix}"
+	for file in `find ${direc}/${src}/ -name "${suffix}" -mtime 0`
 	do
 	    basen=`basename ${file}`
 	    echo "gsx ${src} ${file} ${direc}/${src}_GSX/GSX_${basen}.nc.partial" \
@@ -166,9 +177,9 @@ if [[ $do_ftp ]]; then
 	rm ${direc}/AMSR2_scripts/gsx_lb_list_alpine
 	echo "removed old gsx_lb_file for AMSR2"
     fi
-    for file in `find ${direc}/AMSR2-L1C_GSX -name "GSX_*.nc.partial" -mtime 0`
+    for file in `find ${direc}/AMSR2-L1C_GSX -name "GSX_*.nc.partial"`
     do
-	echo "combine_amsr2_l1c_jaxa $file ${direc}/AMSR2-JAXA_GSX ${direc}/AMSR2_GSX" \
+	echo "combine_amsr_l1c_jaxa AMSR2 $file ${direc}/AMSR2-JAXA_GSX ${direc}/AMSR2_GSX" \
 	     >> ${direc}/AMSR2_scripts/gsx_lb_list_alpine
     done
     parallel -a ${direc}/AMSR2_scripts/gsx_lb_list_alpine || \
@@ -210,17 +221,16 @@ do
     ml udunits/2.2.25
     ml
     echo "parallel -a ${direc}/${src}_scripts/${src}_make_list${suffix}"
-    parallel -a ${direc}/${src}_scripts/${src}_make_list${suffix} || \
+    parallel -a ${direc}/${src}_scripts/${src}_make_list || \
 	error_exit "Line $LINENO: parallel meas_meta_make ${src} error."
 done
 
 #finally set off Step1
-#for src in $platforms
-#do
-#    echo "Start Step1 for ${src}"
-#    echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}"
-#    sbatch --dependency=afterok:$SLURM_JOB_ID --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}
-#done
+
+echo "Start Step1 for AMSR2"
+echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} AMSR2"
+sbatch --dependency=afterok:$SLURM_JOB_ID --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} AMSR2
+
 
 thisDate=$(date)
 echo "$PROGNAME: Done on hostname=$thisHost on $thisDate with this jobid=$SLURM_JOB_ID"

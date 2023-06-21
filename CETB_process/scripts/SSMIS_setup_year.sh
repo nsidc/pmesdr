@@ -6,7 +6,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 3 ] ; then
     echo "Arguments:"
     echo "  YEAR: 4-digit year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script"
     echo ""
     exit 1
 fi
@@ -15,10 +15,10 @@ YEAR=$1
 SRC=$2
 envpath=$3
 top_level=$4
-source ${envpath}/summit_set_pmesdr_environment.sh
+source ${envpath}/alpine_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-direc=/scratch/summit/${USER}/${top_level}/
+direc=/scratch/alpine/${USER}/${top_level}/
 OUTDIR=${direc}/${SRC}_make/
 #
 #

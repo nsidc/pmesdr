@@ -16,7 +16,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
 #SBATCH --ntasks=20
-#SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep0-%j.out
+#SBATCH -o /scratch/alpine/%u/NRTdaily_output/%x-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
@@ -106,7 +106,7 @@ gsx_type=$1
 condaenv=$2
 
 # start sbatch for the next day
-sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
+sbatch --begin=${start_string} --jobname=${gsx_type}-0Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
 ml purge
 ml intel/2022.1.2
 ml gnu_parallel
@@ -249,8 +249,8 @@ done
 for src in $platforms
 do
     echo "Start Step1 for ${src}"
-    echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}"
-    sbatch --dependency=afterok:$SLURM_JOB_ID --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}
+    echo "sbatch --account=$SLURM_JOB_ACCOUNT --jobname=$src-1Step --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}"
+    sbatch --dependency=afterok:$SLURM_JOB_ID --jobname=$src-1Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}
 done
 
 thisDate=$(date)

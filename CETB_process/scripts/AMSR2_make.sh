@@ -49,10 +49,10 @@ do
     MONTH=`date -d "$YEAR-01-01 + $DOYM1 days" +%m`
     DOYA=$( printf "%03g" $DOY )
 
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.10.NS.meta GCOMW1 $DOYA $DOYA $YEAR $TOPDIR/ref/amsr2-10hv_NS.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.6-10.NS.meta GCOMW1 $DOYA $DOYA $YEAR $TOPDIR/ref/amsr2-6-10hv_NS.def \
 	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
 	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
-    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.10.T.meta GCOMW1 $DOYA $DOYA $YEAR $TOPDIR/ref/amsr2-10hv_T.def \
+    echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.6-10.T.meta GCOMW1 $DOYA $DOYA $YEAR $TOPDIR/ref/amsr2-6-10hv_T.def \
 	    ${direc}/${SRC}_lists/$SRC.$YEAR$MONTH$DAY.NS" \
 	 >> ${direc}/${SRC}_scripts/${SRC}_make_list
     echo "$BINDIR/meas_meta_make $OUTDIR/$SRC.$DOYA.${YEAR}.18-23.NS.meta GCOMW1 $DOYA $DOYA $YEAR $TOPDIR/ref/amsr2-18-23hv_NS.def \

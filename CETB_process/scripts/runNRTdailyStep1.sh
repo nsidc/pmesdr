@@ -14,7 +14,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=12
 #SBATCH --cpus-per-task=4
-#SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep1-%j.out
+#SBATCH -o /scratch/alpine/%u/NRTdaily_output/%x--%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
@@ -142,5 +142,5 @@ parallel -j $SLURM_NTASKS -a ${SCRIPTDIR}/${src}_sir_list${suffix} || \
     error_exit "Line $LINENO: parallel sir ${src} error."
 
 #set off step 2 which copies files to the peta library and deletes the setup files
-echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${res_string} ${arg_string} ${src}"
-sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${res_string} ${arg_string} ${src}
+echo "sbatch --account=$SLURM_JOB_ACCOUNT --jobname=$src-2Step --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${res_string} ${arg_string} ${src}"
+sbatch --account=$SLURM_JOB_ACCOUNT --jobname=${src}-2Step --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep2.sh ${res_string} ${arg_string} ${src}
