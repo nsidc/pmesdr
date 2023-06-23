@@ -228,8 +228,8 @@ done
 #finally set off Step1
 
 echo "Start Step1 for AMSR2"
-echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} AMSR2"
-sbatch --dependency=afterok:$SLURM_JOB_ID --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} AMSR2
+echo "sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID --job-name=AMSR2_S1 ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} AMSR2"
+sbatch --dependency=afterok:$SLURM_JOB_ID --job-name=AMSR2_S1 --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} AMSR2
 
 
 thisDate=$(date)

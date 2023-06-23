@@ -101,11 +101,11 @@ if [[ -d /scratch/alpine/jeca4282/${src}_sir ]]; then
     for file in `find /scratch/alpine/jeca4282/${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
     do
 	basen=`basename $file`
-	year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`
+        year=`echo $basen | grep -o [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | sed 's/[0-9][0-9][0-9][0-9]$//'`
 	hemi=`echo $basen | grep -o EASE2_.*km`
 
-	echo "rsync -avz --chown=jeca4282:moha2290grp $file /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/" >> ${outfile1}
-	echo "chmod 664 /pl/active/PMESDR/nsidc0630_v1/${src}_SSMIS/${hemi}/${year}/${basen}" >> ${outfile2}
+	echo "rsync -avz --chown=jeca4282:moha2290grp $file /pl/active/PMESDR/nsidc0630_v2/${src}_SSMIS/${hemi}/${year}/" >> ${outfile1}
+	echo "chmod 664 /pl/active/PMESDR/nsidc0630_v2/${src}_SSMIS/${hemi}/${year}/${basen}" >> ${outfile2}
 
     done
     ml gnu_parallel

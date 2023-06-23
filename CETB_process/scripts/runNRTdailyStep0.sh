@@ -51,6 +51,8 @@ else
     echo "Not running as sbatch..."
     PROGNAME=${BASH_SOURCE[0]}
 fi
+thisScriptDir="$( cd "$( dirname "${PROGNAME}" )" && pwd )"
+echo "running from this directory ${thisScriptDir}"
 
 error_exit() {
     # Use for fatal program error
@@ -89,7 +91,7 @@ while getopts "fr:t:s:h" opt; do
 	esac
 done
 
-source /projects/moha2290/measures-byu-v2/src/prod/alpine_set_pmesdr_environment.sh
+source $thisScriptDir/../../src/prod/alpine_set_pmesdr_environment.sh
     
 date
 # Now set up sensor based on GSX type
@@ -106,7 +108,7 @@ gsx_type=$1
 condaenv=$2
 
 # start sbatch for the next day
-sbatch --begin=${start_string} --jobname=${gsx_type}-0Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
+sbatch --begin=${start_string} --job-name=${gsx_type}-0Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
 ml purge
 ml intel/2022.1.2
 ml gnu_parallel
@@ -163,7 +165,7 @@ if [[ $do_ftp ]]; then
     source activate base
 #Go here so that correct secret files are used or SMAP downloaded to correct location
     cd ${run_dir}
-    python ${fetch_file} || error_exit "Line $LINENO: ftp error."
+    python ${fetch_file} ${top_level} || error_exit "Line $LINENO: ftp error."
     echo "Done with ftp fetch from ${fetch_file}"
 # Change back to original directory
     cd ${cur_dir}
@@ -249,8 +251,8 @@ done
 for src in $platforms
 do
     echo "Start Step1 for ${src}"
-    echo "sbatch --account=$SLURM_JOB_ACCOUNT --jobname=$src-1Step --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}"
-    sbatch --dependency=afterok:$SLURM_JOB_ID --jobname=$src-1Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}
+    echo "sbatch --account=$SLURM_JOB_ACCOUNT --job-name=$src-1Step --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}"
+    sbatch --dependency=afterok:$SLURM_JOB_ID --job-name=$src-1Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep1.sh ${res_string} ${arg_string} ${src}
 done
 
 thisDate=$(date)

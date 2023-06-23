@@ -90,11 +90,11 @@ elif [[ ${src} == AMSR2 ]]
 then
     suffix=""
     sat_top=GCOMW1_${src}
-    pl_top=nsidc0763_v1
+    pl_top=nsidc0630_v2
 else
     suffix=SSMIS
     sat_top=${src}_${suffix}
-    pl_top=nsidc0763_v1
+    pl_top=nsidc0630_v2
 fi
 
 resolution_suffix=""
@@ -128,10 +128,7 @@ fi
 for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -2`
 do
     basen=`basename $file`
-    year=`echo $basen | grep -o ${src}_${suffix}-.... | sed 's/^.*-//'`
-    if [[ ${src} == AMSR2 ]]; then
-	year=`echo $basen | grep -o ${src}-.... | sed 's/^.*-//'`
-    fi
+    year=`echo $basen | grep -o [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | sed 's/[0-9][0-9][0-9][0-9]$//'`
     hemi=`echo $basen | grep -o EASE2_.*km`
     if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_v2/${src}/" >> ${outfile}
