@@ -442,7 +442,7 @@ int cetb_file_add_var( cetb_file_class *this,
   char *grid_mapping;
   char *coverage_content_type;
   unsigned char num_samples_max = CETB_NCATTS_TB_NUM_SAMPLES_MAX;
-  char *flag_meanings = "num_samples GE 255";
+  char *flag_meanings = "num_samples_GE_255";
 
   count[0] = 1;
   count[1] = rows;
