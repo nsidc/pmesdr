@@ -14,7 +14,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=12
 #SBATCH --cpus-per-task=4
-#SBATCH -o /scratch/alpine/%u/NRTdaily_output/%x--%j.out
+#SBATCH -o /scratch/alpine/%u/NRTdaily_output/%x-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org

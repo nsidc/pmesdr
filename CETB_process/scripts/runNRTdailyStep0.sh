@@ -54,6 +54,10 @@ fi
 thisScriptDir="$( cd "$( dirname "${PROGNAME}" )" && pwd )"
 echo "running from this directory ${thisScriptDir}"
 
+# set up conda correctly
+CONDA_BASE=$(conda info --base)
+source $CONDA_BASE/etc/profile.d/conda.sh
+
 error_exit() {
     # Use for fatal program error
     # Argument:
@@ -109,6 +113,7 @@ condaenv=$2
 
 # start sbatch for the next day
 sbatch --begin=${start_string} --job-name=${gsx_type}-0Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}
+echo "sbatch --begin=${start_string} --job-name=${gsx_type}-0Step --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0.sh ${ftp_string} ${res_string} ${arg_string} ${gsx_type} ${condaenv}"
 ml purge
 ml intel/2022.1.2
 ml gnu_parallel
@@ -162,7 +167,7 @@ echo "$PROGNAME: $platforms"
 
 # if -f is set download files from ftp
 if [[ $do_ftp ]]; then
-    source activate base
+    conda activate base
 #Go here so that correct secret files are used or SMAP downloaded to correct location
     cd ${run_dir}
     python ${fetch_file} ${top_level} || error_exit "Line $LINENO: ftp error."
@@ -172,7 +177,7 @@ if [[ $do_ftp ]]; then
 
 #after files are retrieved, create input file list for gsx of files with
 # modification date less than 1 day old
-    source activate $condaenv
+    conda activate $condaenv
     date
     for src in $platforms
     do

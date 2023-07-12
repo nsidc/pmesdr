@@ -52,6 +52,10 @@ fi
 thisScriptDir="$( cd "$( dirname "${PROGNAME}" )" && pwd )"
 echo "running from this directory ${thisScriptDir}"
 
+# set up conda correctly
+CONDA_BASE=$(conda info --base)
+source $CONDA_BASE/etc/profile.d/conda.sh
+
 error_exit() {
     # Use for fatal program error
     # Argument:
@@ -102,7 +106,7 @@ echo "conda environment $condaenv"
 
 # start sbatch for the next day
 echo "sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0_AMSR2.sh ${ftp_string} ${arg_string} ${condaenv}"
-sbatch --begin=${start_string} --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0_AMSR2.sh ${ftp_string} ${arg_string} ${condaenv}
+sbatch --begin=${start_string} --job-name=AMSR2_S0 --account=$SLURM_JOB_ACCOUNT ${PMESDR_RUN}/runNRTdailyStep0_AMSR2.sh ${ftp_string} ${arg_string} ${condaenv}
 ml purge
 ml intel/2022.1.2
 ml gnu_parallel
@@ -127,13 +131,12 @@ echo "$PROGNAME: $platforms"
 # if -f is set download files from ftp
 run_dir="/projects/${USER}/swathfetcher"
 if [[ $do_ftp ]]; then
-    source activate base
+    conda activate base
 #Go here so that correct secret files are used or SMAP downloaded to correct location
     cd ${run_dir}
     echo "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2_alpine.py"
     python  "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2_alpine.py" || error_exit "Line $LINENO: ftp error."
     echo "Done with ftp fetch for L1C"
-    source activate $condaenv
     echo "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_jaxa_v2_alpine.py"
     python "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_jaxa_v2_alpine.py" || error_exit "Line $LINENO: ftp error."
 # Change back to original directory
@@ -142,7 +145,7 @@ if [[ $do_ftp ]]; then
 
 #after files are retrieved, create input file list for gsx of files with
 # modification date less than 1 day old
-    source activate $condaenv
+    conda activate $condaenv
     date
     for src in $platforms
     do

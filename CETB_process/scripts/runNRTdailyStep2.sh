@@ -12,7 +12,7 @@
 #SBATCH --time=01:50:00
 #SBATCH --ntasks=6
 #SBATCH --nodes=1
-#SBATCH -o /scratch/alpine/%u/NRTdaily_output/runNRTdailyStep2-%j.out
+#SBATCH -o /scratch/alpine/%u/NRTdaily_output/%x-%j.out
 # Set the system up to notify upon completion
 #SBATCH --mail-type=FAIL,REQUEUE,STAGE_OUT
 #SBATCH --mail-user=mhardman@nsidc.org
