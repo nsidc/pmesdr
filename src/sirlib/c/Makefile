@@ -30,7 +30,13 @@ ifeq ($(LOCALE),ALPINEicc)
   CFLAGS = -I./include -I$(INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
   ARFLAGS = crs
 endif
-
+ifeq ($(LOCALE),CUMULUSicc)
+  $(info Build location: $(LOCALE))
+  CC = icc
+  AR = xiar
+  CFLAGS = -I./include -I$(INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div # -Zp8
+  ARFLAGS = crs
+endif
 
 all :  $(LIB)
 

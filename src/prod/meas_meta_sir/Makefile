@@ -33,11 +33,11 @@ INSTALL = cp -f -p
 MKDIR = mkdir -p
 PYTHON = python
 RM = rm -fr
-ifeq ($(LOCALE),SUMMITicc)
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
-ifeq ($(LOCALE),ALPINEicc)
+ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
@@ -47,11 +47,11 @@ endif
 #       these may be things that are machine-specific
 #
 CONFIG_CFLAGS = -m64 -O3
-ifeq ($(LOCALE),SUMMITicc)
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CONFIG_FLAGS = 
 endif
-ifeq ($(LOCALE),ALPINEicc)
+ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   CONFIG_FLAGS = 
 endif
@@ -74,16 +74,6 @@ else ifeq ($(LOCALE),int.nsidc.org)
   HDF5_LIBDIR = /usr/lib
   HDFLIB1 = hdf5_serial_hl
   HDFLIB2 = hdf5_serial
-else ifeq ($(LOCALE),SUMMITicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_INCDIR = ${CURC_HDF5_INC}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
-  HDFLIB1 = hdf5_hl
-  HDFLIB2 = hdf5
-  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
-  UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
@@ -94,6 +84,16 @@ else ifeq ($(LOCALE),ALPINEicc)
   HDFLIB2 = hdf5
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
+else ifeq ($(LOCALE),CUMULUSicc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib/x86_64-linux-gnu
+  HDF5_INCDIR = /usr/include/hdf5/serial
+  HDF5_LIBDIR = /usr/lib/x86_64-linux-gnu
+  HDFLIB1 = hdf5_serial_hl
+  HDFLIB2 = hdf5_serial
+  UDUNITS_INCDIR = /usr/local/include
+  UDUNITS_LIBDIR = /usr/local/lib
 else
   $(info Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
@@ -108,7 +108,7 @@ LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
 	-l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS) 
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) \
 	-Wall -Wno-unused-variable -Wno-unused-but-set-variable
-ifeq ($(LOCALE),SUMMITicc)
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
 	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
@@ -116,11 +116,11 @@ ifeq ($(LOCALE),SUMMITicc)
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) \
 	-O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 endif
-ifeq ($(LOCALE),ALPINEicc)
+ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
 	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
-	-lhdf5_hl -lhdf5 -lz $(SYSLIBS) 
+	-l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS) 
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) \
 	-O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 endif

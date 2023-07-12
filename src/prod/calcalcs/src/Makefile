@@ -32,13 +32,13 @@ MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
 ARFLAGS = ruv
-ifeq ($(LOCALE),SUMMITicc)
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
   ARFLAGS = crs
 endif
-ifeq ($(LOCALE),ALPINEicc)
+ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
@@ -54,18 +54,20 @@ ifeq ($(LOCALE),int.nsidc.org)
   HDF5_LIBDIR = /usr/lib
   ZLIB_LIBDIR = /usr/lib
   UDUNITS_INCDIR = /usr/include
-else ifeq ($(LOCALE),SUMMITicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
-  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
 else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
+else ifeq ($(LOCALE),CUMULUSicc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib/x86_64-linux-gnu
+  HDF5_INCDIR = /usr/include/hdf5/serial
+  HDF5_LIBDIR = /usr/lib/x86_64-linux-gnu
+  UDUNITS_INCDIR = /usr/local/include
+  UDUNITS_LIBDIR = /usr/local/lib
 else
   $(info Assuming default LOCALE=BYU)
   NETCDF4_LIBDIR = /usr/lib64
@@ -85,16 +87,16 @@ endif
 ################################################################################
 CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 
-# summit configuration is TBD
-ifeq ($(LOCALE),SUMMITicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
-	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
-	-Wremarks -wd981 -wd869 -wd2415
-endif
+# alpine or CUMULUS configuration
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
+	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
+	-Wremarks -wd981 -wd869 -wd2415
+endif
+ifeq ($(LOCALE),CUMULUSicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'CUMULUSicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
 	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
 	-Wremarks -wd981 -wd869 -wd2415
 endif

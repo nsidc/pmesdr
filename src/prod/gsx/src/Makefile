@@ -28,12 +28,12 @@ LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
-ifeq ($(LOCALE),SUMMITicc)
+ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
 endif
-ifeq ($(LOCALE),ALPINEicc)
+ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
@@ -60,18 +60,20 @@ ifeq ($(LOCALE),int.nsidc.org)
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib
   ZLIB_LIBDIR = /usr/lib
-else ifeq ($(LOCALE),SUMMITicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_INCDIR = ${CURC_HDF5_INC}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
 else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_INCDIR = ${CURC_HDF5_INC}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
+else ifeq ($(LOCALE),CUMULUSicc)
+  $(info Build location: $(LOCALE))
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib/x86_64-linux-gnu
+  HDF5_INCDIR = /usr/include/hdf5/serial
+  HDF5_LIBDIR = /usr/lib/x86_64-linux-gnu
+  UDUNITS_INCDIR = /usr/local/include
+  UDUNITS_LIBDIR = /usr/local/lib
 else
   $(info Assuming default LOCALE=BYU)
   NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
@@ -86,14 +88,14 @@ endif
 #------------------------------------------------------------------------
 CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ARFLAGS = ruv
-ifeq ($(LOCALE),SUMMITicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'SUMMITicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
-  ARFLAGS = crs
-endif
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
+  ARFLAGS = crs
+endif
+ifeq ($(LOCALE),CUMULUSicc)
+  $(info Build location: $(LOCALE))
+  CFLAGS = -D'CUMULUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
   ARFLAGS = crs
 endif
 
