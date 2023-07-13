@@ -112,6 +112,7 @@ ml intel/2022.1.2
 ml gnu_parallel
 source /projects/${USER}/miniconda3/bin/activate
 ml
+conda activate $condaenv
 date
 
 thisHost=$SLURM_NODELIST
@@ -131,7 +132,6 @@ echo "$PROGNAME: $platforms"
 # if -f is set download files from ftp
 run_dir="/projects/${USER}/swathfetcher"
 if [[ $do_ftp ]]; then
-    conda activate base
 #Go here so that correct secret files are used or SMAP downloaded to correct location
     cd ${run_dir}
     echo "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2_alpine.py"
@@ -145,7 +145,6 @@ if [[ $do_ftp ]]; then
 
 #after files are retrieved, create input file list for gsx of files with
 # modification date less than 1 day old
-    conda activate $condaenv
     date
     for src in $platforms
     do
