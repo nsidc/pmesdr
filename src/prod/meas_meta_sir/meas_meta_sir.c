@@ -1054,7 +1054,7 @@ int main(int argc, char **argv)
   			       CETB_PACK,
   			       (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
   			       (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
-  			       "gregorian" ) ) {
+  			       "standard" ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing Tb time (P) to %s.\n",
 	     __FILE__, cetb_sir->filename );
@@ -1290,7 +1290,7 @@ int main(int argc, char **argv)
   			       CETB_PACK,
   			       (float) CETB_NCATTS_TB_TIME_SCALE_FACTOR,
   			       (float) CETB_NCATTS_TB_TIME_ADD_OFFSET,
-  			       "gregorian" ) ) {
+  			       "standard" ) ) {
     errors++;
     fprintf( stderr, "%s: Error writing GRD Tb time (P) to file %s.\n",
 	     __FILE__, cetb_grd->filename );
