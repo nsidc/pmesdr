@@ -54,7 +54,7 @@ echo "running from this directory ${thisScriptDir}"
 
 # set up conda correctly
 CONDA_BASE=$(conda info --base)
-source $CONDA_BASE/etc/profile.d/conda.sh
+#source $CONDA_BASE/etc/profile.d/conda.sh
 
 error_exit() {
     # Use for fatal program error
@@ -113,6 +113,7 @@ ml gnu_parallel
 source /projects/${USER}/miniconda3/bin/activate
 ml
 conda activate $condaenv
+echo "conda activate $condaenv"
 date
 
 thisHost=$SLURM_NODELIST

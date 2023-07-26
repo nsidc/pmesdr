@@ -56,7 +56,7 @@ echo "running from this directory ${thisScriptDir}"
 
 # set up conda correctly
 CONDA_BASE=$(conda info --base)
-source $CONDA_BASE/etc/profile.d/conda.sh
+#source $CONDA_BASE/etc/profile.d/conda.sh
 
 error_exit() {
     # Use for fatal program error
