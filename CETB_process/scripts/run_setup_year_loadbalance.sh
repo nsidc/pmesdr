@@ -31,7 +31,7 @@ module purge
 module load loadbalance/0.2
 
 # Now load any other software modules you need:
-source ${envpath}/alpine_set_pmesdr_environment.sh
+source ${envpath}/single_set_pmesdr_environment.sh
 
 ml
 date
