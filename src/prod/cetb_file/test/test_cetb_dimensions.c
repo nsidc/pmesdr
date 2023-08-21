@@ -211,7 +211,7 @@ void test_cetb_dimensions( void ) {
 				    att_p, "time units" );
   free( att_p );
   att_p = get_text_att( nc_fileid, times_var_id, "calendar" );
-  TEST_ASSERT_EQUAL_STRING_MESSAGE( "gregorian", att_p, "time calendar" );
+  TEST_ASSERT_EQUAL_STRING_MESSAGE( "standard", att_p, "time calendar" );
   free( att_p );
   att_p = get_text_att( nc_fileid, times_var_id, "axis" );
   TEST_ASSERT_EQUAL_STRING_MESSAGE( "T", att_p, "time axis" );

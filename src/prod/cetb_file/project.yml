@@ -37,15 +37,13 @@
   # in order to add common defines:
   #  1) remove the trailing [] from the :common: section
   #  2) add entries to the :common: section (e.g. :test: has TEST defined)
-  :commmon: &common_defines
+  :common: &common_defines
   :test:
-    - *common_defines
     - TEST
     - UNITY_INCLUDE_DOUBLE
     - CETB_VERSION_ID=2.0
     - SMAP_VERSION_ID=2.0
   :test_preprocess:
-    - *common_defines
     - TEST
 
 :flags:
