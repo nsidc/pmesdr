@@ -251,7 +251,7 @@ int main(int argc,char *argv[])
   int krec = 0; /* total scans considered */
   int mcnt=0;
   int z;
-  char lin[100];
+  char lin[CETB_SETUP_LINE_LENGTH];
 
   /*
    * calendar calculation variables
@@ -382,9 +382,9 @@ int main(int argc,char *argv[])
     fprintf( stderr, "%s: %s metafile:box size in pixels is %d and in km is %f for channel %d\n",
 	     __FILE__, mname, box_size, box_size_km, save_area.sav_ibeam[iregion] );
     fwrite( &cnt, 4, 1, save_area.reg_lu[iregion] );
-    for( z=0; z < 100; z++ ) lin[z] = ' ';
+    for( z=0; z < CETB_SETUP_LINE_LENGTH; z++ ) lin[z] = ' ';
     sprintf( lin, " Search_box_km=%f", box_size_km );
-    fwrite( lin, 100, 1, save_area.reg_lu[iregion] );
+    fwrite( lin, CETB_SETUP_LINE_LENGTH, 1, save_area.reg_lu[iregion] );
     fwrite( &cnt, 4, 1, save_area.reg_lu[iregion] );
   }
   
@@ -1319,7 +1319,7 @@ FILE * get_meta(char *mname, char *outpath,
   FILE *file_id, *ftemp;  
 
   int ireg;
-  char line[100], lin[100];
+  char line[CETB_SETUP_LINE_LENGTH], lin[CETB_SETUP_LINE_LENGTH];
   int asc_des;
   float lath,latl,lonh,lonl;
   int regnum,projt=0;
@@ -1332,7 +1332,7 @@ FILE * get_meta(char *mname, char *outpath,
   char regname[11];
   int dateline;
   char fname2[180];
-  char outname[350];
+  char outname[500];
   char sensor[40]="SSMI something";
   int ibeam;  
 
@@ -1788,112 +1788,112 @@ FILE * get_meta(char *mname, char *outpath,
 		      fwrite(&ydeg2,4,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
-		      /* now add optional 100 char records
+		      /* now add optional CETB_SETUP_LINE_LENGTH char records
 			 with tagged variable values */
-		      cnt=100;	      
+		      cnt=CETB_SETUP_LINE_LENGTH;	      
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Setup_program_name=%s version %f",prog_n,prog_v);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Input metafile=%s", mname );
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Setup output directory=%s", outpath );
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Beam_code=%d",ibeam);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," A_initialization=%f",a_init);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," A offset value=%f",a_offset);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Max_iterations=%d",nits);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin,"Reference_incidence_angle=%f",*angle_ref);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 		      
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Response_threshold=%f",*response_threshold);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      if (*median_flag)
 			sprintf(lin," Median_flag=T");
 		      else
 			sprintf(lin," Median_flag=F");
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      if (flatten)
 			sprintf(lin," Flat_response=T");
 		      else
 			sprintf(lin," Flat_response=F");
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      if (HASAZIMUTHANGLE)
 			sprintf(lin," Has_Azimuth_Angle=T");
 		      else
 			sprintf(lin," Has_Azimuth_Agnle=F");
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Max_Fill=%d",MAXFILL);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Response_Multiplier=%d",RESPONSEMULT);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Sensor=%s",sensor);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-		      for(z=0;z<100;z++)lin[z]=' ';
+		      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 		      sprintf(lin," Base_resolution=%d", *base_resolution);
-		      fwrite(lin,100,1,a->reg_lu[iregion-1]);
+		      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 		      fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 
 		    }
@@ -1913,9 +1913,9 @@ FILE * get_meta(char *mname, char *outpath,
 			} else 
 			  if (flag_out) {
 			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
-			    for(z=0;z<100;z++)lin[z]=' ';
+			    for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 			    sprintf(lin,"%s",line);
-			    fwrite(lin,100,1,a->reg_lu[iregion-1]);
+			    fwrite(lin,CETB_SETUP_LINE_LENGTH,1,a->reg_lu[iregion-1]);
 			    fwrite(&cnt,4,1,a->reg_lu[iregion-1]);
 			  }
 		      }
@@ -2479,8 +2479,8 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
  *
  */
 int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
-  int cnt=100;
-  char lin[100];
+  int cnt=CETB_SETUP_LINE_LENGTH;
+  char lin[CETB_SETUP_LINE_LENGTH];
   int z;
   int iregion, status;
   float ltod_morning, ltod_evening;
@@ -2489,27 +2489,27 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
   if ( gsx != NULL ) {
     for ( iregion=1; iregion<=save_area->nregions; iregion++ ) {
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-      for(z=0;z<100;z++)lin[z]=' ';
+      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
       sprintf(lin," Platform_id=%d ", gsx->short_platform);
-      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-      for(z=0;z<100;z++)lin[z]=' ';
+      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
       sprintf(lin," Sensor_id=%d ", gsx->short_sensor);
-      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-      for(z=0;z<100;z++)lin[z]=' ';
+      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
       sprintf(lin," Producer_id=%d ", gsx->input_provider);
-      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-      for(z=0;z<100;z++)lin[z]=' ';
+      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
       sprintf(lin," Pass_direction=%d ", save_area->sav_ascdes[iregion-1]);
-      fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion-1]);
       fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
       if ( ((save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER) !=
@@ -2519,7 +2519,7 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
 	   ((save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER) !=
 	    (int)CETB_EASE2_M24) ) {
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-	for(z=0;z<100;z++)lin[z]=' ';
+	for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 	status = ltod_split_time(gsx->short_platform,
 				 (cetb_region_id)
 				 (save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER),
@@ -2528,11 +2528,11 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
 	  ltod_morning = -1.;
 	}
 	sprintf(lin," Ltod_morning=%f ", ltod_morning);
-	fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+	fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion-1]);
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
 
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-	for(z=0;z<100;z++)lin[z]=' ';
+	for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
 	status = ltod_split_time(gsx->short_platform,
 				 (cetb_region_id)
 				 (save_area->sav_regnum[iregion-1]-CETB_PROJECTION_BASE_NUMBER),
@@ -2541,7 +2541,7 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
 	  ltod_evening = -1.;
 	}
 	sprintf(lin," Ltod_evening=%f ", ltod_evening);
-	fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+	fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion-1]);
 	fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
       }
 
@@ -2567,8 +2567,8 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
  */
 int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
 			       unsigned long *position_filename, unsigned long *position_data ) {
-  int cnt=100;
-  char lin[100];
+  int cnt=CETB_SETUP_LINE_LENGTH;
+  char lin[CETB_SETUP_LINE_LENGTH];
   int z;
   int iregion;
 
@@ -2577,9 +2577,10 @@ int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file
       *(position_data+iregion) = ftell( save_area->reg_lu[iregion]);
       fseek( save_area->reg_lu[iregion], *(position_filename+iregion), SEEK_SET );
       fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
-      for(z=0;z<100;z++)lin[z]=' '; 
+      for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' '; 
       sprintf(lin," Input_file=%s (GSX_version:%s)", gsx->source_file, gsx->gsx_version);
-      fwrite(lin,100,1,save_area->reg_lu[iregion]); 
+      fprintf( stderr, "%s: %s\n", __FUNCTION__, lin );
+      fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion]); 
       fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
       *(position_filename+iregion) = ftell( save_area->reg_lu[iregion]);
       fseek( save_area->reg_lu[iregion], *(position_data+iregion), SEEK_SET );
@@ -2600,15 +2601,15 @@ int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file
  *   0 on success, 1 on failure
  */
 int write_blanklines_to_header( region_save *save_area ) {
-  int cnt=100;
-  char lin[100];
+  int cnt=CETB_SETUP_LINE_LENGTH;
+  char lin[CETB_SETUP_LINE_LENGTH];
   int z;
   int iregion;
 
   for ( iregion=0; iregion<save_area->nregions; iregion++ ) { 
      fwrite(&cnt,4,1,save_area->reg_lu[iregion]); 
-     for(z=0;z<100;z++)lin[z]=' '; 
-     fwrite(lin,100,1,save_area->reg_lu[iregion]); 
+     for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' '; 
+     fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion]); 
      fwrite(&cnt,4,1,save_area->reg_lu[iregion]);
    }
   return (0);
@@ -2624,16 +2625,16 @@ int write_blanklines_to_header( region_save *save_area ) {
  *
  */
 int write_end_header( region_save *save_area ){
-  int cnt=100;
-  char lin[100];
+  int cnt=CETB_SETUP_LINE_LENGTH;
+  char lin[CETB_SETUP_LINE_LENGTH];
   int z;
   int iregion;
 
   for ( iregion=1; iregion<=save_area->nregions; iregion++ ) {
     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
-    for(z=0;z<100;z++)lin[z]=' ';
+    for(z=0;z<CETB_SETUP_LINE_LENGTH;z++)lin[z]=' ';
     sprintf(lin," End_header");
-    fwrite(lin,100,1,save_area->reg_lu[iregion-1]);
+    fwrite(lin,CETB_SETUP_LINE_LENGTH,1,save_area->reg_lu[iregion-1]);
     fwrite(&cnt,4,1,save_area->reg_lu[iregion-1]);
   }
   return (0);

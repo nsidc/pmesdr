@@ -22,6 +22,9 @@
 /* Max number of input files that could go into a daily output file */
 #define CETB_MAX_INPUT_FILES 250 /* maximum number of input files to process onto a single grid */
 
+/* Setup file line length for ascii in binary file */
+#define CETB_SETUP_LINE_LENGTH 256
+
 /*
  * Grid resolution factor: power of 2 to divide into base resolution of 25 km
  * factor = 0 : 25/2**0 = 25

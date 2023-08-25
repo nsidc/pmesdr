@@ -97,6 +97,7 @@ long int nspace;
 int main(int argc, char **argv)
 {
 
+  char *ptr;
   char *file_in;
   char outpath[FILENAME_MAX];
   char cetb_sir_filename[FILENAME_MAX]; // Required to save the name for consistency checking at end
@@ -137,7 +138,7 @@ int main(int argc, char **argv)
 
   float ltod_morning, ltod_evening;
 
-  char line[100];
+  char line[CETB_SETUP_LINE_LENGTH];
 
   cetb_file_class *cetb_sir;
   cetb_file_class *cetb_grd;
@@ -283,7 +284,7 @@ int main(int argc, char **argv)
 		__FILE__, file_in );
        exit (-1);
      }
-     if (fread(line,   sizeof(char), 100, imf) == 0) {
+     if (fread(line,   sizeof(char), CETB_SETUP_LINE_LENGTH, imf) == 0) {
        fprintf( stderr, "%s: reached Ferror(71), Error in setup file %s\n",
 		__FILE__, file_in );
        exit (-1);
@@ -450,7 +451,19 @@ int main(int argc, char **argv)
     *
     * Initialize 2 cetb_files one for SIR output, the other for GRD output.
     * Also set the appropriate constants in case this is a Stokes var rather than TB
+    *
+    * At this point we also know what sensor and channel we're working with so
+    * if it's AMSR2 and NOT 6 GHZ, time to delete the JAXA input file from the input file lists
     */
+
+   if ( ( sensor_id == CETB_AMSR2 ) &&
+	( AMSR2_06H != cetb_ibeam_to_cetb_amsr2_channel[ibeam] ) &&
+	( AMSR2_06V != cetb_ibeam_to_cetb_amsr2_channel[ibeam] ) ) {
+     for ( i = 0; i < input_file_total; i++ ) {
+       ptr = strchr( list_of_input_files[i], ':' );
+       list_of_input_files[i] = ptr+1;
+     }
+   }
 
    tb_or_stokes_scaled_min = CETB_NCATTS_TB_SCALED_MIN;
    tb_or_stokes_scaled_max = CETB_NCATTS_TB_SCALED_MAX;

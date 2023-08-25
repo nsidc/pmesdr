@@ -21,6 +21,7 @@
 /*
  * Private Functions
  */
+static char *get_att_source_file( int fileid );
 static char *get_att_text( int fileid, int varid, const char* varname );
 static gsx_class *get_gsx_file( char *filename );
 static int get_gsx_dims( gsx_class *this );
@@ -218,14 +219,15 @@ int get_gsx_dims( gsx_class *this ) {
  */
 int get_gsx_global_attributes( gsx_class *this ) {
   
-  int i;
+  int i, status;
   char *temp;
+  char *temp2;
   
   if ( NULL == this ) {
     return -1;
   }
 
-  this->source_file = get_att_text( this->fileid, NC_GLOBAL, "gsx_source" );
+  this->source_file = get_att_source_file( this->fileid );
   if ( NULL == this->source_file ) {
     fprintf( stderr, "%s: no gsx_source\n", __FUNCTION__ );
     return -1;
@@ -874,6 +876,84 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
       return NULL;
     }
     *(att_text+att_len) = '\0';
+  }
+  
+  return att_text;
+}
+
+/*
+ * get_att_source_file - utility function to pull source file from a netcdf file
+ *
+ *  Input:
+ *    fileid - netcdf file id
+ *    varid - the variable id of the attribute to be retrieved (cound be NC_GLOBAL)
+ *    source_name1 - the source file attribute name
+ *    source_name2 - the source file attribute name
+ *
+ *  Result:
+ *    returns a pointer to the string returned from the file
+ *    NULL is returned on failure
+ *
+ */
+char *get_att_source_file( int fileid ) {
+  int status=0;
+  size_t att_len1;
+  char *att_text1;
+  size_t att_len2;
+  char *att_text2;
+  char *att_text;
+  size_t att_len;
+
+  if ( ( status = nc_inq_attlen( fileid, NC_GLOBAL, "jaxa_source", (size_t*)&att_len2 ) ) ) {
+    /* NO need to print an error message here as jaxa_source is only present for AMSR2 and AMSRE files*/
+    att_text2 = NULL;
+    att_len2 = 0;
+  } else {
+    status = utils_allocate_clean_aligned_memory( (void**)&att_text2, (att_len2+2) );
+    if ( 0 == status ) {
+      if ( ( status = nc_get_att_text( fileid, NC_GLOBAL, "jaxa_source", att_text2 ) ) ) { 
+	fprintf( stderr, "%s: couldn't get attribute %s string, error : %s\n", \
+		 __FUNCTION__, "jaxa_source", nc_strerror( status ) );
+	free( att_text2 );
+	return NULL;
+      }
+      *(att_text2+att_len2) = ':';
+      *(att_text2+att_len2+1) = '\0';
+      fprintf( stderr, "%s: att_text2 %s att_len2 %ld\n", __FUNCTION__, att_text2, att_len2 );
+    }
+  }
+    
+  if ( ( status = nc_inq_attlen( fileid, NC_GLOBAL, "gsx_source", (size_t*)&att_len1 ) ) ) {
+    /* NO need to print an error message here as the calling routine must check for NULL return
+     and gsx_source is required*/
+    return NULL;
+  }
+
+  status = utils_allocate_clean_aligned_memory( (void**)&att_text1, (att_len1+1) );
+  if ( 0 == status ) {
+    if ( ( status = nc_get_att_text( fileid, NC_GLOBAL, "gsx_source", att_text1 ) ) ) { 
+      fprintf( stderr, "%s: couldn't get attribute %s string, error : %s\n", \
+	     __FUNCTION__, "gsx_source", nc_strerror( status ) );
+      free( att_text1 );
+      return NULL;
+    }
+    *(att_text1+att_len1) = '\0';
+    fprintf( stderr, "%s: %s att_len1 %ld\n", __FUNCTION__, att_text1, att_len1 );
+  }
+
+  att_len = (size_t) ( (int)att_len1 + (int) att_len2 + 2 );
+  fprintf( stderr, "%s: att_len %ld att_len1 %ld att_len2 %ld\n", __FUNCTION__, att_len, att_len1, att_len2 );
+  status = utils_allocate_clean_aligned_memory( (void**)&att_text, att_len );
+  if ( NULL != att_text2 ) {
+    strcpy ( att_text, att_text2 );
+    fprintf( stderr, "%s: with jaxa: att_text %s len att_text %ld\n", __FUNCTION__, att_text, strlen( att_text ) );
+    free ( att_text2 );
+    strcat ( att_text, att_text1 );
+    fprintf( stderr, "%s: with jaxa: att_text %s len att_text %ld\n", __FUNCTION__, att_text, strlen( att_text ) );
+    free( att_text1 );
+  } else {
+    strcpy ( att_text, att_text1 );
+    fprintf( stderr, "%s: No jaxa :att_text %s len att_text %ld\n", __FUNCTION__, att_text, strlen( att_text ) );
   }
   
   return att_text;
