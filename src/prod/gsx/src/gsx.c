@@ -219,9 +219,8 @@ int get_gsx_dims( gsx_class *this ) {
  */
 int get_gsx_global_attributes( gsx_class *this ) {
   
-  int i, status;
+  int i;
   char *temp;
-  char *temp2;
   
   if ( NULL == this ) {
     return -1;
@@ -919,7 +918,6 @@ char *get_att_source_file( int fileid ) {
       }
       *(att_text2+att_len2) = ':';
       *(att_text2+att_len2+1) = '\0';
-      fprintf( stderr, "%s: att_text2 %s att_len2 %ld\n", __FUNCTION__, att_text2, att_len2 );
     }
   }
     
