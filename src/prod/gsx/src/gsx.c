@@ -938,22 +938,17 @@ char *get_att_source_file( int fileid ) {
       return NULL;
     }
     *(att_text1+att_len1) = '\0';
-    fprintf( stderr, "%s: %s att_len1 %ld\n", __FUNCTION__, att_text1, att_len1 );
   }
 
   att_len = (size_t) ( (int)att_len1 + (int) att_len2 + 2 );
-  fprintf( stderr, "%s: att_len %ld att_len1 %ld att_len2 %ld\n", __FUNCTION__, att_len, att_len1, att_len2 );
   status = utils_allocate_clean_aligned_memory( (void**)&att_text, att_len );
   if ( NULL != att_text2 ) {
     strcpy ( att_text, att_text2 );
-    fprintf( stderr, "%s: with jaxa: att_text %s len att_text %ld\n", __FUNCTION__, att_text, strlen( att_text ) );
     free ( att_text2 );
     strcat ( att_text, att_text1 );
-    fprintf( stderr, "%s: with jaxa: att_text %s len att_text %ld\n", __FUNCTION__, att_text, strlen( att_text ) );
     free( att_text1 );
   } else {
     strcpy ( att_text, att_text1 );
-    fprintf( stderr, "%s: No jaxa :att_text %s len att_text %ld\n", __FUNCTION__, att_text, strlen( att_text ) );
   }
   
   return att_text;
