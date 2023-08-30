@@ -460,7 +460,7 @@ int main(int argc, char **argv)
 	( AMSR2_06H != cetb_ibeam_to_cetb_amsr2_channel[ibeam] ) &&
 	( AMSR2_06V != cetb_ibeam_to_cetb_amsr2_channel[ibeam] ) ) {
      for ( i = 0; i < input_file_total; i++ ) {
-       ptr = strchr( list_of_input_files[i], ':' );
+       ptr = strchr( list_of_input_files[i], ';' );
        list_of_input_files[i] = ptr+1;
      }
    }

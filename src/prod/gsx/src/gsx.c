@@ -916,7 +916,7 @@ char *get_att_source_file( int fileid ) {
 	free( att_text2 );
 	return NULL;
       }
-      *(att_text2+att_len2) = ':';
+      *(att_text2+att_len2) = ';';
       *(att_text2+att_len2+1) = '\0';
     }
   }
