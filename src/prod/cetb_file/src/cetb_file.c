@@ -354,7 +354,7 @@ int cetb_file_add_filenames( cetb_file_class *this, int input_file_number,
   }
 
   for ( count = 0; count < input_file_number; count++ ) {
-    sprintf( input_file, "input_file%d", count+1 );
+    sprintf( input_file, "input_file%02d", count+1 );
     if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, input_file,
 				     strlen( *(list_of_file_names+count) ),
 				     *(list_of_file_names+count) ) ) ) {
