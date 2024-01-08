@@ -63,7 +63,8 @@ res_string=""
 resolution=0
 while getopts "r:t:h" opt; do
     case $opt in
-	t) top_level=$OPTARG;;
+	t) top_level=$OPTARG
+	   arg_string="-t ${top_level}";;
 	r) resolution=$OPTARG
 	   res_string="resolution ${resolution}";;
 	h) usage
@@ -165,7 +166,7 @@ if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
     echo "${PROGNAME}: rerun premet and spatial after *.nc time metadata corrected"
     parallel -j $SLURM_NTASKS -a ${outfile_ps} || error_exit "Line $LINENO: parallel premetandspatial"
     echo "${PROGNAME}: premet fix has run"
-    sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep3.sh ${src}
+    sbatch --account=$SLURM_JOB_ACCOUNT --dependency=afterok:$SLURM_JOB_ID ${PMESDR_RUN}/runNRTdailyStep3.sh ${arg_string} ${src}
 fi
 
 parallel -j $SLURM_NTASKS -a $outfile || error_exit "Line $LINENO: parallel cp *.nc files"
