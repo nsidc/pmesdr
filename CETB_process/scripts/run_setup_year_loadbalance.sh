@@ -26,12 +26,11 @@ top_level=$4
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_setup_list_${year}
 
 module purge 
+# Now load any other software modules you need:
+source ${envpath}/single_set_pmesdr_environment.sh
 
 # Load the Load Balancer module *first*
 module load loadbalance/0.2
-
-# Now load any other software modules you need:
-source ${envpath}/single_set_pmesdr_environment.sh
 
 ml
 date
