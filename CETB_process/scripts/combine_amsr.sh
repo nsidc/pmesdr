@@ -16,7 +16,7 @@ src=$1
 top_level=$2
 
 direc=/scratch/alpine/${USER}/${top_level}/
-for file in `find ${direc}/${src}-L1C -name "*.nc.partial"`
+for file in `find ${direc}/${src}-L1C_GSX -name "*.nc.partial"`
 do
     echo "combine_amsr_l1c_jaxa $src $file ${direc}/${src}-JAXA_GSX ${direc}/AMSR2_GSX" >> ${direc}/${src}_scripts/gsx_lb_list_alpine
 done
