@@ -2980,6 +2980,36 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
     default:
       *split_time = -1;
     }
+  } else if ( platform_id == CETB_F18 ) {
+    switch ( year ) {
+    case 2010:
+    case 2011:
+    case 2012:
+    case 2013:
+    case 2014:
+    case 2015:
+    case 2016:
+    case 2017:
+    case 2018:
+    case 2019:
+    case 2020:
+    case 2021:
+    case 2022:
+      *split_time =
+	cetb_ltod_split_times[platform_id][region_id][direction_id-CETB_MORNING_PASSES];
+      break;
+    case 2023:
+    case 2024:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = -1.0;
+      } else {
+	*split_time = 11.0;
+      }
+      negative_flag = 1;
+      break;
+    default:
+      *split_time = -1;
+    }
   } else {
     *split_time =
       cetb_ltod_split_times[platform_id][region_id][direction_id-CETB_MORNING_PASSES];
