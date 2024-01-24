@@ -2752,7 +2752,8 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
 				     2014      -1 hour,
 				     2015-2017 -1 hour, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F17 platform, N or S projection */
-    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection */
+    { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F18 platform, N or S projection
+				     Stable until 2021 */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_F19 platform, N or S projection */
     { {0.0, 12.0}, {0.0, 12.0} }, /* CETB_SMAP platform, N or S projection */
     { {-4.0, 8.0}, {-4.0, 8.0} }  /* CETB_GCOMW1 platform, N or S projection */
