@@ -201,9 +201,12 @@ void test_populate_filenames( void ) {
   char *filenames[ num_input_files ];
   char ret_filename[ FILENAME_MAX ];
   int nc_fileid;
+  size_t len;
 
   status = utils_allocate_clean_aligned_memory( (void**)&filenames[0], FILENAME_MAX );
-  strcpy( filenames[0], "my_test_file.txt");
+  strncpy( filenames[0], "my_test_file.txt", strlen("my_test_file.txt") );
+  len = strlen( "my_test_file.txt" );
+  fprintf( stderr, "%s: strlen %d\n", __FUNCTION__, (int)len );
   
   cetb = cetb_file_init( dirname,
 			 region_number, base_resolution,
@@ -216,11 +219,13 @@ void test_populate_filenames( void ) {
   status = cetb_file_add_filenames( cetb, num_input_files, filenames );
   cetb_file_close( cetb );
 
-  /* Reopen the file and make sure the filename we expect is a file attribute */
+  /* Reopen the file and make sure the filename we expect i a file attribute */
   status = nc_open( filename, NC_NOWRITE, &nc_fileid );
   status = nc_get_att_int( nc_fileid, NC_GLOBAL, "number_of_input_files", &num_input_files );
   TEST_ASSERT_EQUAL_INT( 1, num_input_files );
   status = nc_get_att_text( nc_fileid, NC_GLOBAL, "input_file1", ret_filename );
+  len = strlen(ret_filename);
+  fprintf( stderr, "%s: %s filename %d length\n", __FUNCTION__, ret_filename, (int)len );
   TEST_ASSERT_EQUAL_STRING( "my_test_file.txt", ret_filename );
   nc_close( nc_fileid );
   
