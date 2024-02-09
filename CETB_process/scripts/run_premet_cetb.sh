@@ -8,7 +8,7 @@
 #SBATCH --job-name CETB_platform_premet
 #SBATCH --partition=amilan
 #SBATCH --time=01:20:00
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH --ntasks 120
 #SBATCH --cpus-per-task=1
 #SBATCH --constraint=ib

@@ -11,7 +11,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name AMSR2_runNRTdailyStep0
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH --partition=amilan
 # SBATCH --constraint=ib
 #SBATCH --time=02:00:00
