@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <udunits2.h>
+#include <unistd.h>
 
 #include "calcalcs.h"
 #include "cetb.h"
@@ -125,6 +126,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   char *file_version=NULL;
   size_t len_version;
   int month, day;
+  pid_t pid;
 
   if ( STATUS_OK != valid_base_resolution( base_resolution ) ) return NULL;
   if ( CETB_NO_REGION ==
@@ -216,8 +218,9 @@ cetb_file_class *cetb_file_init( char *dirname,
 	     __FUNCTION__, filename, nc_strerror( status ) );
   }
 
+  pid = getpid();
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s_%s_%s%s_%s_%s_%s_%s_%4.4d%2.2d%2.2d_%s.nc",
+  	    "%s/%s_%s_%s%s_%s_%s_%s_%s_%4.4d%2.2d%2.2d_%010d_%s.nc",
   	    dirname,
 	    cetb_NSIDC_dataset_id[ cetb_dataset_id_index ],
   	    cetb_reconstruction_id_name[ reconstruction_id ],
@@ -231,6 +234,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    year,
 	    month,
   	    day,
+	    pid,
   	    file_version );
 
   snprintf( this->progname, MAX_STR_LENGTH, "%s", progname );
