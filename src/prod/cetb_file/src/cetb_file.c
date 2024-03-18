@@ -39,7 +39,7 @@ static char *cetb_template_filename( cetb_sensor_id sensor_id,
 				     cetb_swath_producer_id producer_id,
 				     cetb_dataset_id *cetb_dataset_id_index );
 static char *channel_name( cetb_sensor_id sensor_id, int beam_id );
-static char *current_time_stamp( void );
+static char *current_time_stamp( int flag );
 static int fetch_crs( cetb_file_class *this, int template_fid );
 static int fetch_global_atts( cetb_file_class *this, int template_fid );
 static char *pmesdr_release_version( void );
@@ -126,7 +126,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   char *file_version=NULL;
   size_t len_version;
   int month, day;
-  pid_t pid;
+  char *time_stamp;
 
   if ( STATUS_OK != valid_base_resolution( base_resolution ) ) return NULL;
   if ( CETB_NO_REGION ==
@@ -218,9 +218,9 @@ cetb_file_class *cetb_file_init( char *dirname,
 	     __FUNCTION__, filename, nc_strerror( status ) );
   }
 
-  pid = getpid();
+  time_stamp = current_time_stamp( 1 );
   snprintf( this->filename, FILENAME_MAX,
-  	    "%s/%s_%s_%s%s_%s_%s_%s_%s_%4.4d%2.2d%2.2d_%010d_%s.nc",
+  	    "%s/%s_%s_%s%s_%s_%s_%s_%s_%4.4d%2.2d%2.2d_%s_%s.nc",
   	    dirname,
 	    cetb_NSIDC_dataset_id[ cetb_dataset_id_index ],
   	    cetb_reconstruction_id_name[ reconstruction_id ],
@@ -234,7 +234,7 @@ cetb_file_class *cetb_file_init( char *dirname,
   	    year,
 	    month,
   	    day,
-	    pid,
+	    time_stamp,
   	    file_version );
 
   snprintf( this->progname, MAX_STR_LENGTH, "%s", progname );
@@ -1554,7 +1554,8 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
 /*
  * current_time_stamp - Formats a string with the current date and time.
  *
- *  input : n/a
+ *  input : 0 for creation date/time for metadata
+ *          1 for string yymmddhhmm in filename
  *
  *  output : n/a
  *
@@ -1563,7 +1564,7 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
  *           Any errors that occur will be written to stderr
  *
  */
-char *current_time_stamp( void ) {
+char *current_time_stamp( int flag ) {
 
   char *p;
   time_t curtime;
@@ -1582,8 +1583,14 @@ char *current_time_stamp( void ) {
   curtime = time( NULL );
   loctime = localtime( &curtime );
 
-  /* Now format it the way I want it. */
-  strftime( p, MAX_STR_LENGTH, "%Y-%m-%dT%H:%M:%S%Z", loctime );
+  /* Now format it the way I want it. Depending on if for filename or for creation date*/
+  if ( flag == 0 ) {
+    strftime( p, MAX_STR_LENGTH, "%Y-%m-%dT%H:%M:%S%Z", loctime );
+  } else if ( flag == 1 ) {
+    strftime( p, MAX_STR_LENGTH, "%y%m%d%H%M", loctime );
+  } else {
+    return NULL;
+  }
 
   return p;
 
@@ -1683,7 +1690,7 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
   } 
   free( source_value );
 
-  time_stamp = current_time_stamp();
+  time_stamp = current_time_stamp( 0 );
   if ( ( status = nc_put_att_text( this->fid, NC_GLOBAL, "date_created", 
 				   strlen( time_stamp ), 
 				   time_stamp ) ) ) {
