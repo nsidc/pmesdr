@@ -1772,7 +1772,6 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   char att_name[ MAX_STR_LENGTH ] = "";
   char crs_name[ MAX_STR_LENGTH ] = "crs_";
   char long_name[ MAX_STR_LENGTH ] = "";
-  char geospatial_resolution[ MAX_STR_LENGTH ] = "";
   
   /* Copy/set the coordinate reference system (crs) metadata */
   strcat( crs_name, cetb_region_id_name[this->resolution_id]
