@@ -12,7 +12,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 5 ] ; then
     echo "  DOY_START: start day of year"
     echo "  DOY_STOP: stop day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script"
     echo "  top_level: used for NRT processing"
     echo ""
     exit 1

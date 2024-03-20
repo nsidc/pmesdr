@@ -6,17 +6,21 @@
 #  envpath : location of summit_set_pmesdr_environment.sh script
 #
 #SBATCH --qos normal
-#SBATCH --job-name CETB_run_sir_year
-#SBATCH --partition=shas
+#SBATCH --job-name SMAP_sir_year
+#SBATCH --partition=amilan
 #SBATCH --account=ucb286_asc2
-#SBATCH --time=23:59:00
+#SBATCH --time=02:59:00
+#SBATCH --nodes=6
 #SBATCH --ntasks=120
-#SBATCH --cpus-per-task=3
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=7500
 #SBATCH -o output/sir_lb-%j.out
+#SBATCH --constraint=ib
 # Set the system up to notify upon completion
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mhardman@nsidc.org
 OPTIND=1
+top_level=""
 usage() {
     echo "" 1>&2
     echo "Usage: `basename $0`[-r resolution] [-h] YEAR SRC ENVPATH" 1>&2
@@ -30,9 +34,10 @@ usage() {
     echo "" 1>&2
 }
 
-while getopts "r:h" opt; do
+while getopts "t:r:h" opt; do
     case $opt in
 	r) base_resolution=$OPTARG;;
+	t) top_level=$OPTARG;;
 	h) usage
 	   exit 1;;
 	?) printf "Usage: %s: [-r] args\n" $0
@@ -57,11 +62,15 @@ then
     suffix="_24"
 fi
 
-file=/scratch/summit/${USER}/${src}_scripts/${src}_sir_list_${year}${suffix}
-source ${envpath}/summit_set_pmesdr_environment.sh
-ml impi
-ml loadbalance
+file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}${suffix}
+echo "file = ${file}"
+module purge
+source ${envpath}/single_set_pmesdr_environment.sh
+
+module load loadbalance/0.2
 ml
 date
-mpirun -genv I_MPI_FABRICS=shm:tmi -genv I_MPI_TMI_PROVIDER=psm2 lb ${file}
+#/curc/sw/install/openmpi/4.1.1/gcc/11.2.0/bin/mpirun lb ${file}
+$CURC_LB_BIN/mpirun lb ${file}
+
 date

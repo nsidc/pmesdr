@@ -73,7 +73,7 @@ top_level=""
 arg_string=""
 do_ftp=
 ftp_string=""
-start_string="now+24hour"
+start_string="now+6hour"
 
 while getopts "ft:h" opt; do
     case $opt in

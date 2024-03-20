@@ -126,10 +126,10 @@ if [[ -f ${outfile_ps} ]]; then
     echo "removed old premetandspatial file for ${src}"
 fi
 
-for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -2`
+for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -1`
 do
     basen=`basename $file`
-    year=`echo $basen | grep -o [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | sed 's/[0-9][0-9][0-9][0-9]$//'`
+    year=`echo $basen | grep -o _[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_ | sed 's/_//' | sed 's/_//' | sed 's/[0-9][0-9][0-9][0-9]$/\//'`
     hemi=`echo $basen | grep -o EASE2_.*km`
     if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
 	echo "rsync -avz -e 'ssh -i /home/jeca4282/.ssh/id_ecdsa_summit_archive' ${file} archive@nusnow.colorado.edu:/disks/restricted_ftp/ops_data/incoming/NSIDC0630_v2/${src}/" >> ${outfile}
