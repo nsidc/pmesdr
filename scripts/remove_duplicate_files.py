@@ -77,8 +77,8 @@ def daterange(start_date, end_date):
 def remove_duplicate_files(ctx, start_date, end_date, input_dir, platforms):
     if end_date < start_date:
         raise ValueError('The start date of processing: ' +
-                                     start_date.strftime('%m/%d/%Y') + '  is after the end date: ' +
-                                     end_date.strftime('%m/%d/%Y'))
+                         start_date.strftime('%m/%d/%Y') + '  is after the end date: ' +
+                         end_date.strftime('%m/%d/%Y'))
     for day in daterange(start_date, end_date + dt.timedelta(days=1)):
         for platform in platforms:
             if platform in ['F16', 'F17', 'F18']:
@@ -90,13 +90,13 @@ def remove_duplicate_files(ctx, start_date, end_date, input_dir, platforms):
             else:
                 raise ValueError('Unknown platform: ' + platform)
             for resolution in resolutions:
-                projections = resolution['projections']
-                ltods = resolution['ltods']
-                file_regex = os.path.join(input_dir, resolution['file_regex'])
+                projections = resolution.get('projections')
+                ltods = resolution.get('ltods')
+                file_regex = os.path.join(input_dir, resolution.get('file_regex'))
                 remove_files(projections, ltods, channels, platform, day, file_regex)
-                file_regex = os.path.join(input_dir, resolution['premet_file_regex'])
+                file_regex = os.path.join(input_dir, resolution.get('premet_file_regex'))
                 remove_files(projections, ltods, channels, platform, day, file_regex)
-                file_regex = os.path.join(input_dir, resolution['spatial_file_regex'])
+                file_regex = os.path.join(input_dir, resolution.get('spatial_file_regex'))
                 remove_files(projections, ltods, channels, platform, day, file_regex)
 
 if __name__ == "__main__":
