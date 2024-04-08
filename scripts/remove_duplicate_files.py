@@ -20,12 +20,10 @@ def remove_files(projections, ltods, channels, satellite, date, file_regex):
                     channel,
                     date
                 )
-                print('current regex: ', cur_regex)
                 files = np.sort(glob.glob(cur_regex))
-                print('files found: ', files)
                 if (len(files)) > 1:
                     for cur_regex in files[0:-1]:
-                        print('removing file: ', cur_regex)
+                        print('Removing file: ', cur_regex)
                         os.remove(cur_regex)
 
 
