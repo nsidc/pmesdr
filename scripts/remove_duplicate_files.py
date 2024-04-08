@@ -4,6 +4,7 @@ from datetime import timedelta
 import numpy as np
 import glob as glob
 import os
+from pathlib import Path
 
 from nsidc0630_params import resolutions
 
