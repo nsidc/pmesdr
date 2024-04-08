@@ -6,7 +6,7 @@ import glob as glob
 import os
 from pathlib import Path
 
-import nsidc0630_params import resolutions
+from nsidc0630_params import resolutions
 
 
 def remove_files(projections, ltods, channels, satellite, date, file_regex):
