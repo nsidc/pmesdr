@@ -6,7 +6,7 @@ import glob as glob
 import os
 from pathlib import Path
 
-from nsidc0630_params import resolutions
+import nsidc0630_params import resolutions
 
 
 def remove_files(projections, ltods, channels, satellite, date, file_regex):
@@ -89,14 +89,14 @@ def remove_duplicate_files(ctx, start_date, end_date, input_dir, platforms):
                 platform = 'GCOMW1_' + platform
             else:
                 raise ValueError('Unknown platform: ' + platform)
-            for resolution in resolutions:
-                projections = resolution.get('projections')
+            for resolution in resolutions.values():
+                projections = resolution['projections']
                 ltods = resolution.get('ltods')
-                file_regex = os.path.join(input_dir, resolution.get('file_regex'))
+                file_regex = os.path.join(input_dir, resolution['file_regex'])
                 remove_files(projections, ltods, channels, platform, day, file_regex)
-                file_regex = os.path.join(input_dir, resolution.get('premet_file_regex'))
+                file_regex = os.path.join(input_dir, resolution['premet_file_regex'])
                 remove_files(projections, ltods, channels, platform, day, file_regex)
-                file_regex = os.path.join(input_dir, resolution.get('spatial_file_regex'))
+                file_regex = os.path.join(input_dir, resolution['spatial_file_regex'])
                 remove_files(projections, ltods, channels, platform, day, file_regex)
 
 if __name__ == "__main__":
