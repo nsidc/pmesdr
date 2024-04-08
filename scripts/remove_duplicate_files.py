@@ -13,17 +13,18 @@ def remove_files(projections, ltods, channels, satellite, date, file_regex):
     for projection in projections:
         for ltod in ltods:
             for channel in channels:
-                file_regex = file_regex % (
+                cur_regex = file_regex % (
                     projection,
                     satellite,
                     ltod,
                     channel,
                     date
                 )
-                files = np.sort(glob.glob(file_regex))
+                files = np.sort(glob.glob(cur_regex))
                 if (len(files)) > 1:
-                    for file_regex in files[0:-1]:
-                        os.remove(file_regex)
+                    for cur_regex in files[0:-1]:
+                        os.remove(cur_regex)
+
 
 def datetime_to_date(_ctx, _param, value: dt.datetime) -> dt.date:
     """Click callback that converts a `dt.datetime` to `dt.date`."""
@@ -39,7 +40,7 @@ def daterange(start_date, end_date):
     '-s',
     '--start-date',
     type=click.DateTime(formats=['%Y%m%d', '%Y-%m-%d']),
-    default=str(dt.datetime.today().date() - timedelta(days = 1)),
+    default=str(dt.datetime.today().date() - timedelta(days=1)),
     show_default=True,
     help='Start date of MOD09GA tiles to process.',
     callback=datetime_to_date,
@@ -73,8 +74,7 @@ def daterange(start_date, end_date):
     multiple=True,
     help='Platforms for which duplicate files are to be removed.',
 )
-@click.pass_context
-def remove_duplicate_files(ctx, start_date, end_date, input_dir, platforms):
+def remove_duplicate_files(start_date, end_date, input_dir, platforms):
     if end_date < start_date:
         raise ValueError('The start date of processing: ' +
                          start_date.strftime('%m/%d/%Y') + '  is after the end date: ' +
@@ -98,6 +98,7 @@ def remove_duplicate_files(ctx, start_date, end_date, input_dir, platforms):
                 remove_files(projections, ltods, channels, platform, day, file_regex)
                 file_regex = os.path.join(input_dir, resolution['spatial_file_regex'])
                 remove_files(projections, ltods, channels, platform, day, file_regex)
+
 
 if __name__ == "__main__":
     """Executed from the command line"""
