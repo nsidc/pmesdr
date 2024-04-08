@@ -20,9 +20,12 @@ def remove_files(projections, ltods, channels, satellite, date, file_regex):
                     channel,
                     date
                 )
+                print('current regex: ', cur_regex)
                 files = np.sort(glob.glob(cur_regex))
+                print('files found: ', files)
                 if (len(files)) > 1:
                     for cur_regex in files[0:-1]:
+                        print('removing file: ', cur_regex)
                         os.remove(cur_regex)
 
 
@@ -92,12 +95,13 @@ def remove_duplicate_files(start_date, end_date, input_dir, platforms):
             for resolution in resolutions.values():
                 projections = resolution['projections']
                 ltods = resolution.get('ltods')
+                day_str = day.strftime('%Y%m%d')
                 file_regex = os.path.join(input_dir, resolution['file_regex'])
-                remove_files(projections, ltods, channels, platform, day, file_regex)
+                remove_files(projections, ltods, channels, platform, day_str, file_regex)
                 file_regex = os.path.join(input_dir, resolution['premet_file_regex'])
-                remove_files(projections, ltods, channels, platform, day, file_regex)
+                remove_files(projections, ltods, channels, platform, day_str, file_regex)
                 file_regex = os.path.join(input_dir, resolution['spatial_file_regex'])
-                remove_files(projections, ltods, channels, platform, day, file_regex)
+                remove_files(projections, ltods, channels, platform, day_str, file_regex)
 
 
 if __name__ == "__main__":
