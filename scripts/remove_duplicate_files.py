@@ -9,11 +9,12 @@ from pathlib import Path
 from nsidc0630_params import resolutions
 
 
-def remove_files(projections, ltods, channels, satellite, date, file_regex):
+def remove_files(prefix, projections, ltods, channels, satellite, date, file_regex):
     for projection in projections:
         for ltod in ltods:
             for channel in channels:
                 cur_regex = file_regex % (
+                    prefix,
                     projection,
                     satellite,
                     ltod,
@@ -70,7 +71,7 @@ def daterange(start_date, end_date):
 @click.option(
     '-p',
     '--platforms',
-    type=click.Choice(['F16', 'F17', 'F18', 'AMSR2']),
+    type=click.Choice(['F16', 'F17', 'F18', 'AMSR2', 'SMAP']),
     default=['F16'],
     multiple=True,
     help='Platforms for which duplicate files are to be removed.',
@@ -85,9 +86,15 @@ def remove_duplicate_files(start_date, end_date, input_dir, platforms):
             if platform in ['F16', 'F17', 'F18']:
                 channels = ['19H', '19V', '22V', '37H', '37V', '91H', '91V']
                 platform = platform + '_SSMIS'
+                prefix = 'NSIDC0630'
             elif platform in ['AMSR2']:
                 channels = ['6.9H', '6.9V', '10.7H', '10.7V', '18H', '18V', '23H', '23V', '36H', '36V', '89H', '89V']
                 platform = 'GCOMW1_' + platform
+                prefix = 'NSIDC0630'
+            elif platform in ['SMAP']:
+                channels = ['1.4H', '1.4V', '1.4F']
+                platform = platform + '_LRM'
+                prefix = 'NSIDC0738'
             else:
                 raise ValueError('Unknown platform: ' + platform)
             for resolution in resolutions.values():
@@ -95,11 +102,11 @@ def remove_duplicate_files(start_date, end_date, input_dir, platforms):
                 ltods = resolution.get('ltods')
                 day_str = day.strftime('%Y%m%d')
                 file_regex = os.path.join(input_dir, resolution['file_regex'])
-                remove_files(projections, ltods, channels, platform, day_str, file_regex)
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
                 file_regex = os.path.join(input_dir, resolution['premet_file_regex'])
-                remove_files(projections, ltods, channels, platform, day_str, file_regex)
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
                 file_regex = os.path.join(input_dir, resolution['spatial_file_regex'])
-                remove_files(projections, ltods, channels, platform, day_str, file_regex)
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
 
 
 if __name__ == "__main__":
