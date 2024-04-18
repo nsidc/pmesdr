@@ -20,3 +20,39 @@ top_level - same as before - the top level directory under /scratch/alpine/$USER
 Arguments for combine_amsr.sh
 src - either AMSR2 or AMSRE
 top_level - same as before
+
+RECIPE for SSMIS for processing a year at a time
+
+First source the environment setup file
+source /projects/moha2290/pmesdr-v2/src/projects/single_set_pmesdr_environment.sh
+
+If not done already - create the sensor directories by running
+source $PMESDR_RUN/make_sensor_dirs.sh SRC top_level
+       where SRC is AMSER2 or SMAP or F08 ot F16 etc and top_level is the top level directory on scratch in your user area
+
+source $PMESDR_RUN/l1c_to_gsx.sh gsx-type src suffix top_level
+
+sbatch $PMESDR_RUN/run_gsx_loadbalance.sh src condaenv top_level $PMESDR_SCRIPT_DIR
+
+source $PMESDR_RUN/all_lists_for_sensor.sh year doy year doy SRC top_level
+
+source $PMESDR_RUN/SSMIS_make.sh year doy doy src $PMESDR_SCRIPT_DIR top_level
+
+sbatch $PMESDR_RUN/run_make_loadbalance.sh src $PMESDR_SCRIPT_DIR top_level
+
+source $PMESDR_RUN/SSMIS_setup_year.sh year src $PMESDR_SCRIPT_DIR top_level
+
+sbatch $PMESDR_RUN/run_setup_year_loadbalance.sh year src $PMESDR_SCRIPT_DIR top_level
+
+source $PMESDR_RUN/SSMIS_sir_year.sh year src $PMESDR_SCRIPT_DIR top_level
+
+sbatch $PMESDR_RUN/run_sir_year_loadbalance.sh year src $PMESDR_SCRIPT_DIR top_level
+
+source $PMESDR_RUN/premetandspatial.sh src $PMESDR_SCRIPT_DIR year top_level
+
+sbatch $PMESDR_RUN/run_premet_cetb_loadbalance.sh src year condaenv $PMESDR_SCRIPT_DIR top_level
+
+In between each step - check the "dirver" files that are created in the src_scripts directory for correct entries and correct number of lines
+After each batch job completes, check for correct number of files
+Check the output files in the src_scripts/output directory and grep for errors
+

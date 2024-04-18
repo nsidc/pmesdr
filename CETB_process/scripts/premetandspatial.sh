@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 2 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 2  ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] SRC ENVPATH"
     echo "  Make an sbatch script to make premet and spatial metadata"
@@ -7,24 +7,28 @@ if [ "$1" == "-h" ] || [ "$#" -ne 2 ] ; then
     echo "  Run this script from the \$SRC_scripts directory."
     echo "Arguments:"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to single_set_pmesdr_environment.sh script"
     echo ""
     exit 1
 fi
 
 src=$1
 envpath=$2
-source ${envpath}/summit_set_pmesdr_environment.sh
+year=$3
+top_level=$4
+echo $src $envpath $year $top_level
+source ${envpath}/single_set_pmesdr_environment.sh
 
 # Clean up any prior sbatch file with same name
-outfile=${src}_premet_list_cetb
+direc=/scratch/alpine/${USER}/${top_level}
+outfile=${direc}/${src}_scripts/${src}_premet_list_cetb_${year}
 if [ -f $outfile ] ; then
     echo "Removing old $outfile"
     rm $outfile
 fi
 
 date
-for FILE in `find ../${src}_sir -name "*.nc"`
+for FILE in `find ${direc}/${src}_sir/${year} -name "*.nc"`
 do
     echo "generate_premetandspatial.py $FILE" >> ${outfile}
 done

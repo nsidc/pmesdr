@@ -63,7 +63,7 @@ then
     suffix="_24"
 fi
 
-echo "src,suffic,res,top,year $src $suffix $resolution $top_level $year"
+echo "src,suffix,res,top,year $src $suffix $resolution $top_level $year"
 
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_setup_list_${year}${suffix}
 echo "file = ${file}"

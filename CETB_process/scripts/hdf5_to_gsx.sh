@@ -13,11 +13,11 @@
 gsx_type=$1
 src=$2
 top_level=$3
-direc=/scratch/summit/${USER}/${top_level}/
-rm -f ${direc}/${src}_scripts/gsx_lb_list_summit
+direc=/scratch/alpine/${USER}/${top_level}/
+rm -f ${direc}/${src}_scripts/gsx_lb_list_alpine
 for file in `find ${direc}/${src} -name "*.h5"`
 do
     basen=`basename $file`
-    echo "gsx $gsx_type $file ${direc}/${src}_GSX/GSX_$basen.nc" >> ${direc}/${src}_scripts/gsx_lb_list_summit
+    echo "gsx $gsx_type $file ${direc}/${src}_GSX/GSX_$basen.nc" >> ${direc}/${src}_scripts/gsx_lb_list_alpine
 done
 
