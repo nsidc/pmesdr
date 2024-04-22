@@ -68,11 +68,21 @@ do
 	    ${direc}/${src}_lists/${src}.$yearp$monthp1$dayplus1 \
 	    >& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
     else
-	cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
-	    ${direc}/${src}_lists/${src}.$year$month$day \
-	    >& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
+	if [[ -f ${direc}/${src}_lists/${src}.$yearp$monthp1$dayplus1 ]]
+	then
+	    cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
+		${direc}/${src}_lists/${src}.$year$month$day \
+		${direc}/${src}_lists/${src}.$yearp$monthp1$dayplus1 \
+		>& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
+        else
+	    cat ${direc}/${src}_lists/${src}.$yearm1$monthm1$dayminus1 \
+		${direc}/${src}_lists/${src}.$year$month$day \
+		>& ${direc}/${src}_lists/${src}.$year$month$day.NS 2>/dev/null
+	fi
     fi
 	
 done
+
+echo $year$month$day
 
 
