@@ -44,6 +44,8 @@ else
     echo "Not running as sbatch..."
     PROGNAME=${BASH_SOURCE[0]}
 fi
+thisScriptDir="$( cd "$( dirname "${PROGNAME}" )" && pwd )"
+echo "running from this directory ${thisScriptDir}"
 
 error_exit() {
     # Use for fatal program error
@@ -107,6 +109,7 @@ then
     resolution_suffix="_24"
 fi
 
+source activate /projects/${USER}/miniconda3/envs/cetb3
 direc=/scratch/alpine/${USER}/${top_level}/
 SETUPDIR=${direc}/${src}_setup${resolution_suffix}/
 SCRIPTDIR=${direc}/${src}_scripts/
@@ -125,6 +128,10 @@ if [[ -f ${outfile_ps} ]]; then
     rm ${outfile_ps}
     echo "removed old premetandspatial file for ${src}"
 fi
+#
+# Now need to delete the extra files because of the creation date in the file name
+#
+python $thisScriptDir/../../scripts/remove_duplicate_files.py -i ${direc}/${src}_sir${resolution_suffix} -p $src
 
 for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -1`
 do
