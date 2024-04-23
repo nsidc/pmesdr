@@ -42,7 +42,7 @@ def daterange(start_date, end_date):
     '-s',
     '--start-date',
     type=click.DateTime(formats=['%Y%m%d', '%Y-%m-%d']),
-    default=str(dt.datetime.today().date() - timedelta(days=1)),
+    default=str(dt.datetime.today().date() - timedelta(days=10)),
     show_default=True,
     help='Start date of MOD09GA tiles to process.',
     callback=datetime_to_date,
