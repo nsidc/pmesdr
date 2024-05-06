@@ -65,8 +65,7 @@ def compare_cetb_directories( dir1, dir2,
         sys.stderr.write( "\n" + this_program + ": Empty directories.\n" )
         return False
 
-    p = re.compile('(.+)_v[0-9]+\.[0-9]+\.nc')
-    q = re.compile('(.+)_[0-9]+_v[0-9]+\.[0-9]+\.nc')
+    p = re.compile('(.+_[0-9]{8})(_[0-9]{10})?_v[0-9]+\.[0-9]+\.nc')
     
     all_files_OK = True
     for i in np.arange( len( list1 ) ):
@@ -76,9 +75,10 @@ def compare_cetb_directories( dir1, dir2,
         if not ( base1 == base2 ):
             
             # if filenames don't match exactly, try a relaxed test to
-            # see if they only differ by version number at end of filename
+            # see if they only differ by version number and processing date
+            # at end of filename
             m1 = p.match( base1 )
-            m2 = q.match( base2 )
+            m2 = p.match( base2 )
             if m1 and m2:
                 if not ( m1.group(1) == m2.group(1) ):
                     sys.stderr.write(
