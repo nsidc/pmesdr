@@ -26,8 +26,8 @@ dir_small_diffs = 'test_cetb_utilities_data/test_data_small_diffs'
 dir_big_diffs = 'test_cetb_utilities_data/test_data_big_diffs'
 dir_3files_1diff = 'test_cetb_utilities_data/test_data_3files_1different'
 dir_3files_1diff_name = 'test_cetb_utilities_data/test_data_3files_1different_name'
-dir_v1_2 = 'test_cetb_utilities_data/test_v1.2'
-dir_v1_3 = 'test_cetb_utilities_data/test_v1.3'
+dir_1 = 'test_cetb_utilities_data/test_v2.0'
+dir_2 = 'test_cetb_utilities_data/test_v2.1'
 
 verbose = False
 
@@ -139,7 +139,7 @@ def test_compare_dirs_3files_1different_name():
                    False )
 
 def test_compare_dirs_only_versions_different():
-    assert_equals( compare_cetb_directories( dir_v1_2, dir_v1_3,
+    assert_equals( compare_cetb_directories( dir_1, dir_2,
                                              verbose=verbose ),
                    True )
 

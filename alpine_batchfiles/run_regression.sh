@@ -8,29 +8,6 @@
 # as arguments.
 
 #
-# Set the name of the job
-#SBATCH -J run_regression
-
-#
-# Set a walltime for the job. The time format is HH:MM:SS
-#SBATCH --time=00:15:00
-
-# Set the output file and embed the job number in the filename
-#SBATCH -o output/run_regression-%j.out
-
-# Select the summit QOS
-#SBATCH --qos normal
-#SBATCH --partition=shas
-#SBATCH --account=ucb135_summit3
-#SBATCH --ntasks-per-node=1
-#SBATCH --nodes=1
-
-#
-# Set the system up to notify upon completion
-# Don't notify when job starts
-#SBATCH --mail-type=END,FAIL,REQUEUE,STAGE_OUT
-#SBATCH --mail-user=mhardman@nsidc.org,brodzik@nsidc.org
-#
 # The following commands will be executed when this script is run.
 # It is assumed that the caller has set the system location to
 # $PMESDR_TOP_DIR
@@ -66,7 +43,7 @@ echo "`basename $0`: Regression type is $regressiontype"
 echo "`basename $0`: Conda env is       $condaenv"
 echo "`basename $0`: Make target is     $maketarget"
 
-source ${PMESDR_TOP_DIR}/src/prod/summit_set_pmesdr_environment.sh
+source ${PMESDR_TOP_DIR}/src/prod/single_set_pmesdr_environment.sh
 source activate ${condaenv}
 date
 
