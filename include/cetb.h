@@ -23,7 +23,7 @@
 #define CETB_MAX_INPUT_FILES 250 /* maximum number of input files to process onto a single grid */
 
 /* Setup file line length for ascii in binary file */
-#define CETB_SETUP_LINE_LENGTH 256
+#define CETB_SETUP_LINE_LENGTH 350
 
 /*
  * Grid resolution factor: power of 2 to divide into base resolution of 25 km
@@ -595,8 +595,8 @@ typedef enum {
  * for 89 GHz map into the same output grid
  */
 static const char *cetb_amsre_channel_name[] = {
-  "06H",
-  "06V",
+  "6.9H",
+  "6.9V",
   "10.7H",
   "10.7V",
   "18H",
