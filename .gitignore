@@ -35,4 +35,5 @@ src/prod/cetb_file/test/NSIDC-0630*nc
 /testing/AMSRE200*
 /testing/CSU200*
 /testing/RSS200*
-
+/bin
+/NSIDCtest
