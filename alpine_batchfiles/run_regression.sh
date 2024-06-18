@@ -44,7 +44,7 @@ echo "`basename $0`: Conda env is       $condaenv"
 echo "`basename $0`: Make target is     $maketarget"
 
 source ${PMESDR_TOP_DIR}/src/prod/single_set_pmesdr_environment.sh
-source activate ${condaenv}
+conda activate ${condaenv}
 date
 
 echo "`basename $0`: running make"
