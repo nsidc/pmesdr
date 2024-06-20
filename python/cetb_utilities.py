@@ -65,7 +65,7 @@ def compare_cetb_directories( dir1, dir2,
         sys.stderr.write( "\n" + this_program + ": Empty directories.\n" )
         return False
 
-    p = re.compile('(.+_[0-9]{8})(_[0-9]{10})?_v[0-9]+\.[0-9]+\.nc')
+    p = re.compile(r'(.+_[0-9]{8})(_[0-9]{10})?_v[0-9]+\.[0-9]+\.nc')
     
     all_files_OK = True
     for i in np.arange( len( list1 ) ):
