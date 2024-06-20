@@ -1,0 +1,45 @@
+# Welcome to scrontab, Slurm's cron-like interface.
+#
+# Edit this file to submit recurring jobs to be run by Slurm.
+#
+# Note that jobs will be run based on the Slurm controller's
+# time and timezone.
+#
+# Lines must either be valid entries, comments (start with '#'),
+# or blank.
+#
+# Lines starting with #SCRON will be parsed for options to use
+# with the next cron line. E.g., "#SCRON --time 1" would request
+# a one minute timelimit be applied. See the sbatch man page for
+# options, although note that not all options are supported here.
+#
+# For example, the following line (when uncommented) would request
+# a job be run at 5am each day.
+# 0 5 * * * /my/script/to/run
+#
+#SCRON --qos normal                                                                                                
+#SCRON --job-name PmesdrRegress                                                                                        
+#SCRON --partition=amilan                                                                                          
+#SCRON --time=00:30:00                                                                                             
+#SCRON --ntasks=1
+#SCRON --cpus-per-task=1                                                                                           
+#SCRON --account=ucb286_asc2                                                                                       
+#SCRON --output=/scratch/alpine/%u/cron_output/pmesdr-regress-%j.out  
+#SCRON --mail-type=FAIL,INVALID_DEPEND,TIME_LIMIT,REQUEUE,STAGE_OUT,END
+#SCRON --mail-user=brodzik@colorado.edu,moha2290@colorado.edu
+01 00 * * * source /projects/moha2290/PMESDR_regression/src/prod/single_set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/regression_scripts/git_pull.sh; source $PMESDR_TOP_DIR/regression_scripts/build_pmesdr.sh cetb3; source $PMESDR_TOP_DIR/regression_scripts/run_regression.sh daily cetb3
+
+#SCRON --job-name Rquick
+#SCRON --time=00:10:00
+#SCRON --output=/scratch/alpine/%u/cron_output/Rquick-%j.out
+#SCRON --mail-user=moha2290@colorado.edu
+03 12 * * * source /projects/moha2290/PMESDR_regression/src/prod/single_set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/regression_scripts/git_pull.sh; source $PMESDR_TOP_DIR/regression_scripts/build_pmesdr.sh cetb3; source $PMESDR_TOP_DIR/regression_scripts/run_regression.sh quick cetb3
+
+
+#SCRON --job-name cleanup
+#SCRON --time=00:30:00
+#SCRON --output=/scratch/alpine/%u/cron_output/cleanup-%j.out
+#SCRON --mail-user=moha2290@colorado.edu
+05 01 * * * source /projects/moha2290/pmesdr-v2/src/prod/single_set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/CETB_process/scripts/cleanup_nsidc0630_v2.sh cetb3;
+
+
