@@ -89,3 +89,6 @@ all install clean:
 	  ) || exit 1; \
 	done
 
+regression-setup:
+	cd ${PMESDR_REGRESS_DIR}/../../
+	git clone git@github.com:nsidc/pmesdr_regression_data.git

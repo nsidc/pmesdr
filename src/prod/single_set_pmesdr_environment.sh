@@ -67,6 +67,7 @@ if [[ "$thisHostname" == *"rc.colorado.edu" \
   ml intel/2022.1.2
   ml netcdf/4.8.1
   ml udunits/2.2.25
+  ml git-lfs/3.1.2
   export LOCALE=ALPINEicc
   echo "Compiler set to $PMESDR_COMPILER"
       module list
