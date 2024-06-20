@@ -24,6 +24,7 @@ src=$2
 envpath=$3
 top_level=$4
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}
+echo $file
 
 module purge
 

@@ -109,7 +109,12 @@ then
     resolution_suffix="_24"
 fi
 
-source activate /projects/${USER}/miniconda3/envs/cetb3
+echo "source /projects/${USER}/miniconda3/bin/activate"
+echo "source activate /projects/${USER}/miniconda3/envs/cetb3"
+source /projects/${USER}/miniconda3/bin/activate
+#source activate /projects/${USER}/miniconda3/envs/cetb3
+conda activate cetb3
+
 direc=/scratch/alpine/${USER}/${top_level}/
 SETUPDIR=${direc}/${src}_setup${resolution_suffix}/
 SCRIPTDIR=${direc}/${src}_scripts/
@@ -131,7 +136,7 @@ fi
 #
 # Now need to delete the extra files because of the creation date in the file name
 #
-python $thisScriptDir/../../scripts/remove_duplicate_files.py -i ${direc}/${src}_sir${resolution_suffix} -p $src
+python $thisScriptDir/remove_duplicate_files.py -i ${direc}/${src}_sir${resolution_suffix} -p $src
 
 for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -1`
 do
