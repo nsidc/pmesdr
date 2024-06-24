@@ -90,5 +90,10 @@ all install clean:
 	done
 
 regression-setup:
-	cd ${PMESDR_TOP_DIR}/../
+	cd ${PMESDR_TOP_DIR}/../; \
+	git lfs install; \
 	git clone git@github.com:nsidc/pmesdr_regression_data.git
+
+quick-regression:
+	${PMESDR_TOP_DIR}/regression_scripts/run_regression.sh quick pmesdr
+
