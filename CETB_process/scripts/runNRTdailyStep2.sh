@@ -136,7 +136,7 @@ fi
 #
 # Now need to delete the extra files because of the creation date in the file name
 #
-python $thisScriptDir/remove_duplicate_files.py -i ${direc}/${src}_sir${resolution_suffix} -p $src
+python $thisScriptDir/../../python/remove_duplicate_files.py -i ${direc}/${src}_sir${resolution_suffix} -p $src
 
 for file in `find ${direc}/${src}_sir${resolution_suffix}/*.nc -mtime -1`
 do
