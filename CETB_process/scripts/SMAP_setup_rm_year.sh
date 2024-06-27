@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
+if [ "$1" == "-h" ] || [ "$#" -lt 3 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] YEAR SRC ENVPATH"
     echo "  Creates an sbatch script to remove the very large setup files"
@@ -7,7 +7,7 @@ if [ "$1" == "-h" ] || [ "$#" -ne 3 ] ; then
     echo "Arguments:"
     echo "  YEAR: 4-digit year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script"
     echo ""
     exit 1
 fi
@@ -17,10 +17,11 @@ shortyear=${longyear:2:2}
 src=$2
 envpath=$3
 suffix=$4
-source ${envpath}/summit_set_pmesdr_environment.sh
+
+source ${envpath}/alpine_set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/summit/${USER}/${src}_setup_${suffix}
+OUTDIR=/scratch/alpine/${USER}/${src}_setup_${suffix}
 #
 #
 # find used setup files to remove - by year

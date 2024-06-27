@@ -7,7 +7,7 @@
 
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep3
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH --constraint=ib
 #SBATCH --partition=amilan
 #SBATCH --time=01:50:00
@@ -81,7 +81,7 @@ src=$1
 direc=/scratch/alpine/${USER}/${top_level}/
 SCRIPTDIR=${direc}/${src}_scripts/
 
-if [[ -d /scratch/alpine/jeca4282/${src}_sir ]]; then
+if [[ -d ${direc}/${src}_sir ]]; then
 
     outfile1=${SCRIPTDIR}/${src}_moving_files_to_pl
     outfile2=${SCRIPTDIR}/${src}_chmod_files_in_pl
@@ -98,7 +98,7 @@ if [[ -d /scratch/alpine/jeca4282/${src}_sir ]]; then
 	echo " no old chmod file to remove for ${src}"
     fi
 
-    for file in `find /scratch/alpine/jeca4282/${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
+    for file in `find ${direc}//${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
     do
 	basen=`basename $file`
 	year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`

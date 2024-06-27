@@ -13,7 +13,7 @@
 #SBATCH --ntasks=120
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=7500
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH -o output/setup_lb-%j.out
 #SBATCH --constraint=ib
 # Set the system up to notify upon completion

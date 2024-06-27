@@ -9,7 +9,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep0
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH --partition=amilan
 # SBATCH --constraint=ib
 #SBATCH --time=01:00:00
@@ -89,7 +89,7 @@ while getopts "fr:t:s:h" opt; do
 	esac
 done
 
-source /projects/moha2290/measures-byu-alpine/src/prod/alpine_set_pmesdr_environment.sh
+source /projects/moha2290/pmesdr-alpine/src/prod/alpine_set_pmesdr_environment.sh
     
 date
 # Now set up sensor based on GSX type

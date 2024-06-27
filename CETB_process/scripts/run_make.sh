@@ -10,7 +10,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --ntasks=24
 #SBATCH --cpus-per-task=1
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH -o output/make_lb-%j.out
 #SBATCH --constraint=ib
 # Set the system up to notify upon completion

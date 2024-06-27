@@ -12,7 +12,7 @@
 #SBATCH --constraint=ib
 #SBATCH --time=04:30:00
 #SBATCH --ntasks=120
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH --cpus-per-task=1
 #SBATCH -o output/gsx_lb-%j.out
 # Set the system up to notify upon completion
@@ -22,6 +22,7 @@ src=$1
 condaenv=$2
 top_level=$3
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/gsx_lb_list_alpine
+source /projects/${USER}/miniconda3/bin/activate
 conda activate $condaenv
 ml intel/2022.1.2
 ml gnu_parallel

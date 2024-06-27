@@ -7,7 +7,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep1
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH --partition=amilan
 #SBATCH --constraint=ib
 #SBATCH --time=04:30:00
@@ -77,7 +77,7 @@ while getopts "r:t:h" opt; do
 	esac
 done
 
-source /projects/moha2290/measures-byu-alpine/src/prod/alpine_set_pmesdr_environment.sh
+source /projects/moha2290/pmesdr-alpine/src/prod/alpine_set_pmesdr_environment.sh
 date
 
 shift $(($OPTIND - 1))

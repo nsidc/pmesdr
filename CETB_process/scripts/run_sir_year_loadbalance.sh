@@ -8,7 +8,7 @@
 #SBATCH --qos normal
 #SBATCH --job-name CETB_run_sir_year
 #SBATCH --partition=amilan
-#SBATCH --account=ucb286_asc1
+#SBATCH --account=ucb286_asc2
 #SBATCH --time=03:00:00
 #SBATCH --nodes=6
 #SBATCH --ntasks=120
