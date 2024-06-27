@@ -6,11 +6,10 @@
 #
 # Lines starting with #PBS are treated by bash as comments, but interpreted by qsub
 # as arguments.
-
 #
-# The following commands will be executed when this script is run.
 # It is assumed that the caller has set the system location to
 # $PMESDR_TOP_DIR
+# 
 regressiontype=$1
 condaenv=$2
 

@@ -40,14 +40,6 @@ ifeq ($(LOCALE),int.nsidc.org)
   HDF5_INCDIR = /usr/include
   HDF5_LIBDIR = /usr/lib
   ZLIB_LIBDIR = /usr/lib
-else ifeq ($(LOCALE),SUMMITicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = ${CURC_NETCDF_INC}
-  NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
-  HDF5_INCDIR = ${CURC_HDF5_INC}
-  HDF5_LIBDIR = ${CURC_HDF5_LIB}
-  UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
-  UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   NETCDF4_INCDIR = ${CURC_NETCDF_INC}
@@ -57,7 +49,7 @@ else ifeq ($(LOCALE),ALPINEicc)
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
 else
-  $(info Assuming default LOCALE=BYU)
+  $(info Assuming default, mileage may vary)
   NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_INCDIR = /usr/include
@@ -66,6 +58,9 @@ else
   UDUNITS_INCDIR = /usr/include
   UDUNITS_LIBDIR = /usr/lib64
 endif
+
+# Python env for regression testing
+CONDAENV = ${PMESDR_CONDAENV}
 
 #
 # end configuration section
@@ -94,6 +89,15 @@ regression-setup:
 	git lfs install; \
 	git clone git@github.com:nsidc/pmesdr_regression_data.git
 
+conda-env:
+	conda create -y -n $(CONDAENV) netcdf4 nose numpy
+
 quick-regression:
-	${PMESDR_TOP_DIR}/regression_scripts/run_regression.sh quick pmesdr
+	${PMESDR_TOP_DIR}/regression_scripts/run_regression.sh quick $(CONDAENV)
+
+daily-regression:
+	${PMESDR_TOP_DIR}/regression_scripts/run_regression.sh daily $(CONDAENV)
+
+
+
 

@@ -1,6 +1,0 @@
-# Daily regression should run at midnight
-00 00 * * * source /projects/brodzik/PMESDR_regression/src/prod/summit_set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/summit_batchfiles/local_git_pull.sh; source $PMESDR_TOP_DIR/summit_batchfiles/remote_build_pmesdr.sh pmesdr; cd $PMESDR_TOP_DIR/summit_batchfiles; source $PMESDR_TOP_DIR/summit_batchfiles/remote_run_regression.sh daily pmesdr;
-
-# Quick regression can be run anytime
-#05 12 * * * source /projects/brodzik/PMESDR_regression/src/prod/summit_set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/summit_batchfiles/local_git_pull.sh; source $PMESDR_TOP_DIR/summit_batchfiles/remote_build_pmesdr.sh pmesdr; cd $PMESDR_TOP_DIR/summit_batchfiles; source $PMESDR_TOP_DIR/summit_batchfiles/remote_run_regression.sh quick pmesdr;
-
