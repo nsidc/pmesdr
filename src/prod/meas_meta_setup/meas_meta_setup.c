@@ -2962,7 +2962,16 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
       }
       negative_flag = 1;
       break;
-    case 2023:                                                                                                       if ( direction_id == CETB_MORNING_PASSES ) {                                                                     *split_time = -1.0;                                                                                          } else {                                                                                                         *split_time = 11.0;                                                                                          }                                                                                                              negative_flag = 1;                                                                                             break;                                                                                                       default:
+    case 2023:
+    case 2024:
+      if ( direction_id == CETB_MORNING_PASSES ) {
+	*split_time = -1.0;
+      } else {
+	*split_time = 11.0;
+      }
+      negative_flag = 1;
+      break;
+    default:
       *split_time = -1;
     }
   } else {
