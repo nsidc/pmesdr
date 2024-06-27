@@ -3,7 +3,6 @@
 #
 # usage: set_pmesdr_environment.sh
 #
-
 #  This script is used by sourcing it
 #
 #  ". /this/script/location/set_pmesdr_environment.sh"
@@ -21,10 +20,12 @@
 # National Snow & Ice Data Center, University of Colorado, Boulder
 # Copyright (C) 2014 Regents of University of Colorado and Brigham-Young University
 #========================================================================
+
+# Make no assumptions about starting LOCALE
+export LOCALE=
 #
 # First check for compiler environment variable - cmd line args will override
 #
-export LOCALE=
 compiler=icc
 export PMESDR_COMPILER=$compiler
 
