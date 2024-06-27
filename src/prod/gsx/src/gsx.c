@@ -1120,50 +1120,49 @@ int get_gsx_byscan_variables( gsx_class *this, int count, int scans ) {
     location = count;
   }
   
-  if ( this->short_sensor != CETB_AMSRE ) { // because there is no sc lat and lon in AMSRE
-    if ( ( status = nc_inq_varid( this->fileid, gsx_sc_latitudes[location], &varid ) ) ) {
-      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
-	       __FUNCTION__, this->fileid, gsx_sc_latitudes[location], nc_strerror( status ) );
-      return -1;
-    }
-    status = utils_allocate_clean_aligned_memory( (void**)&this->sc_latitude[count],
-						  sizeof(float)*scans );
-    if ( 0 == status ) {
-      if ( ( status = nc_get_var_float( this->fileid, varid, this->sc_latitude[count] ) ) ) {
-	fprintf( stderr, "%s: error %s retrieving sc_latitudes\n",
-		 __FUNCTION__, nc_strerror( status ) );
-	free( this->sc_latitude[count] );
-	status = -1;
-      } else {
-	if ( ( status = nc_get_att_float( this->fileid, varid, "_FillValue",
-					  &(this->fill_sc_latitude[count]) ) ) ) {
-	  fprintf( stderr, "%s: error %s retrieving latitude fill value\n",
-		   __FUNCTION__, nc_strerror( status ) );
-	  this->fill_latitude[count] = 0.0;
-	}
-      }
-    } else {
-      status = -1;
-    }
-
-    if ( ( status = nc_inq_varid( this->fileid, gsx_sc_longitudes[location], &varid ) ) ) {
-      fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
-	       __FUNCTION__, this->fileid, gsx_sc_longitudes[location], nc_strerror( status ) );
-      return -1;
-    }
-    status = utils_allocate_clean_aligned_memory( (void**)&this->sc_longitude[count],
-						  sizeof(float)*scans );
-    if ( 0 == status ) {
-      if ( ( status = nc_get_var_float( this->fileid, varid, this->sc_longitude[count] ) ) ) {
-	fprintf( stderr, "%s: error %s retrieving sc_longitudes\n", __FUNCTION__,
-		 nc_strerror( status ) );
-	free( this->sc_longitude[count] );
-	status = -1;
-      }
-    } else {
-      status = -1;
-    }
+  if ( ( status = nc_inq_varid( this->fileid, gsx_sc_latitudes[location], &varid ) ) ) {
+    fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	     __FUNCTION__, this->fileid, gsx_sc_latitudes[location], nc_strerror( status ) );
+    return -1;
   }
+  status = utils_allocate_clean_aligned_memory( (void**)&this->sc_latitude[count],
+				  sizeof(float)*scans );
+  if ( 0 == status ) {
+    if ( ( status = nc_get_var_float( this->fileid, varid, this->sc_latitude[count] ) ) ) {
+      fprintf( stderr, "%s: error %s retrieving sc_latitudes\n",
+	       __FUNCTION__, nc_strerror( status ) );
+      free( this->sc_latitude[count] );
+      status = -1;
+    } else {
+      if ( ( status = nc_get_att_float( this->fileid, varid, "_FillValue",
+					  &(this->fill_sc_latitude[count]) ) ) ) {
+	fprintf( stderr, "%s: error %s retrieving latitude fill value\n",
+		 __FUNCTION__, nc_strerror( status ) );
+	this->fill_latitude[count] = 0.0;
+      }
+    }
+  } else {
+    status = -1;
+  }
+
+  if ( ( status = nc_inq_varid( this->fileid, gsx_sc_longitudes[location], &varid ) ) ) {
+    fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
+	     __FUNCTION__, this->fileid, gsx_sc_longitudes[location], nc_strerror( status ) );
+    return -1;
+  }
+  status = utils_allocate_clean_aligned_memory( (void**)&this->sc_longitude[count],
+						sizeof(float)*scans );
+  if ( 0 == status ) {
+    if ( ( status = nc_get_var_float( this->fileid, varid, this->sc_longitude[count] ) ) ) {
+      fprintf( stderr, "%s: error %s retrieving sc_longitudes\n", __FUNCTION__,
+	       nc_strerror( status ) );
+      free( this->sc_longitude[count] );
+      status = -1;
+    }
+  } else {
+    status = -1;
+  }
+
   
   if ( ( status = nc_inq_varid( this->fileid, gsx_scantime[location], &varid ) ) ) {
       fprintf( stderr, "%s: file id %d variable '%s', error : %s\n",	\
