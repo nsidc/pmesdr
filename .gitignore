@@ -37,3 +37,4 @@ src/prod/cetb_file/test/NSIDC-0630*nc
 /testing/RSS200*
 /bin
 /NSIDCtest
+ipython_notebooks/.ipynb_checkpoints
