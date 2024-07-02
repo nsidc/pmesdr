@@ -10,5 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
+        with:
+	  activate-environment: test
+	  channels: conda-forge
+	  show-channel-urls: true
+	  use-only-tar-bz2: true
       - run: |
           echo "This does nothing"
+	  conda info
+	  conda install bumpversion
+	  conda list
