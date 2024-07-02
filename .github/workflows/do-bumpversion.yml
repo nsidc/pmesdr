@@ -11,13 +11,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          miniconda-version: "latest"
           activate-environment: test
           channels: conda-forge
           show-channel-urls: true
           use-only-tar-bz2: true
       - run: |
-          conda info
-          conda config --show
           conda install bumpversion
-          conda list
-          which bumpversion
+          bumpversion -h
+          bumpversion patch
+          ls -last
