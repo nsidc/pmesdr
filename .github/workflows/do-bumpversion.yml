@@ -9,6 +9,7 @@ jobs:
         shell: bash -el {0}
     steps:
       - uses: actions/checkout@v4
+      - uses: fregante/setup-git-user@v2
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniconda-version: "latest"
@@ -18,6 +19,5 @@ jobs:
           use-only-tar-bz2: true
       - run: |
           conda install bumpversion
-          bumpversion -h
           bumpversion patch
           ls -last
