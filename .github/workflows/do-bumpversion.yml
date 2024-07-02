@@ -12,7 +12,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
       - run: |
           echo "This does nothing"
-	  conda info
-	  conda config --show
-	  conda install -c conda-forge bumpversion
-	  conda list
+          conda info
+          conda config --show
+          conda install -c conda-forge bumpversion
+          conda list
