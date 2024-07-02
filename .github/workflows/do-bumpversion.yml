@@ -20,4 +20,6 @@ jobs:
       - run: |
           conda install bumpversion
           bumpversion patch
-          ls -last
+          /usr/bin/git status
+          cat .bumpversion.cfg
+          cat VERSION
