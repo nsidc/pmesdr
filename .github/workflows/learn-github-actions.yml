@@ -16,6 +16,8 @@ jobs:
       - run: conda install -c conda-forge bumpversion
       - run: conda list
       - run: echo ${PATH}
+      - run: eval "$(conda shell.bash activate)"
+      - run: echo ${PATH}
       - run: which bumpversion
       - run: bumpversion -h
       - run: echo "VERSION file before bump:"
