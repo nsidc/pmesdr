@@ -13,3 +13,11 @@ jobs:
       - run: bats -v
       - run: python --version
       - run: conda --version
+      - run: conda install -c conda-forge bumpversion
+      - run: bumpversion -h
+      - run: echo "VERSION file before bump:"
+      - run: cat VERSION
+      - run: bumpversion patch
+      - run: echo "VERSION file after bump:"
+      - run: cat VERSION
+
