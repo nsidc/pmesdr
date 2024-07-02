@@ -14,6 +14,8 @@ jobs:
       - run: python --version
       - run: conda --version
       - run: conda install -c conda-forge bumpversion
+      - run: conda list
+      - run: which bumpversion
       - run: bumpversion -h
       - run: echo "VERSION file before bump:"
       - run: cat VERSION
