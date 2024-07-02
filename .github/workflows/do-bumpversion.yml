@@ -9,4 +9,5 @@ jobs:
         shell: bash -el {0}
     steps:
       - uses: actions/checkout@v4
-      - run: echo "This does nothing"
+      - run: |
+          echo "This does nothing"
