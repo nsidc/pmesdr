@@ -1,0 +1,13 @@
+name: do-bumpversion
+run-name: ${{ github.actor }} is running do-bumpversion
+on: [push]
+jobs:
+  do-bumpversion:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+	  echo "This does nothing"
