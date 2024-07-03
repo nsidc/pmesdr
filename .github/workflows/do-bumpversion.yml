@@ -23,7 +23,10 @@ jobs:
           /usr/bin/git status
           cat .bumpversion.cfg
           cat VERSION
-          git add VERSION
-          git add .bumpversion.cfg
-          git commit -m "[skip actions] GitHub Action bumping patch version"
-          git push
+          echo "git adding VERSION and .bumpversion.cfg"
+          /usr/bin/git add VERSION
+          /usr/bin/git add .bumpversion.cfg
+          echo "git commit..."
+          /usr/bin/git commit -m "[skip actions] GitHub Action bumping patch version"
+          echo "git push..."
+          /usr/bin/git push
