@@ -20,7 +20,7 @@ jobs:
       - run: |
           conda install bumpversion
           /usr/bin/git status
-          bumpversion -m "[skip actions] GitHub Action bump version {current_version} -> {new_version}" patch
+          bumpversion --message "[skip actions] GitHub Action bump version {current_version} -> {new_version}" patch
           /usr/bin/git status
           cat .bumpversion.cfg
           cat VERSION
