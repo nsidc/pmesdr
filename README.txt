@@ -53,7 +53,7 @@ https://doi.org/10.5067/QZ3WJNOUZLFK.
 
 *********************************************************************
 
-A small change here.
+2 small changes here.
 
 Base directory for the BYU MEASURES project:
 
