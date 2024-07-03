@@ -1,6 +1,9 @@
 name: do-bumpversion
 run-name: ${{ github.actor }} is running do-bumpversion
-on: [push]
+on:
+  push:
+    branches:
+      - 'main'
 jobs:
   do-bumpversion:
     runs-on: "ubuntu-latest"
