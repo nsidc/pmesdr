@@ -29,5 +29,5 @@ jobs:
           use-only-tar-bz2: true
       - run: |
           conda install bumpversion
-          bumpversion --message "[skip actions] bump version {current_version} -> {new_version}" patch
+          bumpversion --tag --message "[skip actions] bump version {current_version} -> {new_version}" patch
           /usr/bin/git push
