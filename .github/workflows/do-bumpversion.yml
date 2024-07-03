@@ -19,10 +19,5 @@ jobs:
           use-only-tar-bz2: true
       - run: |
           conda install bumpversion
-          /usr/bin/git status
-          bumpversion --message "[skip actions] GitHub Action bump version {current_version} -> {new_version}" patch
-          /usr/bin/git status
-          cat .bumpversion.cfg
-          cat VERSION
-          echo "git push..."
+          bumpversion --message "[skip actions] bump version {current_version} -> {new_version}" patch
           /usr/bin/git push
