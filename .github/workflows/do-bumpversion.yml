@@ -19,6 +19,7 @@ jobs:
           use-only-tar-bz2: true
       - run: |
           conda install bumpversion
+          /usr/bin/git status
           bumpversion patch
           /usr/bin/git status
           cat .bumpversion.cfg
