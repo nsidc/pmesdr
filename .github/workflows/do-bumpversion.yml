@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is running do-bumpversion
 on:
   push:
     branches:
-      - 'main'
+    - main
 jobs:
   do-bumpversion:
     runs-on: "ubuntu-latest"
