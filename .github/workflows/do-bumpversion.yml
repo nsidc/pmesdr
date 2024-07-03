@@ -1,11 +1,18 @@
+# Bumps the patch version when main branch is changed by push or closed PR
 name: do-bumpversion
 run-name: ${{ github.actor }} is running do-bumpversion
 on:
   push:
     branches:
-    - main
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
 jobs:
   do-bumpversion:
+    if: github.event.pull_request.merged == true
     runs-on: "ubuntu-latest"
     defaults:
       run:
