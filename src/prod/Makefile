@@ -92,6 +92,9 @@ regression-setup:
 conda-env:
 	conda create -y -n $(CONDAENV) gsx nose
 
+unit-test:
+	${PMESDR_TOP_DIR}/regression_scripts/build_pmesdr.sh $(CONDAENV)
+
 quick-regression:
 	${PMESDR_TOP_DIR}/regression_scripts/run_regression.sh quick $(CONDAENV)
 
