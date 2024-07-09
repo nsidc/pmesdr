@@ -12,7 +12,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 2 ] ; then
     echo "  SUFFIX: input file suffix"
     echo "  top_level is optional"
     echo ""
-    exit 1
+    return
 fi
 
 gsx_type=$1

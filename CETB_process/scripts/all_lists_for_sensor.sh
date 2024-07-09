@@ -12,7 +12,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 5 ] ; then
     echo "  SRC: input sensor source of data: F08, F10, etc"
     echo "  TOP_LEVEL: top level directory for NRT processing (optional)"
     echo ""
-    exit 1
+    return
 fi
 
 startyear=$1
@@ -29,7 +29,7 @@ error_exit() {
     #   if no error message, prints "Unknown Error"
 
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
-    exit 1
+    return
 }
 
 echo "${PROGNAME}: $startyear $startdoy $endyear $enddoy"
