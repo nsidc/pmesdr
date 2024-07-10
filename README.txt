@@ -1,10 +1,10 @@
-This software repository contains the source code to transform
-passive microwave radiometer data to gridded format, using image
-reconstruction methods developed by D. G. Long at Brigham Young
-University. The radiometer version of Scatterometer Image
-Reconstruction (rSIR) leverages large footprint overlaps and
-irregularly-spaced sampling locations to enhanced the spatial
-resolution of the output grids.
+# PMESDR
+This software repository contains the source code to transform passive
+microwave radiometer data to gridded format, using image reconstruction methods
+developed by D. G. Long at Brigham Young University. The radiometer version of
+Scatterometer Image Reconstruction (rSIR) leverages large footprint overlaps and
+irregularly-spaced sampling locations to enhanced the spatial resolution of the
+output grids.
 
 Copyright (C) 2014-2019 The Regents of the University of Colorado and
 Brigham Young University.
@@ -53,6 +53,8 @@ https://doi.org/10.5067/QZ3WJNOUZLFK.
 
 *********************************************************************
 
+2 small changes here.
+
 Base directory for the BYU MEASURES project:
 
 CETB_process/ scripts for running this system on summit supercomputer
@@ -74,3 +76,4 @@ respectively.
 
 
 
+https://medium.com/@kc_clintone/the-ultimate-guide-to-writing-a-great-readme-md-for-your-project-3d49c2023357

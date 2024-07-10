@@ -95,7 +95,7 @@ else ifeq ($(LOCALE),CUMULUSicc)
   UDUNITS_INCDIR = /usr/local/include
   UDUNITS_LIBDIR = /usr/local/lib
 else
-  $(info Assuming default LOCALE=BYU)
+  $(info Assuming default LOCALE)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
 endif

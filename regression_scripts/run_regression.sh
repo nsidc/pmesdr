@@ -42,7 +42,7 @@ echo "`basename $0`: Regression type is $regressiontype"
 echo "`basename $0`: Conda env is       $condaenv"
 echo "`basename $0`: Make target is     $maketarget"
 
-source ${PMESDR_TOP_DIR}/src/prod/single_set_pmesdr_environment.sh
+source ${PMESDR_TOP_DIR}/src/prod/set_pmesdr_environment.sh
 eval "$(conda shell.bash hook)"
 conda activate ${condaenv}
 date
