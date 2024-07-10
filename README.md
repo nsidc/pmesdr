@@ -9,9 +9,10 @@
     - [Requirements](#requirements)
     - [Installation ](#installation)
     - [Testing](#testing)
-        - [<Quick Regression>](#quick-regression)
+        - [Quick Regression](#quick-regression)
         - [Daily_Regression](#daily_regression)
     - [Development Cycle](#development-cycle)
+        - [Releasing](#releasing)
     - [Software](#software)
         - [gsx](#gsx)
         - [meas_meta_make](#meas_meta_make)
@@ -163,7 +164,7 @@ value of `regression_yyyymmdd` that is defined in `set_pmesdr_environment.sh`.
 The regression tests assume that a conda environment named ${PMESDR_CONDAENV}
 has been built as described above. 
 
-### <Quick Regression>
+### Quick Regression
 
 A "quick" regression, intended for quick development cycles, is fast, but only
 executes tests for the Northern Hemisphere grid and a limited set of pre-defined

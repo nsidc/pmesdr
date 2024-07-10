@@ -52,6 +52,8 @@ if [[ "$thisHostname"  == *"int.nsidc.org"* ]]; then
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
+  # TODO: This directory should end with the name of the VM that is pulled from $thisHostname
+  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant  
 
 elif [[ "$thisHostname" == *"rc.colorado.edu" \
 	  || "$thisHostname" == *"c3"* ]]; then
@@ -60,6 +62,7 @@ elif [[ "$thisHostname" == *"rc.colorado.edu" \
   export LOCALE=ALPINEicc
   export PMESDR_COMPARE_TOLERANCE=0.06
   export PMESDR_MAX_DIFF_PIXELS=100
+  export PMESDR_SCRATCH_DIR=/scratch/alpine/${USER}
 
   module purge all
   ml intel/2022.1.2
@@ -68,21 +71,13 @@ elif [[ "$thisHostname" == *"rc.colorado.edu" \
   ml git-lfs/3.1.2
   module list
 
-elif [[ "$thisHostname" == "pmesdr-nrt" ]]; then
-
-  # this environment is assuming CURC Cumulus
-  export PMESDR_COMPILER=icc
-  export LOCALE=CUMULUSicc
-  source /opt/intel/oneapi/setvars.sh
-  export PMESDR_COMPARE_TOLERANCE=0.06
-  export PMESDR_MAX_DIFF_PIXELS=100
-
 else
 
   export PMESDR_COMPILER=gcc
   export LOCALE=default
   export PMESDR_COMPARE_TOLERANCE=0.06
   export PMESDR_MAX_DIFF_PIXELS=100
+  export PMESDR_SCRATCH_DIR=/home/${USER}
   
 fi                                                                                                                   
 
@@ -93,6 +88,7 @@ else
   echo "Compiler: $PMESDR_COMPILER"
   echo "Conda env: $PMESDR_CONDAENV"
   echo "Regression data: $PMESDR_REGRESS_DIR"
+  echo "Scratch dir: $PMESDR_SCRATCH_DIR"
   echo "It is expected that you will use conda environments for specific versions of python"
   echo "PMESDR system LOCALE=$LOCALE, ready to use the PMESDR system."
 fi
