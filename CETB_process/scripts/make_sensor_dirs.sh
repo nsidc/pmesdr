@@ -14,7 +14,7 @@ fi
 
 SRC=$1
 top_level=$2
-scratchdir=/scratch/alpine/${USER}/${top_level}
+scratchdir=$PMESDR_SCRATCH_DIR/${top_level}
 echo "Making ${scratchdir} processing directories for ${SRC}..."
 
 for subdir in ${SRC} \

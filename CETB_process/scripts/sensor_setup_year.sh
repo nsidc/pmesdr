@@ -18,7 +18,7 @@ top_level=$4
 source ${envpath}/set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-direc=/scratch/alpine/${USER}/${top_level}/
+direc=$PMESDR_SCRATCH_DIR/${top_level}/
 OUTDIR=${direc}/${SRC}_make/
 rm -rf ${direc}/${SRC}_scripts/${SRC}_setup_list_${YEAR}
 #

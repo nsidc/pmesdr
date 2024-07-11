@@ -14,6 +14,7 @@ usage() {
     echo "   - only need the src arg for choosing the correct directories"
     echo "  top_level is optional"
     echo "" 1>&2
+    return
 }
 
 error_exit() {
@@ -39,7 +40,7 @@ while getopts "ant:s:h" opt; do
 	s) src=$OPTARG;;
 	h) usage
 	   return;;
-	?) printf "Usage: %s: [-antsh] args\n" $0
+	?) printf "Usage: %s: [-ant {top_level} s {source} h] args\n" $0
            return;;
 	esac
 done
