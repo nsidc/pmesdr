@@ -31,7 +31,7 @@ DOY1=$2
 DOY2=$3
 envpath=$5
 top_level=$6
-source ${envpath}/single_set_pmesdr_environment.sh
+source ${envpath}/set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
 OUTDIR=/scratch/alpine/${USER}/${top_level}/${SRC}_make/

@@ -65,7 +65,7 @@ fi
 file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}${suffix}
 echo "file = ${file}"
 module purge
-source ${envpath}/single_set_pmesdr_environment.sh
+source ${envpath}/set_pmesdr_environment.sh
 
 module load loadbalance/0.2
 ml

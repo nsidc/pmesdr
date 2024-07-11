@@ -16,7 +16,7 @@ SRC=$2
 envpath=$3
 resolution=$4
 top_level=$5
-source ${envpath}/single_set_pmesdr_environment.sh
+source ${envpath}/set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
 direc=/scratch/alpine/${USER}/${top_level}/

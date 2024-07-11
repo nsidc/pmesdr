@@ -65,7 +65,7 @@ echo "suffix, year, src, path, ${suffix}, ${year}, ${src} ${envpath} ${top_level
 
 module purge 
 # Now load any other software modules you need:
-source ${envpath}/single_set_pmesdr_environment.sh
+source ${envpath}/set_pmesdr_environment.sh
 
 # Load the Load Balancer module *first*
 module load loadbalance/0.2

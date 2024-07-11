@@ -7,7 +7,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 2  ] ; then
     echo "  Run this script from the \$SRC_scripts directory."
     echo "Arguments:"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to single_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to set_pmesdr_environment.sh script"
     echo ""
     exit 1
 fi
@@ -17,7 +17,7 @@ envpath=$2
 year=$3
 top_level=$4
 echo $src $envpath $year $top_level
-source ${envpath}/single_set_pmesdr_environment.sh
+source ${envpath}/set_pmesdr_environment.sh
 
 # Clean up any prior sbatch file with same name
 direc=/scratch/alpine/${USER}/${top_level}

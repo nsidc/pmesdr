@@ -30,7 +30,7 @@ module purge
 
 
 # Now load any other software modules you need:
-source ${envpath}/single_set_pmesdr_environment.sh
+source ${envpath}/set_pmesdr_environment.sh
 
 ml
 date
