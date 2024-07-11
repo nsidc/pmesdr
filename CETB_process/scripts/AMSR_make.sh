@@ -34,9 +34,9 @@ top_level=$6
 source ${envpath}/set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-OUTDIR=/scratch/alpine/${USER}/${top_level}/${SRC}_make/
-direc=/scratch/alpine/${USER}/${top_level}
-rm -rf ${direc}/${SRC}_scripts/${SRC}_make_list 
+OUTDIR=$PMESDR_SCRATCH_DIR/${top_level}/${SRC}_make/
+direc=$PMESDR_SCRATCH_DIR/${top_level}/
+
 if [[ "${SRC}" == "AMSR2" ]] ; then
    sat=GCOMW1
 elif [[ "${SRC}" == "AMSRE" ]] ; then
