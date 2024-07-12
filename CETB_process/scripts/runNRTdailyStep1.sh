@@ -24,12 +24,12 @@ usage() {
     echo "Usage: `basename $0` [-t] [-r] [-h] PLATFORM" 1>&2
     echo "  PLATFORM" 1>&2
     echo "Options: "  1>&2
-    echo "  -t: top level data location under /scratch/summit/${USER}" 1>&2
+    echo "  -t: top level data location under $PMESDR_SCRATCH_DIR" 1>&2
     echo "  -r: optional for different base resolution, -r 1 is 36km and -r 2 is 24km" 1>&2
     echo "  -h: display help message and exit" 1>&2
     echo "  PLATFORM : F16, F17, F18 AMSRE, SMAP" 1>&2
     echo "Prior to running this script, do:" 1>&2
-    echo "  run summit_set_pmesdr_environment.sh" 1>&2
+    echo "  run set_pmesdr_environment.sh" 1>&2
     echo "" 1>&2
 }
 
@@ -45,6 +45,8 @@ else
     echo "Not running as sbatch..."
     PROGNAME=${BASH_SOURCE[0]}
 fi
+thisScriptDir="$( cd "$( dirname "${PROGNAME}" )" && pwd )"
+echo "running from this directory ${thisScriptDir}"
 
 error_exit() {
     # Use for fatal program error
@@ -56,7 +58,7 @@ error_exit() {
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
 	mailx -s "NRT Step1 error jobid ${SLURM_JOB_ID}" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
-    exit 1
+    return
 }
 
 top_level=""
@@ -71,13 +73,13 @@ while getopts "r:t:h" opt; do
 	r) resolution=$OPTARG
 	   res_string="-r ${resolution}";;
 	h) usage
-	   exit 1;;
+	   return;;
 	?) printf "Usage: %s: [-tf] args\n" $0
-           exit 1;;
+           return;;
 	esac
 done
 
-source /projects/moha2290/measures-byu-v2/src/prod/alpine_set_pmesdr_environment.sh
+source $thisScriptDir/../../src/prod/set_pmesdr_environment.sh
 date
 
 shift $(($OPTIND - 1))

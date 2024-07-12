@@ -40,9 +40,9 @@ while getopts "t:r:h" opt; do
 	r) base_resolution=$OPTARG;;
 	t) top_level=$OPTARG;;
 	h) usage
-	   exit 1;;
+	   return;;
 	?) printf "Usage: %s: [-t] [-r] args\n" $0
-           exit 1;;
+           return;;
 	esac
 done
 
@@ -65,11 +65,12 @@ fi
 
 echo "src,suffix,res,top,year $src $suffix $resolution $top_level $year"
 
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_setup_list_${year}${suffix}
-echo "file = ${file}"
 module purge 
 # Now load any other software modules you need:
 source ${envpath}/set_pmesdr_environment.sh
+
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_setup_list_${year}${suffix}
+echo "file = ${file}"
 
 # Load the Load Balancer module *first*
 module load loadbalance/0.2

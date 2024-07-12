@@ -10,7 +10,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 6 ] ; then
     echo "  YEAR_END: end 4-digit year"
     echo "  DOY_END: end day of year"
     echo "  SRC: input sensor source of data: AMSRE"
-    echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script"
+    echo "  ENVPATH: path to set_pmesdr_environment.sh script"
     echo ""
     return
 fi

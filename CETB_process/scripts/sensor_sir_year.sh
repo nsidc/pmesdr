@@ -8,7 +8,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 3 ] ; then
     echo "  YEAR: 4-digit year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
     echo "  ENVPATH: path to set_pmesdr_environment.sh script"
-    echo "  top_level: optional parameter directory below /scratch/summit/${USER}"
+    echo "  top_level: optional parameter directory below $PMESDR_SCRATCH_DIR"
     echo ""
     return
 fi
@@ -21,7 +21,7 @@ shortyear=${longyear:2:2}
 source ${envpath}/set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-direc=/scratch/alpine/${USER}/${top_level}/
+direc=$PMESDR_SCRATCH_DIR/${top_level}/
 
 # run meas_meta_sir with specific parameters
 rm -rf ${direc}/${src}_scripts/${src}_sir_list_${longyear}

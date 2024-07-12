@@ -23,7 +23,7 @@ year=$1
 src=$2
 envpath=$3
 top_level=$4
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_setup_list_${year}
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_setup_list_${year}
 
 module purge 
 # Now load any other software modules you need:

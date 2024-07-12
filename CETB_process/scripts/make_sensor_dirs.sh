@@ -3,13 +3,14 @@ if [ "$1" == "-h" ] || [ "$#" -gt 2 ] ; then
     echo ""
     echo "Usage: `basename $0` [-h] SRC"
     echo "  Creates all the required sensor directories for running"
-    echo "  the system on summit in the current /scratch/summit directory."
+    echo "  the system in the current $PMESDR_SCRATCH_DIR/top_level directory."
+    echo "  Note that the top_level is an optional argument"
     echo "  If any of the required directories exist, this script will"
     echo "  do nothing for that directory."
     echo "Arguments:"
     echo "  SRC: input sensor source of data: F08, F10, etc"
     echo ""
-    exit 1
+    return
 fi
 
 SRC=$1

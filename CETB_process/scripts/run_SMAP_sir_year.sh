@@ -3,7 +3,7 @@
 # Arguments:
 #  year : 4-digit year
 #  src : sensor source (F08, F10, etc)
-#  envpath : location of summit_set_pmesdr_environment.sh script
+#  envpath : location of set_pmesdr_environment.sh script
 #
 #SBATCH --qos normal
 #SBATCH --job-name SMAP_sir_year
@@ -39,9 +39,9 @@ while getopts "t:r:h" opt; do
 	r) base_resolution=$OPTARG;;
 	t) top_level=$OPTARG;;
 	h) usage
-	   exit 1;;
+	   return;;
 	?) printf "Usage: %s: [-r] args\n" $0
-           exit 1;;
+           return;;
 	esac
 done
 
@@ -62,10 +62,11 @@ then
     suffix="_24"
 fi
 
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}${suffix}
-echo "file = ${file}"
 module purge
 source ${envpath}/set_pmesdr_environment.sh
+
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_sir_list_${year}${suffix}
+echo "file = ${file}"
 
 module load loadbalance/0.2
 ml

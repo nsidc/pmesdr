@@ -24,7 +24,7 @@ usage() {
     echo "Usage: `basename $0` [-t] [-r] [-h] PLATFORM" 1>&2
     echo "  PLATFORM" 1>&2
     echo "Options: "  1>&2
-    echo "  -t: top level data location under /scratch/summit/${USER}" 1>&2
+    echo "  -t: top level data location under $PMESDR_SCRATCH_DIR" 1>&2
     echo "  -r: -r 0 is default base resolution (25km) -r 1 is 36km -r 2 is 24km" 1>&2
     echo "  -h: display help message and exit" 1>&2
     echo "  PLATFORM : F16, F17, F18 AMSR2, SMAP" 1>&2
@@ -57,7 +57,7 @@ error_exit() {
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
 	mailx -s "NRT Step2 error jobid ${SLURM_JOB_ID}" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
-    exit 1
+    return
 }
 
 top_level=""
@@ -70,9 +70,9 @@ while getopts "r:t:h" opt; do
 	r) resolution=$OPTARG
 	   res_string="resolution ${resolution}";;
 	h) usage
-	   exit 1;;
+	   return;;
 	?) printf "Usage: %s: [-t] args\n" $0
-           exit 1;;
+           return;;
 	esac
 done
 

@@ -66,7 +66,7 @@ error_exit() {
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
 	mailx -s "NRT Step0 error jobid ${SLURM_JOB_ID}" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
-    exit 1
+    return
 }
 
 top_level=""
@@ -88,13 +88,13 @@ while getopts "ft:h" opt; do
 	esac
 done
 
-source $thisScriptDir/../../src/prod/alpine_set_pmesdr_environment.sh
+source $thisScriptDir/../../src/prod/set_pmesdr_environment.sh
     
 date
 # Now set up sensor based on GSX type
 
 echo "$PROGNAME: top_level = $top_level"
-direc=/scratch/alpine/${USER}/${top_level}
+direc=$PMESDR_SCRATCH_DIR/${top_level}
 echo "$PROGNAME: scratch directory $direc"
 
 shift $(($OPTIND - 1))

@@ -68,7 +68,7 @@ error_exit() {
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" | \
 	mailx -s "NRT Step0 error jobid ${SLURM_JOB_ID}" \
 	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
-    exit 1
+    return
 }
 
 top_level=""
@@ -89,13 +89,13 @@ while getopts "fr:t:s:h" opt; do
 	   res_string="-r ${base_resolution}";;
 	s) start_string=$OPTARG;;
 	h) usage
-	   exit 1;;
+	   return;;
 	?) printf "Usage: %s: [-tf] args\n" $0
-           exit 1;;
+           return;;
 	esac
 done
 
-source $thisScriptDir/../../src/prod/alpine_set_pmesdr_environment.sh
+source $thisScriptDir/../../src/prod/set_pmesdr_environment.sh
     
 date
 # Now set up sensor based on GSX type
