@@ -9,7 +9,7 @@
 #SBATCH --job-name CETB_platform_setup
 #SBATCH --partition=amilan
 #SBATCH --time=06:00:00
-#SBATCH --nodes=6
+#SBATCH --nodes=12
 #SBATCH --ntasks=120
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=7500
