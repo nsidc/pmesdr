@@ -29,7 +29,7 @@ fi
 
 echo $gsx_suffix
 
-direc=/scratch/alpine/${USER}/${top_level}/
+direc=$PMESDR_SCRATCH_DIR/${top_level}/
 for file in `find ${direc}/${src} -name "*.${suffix}"`
 do
     basen=`basename $file`

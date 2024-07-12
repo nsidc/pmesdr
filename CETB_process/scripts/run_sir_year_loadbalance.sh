@@ -23,13 +23,13 @@ year=$1
 src=$2
 envpath=$3
 top_level=$4
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_sir_list_${year}
-echo $file
-
-module purge
 
 # Now load any other software modules you need:
-source ${envpath}/alpine_set_pmesdr_environment.sh
+module purge
+source ${envpath}/set_pmesdr_environment.sh
+
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_sir_list_${year}
+echo $file
 
 # Load the Load Balancer module *first*
 module load loadbalance/0.2

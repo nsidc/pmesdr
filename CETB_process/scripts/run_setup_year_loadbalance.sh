@@ -23,11 +23,12 @@ year=$1
 src=$2
 envpath=$3
 top_level=$4
-file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_setup_list_${year}
 
 module purge 
 # Now load any other software modules you need:
 source ${envpath}/set_pmesdr_environment.sh
+
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_setup_list_${year}
 
 # Load the Load Balancer module *first*
 module load loadbalance/0.2

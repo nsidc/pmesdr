@@ -19,7 +19,7 @@ startdoy=$2
 stopdoy=$3
 src=$4
 top_level=$5
-direc=/scratch/alpine/${USER}/${top_level}/
+direc=$PMESDR_SCRATCH_DIR/${top_level}/
 
 error_exit() {
     # Use for fatal program error
@@ -28,7 +28,7 @@ error_exit() {
     #   if no error message, prints "Unknown Error"
 
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
-    exit 1
+    return
 }
 
 enddaydate=`date -d "$year-01-01 + $(( 10#${stopdoy} - 1 )) days" +%d`

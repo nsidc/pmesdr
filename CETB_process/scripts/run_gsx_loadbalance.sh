@@ -22,16 +22,15 @@ src=$1
 condaenv=$2
 top_level=$3
 envpath=$4
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/gsx_lb_list_alpine
-source /projects/${USER}/miniconda3/bin/activate
-conda activate $condaenv
 
 module purge 
-
 
 # Now load any other software modules you need:
 source ${envpath}/set_pmesdr_environment.sh
 
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/gsx_lb_list_alpine
+source /projects/${USER}/miniconda3/bin/activate
+conda activate $condaenv
 ml
 date
 

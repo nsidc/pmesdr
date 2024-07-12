@@ -19,15 +19,15 @@
 src=$1
 envpath=$2
 top_level=$3
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_make_list
 
 module purge 
 # Now load any other software modules you need:
 source ${envpath}/set_pmesdr_environment.sh
 
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_make_list
+
 # Load the Load Balancer module *first*
 module load loadbalance/0.2
-
 
 ml
 date
