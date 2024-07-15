@@ -33,16 +33,17 @@
 
 ## Introduction
 
-This software repository contains the source code to transform passive microwave
-radiometer data to gridded format, using image reconstruction methods developed
-by D. G. Long at Brigham Young University. The radiometer version of
-Scatterometer Image Reconstruction (rSIR) (Long and Brodzik, 2016; Long et al.,
-2019; Long et al., 2023) leverages large footprint overlaps and
-irregularly-spaced sampling locations to enhanced the spatial resolution of the
-output grids. The PMESDR system is currently maintained and operated at the
-National Snow and Ice Data Center (NSIDC) Distributed Active Archive Center
-(DAAC) on hardware resources at the DAAC and at the University of Colorado
-Research Computing (CURC) high performance computing facilities in Boulder, CO.
+This software repository contains source code to transform passive microwave
+radiometer swath-format data to gridded format, using image reconstruction
+methods developed by D. G. Long at Brigham Young University. The radiometer
+version of Scatterometer Image Reconstruction (rSIR) ([Long and Brodzik,
+2016][long2016]; Long et al., 2019; Long et al., 2023) leverages large footprint
+overlaps and irregularly-spaced sampling locations to enhanced the spatial
+resolution of the output grids. The PMESDR system is currently maintained and
+operated at the National Snow and Ice Data Center (NSIDC) Distributed Active
+Archive Center (DAAC) on hardware resources at the DAAC and at the University of
+Colorado Research Computing (CURC) high performance computing facilities in
+Boulder, CO.
 
 A description of software methods and data set requirements definitions for the
 project development is included in Brodzik et al., 2018. Data products are
@@ -245,50 +246,74 @@ Enhanced-Resolution Brightness Temperature (CETB) data sets:
 
 ### CETB Data Products
 
-Brodzik, M. J., D. G. Long, M. A. Hardman, A. Paget, and
-R. Armstrong. 2016, updated 2024. MEaSUREs Calibrated
-Enhanced-Resolution Passive Microwave Daily EASE-Grid 2.0
-Brightness Temperature ESDR, Version 1. Boulder, Colorado
-USA. NASA National Snow and Ice Data Center Distributed Active
-Archive Center. doi:
+Brodzik, M. J., D. G. Long, M. A. Hardman, A. Paget, and R. Armstrong. 2016,
+updated current year. MEaSUREs Calibrated Enhanced-Resolution Passive Microwave
+Daily EASE-Grid 2.0 Brightness Temperature ESDR, Version 1. Boulder, Colorado
+USA. NASA National Snow and Ice Data Center Distributed Active Archive
+Center. [nsidc0630](https://nsidc.org/data/nsidc-0630/versions/1)
 [10.5067/MEASURES/CRYOSPHERE/NSIDC-0630.001](https://doi.org/10.5067/MEASURES/CRYOSPHERE/NSIDC-0630.001).
-
-<0630v2>
 
 ### SMAP CETB Data Products
 
-check the DOI for version 2:
-
-Brodzik, M. J., D. G. Long, M. A. Hardman. 2019. SMAP Radiometer
+Brodzik, M. J., D. G. Long, M. A. Hardman. 2021, updated 2023. SMAP Radiometer
 Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness
-Temperatures. Version 2. Boulder, Colorado USA: NASA DAAC at the
-National Snow and Ice Data. doi:
-[10.5067/QZ3WJNOUZLFK](https://doi.org/10.5067/QZ3WJNOUZLFK).
+Temperatures. Version 2. Boulder, Colorado USA: NASA DAAC at the National Snow
+and Ice Data
+Center. [nsidc0738v2](https://nsidc.org/data/nsidc-0738/versions/2). [10.5067/YAMX52BXFL10](https://doi.org/10.5067/YAMX52BXFL10).
 
-<0763v1>
+Brodzik, M. J., D. G. Long, M. A. Hardman. 2024, updated current year. SMAP
+Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness
+Temperatures. Version 3. Boulder, Colorado USA: NASA DAAC at the National Snow
+and Ice Data Center.
+[nsidc0738v3](https://nsidc.org/data/nsidc-0738/versions/3). [10.5067/8OULQIU7ZPSX](https://doi.org/10.5067/8OULQIU7ZPSX).
 
 ## References
 
-<add all ATBD refs here>
+Brodzik, M. J., B. Billingsley, T. Haran, B. Raup, and M. H. Savoie. 2012.
+EASE-Grid 2.0: Incremental but Significant Improvements for Earth-Gridded Data
+Sets. ISPRS Int. J. Geo-Inf. 1,
+32–45. [10.3390ijgi1010032](https://doi.org/10.3390/ijgi1010032).
 
-<add EASE-Grid 2.0 refs here>
+Brodzik, M. J., B. Billingsley, T. Haran, B. Raup, and M. H. Savoie. 2014.
+Correction: Brodzik, M.J., et al. EASE-Grid 2.0: Incremental but Significant
+Improvements for Earth-Gridded Data Sets, ISPRS Int. J. Geo-Inf. 2012, 1,
+32–45. ISPRS Int. J. Geo-Inf. 3,
+1154–1156. [10.3390/ijgi3031154](https://doi.org/10.3390/ijgi3031154).
 
-Brodzik, M. J., D. G. Long, and M. A. Hardman. 2018. Best
-Practices in Crafting the Calibrated, Enhanced–Resolution
-Passive–Microwave EASE-Grid 2.0 Brightness Temperature Earth
-System Data Record. Remote Sensing, 10(11), 2018. doi:
-[10.3390/rs10111793](https://doi.org/10.3390/rs10111793).
+Brodzik, M. J. and D. G. Long. 2018. Calibrated Passive Microwave Daily
+EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm Theoretical Basis
+Document, Version 1.0. Boulder, CO, USA. [10.5181/zenodo.7958456](https:
+//doi.org/10.5281/zenodo.7958456).
 
-Long, D. G. and M. J. Brodzik. 2016. Optimum Image Formation for
-Spaceborne Microwave Radiometer Products. IEEE Transactions on
-Geoscience and Remote Sensing, 54(5):2763–2779. doi:
-[10.1109/TGRS.2015.2505677](https://doi.org/10.1109/TGRS.2015.2505677).
+Brodzik, M. J. and D. G. Long. 2024. Calibrated Passive Microwave Daily
+EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm Theoretical Basis
+Document, Version 2.1. Boulder, CO, USA. [10.5281/zenodo.11626219](https:
+//doi.org/10.5281/zenodo.11626219).
 
-Long, D. G., M. J. Brodzik, and M. A. Hardman. 2019. Enhanced
-Resolution SMAP Brightness Temperature Image Products. IEEE
-Transactions on Geoscience and Remote Sensing,
-1-13. doi:[10.1109/TGRS.2018.2889427](https://doi.org/10.1109/TGRS.2018.2889427).
+Brodzik, M. J., D. G. Long, and M. A. Hardman. 2018. Best Practices in Crafting
+the Calibrated, Enhanced–Resolution Passive–Microwave EASE-Grid 2.0 Brightness
+Temperature Earth System Data Record. Remote Sensing,
+10(11), 2018. [10.3390/rs10111793](https://doi.org/10.3390/rs10111793).
 
-<Frontiers paper>
+Brodzik, M. J., D. G. Long, and M. A. Hardman. 2021. SMAP Twice–Daily
+rSIR–Enhanced EASE-Grid 2.0 Brightness Temperatures Algorithm Theoretical Basis
+Document, Version 2. Boulder, CO, USA. [10.5281/zenodo.11069045](https:
+//doi.org/10.5281/zenodo.11069045).
 
+Brodzik, M. J., D. G. Long, and M. A. Hardman. 2024. SMAP Twice–Daily
+rSIR–Enhanced EASE-Grid 2.0 Brightness Temperatures Algorithm Theoretical Basis
+Document, Version 3. Boulder, CO, USA. [10.5281/zenodo.11069054](https:
+//doi.org/10.5281/zenodo.11069054).
 
+[long2016]: Long, D. G. and M. J. Brodzik. 2016. Optimum Image Formation for Spaceborne Microwave Radiometer Products. IEEE Transactions on Geoscience and Remote Sensing, 54(5):2763–2779. [10.1109/TGRS.2015.2505677](https://doi.org/10.1109/TGRS.2015.2505677).
+
+Long, D. G., M. J. Brodzik, and M. A. Hardman. 2019. Enhanced Resolution SMAP
+Brightness Temperature Image Products. IEEE Transactions on Geoscience and
+Remote Sensing,
+1-13. [10.1109/TGRS.2018.2889427](https://doi.org/10.1109/TGRS.2018.2889427).
+
+Long, D. G., M. J. Brodzik, and M. A. Hardman. 2023. Evaluating the Effective
+Resolution of Enhanced Resolution SMAP Brightness Temperature Image
+Products. Frontiers in Remote Sensing 4
+(1073765), 16. [10.3389/frsen.2023.1073765](https://doi.
+org/10.3389/frsen.2023.1073765).
