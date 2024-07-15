@@ -6,12 +6,13 @@
 - [Passive Microwave Earth Science Data Record (PMESDR) System](#passive-microwave-earth-science-data-record-pmesdr-system)
     - [Introduction](#introduction)
     - [License](#license)
+    - [Repository Contents](#repository-contents)
     - [Requirements](#requirements)
     - [Installation ](#installation)
     - [Testing](#testing)
         - [Unit Tests](#unit-tests)
         - [Quick Regression](#quick-regression)
-        - [Daily_Regression](#daily_regression)
+        - [Daily Regression](#daily-regression)
     - [Development Cycle](#development-cycle)
         - [Releasing](#releasing)
     - [Software](#software)
@@ -20,14 +21,17 @@
         - [meas_meta_make](#meas_meta_make)
         - [meas_meta_setup](#meas_meta_setup)
         - [meas_meta_sir](#meas_meta_sir)
+        - [meas_meta_bgi](#meas_meta_bgi)
         - [Additional software](#additional-software)
             - [C gsx reader module](#c-gsx-reader-module)
             - [calcalcs](#calcalcs)
             - [cetb_file](#cetb_file)
             - [utils](#utils)
+    - [Ancillary Data](#ancillary-data)
+        - [Region Definition Files](#region-definition-files)
     - [Operational Instructions](#operational-instructions)
     - [Development Notes](#development-notes)
-        - [Adding a New Sensor](#adding-a-new-sensor)
+        - [Adding a New Sensor/Producer](#adding-a-new-sensorproducer)
         - [Changing Spatial Resolution](#changing-spatial-resolution)
         - [Known Issues](#known-issues)
     - [Data Products](#data-products)
@@ -73,6 +77,25 @@ Young University.
 
 This project software is licensed under the GNU General Public License v3.0.
 Please refer to the LICENSE.txt file for details.
+
+## Repository Contents
+
+CETB_geolocation_tools/ : TBD fix this
+CETB_process/ : operational workflows and scripts used to run this system on
+NSIDC resources at CURC
+LICENSE.txt : software license
+README.md : this README file
+VERION : ascii file with current release version
+docs/ : documentation TBD fix this
+include/ : installation location of C header files
+ipython_notebooks/ : various ipython notebooks
+python/ : general python utilities
+ref/ : region definition files
+regression_scripts/ : bash scripts to perform regression testing
+sample_data/ : data files for regression and development testing --TBD should
+this be moved down?
+src/ : PMESDR system C source code
+testing/ :  directory of testing code and data files --TBD clean this up
 
 ## Requirements
 
@@ -350,7 +373,77 @@ use by `meas_meta_setup`.
 
 ### meas_meta_setup
 
+The `meas_meta_setup` utility is a command-line C program that uses the
+configuration parameters defined by `meas_meta_make` to convert gsx input into
+`.setup` files required by `meas_meta_sir`. The usage message can be produced by
+calling it with no input arguments:
+
+``` bash
+usage: meas_meta_setup -b box_size meta_in outpath
+
+ input parameters:
+   -b box_size is optional input argument to specify box_size for MRF
+      default box_size is 80 for early regression testing
+   meta_in     = input meta file
+   outpath     = output path
+
+```
+
+Required inputs:
+
+meta_in : fully-qualified .meta file from `meas_meta_make`
+outpath : output path for .setup files
+
+Options:
+
+-b box_size: number of pixels that defines measurement response function, as
+a square box_size X box_size area of the output grid. MRF for pixels outside the
+box_size is defined to be zero. Default 80.
+
+Outputs:
+
+For each region defined in the input `.meta` file, a binary `.setup` file is
+produced that contains the mapping of every potential measurement to each output
+grid cell.
+
 ### meas_meta_sir
+
+The `meas_meta_sir` utility is a command-line C program that uses a `.setup`
+file to perform the radiometer version of scatterometer image reconstruction
+(rSIR). The usage message can be produced by calling it with no input arguments:
+
+``` bash
+usage: ./meas_meta_sir setup_in outpath 
+
+ input parameters:
+   setup_in        = input setup file
+   outpath         = output path
+```
+
+Required inputs:
+
+setup_in : fully-qualified .setup file from `meas_meta_setup`
+outpath : output path for reconstructed CETB GRD and rSIR files
+
+Options:
+
+There are no options to this utility.
+
+Outputs:
+
+For each input `.setup` file, two image files are produced: one base-resolution
+CETB GRD file and one enhanced-resolution CETB rSIR file. These CETB files are
+CF-compliant netCDF4 files.
+ 
+### meas_meta_bgi
+
+The `meas_meta_bgi` utility is a command-line C program that uses a `.setup`
+file to perform Backus-Gilbert image reconstruction. This utility is obsolete.
+We have determined that it is much more computationally demanding than
+`meas_meta_sir`. It was used in early development and testing of the PMESDR
+system ([Long and Brodzik, 2016](#long2016); [Long et al., 2019](#long2019)),
+and is only included here for historical purposes. It is no longer included in
+the build or testing targets.
 
 ### Additional software
 
@@ -440,11 +533,49 @@ the `make daily-regression` target.
 
 ## Operational Instructions
 
+TBD: Refer to operational workflow documents
+
 ## Development Notes
 
-### Adding a New Sensor
+### Adding a New Sensor/Producer
+
+Steps to add and process data from a new sensor and/or data producer:
+
+	1. Add or modify one of the gsx Adaptor strategies in `gsx`, to produce`.gsx`-formatted eXtended Generic Swath input files.
+	2. Modify `include/cetb.h` with values for new sensor name, platform, NSIDC
+	dataset name, channels etc. Most of these will be easy to recognize once the
+	new sensor data are examined, e.g. there are enums defined for the platform,
+	producer id, etc.
+	3. Modify `meas_meta_make` with a new single letter identifier that is used
+	in the setup files - see the section in the code that compares F_num to the CETB_platform
+	enum (TBD--needs more detail on what actully needs to be modified here)
+	4. Edit the function cetb_template_filename in cetb_file.c to get the correct template file for the platform and provider
+	combination 
 
 ### Changing Spatial Resolution
+
+For CETB data products, the PMESDR system only outputs data in EASE grid 2.0 (N,
+S, M, T) projections. 
+
+The default is to produce data at a 25 km base resolution. See [Region
+Definition Files](#region-definition-files) to produce output at standard
+spatial resolutions that are divisors of the base resolution, at factors of
+powers-of-2 (12.5, 6.25, 3.125 km, etc).
+
+The system can also produce data with a base resolution of 36 km
+or 24 km.  These are achieved with the `-r` option to `meas_meta_make`:
+
+* -r 0  is the default and uses the 25 km base resolution
+* -r 1  uses 36 km base resolution (and hence 18, 9, 4.5, 2.25 etc)
+* -r 2  uses 24 km base resolution (and 12, 6 and 3)
+
+Currently this is only used in SMAP processing where, for the CETB SMAP
+(nsidc-0738) products, we also produce 36, 9 and 3 km resolution gridded output.
+The 24 km output is not used and is discarded, but is required as a base
+resolution, to get to 3 km.  Also note that the software ensures for the 24 km
+base resolution that the cylindrical grids are M rather than T grids as they
+extend to higher latitudes than the T grids (which only extend to +/- 67
+degrees).
 
 ### Known Issues
 
