@@ -542,7 +542,13 @@ the `make daily-regression` target.
 
 ## Operational Instructions
 
-TBD: Refer to operational workflow documents
+Operational instructions are written for NSIDC operators, for use on CU Research
+Computing resources. The instructions assume that operators have access to these
+systems and access to swath data provider repositories. Mileage may vary for
+non-NSIDC operators. See [nsidc0630 v1
+notes](CETB_process/v1_0630_processing_notes.md) or [nsidc0630 v2
+notes](CETB_process/v2_0630_processing_notes.md) for operational data production
+details.
 
 ## Development Notes
 
