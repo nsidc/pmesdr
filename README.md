@@ -342,8 +342,8 @@ file for input to the PMESDR system.
 	obtained from JAXA L1B data and combined with original data and metadata
 	from L1C. For a given orbit, the gsx adapter is called for each (full orbit)
 	L1C file and the corresponding set of (half-orbit) L1B files. A python
-	utility (included in the gsx package) is call to merge the partial gsx files
-	into a single, complete gsx file for the orbit for downstream processing..</i></figcaption>
+	utility, combine_amsr_l1c_jaxa.py (included in the gsx package) merges the partial gsx files
+	into a single, complete gsx file for the orbit for downstream processing.</i></figcaption>
 </figure>
 
 ### meas_meta_make
