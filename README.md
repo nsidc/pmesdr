@@ -336,7 +336,15 @@ corresponding L1B files (for only 6 GHz data), and finally a call to a python
 function `gsx-merger` to merge the partial gsx files into a single, complete gsx
 file for input to the PMESDR system.
 
-TBD: figure for AMSR-specific gsx workflow
+<figure>
+	<img src="./images/gsx_adapter_for_amsr.png" alt="gsx adapter for AMSR concept" />
+	<figcaption><i>Figure 3: For AMSR2 and AMSR-E inputs, 6 GHz data are
+	obtained from JAXA L1B data and combined with original data and metadata
+	from L1C. For a given orbit, the gsx adapter is called for each (full orbit)
+	L1C file and the corresponding set of (half-orbit) L1B files. A python
+	utility (included in the gsx package) is call to merge the partial gsx files
+	into a single, complete gsx file for the orbit for downstream processing..</i></figcaption>
+</figure>
 
 ### meas_meta_make
 
