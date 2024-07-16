@@ -29,17 +29,18 @@
             - [utils](#utils)
     - [Ancillary Data](#ancillary-data)
         - [Region Definition Files](#region-definition-files)
-    - [Operational Instructions](#operational-instructions)
     - [Development Notes](#development-notes)
+        - [Annual maintenance on local-time-of-day (ltod) boundaries](#annual-maintenance-on-local-time-of-day-ltod-boundaries)
         - [Adding a New Sensor/Producer](#adding-a-new-sensorproducer)
         - [Changing Spatial Resolution](#changing-spatial-resolution)
         - [Known Issues](#known-issues)
+    - [Operational Instructions](#operational-instructions)
     - [Geolocation Tools](#geolocation-tools)
         - [EASE-Grid 2.0 Geolocation Files](#ease-grid-20-geolocation-files)
         - [Software Supporting EASE-Grid 2.0 ](#software-supporting-ease-grid-20)
             - [`cetbtools` python package](#cetbtools-python-package)
             - [`mapx` C library](#mapx-c-library)
-            - [Matlab Transformations](#matlab-transformations)
+            - [Matlab utilities](#matlab-utilities)
             - [Other Software](#other-software)
     - [Data Products](#data-products)
         - [CETB Data Products](#cetb-data-products)
@@ -540,16 +541,6 @@ target.
 * `E2?_test.def`: For each of N, S, T, all channels, separated by ltod, used for
 the `make daily-regression` target.
 
-## Operational Instructions
-
-Operational instructions are written for NSIDC operators, for use on CU Research
-Computing resources. The instructions assume that operators have access to these
-systems and access to swath data provider repositories. Mileage may vary for
-non-NSIDC operators. See [nsidc0630 v1
-notes](CETB_process/v1_0630_processing_notes.md) or [nsidc0630 v2
-notes](CETB_process/v2_0630_processing_notes.md) for operational data production
-details.
-
 ## Development Notes
 
 ### Annual maintenance on local-time-of-day (ltod) boundaries
@@ -607,6 +598,16 @@ extend to higher latitudes than the T grids (which only extend to +/- 67
 degrees).
 
 ### Known Issues
+
+## Operational Instructions
+
+Operational instructions are written for NSIDC operators, for use on CU Research
+Computing resources. The instructions assume that operators have access to these
+systems and access to swath data provider repositories. Mileage may vary for
+non-NSIDC operators. See [nsidc0630 v1
+notes](CETB_process/v1_0630_processing_notes.md) or [nsidc0630 v2
+notes](CETB_process/v2_0630_processing_notes.md) for operational data production
+details.
 
 ## Geolocation Tools
 

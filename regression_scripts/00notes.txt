@@ -1,12 +1,10 @@
-scrontab-l.txt
-	this file shows the scrontab that runs pulls the latest
-	code from the github repo and compiles and then runs
-	nosetests and regression tests at midnight on Alpine
-	supercomputer.  There is also a quick regression test
-	that can be run at any time for quick testing
-	The workflow for the regression assumes that you have a
-	conda env and in this scrontab that is set to cetb3
-	The conda env needs nose and numpy and netCDF4
+Refer to scrontab-l.txt file to see the scrontab that runs daily on CURC
+systems. This job pulls the latest code from the github repo and compiles and
+then runs nosetests and regression tests.
+
+There is also a quick regression test that can be run at any time for quick
+testing. The workflow for the regression assumes that you have a conda env named
+${PMESDR_CONDAENV}. The conda env needs nose, numpy and netCDF4.
 
 
 
