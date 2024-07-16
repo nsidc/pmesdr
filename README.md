@@ -34,6 +34,13 @@
         - [Adding a New Sensor/Producer](#adding-a-new-sensorproducer)
         - [Changing Spatial Resolution](#changing-spatial-resolution)
         - [Known Issues](#known-issues)
+    - [Geolocation Tools](#geolocation-tools)
+        - [EASE-Grid 2.0 Geolocation Files](#ease-grid-20-geolocation-files)
+        - [Software Supporting EASE-Grid 2.0 ](#software-supporting-ease-grid-20)
+            - [`cetbtools` python package](#cetbtools-python-package)
+            - [`mapx` C library](#mapx-c-library)
+            - [Matlab Transformations](#matlab-transformations)
+            - [Other Software](#other-software)
     - [Data Products](#data-products)
         - [CETB Data Products](#cetb-data-products)
         - [SMAP CETB Data Products](#smap-cetb-data-products)
@@ -579,6 +586,82 @@ degrees).
 
 ### Known Issues
 
+## Geolocation Tools
+
+The PMESDR system produces data in EASE-Grid 2.0. [Brodzik et al.,
+2012](https://doi.org/10.3390/ijgi1010032) and [Brodzik et al.,
+2014](https://doi.org/10.3390/ijgi3031154) contain projection and gridding
+details, with reference transformations and PROJ.4 strings included in
+appendices. Since the publication of this information, EASE-Grid 2.0 EPSG codes
+have been defined and verified as:
+
+Projection | EPSG Code
+---------- | ---------
+North | EPSG:6931
+South | EPSG:6932
+Global Cylindrical | EPSG:6933
+
+### EASE-Grid 2.0 Geolocation Files
+
+EASE-Grid 2.0 arrays of latitude and longitude positions at the center of each
+grid cell are available as [nsidc-0772](https://nsidc.org/data/nsidc-0772/versions/1).
+
+### Software Supporting EASE-Grid 2.0 
+
+For map transformation software and/or to perform transformations at locations
+other than the centers of grid cells, users have several options.
+
+#### `cetbtools` python package
+
+The [`cetbtools`](http://anaconda.org/nsidc/cetbtools) python package is
+available for linux, mac osx and Windows platforms. Use the conda package
+manager to install cetbtools. `cetbtools` contains an `Ease2Transform` class for
+calculating transformations between geographic (lat/lon), grid (row/col), and
+map (x,y) locations in EASE-Grid 2.0 projections.
+
+The ipython notebook, [How to read and examine CETB
+files](https://nbviewer.org/gist/mjbrodzik/a250ff522cb49dc155eb), includes
+examples of opening and displaying data in a CETB file, and examples showing how
+to understand the projection and grid metadata, the time variable and run the
+map transformations from (row,col) <--> (lat, lon). Even if you are not a python
+progammer, reviewing this notebook will likely help you understand how the data
+in the CETB files are organized.  You only need a browser to view the notebook.
+
+#### `mapx` C library
+
+Originally developed at NSIDC, [`mapx`](https://github.com/nsidc/mapx) is a
+public C library with map transformation routines supporting a large set of map
+projections, including the EASE-Grid 2.0 projections.
+
+The [`mapxmaps`](https://github.com/nsidc/mapxmaps) repository contains many
+grid parameter definitions (`.gpd`) files used by `mapx`. In any given CETB
+file, the "long_name" attribute in the "crs" variable contains the name of the
+mapx gpd file that corresponds to the data in the file.
+
+`mapx` users may wish to refer to the ipython notebook above in the
+[cetbtools python package](#cetbtools-python-package) section, for a link to
+view an ipython notebook in your browser to better understand the file contents
+and organization.
+
+#### Matlab utilities
+
+The `matlab/` directory in this repository contains Matlab routines that support
+reading and displaying CETB files, and map projection forward and reverse
+transformations. Instructions for use are included in
+`matlab/viewer/readme.txt`.
+
+Matlab users may wish to refer to the ipython notebook above in the
+[cetbtools python package](#cetbtools-python-package) section, for a link to
+view an ipython notebook in your browser to better understand the file contents
+and organization.
+
+#### Other Software
+
+NSIDC maintains an informational web site with the latest known information
+about various software packages (HDFEOS, PROJ.4, GDAL, ENVI, mapx, ArcGIS,
+ERDAS) [support for EASE-Grid 2.0
+projections](https://nsidc.org/data/user-resources/help-center/what-tools-are-compatible-ease-grids).
+
 ## Data Products
 
 The PMESDR system has been used to produce the following Calibrated,
@@ -662,13 +745,14 @@ Project White Paper. [10.5281/zenodo.8035057](https://doi.org/10.5281/zenodo.803
 
 <a id="long2016"></a>Long, D. G. and M. J. Brodzik. 2016. Optimum Image Formation for Spaceborne Microwave Radiometer Products. IEEE Transactions on Geoscience and Remote Sensing, 54(5):2763–2779. [10.1109/TGRS.2015.2505677](https://doi.org/10.1109/TGRS.2015.2505677).
 
-<a id="long2019">Long, D. G., M. J. Brodzik, and M. A. Hardman. 2019. Enhanced Resolution SMAP
+<a id="long2019"></a>Long, D. G., M. J. Brodzik, and M. A. Hardman. 2019. Enhanced Resolution SMAP
 Brightness Temperature Image Products. IEEE Transactions on Geoscience and
 Remote Sensing,
 1-13. [10.1109/TGRS.2018.2889427](https://doi.org/10.1109/TGRS.2018.2889427).
 
-<a id="long2023">Long, D. G., M. J. Brodzik, and M. A. Hardman. 2023. Evaluating the Effective
-Resolution of Enhanced Resolution SMAP Brightness Temperature Image
-Products. Frontiers in Remote Sensing 4
+<a id="long2023"></a>Long, D. G., M. J. Brodzik, and
+M. A. Hardman. 2023. Evaluating the Effective Resolution of Enhanced Resolution
+SMAP Brightness Temperature Image Products. Frontiers in Remote Sensing 4
 (1073765), 16. [10.3389/frsen.2023.1073765](https://doi.
 org/10.3389/frsen.2023.1073765).
+
