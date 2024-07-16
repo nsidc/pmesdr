@@ -316,9 +316,9 @@ reader](#c-gsx-reader) module (below).
 
 <figure>
 	<img src="./images/gsx_adapter.png" alt="gsx adapter concept" />
-	<figcaption>The gsx adapter handles all producer/sensor/formatting
+	<figcaption><i>Figure 2: The gsx adapter handles all producer/sensor/formatting
 	differences, producing generic swath format with required information for
-	downstream processing.</figcaption>
+	downstream processing.</i></figcaption>
 </figure>
 
 #### AMSR sensor gsx differences
