@@ -314,7 +314,7 @@ Files formatted as `gsx` are NC-compliant, with required geolocation and
 positional metadata in a format that is expected by the [C gsx
 reader](#c-gsx-reader) module (below).
 
-TBD: figure for gsx nominal workflow
+![gsx adapter](./images/gsx_adapter.png)
 
 #### AMSR sensor gsx differences
 
@@ -598,6 +598,13 @@ extend to higher latitudes than the T grids (which only extend to +/- 67
 degrees).
 
 ### Known Issues
+
+1. `meas_meta_setup` assumes time values from gsx file are epoch 1987: Setup
+   does all time comparisons using the time variable from the gsx file; however,
+   it is assuming epoch time of "seconds since Jan 1 1987", but it should be
+   getting this string directly from gsx. The python gsx package should set the
+   epoch time so that this assumption and hardcoded epoch can be removed from
+   `meas_meta_setup`.
 
 ## Operational Instructions
 
