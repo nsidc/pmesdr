@@ -96,7 +96,7 @@ CETB_process/ | operational workflows and scripts used to run this system on NSI
 LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
-docs/ | documentation TBD fix this
+docs/ | documentation TBD fix this (combine all refs/reports, move internal notes to README etc
 include/ | C header files
 ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
 matlab/ | matlab viewer routines
