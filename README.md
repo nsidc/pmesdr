@@ -87,22 +87,27 @@ Please refer to the LICENSE.txt file for details.
 
 ## Repository Contents
 
-CETB_geolocation_tools/ : TBD fix this
-CETB_process/ : operational workflows and scripts used to run this system on
-NSIDC resources at CURC
-LICENSE.txt : software license
-README.md : this README file
-VERION : ascii file with current release version
-docs/ : documentation TBD fix this
-include/ : installation location of C header files
-ipython_notebooks/ : various ipython notebooks
-python/ : general python utilities
-ref/ : region definition files
-regression_scripts/ : bash scripts to perform regression testing
-sample_data/ : data files for regression and development testing --TBD should
+This repository contains the following:
+
+Directory | Contents
+--------- | --------
+CETB_process/ | operational workflows and scripts used to run this system on NSIDC resources at CURC
+LICENSE.txt | software license
+README.md | this README file
+VERSION | ascii file with current release version, updated for major/minor/patch
+releases, used in output CETB files
+docs/ | documentation TBD fix this
+include/ | C header files
+ipython_notebooks/ | various ipython notebooks, includes notebook to examine
+orbital drift for local-time-of-day boundaries
+matlab/ | matlab viewer routines
+python/ | miscellaneous python utilities
+ref/ | region definition files
+regression_scripts/ | bash scripts to perform regression testing
+sample_data/ | data files for regression and development testing --TBD should
 this be moved down?
-src/ : PMESDR system C source code
-testing/ :  directory of testing code and data files --TBD clean this up
+src/ | PMESDR system C source code
+testing/ |  directory of testing code and data files --TBD clean this up
 
 ## Requirements
 
@@ -543,6 +548,20 @@ the `make daily-regression` target.
 TBD: Refer to operational workflow documents
 
 ## Development Notes
+
+### Annual maintenance on local-time-of-day (ltod) boundaries
+
+Boundary settings for local-time-of-day (ltod) settings can vary by sensor,
+hemisphere and date. ltod settings control the morning vs. evening binning that
+is performed for EASE2-N and EASE2-S projections. Appendices in [Brodzik et
+al. 2024](https://doi.org/10.5281/zenodo.11626219) include the history of ltods
+shifting due to orbital drift over the lifetimes of the CETB sensors. For
+sensors that continue to produce data in near real-time, NSIDC performs annual
+maintenance of ltod settings, using the ipython notebook,
+`ipython_notebooks/LTOD calculations.ipynb`. Steps to perform annual ltod checks
+include:
+
+	1. TBD
 
 ### Adding a New Sensor/Producer
 
