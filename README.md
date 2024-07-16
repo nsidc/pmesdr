@@ -94,18 +94,15 @@ Directory | Contents
 CETB_process/ | operational workflows and scripts used to run this system on NSIDC resources at CURC
 LICENSE.txt | software license
 README.md | this README file
-VERSION | ascii file with current release version, updated for major/minor/patch
-releases, used in output CETB files
+VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
 docs/ | documentation TBD fix this
 include/ | C header files
-ipython_notebooks/ | various ipython notebooks, includes notebook to examine
-orbital drift for local-time-of-day boundaries
+ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
 matlab/ | matlab viewer routines
 python/ | miscellaneous python utilities
 ref/ | region definition files
 regression_scripts/ | bash scripts to perform regression testing
-sample_data/ | data files for regression and development testing --TBD should
-this be moved down?
+sample_data/ | data files for regression and development testing --TBD should this be moved down?
 src/ | PMESDR system C source code
 testing/ |  directory of testing code and data files --TBD clean this up
 
