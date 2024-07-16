@@ -314,7 +314,9 @@ Files formatted as `gsx` are NC-compliant, with required geolocation and
 positional metadata in a format that is expected by the [C gsx
 reader](#c-gsx-reader) module (below).
 
-![gsx adapter](./images/gsx_adapter.png)
+![gsx adapter{caption=The gsx adapter handles all producer/sensor/formatting
+differences, producing generic swath format with required information for
+downstream processing.}](./images/gsx_adapter.png)
 
 #### AMSR sensor gsx differences
 
