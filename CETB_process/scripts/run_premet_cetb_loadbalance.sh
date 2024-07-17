@@ -7,9 +7,9 @@
 #SBATCH --qos normal
 #SBATCH --job-name CETB_platform_premet
 #SBATCH --partition=amilan
-#SBATCH --time=00:30:00
+#SBATCH --time=01:30:00
 #SBATCH --account=ucb286_asc2
-#SBATCH --ntasks=24
+#SBATCH --ntasks=48
 #SBATCH --cpus-per-task=1
 #SBATCH --constraint=ib
 #SBATCH -o output/premet_lb-%j.out
