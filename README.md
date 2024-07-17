@@ -296,7 +296,15 @@ action with:
 
 ## Software
 
-TBD: PMESDR system nominal workflow 
+<figure>
+	<img src="./images/PMESDR_workflow.png" alt="PMESDR workflow" />
+	<figcaption><i>Figure 1: Nominal PMESDR system workflow. Region definition
+	file is defined with multiple regions, for the grid/channel/direction
+	combinations. gsx input files are converted to multiple .setup files (1 per
+	region definition), containing TB measurements/weights to grid cell
+	mappings. Output files are sets of CETB GRD (base resolution) and rSIR
+	(enhanced resolution) files, by grid/channel/direction.</i></figcaption>
+</figure>
 
 ### gsx
 
