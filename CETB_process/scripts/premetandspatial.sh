@@ -20,7 +20,7 @@ echo $src $envpath $year $top_level
 source ${envpath}/set_pmesdr_environment.sh
 
 # Clean up any prior sbatch file with same name
-direc=/scratch/alpine/${USER}/${top_level}
+direc=$PMESDR_SCRATCH_DIR/${top_level}
 outfile=${direc}/${src}_scripts/${src}_premet_list_cetb_${year}
 if [ -f $outfile ] ; then
     echo "Removing old $outfile"

@@ -21,15 +21,14 @@ year=$2
 condaenv=$3
 envpath=$4
 top_level=$5
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_premet_list_cetb_${year}
+
+module purge 
+# Now load any other software modules you need:
+source ${envpath}/set_pmesdr_environment.sh
 source /projects/${USER}/miniconda3/bin/activate
 conda activate $condaenv
 
-module purge 
-
-
-# Now load any other software modules you need:
-source ${envpath}/set_pmesdr_environment.sh
+file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_premet_list_cetb_${year}
 
 ml
 date
