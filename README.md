@@ -129,7 +129,8 @@ zlib to enable file compression.
 
 `udunits`: The system requires the Unidata
 [`udunits`](https://www.unidata.ucar.edu/software/udunits/) library for handling
-standardized units.
+standardized units. Currently requires v2.2.5--see [Known Issues](#known-issues)
+for details.
 
 `bash`:	Operational scripts are written in the `bash` scripting language.
 
@@ -295,6 +296,8 @@ action with:
 	4. git push origin tag v{new_version}
 
 ## Software
+
+TBD: edit workflow to include list of input file
 
 <figure>
 	<img src="./images/PMESDR_workflow.png" alt="PMESDR workflow" />
@@ -568,8 +571,8 @@ the `make daily-regression` target.
 
 Boundary settings for local-time-of-day (ltod) settings can vary by sensor,
 hemisphere and date. ltod settings control the morning vs. evening binning that
-is performed for EASE2-N and EASE2-S projections. Appendices in [Brodzik et
-al. 2024](https://doi.org/10.5281/zenodo.11626219) include the history of ltods
+is performed for EASE2-N and EASE2-S projections. Appendices in 
+[Brodzik et al. 2024](https://doi.org/10.5281/zenodo.11626219) include the history of ltods
 shifting due to orbital drift over the lifetimes of the CETB sensors. For
 sensors that continue to produce data in near real-time, NSIDC performs annual
 maintenance of ltod settings, using the ipython notebook,
@@ -626,6 +629,11 @@ degrees).
    getting this string directly from gsx. The python gsx package should set the
    epoch time so that this assumption and hardcoded epoch can be removed from
    `meas_meta_setup`.
+
+2. `udunits` TBD issues related to negative hours v2.2.25 is required, v2.2.28 is
+   broken; and an issue has been opened with Unidata
+   
+3. `udunits` TBD issues with 60 seconds vs rolling to next level
 
 ## Operational Instructions
 
@@ -773,8 +781,7 @@ Document, Version 1.0. Boulder, CO, USA. [10.5181/zenodo.7958456](https:
 
 <a id="brodzik2024a">Brodzik, M. J. and D. G. Long. 2024. Calibrated Passive Microwave Daily
 EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm Theoretical Basis
-Document, Version 2.1. Boulder, CO, USA. [10.5281/zenodo.11626219](https:
-//doi.org/10.5281/zenodo.11626219).
+Document, Version 2.1. Boulder, CO, USA. [10.5281/zenodo.11626219](https://doi.org/10.5281/zenodo.11626219).
 
 <a id="brodzik2018a">Brodzik, M. J., D. G. Long, and M. A. Hardman. 2018. Best Practices in Crafting
 the Calibrated, Enhanced–Resolution Passive–Microwave EASE-Grid 2.0 Brightness
@@ -788,8 +795,7 @@ Document, Version 2. Boulder, CO, USA. [10.5281/zenodo.11069045](https:
 
 <a id="brodzik2024b">Brodzik, M. J., D. G. Long, and M. A. Hardman. 2024. SMAP Twice–Daily
 rSIR–Enhanced EASE-Grid 2.0 Brightness Temperatures Algorithm Theoretical Basis
-Document, Version 3. Boulder, CO, USA. [10.5281/zenodo.11069054](https:
-//doi.org/10.5281/zenodo.11069054).
+Document, Version 3. Boulder, CO, USA. [10.5281/zenodo.11069054](https://doi.org/10.5281/zenodo.11069054).
 
 <a id="long2015"></a>Long, D. G. 2015. Selection of Reconstruction Parameters. NSIDC MEaSUREs
 Project White Paper. [10.5281/zenodo.8035057](https://doi.org/10.5281/zenodo.8035057).
@@ -804,6 +810,5 @@ Remote Sensing,
 <a id="long2023"></a>Long, D. G., M. J. Brodzik, and
 M. A. Hardman. 2023. Evaluating the Effective Resolution of Enhanced Resolution
 SMAP Brightness Temperature Image Products. Frontiers in Remote Sensing 4
-(1073765), 16. [10.3389/frsen.2023.1073765](https://doi.
-org/10.3389/frsen.2023.1073765).
+(1073765), 16. [10.3389/frsen.2023.1073765](https://doi.org/10.3389/frsen.2023.1073765).
 
