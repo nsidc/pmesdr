@@ -776,8 +776,7 @@ Improvements for Earth-Gridded Data Sets, ISPRS Int. J. Geo-Inf. 2012, 1,
 
 <a id="brodzik2018">Brodzik, M. J. and D. G. Long. 2018. Calibrated Passive Microwave Daily
 EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm Theoretical Basis
-Document, Version 1.0. Boulder, CO, USA. [10.5181/zenodo.7958456](https:
-//doi.org/10.5281/zenodo.7958456).
+Document, Version 1.0. Boulder, CO, USA. [10.5181/zenodo.7958456](https://doi.org/10.5281/zenodo.7958456).
 
 <a id="brodzik2024a">Brodzik, M. J. and D. G. Long. 2024. Calibrated Passive Microwave Daily
 EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm Theoretical Basis
@@ -790,8 +789,7 @@ Temperature Earth System Data Record. Remote Sensing,
 
 <a id="brodzik2021a">Brodzik, M. J., D. G. Long, and M. A. Hardman. 2021. SMAP Twice–Daily
 rSIR–Enhanced EASE-Grid 2.0 Brightness Temperatures Algorithm Theoretical Basis
-Document, Version 2. Boulder, CO, USA. [10.5281/zenodo.11069045](https:
-//doi.org/10.5281/zenodo.11069045).
+Document, Version 2. Boulder, CO, USA. [10.5281/zenodo.11069045](https://doi.org/10.5281/zenodo.11069045).
 
 <a id="brodzik2024b">Brodzik, M. J., D. G. Long, and M. A. Hardman. 2024. SMAP Twice–Daily
 rSIR–Enhanced EASE-Grid 2.0 Brightness Temperatures Algorithm Theoretical Basis
