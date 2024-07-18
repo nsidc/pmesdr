@@ -933,7 +933,7 @@ void iease2grid(int iopt, float *alon, float *alat,
       lam = x / ( map_equatorial_radius_m * kz );
       break;
     default:
-      fprintf(stderr,"*** invalid EASE2 projection specificaion %d in iease2grid\n",iopt);      
+      fprintf(stderr,"*** invalid EASE2 projection specification %d in iease2grid\n",iopt);      
       break;      
    }
 
