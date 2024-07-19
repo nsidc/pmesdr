@@ -117,7 +117,7 @@ echo "sbatch --begin=${start_string} --job-name=${gsx_type}-0Step --account=$SLU
 ml purge
 ml intel/2022.1.2
 ml gnu_parallel
-source /projects/${USER}/miniconda3/bin/activate
+eval "$(conda shell.bash hook)"
 ml
 date
 
@@ -142,7 +142,7 @@ case $gsx_type in
     fetch_file="/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_alpine.py"
     suffix="*.RT-H5"
     run_dir="/projects/${USER}/swathfetcher"
-    make_file="all_SSMIS_make_for_sensor.sh"
+    make_file="all_AMSR_make.sh"
     platforms="AMSR2";;
     
     SSMIS-CSU-ICDR)

@@ -3,16 +3,21 @@ OPTIND=1
 usage() {
     echo "" 1>&2
     echo "Usage: $0 [-a -n -t top_level -s [AMSRE/AMSR2]"
-    echo "  Rips through all a directory of input swath files for either"
-    echo "  AMSRE or AMSR2 and creates a file to be run in gnu_parallel or via loadbalancer"
-    echo "  and convert from .nc.partial from input swath to GSX format files."
+    echo "  Rips through all a directory of input gsx files for any"
+    echo "  AMSR sensor and creates a file to be run in gnu_parallel or via loadbalancer"
+    echo "  and convert from .nc.partial gsx to complete GSX format files."
     echo "Arguments:"
     echo "   -a - will run the archive combine strategy"
     echo "   -n - will run the near real time combine strategy"
     echo "   -t allows optional top_level directory specification"
     echo "   -s is AMSRE or AMSR2 sensor source of data"
-    echo "   - only need the src arg for choosing the correct directories"
     echo "  top_level is optional"
+    echo ""
+    echo " Note that either -a or -n is required "
+    echo " JAXA files from the NRT location match the L1C files 1-1, but"
+    echo " JAXA files from the archive (including all AMSRE files) are half orbit"
+    echo " files with overlap scans at the beginning and end, so 3 JAXA files are"
+    echo " are needed for each L1C file"
     echo "" 1>&2
     return
 }
@@ -48,7 +53,7 @@ done
 if [[ -n "$app" && -n "$src" ]]
 then
 
-  direc=/scratch/alpine/${USER}/${top_level}/
+  direc=${PMESDR_SCRATCH_DIR}/${top_level}/
   for file in `find ${direc}/${src}-L1C_GSX -name "*.nc.partial"`
   do
       echo "${app} $file ${direc}/${src}-JAXA_GSX ${direc}/${src}_GSX" >> ${direc}/${src}_scripts/gsx_lb_list_alpine

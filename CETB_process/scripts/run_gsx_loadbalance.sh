@@ -29,7 +29,7 @@ module purge
 source ${envpath}/set_pmesdr_environment.sh
 
 file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/gsx_lb_list_alpine
-source /projects/${USER}/miniconda3/bin/activate
+eval "$(conda shell.bash hook)"
 conda activate $condaenv
 ml
 date

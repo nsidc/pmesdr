@@ -1,12 +1,13 @@
 #!/bin/sh
 if [ "$1" == "-h" ] || [ "$#" -lt 3 ] ; then
     echo ""
-    echo "Usage: `basename $0` [-h] YEAR SRC ENVPATH"
+    echo "Usage: `basename $0` [-h] YEAR SRC ENVPATH [top_level]"
     echo "  Creates an sbatch script to run meas_meta_setup for 1 year of data"
     echo "Arguments:"
     echo "  YEAR: 4-digit year"
     echo "  SRC: input sensor source of data: F08, F10, AMSRE, AMSR2 etc"
     echo "  ENVPATH: path to set_pmesdr_environment.sh script"
+    echo "  top_level: optional - directory under $PMESDR_SCRATCH_DIR"
     echo ""
     return
 fi

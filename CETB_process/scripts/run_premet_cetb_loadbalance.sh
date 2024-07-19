@@ -25,7 +25,7 @@ top_level=$5
 module purge 
 # Now load any other software modules you need:
 source ${envpath}/set_pmesdr_environment.sh
-source /projects/${USER}/miniconda3/bin/activate
+eval "$(conda shell.bash hook)"
 conda activate $condaenv
 
 file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_premet_list_cetb_${year}

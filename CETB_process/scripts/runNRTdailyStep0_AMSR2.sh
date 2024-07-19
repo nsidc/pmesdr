@@ -94,7 +94,7 @@ date
 # Now set up sensor based on GSX type
 
 echo "$PROGNAME: top_level = $top_level"
-direc=$PMESDR_SCRATCH_DIR/${top_level}
+direc=${PMESDR_SCRATCH_DIR}/${top_level}
 echo "$PROGNAME: scratch directory $direc"
 
 shift $(($OPTIND - 1))
@@ -110,7 +110,7 @@ sbatch --begin=${start_string} --job-name=AMSR2_S0 --account=$SLURM_JOB_ACCOUNT 
 ml purge
 ml intel/2022.1.2
 ml gnu_parallel
-source /projects/${USER}/miniconda3/bin/activate
+eval "$(conda shell.bash hook)"
 ml
 conda activate $condaenv
 echo "conda activate $condaenv"
@@ -123,7 +123,7 @@ echo "$PROGNAME: SLURM_SCRATCH=$SLURM_SCRATCH"
 echo "$PROGNAME: SLURM_JOB_ID=$SLURM_JOB_ID"
 echo "$PROGNAME: running AMSR2 and condaenv=$condaenv"
 
-make_file="all_SSMIS_make_for_sensor.sh"
+make_file="all_AMSR_make.sh"
 platforms="AMSR2-L1C AMSR2-JAXA"
     
 

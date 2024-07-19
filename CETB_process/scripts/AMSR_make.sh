@@ -14,7 +14,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 5 ] ; then
     echo "  DOY_STOP: stop day of year"
     echo "  SRC: input sensor source of data: AMSRE or AMSR2"
     echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script"
-    echo "  top_level: used for NRT processing"
+    echo "  top_level: optional parameter indicates a directory below $PMESDR_SCRATCH_DIR"
     echo ""
     return
 fi
@@ -33,9 +33,9 @@ envpath=$5
 top_level=$6
 source ${envpath}/set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
-BINDIR=$TOPDIR/bin
-OUTDIR=$PMESDR_SCRATCH_DIR/${top_level}/${SRC}_make/
-direc=$PMESDR_SCRATCH_DIR/${top_level}/
+BINDIR=${TOPDIR}/bin
+OUTDIR=${PMESDR_SCRATCH_DIR}/${top_level}/${SRC}_make/
+direc=${PMESDR_SCRATCH_DIR}/${top_level}/
 
 if [[ "${SRC}" == "AMSR2" ]] ; then
    sat=GCOMW1

@@ -1,7 +1,7 @@
 #!/bin/sh
 if [ "$1" == "-h" ] || [ "$#" -lt 6 ] ; then
     echo ""
-    echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC ENVPATH"
+    echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC ENVPATH TOP_LEVEL"
     echo "  Makes daily and concatenated 3-day file lists of GSX input files for the "
     echo "  requested sensor SRC"
     echo "Arguments:"
@@ -11,6 +11,7 @@ if [ "$1" == "-h" ] || [ "$#" -lt 6 ] ; then
     echo "  DOY_END: end day of year"
     echo "  SRC: input sensor source of data: AMSRE"
     echo "  ENVPATH: path to set_pmesdr_environment.sh script"
+    echo "  TOP_LEVEL: optional directory below $PMESDR_SCRATCH_DIR"
     echo ""
     return
 fi

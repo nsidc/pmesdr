@@ -1,18 +1,19 @@
 #!/bin/sh
 if [ "$1" == "-h" ] || [ "$#" -lt 6 ] ; then
     echo ""
-    echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC ENVPATH"
-    echo "  Makes a list of meas_meta_make commands"
-    echo "  this script is a wrapper for the yearly meas_meta_make list"
-    echo "  the script calls the yearly script for each year in the period"
+    echo "Usage: `basename $0` [-h] YEAR_START DOY_START YEAR_END DOY_END SRC ENVPATH [TOP_LEVEL]"
+    echo "  Creates a file with a list of meas_meta_make instructions that is"
+    echo "  suitable to run with the loadbalancer or gnu_parallel using sbatch"
+    echo "  this script is a wrapper for SSMIS_make.sh which is called "
+    echo "  for each year in the period"
     echo "Arguments:"
     echo "  YEAR_START: start 4-digit year"
     echo "  DOY_START: start day of year"
     echo "  YEAR_END: end 4-digit year"
     echo "  DOY_END: end day of year"
     echo "  SRC: input sensor source of data: F08, F10, etc"
-    echo "  ENVPATH: path to alpine_set_pmesdr_environment.sh script"
-    echo "  top_level: path for top_level in scratch used in NRT processing"
+    echo "  ENVPATH: path to set_pmesdr_environment.sh script"
+    echo "  top_level: path for top_level in scratch is an optional parameter"
     echo ""
     exit 1
 fi
@@ -27,7 +28,7 @@ top_level=$7
 
 # Delete the output file.  It will be appended to by each iteration of the
 # year loop, below.
-outfile=/scratch/alpine/${USER}/${top_level}/${sensor}_scripts/${sensor}_make_list
+outfile=${PMESDR_SCRATCH_DIR}/${top_level}/${sensor}_scripts/${sensor}_make_list
 rm -f ${outfile}
 echo "$0: removing make file: $outfile"
 
@@ -52,15 +53,9 @@ do
     fi
     
     echo "$0: SSMIS_make for: $year $thisbegindoy $thisenddoy $sensor $envpath $top_level"
-    if [[ ${sensor} == "AMSR2" ]]; then
-	echo "source is AMSR2"
-	source $PMESDR_RUN/AMSR_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
-    else
-	echo "source is not AMSR2"
-	source $PMESDR_RUN/SSMIS_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
-    fi
+    source $PMESDR_RUN/SSMIS_make.sh $year $thisbegindoy $thisenddoy $sensor $envpath $top_level
     
-    echo "$? exit from SSMIS[AMSR2]-make.sh called from all_SSMIS-make"
+    echo "$? exit from SSMIS-make.sh called from all_SSMIS-make"
     
 done    
 
