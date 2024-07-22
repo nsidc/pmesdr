@@ -76,6 +76,8 @@ resources at the DAAC and at the University of Colorado Research Computing
 	output imagery. </i></figcaption>
 </figure>
 
+***
+
 System outputs include conventional, low-resolution imagery (`GRD`,
 typically 25 km), and enhanced-resolution imagery (`rSIR`, at resolutions up to
 3.125 km).
@@ -91,6 +93,8 @@ typically 25 km), and enhanced-resolution imagery (`rSIR`, at resolutions up to
 	km resolution (right). [Paget et al., 2017](#paget2017) </i></figcaption>
 </figure>
 
+***
+
 A description of software methods and data set requirements definitions for the
 project development is included in [Brodzik et al., 2018](#brodzik2018a). Data
 products are produced in EASE-Grid 2.0 ([Brodzik et al., 2012](#brodzik2012);
@@ -104,6 +108,8 @@ nsidc0630v2 | [Brodzik et al., 2023](https://doi.org/10.5067/19LHYLUXZ22M) | [ns
 nsidc0763v1 | [Brodzik et al., 2021](https://doi.org/10.5067/NDQ5ATHFSH57) | n/a | Prototype for nsidc0630v2, available for limited periods only
 nsidc0738v2 | [Brodzik et al., 2021](https://doi.org/10.5067/YAMX52BXFL10) | [nsidc0738v2 ATBD](https://doi.org/10.5281/zenodo.11069045) | Stopped production late 2023, to be replaced by nsidc0738v3
 nsidc0738v3 | [Brodzik et al., 2024](https://doi.org/10.5067/8OULQIU7ZPSX) | [nsidc0738v3 ATBD](https://doi.org/10.5281/zenodo.11069054) | In preparation at NSIDC DAAC
+
+***
 
 The operational lifetimes of sensors included in the CETB data products span
 over 40 years.
