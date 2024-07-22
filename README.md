@@ -417,11 +417,11 @@ meas_meta_make.c: usage: meas_meta_make [-t threshold] [-r resolution] meta_name
  meas_meta_make.c: input parameters:
    meas_meta_make.c: meta_name   = meta file output name
    meas_meta_make.c: platform    = name of the platform as cetb_platform_id (from cetb.h)
-   meas_meta_make.c: start_day   = start day
-   meas_meta_make.c: end_day     = end day
-   meas_meta_make.c: year        = year input
+   meas_meta_make.c: start_day   = start day of year
+   meas_meta_make.c: end_day     = end day of year
+   meas_meta_make.c: year        = 4-digit year input
    meas_meta_make.c: def         = region def file 
-   meas_meta_make.c: in_list     = name of input file containing list of swath files
+   meas_meta_make.c: in_list     = name of input file containing list of gsx files
 
 ```
 
@@ -429,10 +429,11 @@ Required inputs:
 
 meta_name: fully-qualified .meta output file name
 platform: platform to process
-start_day: digits?  TBD
-end_day: digits? TBD
-year: digits? TBD
+start_day: day of year
+end_day: day of year
+year: 4-digit year
 def: fully-qualified region definition file
+in_list: ASCII file with list of gsx files to include in processing
 
 Options:
 
