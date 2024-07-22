@@ -23,17 +23,25 @@ def compare_cetb_directories( dir1, dir2,
                               exclude_out_of_range=False, statistics=False, tolerance=0,
                               max_diff_pixels=0, verbose=False ):
     """
-    Compares 2 CETB output directories, by matching up filenames in each one,
+    Compares 2 CETB output directories by matching up filenames in each one,
     and calling compare_cetb_files on the pairs.
     Returns 0 when dirs compare as the "same", and 1 otherwise.
 
-    exclude_out_of_range : default is False
+    dir1: directory
+    dir2: directory
+    exclude_out_of_range : boolean, default is False
          when this keyword is set, any pixel locations outside the interval
-         [ 50.0, 350.0 ] Kelvins are ignored.
-
+         [ 50.0, 350.0 ] Kelvins are ignored
+    statistics : boolean, default is False
+         when this keyword is set, verbose image and difference statistics
+         are dumped to stderr
+    tolerance : numeric, default is 0
+         differences smaller than abs(tolerance) will be ignored
     max_diff_pixels : default is 0
-         when this keyword is set the data will match as long as there are fewer
+         the data will match as long as there are fewer
          than max_diff_pixels different pixels in each file in the directory
+    verbose : boolean, default is False
+         verbose output
     """
     this_program = inspect.stack()[ 0 ][ 3 ]
     if ( verbose ):
@@ -113,42 +121,44 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
                         statistics=False, tolerance=0, max_diff_pixels=0,
                         verbose=False ):
     """
-    status = compare_cetb_files( file1, file2,
-                                 exclude_out_of_range=False,
-                                 statistics=False,
-                                 tolerance=0,
-                                 max_diff_pixels=0,
-                                 verbose=False )
+    Compared 2 CETB files for pixelwise differences in TB arrays only. Returns
+    True if files are identical (or similar within tolerances). Returns False
+    if data are significantly different. Note that CETB files are netCDF files,
+    with global attributes and several variables. No metadata or variables
+    other variables are compared.
 
-    Compares 2 CETB files.
-
-    CETB files are netCDF files, with global attributes and a number of variable arrays.
-    Eventually we will compare all the pieces of the two files, displaying any differences.
-    For now, we will just compare the data array contained in:
-      variable a_image (used in sir files) or bgi_image (used in bgi files).
-    Returns True when files compare as the "same", and False otherwise.
-
-    exclude_out_of_range : default is False
+    file1: CETB .nc file
+    file2: CETB .nc file
+    exclude_out_of_range : boolean, default is False
          when this keyword is set, any pixel locations outside the interval
-         [ 50.0, 350.0 ] Kelvins are ignored.
-
+         [ 50.0, 350.0 ] Kelvins are ignored
+    statistics : boolean, default is False
+         when this keyword is set, verbose image and difference statistics
+         are dumped to stderr
+    tolerance : numeric, default is 0
+         differences smaller than abs(tolerance) will be ignored
     max_diff_pixels : default is 0
-         when this keyword is set the data will match as long as there are fewer
+         the data will match as long as there are fewer
          than max_diff_pixels different pixels in each file in the directory
-
+    verbose : boolean, default is False
+         verbose output
+    
     """
     this_program = inspect.stack()[ 0 ][ 3 ]
     if ( verbose ):
         sys.stderr.write( "\n" )
         sys.stderr.write( "> " + this_program + ": file1: " + file1 + "\n" )
         sys.stderr.write( "> " + this_program + ": file2: " + file2 + "\n" )
-        sys.stderr.write( "> " + this_program + ": tolerance: " + str( tolerance ) + "\n" )
-        sys.stderr.write( "> " + this_program + ": max_diff_pixels: " + str( max_diff_pixels ) + "\n" )
-        sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " + str( exclude_out_of_range ) + "\n" )
+        sys.stderr.write( "> " + this_program + ": tolerance: " +
+                          str( tolerance ) + "\n" )
+        sys.stderr.write( "> " + this_program + ": max_diff_pixels: " +
+                          str( max_diff_pixels ) + "\n" )
+        sys.stderr.write( "> " + this_program + ": exclude_out_of_range: " +
+                          str( exclude_out_of_range ) + "\n" )
 
     # Old cetb nc files can either have "a_image" or "bgi_image" variables (but
     # not both).
-    # New cetb cd files will only have a single "TB" variable, which is scaled
+    # New cetb cd files have a "TB" variable, which is scaled.
     # Figure out which variable name is in the first file, and
     # then always look for "TB" in the second one
     f1 = Dataset( file1, 'r', 'NETCDF4' )
@@ -166,7 +176,8 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
             break
 
     if ( 'none' == var_name ):
-        sys.stderr.write( "\n" + this_program + ": " + file1 + ": " + "contains neither a_image nor bgi_image.\n" )
+        sys.stderr.write( "\n" + this_program + ": " + file1 + ": " +
+                          "contains neither a_image nor bgi_image.\n" )
         return False
     
     # Open and read the variable TB data from both files
@@ -184,10 +195,12 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
         dump_image_statistics( file1, image1 )
         dump_image_statistics( file2, image2 )
 
-    image1, image2, diff = filter_images( image1, image2, diff, exclude_out_of_range )
+    image1, image2, diff = filter_images( image1, image2, diff,
+                                          exclude_out_of_range )
 
     if statistics:
-        dump_diff_statistics( image1, image2, diff, tolerance, exclude_out_of_range=exclude_out_of_range )
+        dump_diff_statistics( image1, image2, diff, tolerance,
+                              exclude_out_of_range=exclude_out_of_range )
 
     # If there is an x dimension variable, compare first elements of it
     # FIXME on next regression data replacement:
@@ -205,28 +218,36 @@ def compare_cetb_files( file1, file2, exclude_out_of_range=False,
     # Finally check for fewer than max_diff_pixels different
     if ( np.array_equal( image1, image2 ) ):
         if ( verbose ):
-            sys.stderr.write( "> " + this_program + ": " + var_name + " data are identical.\n" )
+            sys.stderr.write( "> " + this_program + ": " + var_name +
+                              " data are identical.\n" )
         return True
     else:
         absdiff = abs( diff )
         if ( np.max( absdiff ) <= abs( tolerance ) ):
             if ( verbose ):
-                sys.stderr.write( "> " + this_program + ": " + var_name + " data are within tolerance.\n" )
+                sys.stderr.write( "> " + this_program + ": " + var_name +
+                                  " data are within tolerance.\n" )
             return True
         elif ( (len( absdiff[ absdiff > abs( tolerance ) ] )) <= max_diff_pixels ):
             if ( verbose ):
-                sys.stderr.write( "> " + this_program + ": " + var_name + " fewer than "
-                                  + str( max_diff_pixels ) + " are different.\n")
+                sys.stderr.write( "> " + this_program + ": " + var_name +
+                                  " fewer than " + str( max_diff_pixels ) +
+                                  " are different.\n")
             return True
         else:
-            sys.stderr.write( "\n" + this_program + ": " + var_name + " data differ.\n" )
+            sys.stderr.write( "\n" + this_program + ": " + var_name +
+                              " data differ.\n" )
             return False
 
 
 def dump_image_statistics( filename, image ):
     """
-    Dumps statistics on this image to stderr:
-    filename: min, max, mean, stddev
+    Dumps statistics on this image to stderr as a record of the form:
+    filename: min=min, max=max, mean=mean, stddev=stddev
+
+    filename : string filename to print
+    image : ndarray to examine
+    
     """
     try:
         sys.stderr.write('{0}:\n\tmin={1:8.4f} max={2:8.4f} mean={3:8.4f} std={4:8.4f}\n'
@@ -241,10 +262,20 @@ def dump_image_statistics( filename, image ):
     return
 
 
-def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, tolerance, exclude_out_of_range=False ):
+def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff,
+                          tolerance, exclude_out_of_range=False ):
     """
-    Dumps statistics on difference image to stderr:
-    diff: min, max, mean, stddev
+    Dumps statistics on difference image to stderr as a record of the form:
+    difference: min=min, max=max, mean=mean, stddev=stddev
+
+    filtered_image1 : ndarray of first image
+    filtered_image2 : ndarray of second image
+    filtered_diff : ndarray of difference
+    tolerance : numeric, differences smaller than abs(tolerance) will be ignored
+    exclude_out_of_range : boolean, default is False
+         when this keyword is set, any pixel locations outside the interval
+         [ 50.0, 350.0 ] Kelvins are ignored
+    
     """
     my_image1 = filtered_image1
     my_image2 = filtered_image2
@@ -282,6 +313,20 @@ def dump_diff_statistics( filtered_image1, filtered_image2, filtered_diff, toler
 
 
 def filter_images( image1, image2, diff, exclude_out_of_range=False, verbose=False ):
+    """
+    If exclude_out_of_range is set, filters images and difference arrays to only
+    the locations of pixels in the expected range and ignores any out of range
+    values
+
+    image1 : ndarray of first image
+    image2 : ndarray of second image
+    diff : ndarray of difference
+    exclude_out_of_range : boolean, default is False
+         when this keyword is set, any pixel locations outside the interval
+         [ 50.0, 350.0 ] Kelvins will be ignored in all three images
+    verbose : boolean, default is False
+
+    """
 
     if ( exclude_out_of_range ):
         if ( verbose ):
