@@ -140,7 +140,7 @@ CETB_process/ | operational workflows and scripts used to run this system on NSI
 LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
-docs/ | documentation TBD fix this (move internal boxsize and ltod notes to README)
+docs/ | documentation (TBD: move internal boxsize and ltod notes to README)
 idl/ | IDL scripts to produce the sensor timeline figures
 include/ | C header files
 ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
@@ -341,8 +341,6 @@ action with:
 	4. git push origin tag v{new_version}
 
 ## Software
-
-TBD: edit workflow to include list of input file
 
 <figure>
 	<img src="./images/PMESDR_workflow.png" alt="PMESDR workflow" />
@@ -625,7 +623,7 @@ maintenance of ltod settings, using the ipython notebook,
 `ipython_notebooks/LTOD calculations.ipynb`. Steps to perform annual ltod checks
 include:
 
-	1. TBD
+	1. TBD--needs detail from Molly
 
 ### Adding a New Sensor/Producer
 
