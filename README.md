@@ -120,6 +120,8 @@ over 40 years.
 	with ">>>" are still operating in 2024.</i></figcaption>
 </figure>
 
+## Copyright
+
 Copyright (C) 2014-2024 The Regents of the University of Colorado and Brigham
 Young University.
 
@@ -138,7 +140,7 @@ CETB_process/ | operational workflows and scripts used to run this system on NSI
 LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
-docs/ | documentation TBD fix this (combine all refs/reports, move internal notes to README etc
+docs/ | documentation TBD fix this (move internal boxsize and ltod notes to README)
 idl/ | IDL scripts to produce the sensor timeline figures
 include/ | C header files
 ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
