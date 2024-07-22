@@ -1,5 +1,9 @@
 # Passive Microwave Earth Science Data Record (PMESDR) System
 
+<figure>
+	<img src="./images/cetb_banner.1920x1080.png" alt="CETB banner montage" />
+</figure>
+
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
@@ -61,12 +65,36 @@ sampling locations to enhanced the spatial resolution of the output grids. The
 PMESDR system is currently maintained and operated at the National Snow and Ice
 Data Center (NSIDC) Distributed Active Archive Center (DAAC) on hardware
 resources at the DAAC and at the University of Colorado Research Computing
-(CURC) high performance computing facilities in Boulder, CO.
+(CURC) high performance computing facilities in Boulder, CO. 
+
+<figure>
+	<img src="./images/GRD_vs_rSIR_cartoon_vertical.white.png" alt="GRD vs. SIR concept" />
+    <figcaption><i>Conventional (top) vs. rSIR-enhanced (bottom) concept for
+	image reconstruction. Conventional methods smoothed overlapping
+	measurements, while rSIR takes advantage of overlapping measurement areas
+	and irregularly-spaced measurement locaiton to enhance spatial resolution of
+	output imagery. </i></figcaption>
+</figure>
+
+System outputs include conventional, low-resolution imagery (`GRD`,
+typically 25 km), and enhanced-resolution imagery (`rSIR`, at resolutions up to
+3.125 km).
+
+<figure>
+	<img src="./images/fig1_arctic_detail_for_eos.png" alt="Detail of image
+	enhancement from rSIR" />
+    <figcaption><i>Example of image reconstruction used to enhance spatial resolution, high
+	Arctic. Reconstructed brightness temperatures (grey values) overlaid with
+	coastlines (green) and glacier outlines (blue). Ice, ocean, and land
+	boundary features are indistinct at nominal, 25
+	km resolution (left), but are distinguished more clearly at enhanced, 3.125
+	km resolution (right). [Paget et al., 2017](#paget2017) </i></figcaption>
+</figure>
 
 A description of software methods and data set requirements definitions for the
 project development is included in [Brodzik et al., 2018](#brodzik2018a). Data
 products are produced in EASE-Grid 2.0 ([Brodzik et al., 2012](#brodzik2012);
-[2014](#brodzik2014)). This system has been used to produce the following data
+[2014](#brodzik2014)). This system has been used to produce the following CETB data
 products:
 
 Data Product ID | Reference | Algorithm Theoretical Basis Document | Status
@@ -77,6 +105,14 @@ nsidc0763v1 | [Brodzik et al., 2021](https://doi.org/10.5067/NDQ5ATHFSH57) | n/a
 nsidc0738v2 | [Brodzik et al., 2021](https://doi.org/10.5067/YAMX52BXFL10) | [nsidc0738v2 ATBD](https://doi.org/10.5281/zenodo.11069045) | Stopped production late 2023, to be replaced by nsidc0738v3
 nsidc0738v3 | [Brodzik et al., 2024](https://doi.org/10.5067/8OULQIU7ZPSX) | [nsidc0738v3 ATBD](https://doi.org/10.5281/zenodo.11069054) | In preparation at NSIDC DAAC
 
+The operational lifetimes of sensors included in the CETB data products span
+over 40 years.
+
+<figure>
+	<img src="./idl/CETB_PM_sensors_timeline.v4.png" alt="PMESDR sensor timelines" />
+	<figcaption><i>Operational timelines of PMESDR sensors. Sensors labelled
+	with ">>>" are still operating in 2024.</i></figcaption>
+</figure>
 
 Copyright (C) 2014-2024 The Regents of the University of Colorado and Brigham
 Young University.
@@ -97,15 +133,16 @@ LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
 docs/ | documentation TBD fix this (combine all refs/reports, move internal notes to README etc
+idl/ | IDL scripts to produce the sensor timeline figures
 include/ | C header files
 ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
 matlab/ | matlab viewer routines
 python/ | miscellaneous python utilities
 ref/ | region definition files
 regression_scripts/ | bash scripts to perform regression testing
-sample_data/ | data files for regression and development testing --TBD should this be moved down?
+sample_data/ | data files for development testing
 src/ | PMESDR system C source code
-testing/ |  directory of testing code and data files --TBD clean this up
+testing/ | directory of testing code and data files --TBD clean this up
 
 ## Requirements
 
@@ -301,7 +338,7 @@ TBD: edit workflow to include list of input file
 
 <figure>
 	<img src="./images/PMESDR_workflow.png" alt="PMESDR workflow" />
-	<figcaption><i>Figure 1: Nominal PMESDR system workflow. Region definition
+	<figcaption><i>Nominal PMESDR system workflow. Region definition
 	file is defined with multiple regions, for the grid/channel/direction
 	combinations. gsx input files are converted to multiple .setup files (1 per
 	region definition), containing TB measurements/weights to grid cell
@@ -327,7 +364,7 @@ reader](#c-gsx-reader) module (below).
 
 <figure>
 	<img src="./images/gsx_adapter.png" alt="gsx adapter concept" />
-	<figcaption><i>Figure 2: The gsx adapter handles all producer/sensor/formatting
+	<figcaption><i>The gsx adapter handles all producer/sensor/formatting
 	differences, producing generic swath format with required information for
 	downstream processing.</i></figcaption>
 </figure>
@@ -349,7 +386,7 @@ file for input to the PMESDR system.
 
 <figure>
 	<img src="./images/gsx_adapter_for_amsr.png" alt="gsx adapter for AMSR concept" />
-	<figcaption><i>Figure 3: For AMSR2 and AMSR-E inputs, 6 GHz data are
+	<figcaption><i>For AMSR2 and AMSR-E inputs, 6 GHz data are
 	obtained from JAXA L1B data and combined with original data and metadata
 	from L1C. For a given orbit, the gsx adapter is called for each (full orbit)
 	L1C file and the corresponding set of (half-orbit) L1B files. A python
@@ -517,8 +554,8 @@ control the processing configuration for a requested batch of processing.
 
 `regiondef1.dat` is the general region definition file, containing region ids
 for many regions used in historical development at BYU. The regions ids used for
-CETB data products are only EASE2_M (typo here), EASE2_N, EASE2_S and EASE2_T
-(305, 308, 309, 310).
+CETB data products are only EASE2_N, EASE2_S and EASE2_T (308, 309, 310). Note
+that region id 310 is used for EASE2_T and EASE2_M grids.
 
 Format of .def files is:
 
@@ -539,10 +576,11 @@ Format of .def files is:
 
 Region Field | Values | Notes
 ------------ | ------ | -----
-region id    | 305, 308, 309, 310 | corresponding to EASE2-M, etc, see `regiondef1.dat`
+region id    | 308, 309, 310 | corresponding to EASE2-N, etc, see `regiondef1.dat`
 resolution factor | 0, 1, 2, 3    | power of 2 divided into base resolution
 asc/des/ltod flag | 0=all, 1=asc, 2=des, 3=morn, 4=eve |
-beam number | 1=19H, 2=19V, 3=22V, 4=37H, 5=37V, 6=85H, 7=85V | these are for SSM/I -- where are these defined for AMSR2, etc?
+beam number | 1=19H, 2=19V, 3=22V, 4=37H, 5=37V, 6=85H, 7=85V | these are for
+SSM/I; see channel ibeam enums in [cetb.h]('include/cetb.h')
 SIR iterations | number | number of SIR iterations for this channel
 
 `resolution factor`: Note that resolution factor is used together with meas_meta_make -r
@@ -810,3 +848,6 @@ M. A. Hardman. 2023. Evaluating the Effective Resolution of Enhanced Resolution
 SMAP Brightness Temperature Image Products. Frontiers in Remote Sensing 4
 (1073765), 16. [10.3389/frsen.2023.1073765](https://doi.org/10.3389/frsen.2023.1073765).
 
+<a id="paget2017"></a>Paget, A. C., M. J. Brodzik, D. G. Long, and
+M. A. Hardman. Bringing Earth’s Microwave Maps into Sharper Focus. Eos,
+98(6):28–32, 2017. [10.1029/2016EO063675](https://doi.org/10.1029/2016EO063675)
