@@ -68,7 +68,7 @@ resources at the DAAC and at the University of Colorado Research Computing
 (CURC) high performance computing facilities in Boulder, CO. 
 
 <figure>
-	<img src="./images/GRD_vs_rSIR_cartoon_horizontal.pdf" alt="GRD vs. SIR concept" />
+	<img src="./images/GRD_vs_rSIR_cartoon_horizontal.png" alt="GRD vs. SIR concept" />
     <figcaption><i>Conventional (left) vs. rSIR-enhanced (right) concept for
 	image reconstruction. Conventional methods smoothed overlapping
 	measurements, while rSIR takes advantage of overlapping measurement areas
