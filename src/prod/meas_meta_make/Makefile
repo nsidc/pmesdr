@@ -14,17 +14,13 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 INCDIR = $(TOPDIR)/include
-TESTDIR = $(TOPDIR)/NSIDCtest
-ifeq ($(LOCALE),int.nsidc.org)
-  TESTDIR = /projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)
-endif
+TESTDIR = $(PMESDR_TEST_OUT_DIR)
+
 AMSRE_INPUT_FILES = AMSRE_regress_list_VM
 ifeq ($(LOCALE),ALPINEicc)
   AMSRE_INPUT_FILES = AMSRE_regress_list_SUMMIT
 endif
-ifeq ($(LOCALE),CUMULUSicc)
-  AMSRE_INPUT_FILES = AMSRE_regress_list_SUMMIT
-endif
+
 #
 #	commands
 #
@@ -36,10 +32,6 @@ MKDIR = mkdir -p
 RM = rm -fr
 CP = cp
 ifeq ($(LOCALE),ALPINEicc)
-  $(info Build location: $(LOCALE))
-  CC = icc
-endif
-ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
@@ -66,10 +58,6 @@ ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
 endif
-ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'CUMULUSicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
-endif
 
 DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
 
@@ -89,6 +77,47 @@ install :
 
 clean :
 	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
+
+#
+#------------------------------------------------------------------------
+# Begin test targets section
+#
+# csu_quick
+#   cd to sample_data before anything is run, because list of input
+#   files are defined with paths relative to this location
+#   -r 0 tells it to use base resolution of 25 km
+#   these region def files are 2 regions, M, E at 19H and 12.5 km
+#   csu_full is exactly the same without the -r 0 option and a different gsx list file 
+#   region def files:
+#          $(TOPDIR)/ref/EASE2N_test1ch.def
+#          $(TOPDIR)/ref/EASE2S_test1ch.def
+#          $(TOPDIR)/ref/EASE2T_test1ch.def
+#   gsx list files:
+#          $(TOPDIR)/testing/CSU_regress_list
+#   actual input files:
+#          $(TOPDIR)/sample_data/CSU_JD061_1997/ (there are 2 files)
+#   output to (these dirs are cleared out at beginning of test):
+#          $(TESTDIR)/csu_e2n/e2ntest_CSU.meta
+#          $(TESTDIR)/csu_e2s/e2stest_CSU.meta
+#          $(TESTDIR)/csu_e2t/e2ttest_CSU.meta
+#
+# csu_ease
+#   csu_full is exactly the same without the -r 0 option (this is the default value)
+#   these region def files are 14 regions, M, E (A/D for T),
+#       all 7 channels, again at 12.5 km
+#   same set of only 2 actual gsx files
+#   region def files:
+#          $(TOPDIR)/ref/E2N_test.def
+#          $(TOPDIR)/ref/E2S_test.def
+#          $(TOPDIR)/ref/E2T_test.def
+#   gsx list files:
+#          $(TOPDIR)/testing/CSU_regress_list
+#   actual input files:
+#          $(TOPDIR)/sample_data/CSU_JD061_1997/ (there are 2 files)
+#   output to (these dirs are cleared out at beginning of test):
+#          $(TESTDIR)/csu_e2n/e2ntest_CSU.meta
+#          $(TESTDIR)/csu_e2s/e2stest_CSU.meta
+#          $(TESTDIR)/csu_e2t/e2ttest_CSU.meta
 
 rss_ease :
 	$(RM) $(TESTDIR)/rss_e2s

@@ -183,6 +183,11 @@ for details.
 [`ceedling`](https://github.com/ThrowTheSwitch/Ceedling) system, which is an
 extension of the Ruby Rake build system.
 
+`git`/`git-lfs`: The system requires git to access and check out the software
+from the GitHub repository. The `git-lfs` package is required to properly
+install the regression data. If `git-lfs` is not installed, the regression tests
+will run, but will complain about reading regression .nc file format. 
+
 ## Installation 
 
 Install the the PMESDR system by cloning the repo:
@@ -385,10 +390,18 @@ the 6 GHz inputs. In order to access 6 GHz TBs, we created a gsx translator to
 pull 6 GHz TBs from corresponding JAXA L1B files. The L1B files are organized by
 half-orbit and include half-orbit overlaps. For these sensors, the workflow
 required to produce complete gsx files containing all channels requires calls to
-gsx for the original L1C (all channels but 6 GHz), a call gsx for each potential
+gsx for the original L1C (all channels but 6 GHz), a call to gsx for each potential
 corresponding L1B files (for only 6 GHz data), and finally a call to a python
 function `gsx-merger` to merge the partial gsx files into a single, complete gsx
-file for input to the PMESDR system.
+file for input to the PMESDR system. 
+
+The global metadata for CETB output files indicates the names of the respective
+input files used. For example, a CETB 6 GHz file will include the names of both
+JAXA L1B and PPS L1C inputs, because data are derived from both of these input
+sources, 6 GHz TBs are drawn from JAXA L1B and the remaining geolocation and
+positional data are drawn from the PPS L1C. However, for other channels, the
+global metadata will only include the list of input PPS L1C files, since all
+data are derived only from the L1C inputs.
 
 <figure>
 	<img src="./images/gsx_adapter_for_amsr.png" alt="gsx adapter for AMSR concept" />
@@ -675,10 +688,28 @@ degrees).
    epoch time so that this assumption and hardcoded epoch can be removed from
    `meas_meta_setup`.
 
-2. `udunits` TBD issues related to negative hours v2.2.25 is required, v2.2.28 is
+2. Nearly all of the differences across input swath data producers and formats
+   are encapsulated and handled in the `gsx` Adaptor strategies, with the
+   exception of the handling of A- and B-scans for the AMSR sensors. AMSR input
+   channels for 89 GHz measurements are split into separate variables for A- and
+   B-scans, and need to be merged into a `.setup` file for the complete channel
+   to be processed correctly by `meas_meta_sir`. This is handled in
+   `meas_meta_setup`, which merges input from seperate A- and B-channels into a
+   single output `.setup` file.
+
+3. The `gsx` Adaptor strategies were originally written to handle AMSR-E input
+   data from Remote Sensing Systems (RSS). RSS recommended that the first 14
+   measurements in every scan be omitted. This was handled in the original
+   processing with the variable CETB_AMSRE_FIRST_MEASUREMENT, which was set in
+   cetb.h. Current processing is using AMSR-E data from L1C files, which is not
+   subject to the same restriction in the first 14 measurements. The current
+   value is hardcoded to 0, but the logic should be changed to check the input
+   source in the gsx file and set the value accordingly.
+   
+4. `udunits` TBD issues related to negative hours v2.2.25 is required, v2.2.28 is
    broken; and an issue has been opened with Unidata
    
-3. `udunits` TBD issues with 60 seconds vs rolling to next level
+5. `udunits` TBD issues with 60 seconds vs rolling to next level
 
 ## Operational Instructions
 

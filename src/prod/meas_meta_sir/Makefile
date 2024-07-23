@@ -17,10 +17,8 @@ TOPDIR = $(PMESDR_TOP_DIR)
 INCDIR = $(TOPDIR)/include
 LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
-TESTDIR = $(TOPDIR)/NSIDCtest
-ifeq ($(LOCALE),int.nsidc.org)
-  TESTDIR = /projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)
-endif
+TESTDIR = $(PMESDR_TEST_OUT_DIR)
+
 COMPAREDIR = $(PMESDR_REGRESS_DIR)
 COMPARE_TOLERANCE = $(PMESDR_COMPARE_TOLERANCE)
 MAX_DIFF_PIXELS = $(PMESDR_MAX_DIFF_PIXELS)
@@ -37,10 +35,6 @@ ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CC = icc
 endif
-ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  CC = icc
-endif
 
 #
 #       debug or optimization settings
@@ -48,10 +42,6 @@ endif
 #
 CONFIG_CFLAGS = -m64 -O3
 ifeq ($(LOCALE),ALPINEicc)
-  $(info Build location: $(LOCALE))
-  CONFIG_FLAGS = 
-endif
-ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   CONFIG_FLAGS = 
 endif
@@ -64,11 +54,7 @@ SYSLIBS = -lm
 #
 #	system libraries and include directories
 #
-ifeq ($(LOCALE),NSIDCdev)
-  $(info Build location: $(LOCALE))
-  NETCDF4_LIBDIR = /usr/lib64
-  HDF5_LIBDIR = /usr/lib64
-else ifeq ($(LOCALE),int.nsidc.org)
+ifeq ($(LOCALE),int.nsidc.org)
   $(info Build location: $(LOCALE))
   NETCDF4_LIBDIR = /usr/lib
   HDF5_LIBDIR = /usr/lib
@@ -84,18 +70,8 @@ else ifeq ($(LOCALE),ALPINEicc)
   HDFLIB2 = hdf5
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
-else ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  NETCDF4_LIBDIR = /usr/lib/x86_64-linux-gnu
-  HDF5_INCDIR = /usr/include/hdf5/serial
-  HDF5_LIBDIR = /usr/lib/x86_64-linux-gnu
-  HDFLIB1 = hdf5_serial_hl
-  HDFLIB2 = hdf5_serial
-  UDUNITS_INCDIR = /usr/local/include
-  UDUNITS_LIBDIR = /usr/local/lib
 else
-  $(info Assuming default LOCALE)
+  $(info Assuming default LOCALE, mileage may vary)
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
 endif
@@ -113,14 +89,6 @@ ifeq ($(LOCALE),ALPINEicc)
   LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
 	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
 	-lhdf5_hl -lhdf5 -lz $(SYSLIBS) 
-  CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) \
-	-O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
-endif
-ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
-	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
-	-l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS) 
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) \
 	-O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
 endif
@@ -156,6 +124,27 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
 
+#
+#------------------------------------------------------------------------
+# Begin test targets section
+#
+# csu_quick is same as csu_ease, they end up running on whatever setup files
+# they find in the input directory, so these targets don't need to be different
+# 
+# csu_ease:
+#   input
+#       $(TESTDIR)/setupCSU/e2*/F*E2*.setup
+#   output to (this directory is wiped at beginning of test):
+#	$(TESTDIR)/sirCSU
+#	
+# csu_quick_validate:
+#   compares contents of $(TESTDIR)/sirCSU to
+#   contents of $(COMPAREDIR)/quick/sirCSU
+#
+# csu__validate:
+#   compares contents of $(TESTDIR)/sirCSU to
+#   contents of $(COMPAREDIR)/daily/sirCSU
+#
 rss_ease :
 	$(RM) $(TESTDIR)/sirRSS
 	$(MKDIR) $(TESTDIR)/sirRSS

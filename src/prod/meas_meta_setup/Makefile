@@ -15,10 +15,8 @@ TOPDIR = $(PMESDR_TOP_DIR)
 INCDIR = $(TOPDIR)/include
 LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
-TESTDIR = $(TOPDIR)/NSIDCtest
-ifeq ($(LOCALE),int.nsidc.org)
-  TESTDIR = /projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)
-endif
+TESTDIR = $(PMESDR_TEST_OUT_DIR)
+
 #
 #	commands
 #
@@ -28,10 +26,6 @@ INSTALL = cp -f -p
 LS = ls -1
 MKDIR = mkdir -p
 RM = rm -fr
-ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  CC = icc
-endif
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CC = icc
@@ -72,23 +66,14 @@ else ifeq ($(LOCALE),ALPINEicc)
   HDFLIB2 = hdf5
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
   UDUNITS_LIBDIR = ${CURC_UDUNITS_LIB}
-else ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  NETCDF4_LIBDIR = /usr/lib/x86_64-linux-gnu
-  HDF5_INCDIR = /usr/include/hdf5/serial
-  HDF5_LIBDIR = /usr/lib/x86_64-linux-gnu
-  HDFLIB1 = hdf5_serial_hl
-  HDFLIB2 = hdf5_serial
-  UDUNITS_INCDIR = /usr/local/include
-  UDUNITS_LIBDIR = /usr/local/lib
 else
-  $(info Assuming default LOCALE=BYU)
-  NETCDF4_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-  NETCDF4_LIBDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/lib
-  HDF5_INCDIR = /auto/users/long/src/linux/netcdf/netcdf-4.0.1/include
-  HDF5_LIBDIR = /auto/users/long/src/linux/netcdf/hdf5-1.8.3/lib
-  UDUNITS_INCDIR = 
+  $(info Assuming default LOCALE, mileage may vary)
+  NETCDF4_INCDIR = /usr/include
+  NETCDF4_LIBDIR = /usr/lib64
+  HDF5_INCDIR = /usr/include
+  HDF5_LIBDIR = /usr/lib64
+  UDUNITS_INCDIR = /usr/include
+  UDUNITS_LIBDIR = /usr/lib64
 endif
 
 #
@@ -104,11 +89,6 @@ CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) \
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
-	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -ipo -xHost -no-prec-div \
-	-Wall -Wremarks -wd981 -wd2415 -inline-level=0
-else ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'CUMULUSicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
 	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -ipo -xHost -no-prec-div \
 	-Wall -Wremarks -wd981 -wd2415 -inline-level=0
 endif
@@ -140,6 +120,23 @@ install :
 clean :
 	$(RM) $(BIN) $(OBJS) $(BINDIR)/$(BIN)
 
+#
+#------------------------------------------------------------------------
+# Begin test targets section
+#
+# csu_quick or csu_ease (note that .meta files contain different information
+# after meas_meta_make targets by matching names)
+# does this mean we can eliminate one of these and just keep the other?
+#   input .meta files
+#	$(TESTDIR)/csu_e2n/e2ntest_CSU.meta      
+#	$(TESTDIR)/csu_e2n/e2stest_CSU.meta      
+#	$(TESTDIR)/csu_e2n/e2stest_CSU.meta
+#   output to (these dirs are cleared out that the beginning of test):
+#       $(TESTDIR)/setupCSU/e2n/
+#       $(TESTDIR)/setupCSU/e2s/
+#       $(TESTDIR)/setupCSU/e2t/
+#
+#
 csu_ease :
 	$(RM) $(TESTDIR)/setupCSU/e2n
 	$(MKDIR) $(TESTDIR)/setupCSU/e2n
