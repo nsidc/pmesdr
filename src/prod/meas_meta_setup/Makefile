@@ -15,7 +15,9 @@ TOPDIR = $(PMESDR_TOP_DIR)
 INCDIR = $(TOPDIR)/include
 LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
-TESTDIR = $(PMESDR_TEST_OUT_DIR)
+
+TESTINPUT = $(TOPDIR)/src/test_inputs
+TESTOUTPUT = $(PMESDR_TEST_OUT_DIR)
 
 #
 #	commands
@@ -127,46 +129,48 @@ clean :
 # csu_quick or csu_ease (note that .meta files contain different information
 # after meas_meta_make targets by matching names)
 # does this mean we can eliminate one of these and just keep the other?
+#   input gsx files are read with relative pathnames, so we need to cd
+#   to the top input directory before running
 #   input .meta files
-#	$(TESTDIR)/csu_e2n/e2ntest_CSU.meta      
-#	$(TESTDIR)/csu_e2n/e2stest_CSU.meta      
-#	$(TESTDIR)/csu_e2n/e2stest_CSU.meta
+#	$(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta      
+#	$(TESTOUTPUT)/csu_e2n/e2stest_CSU.meta      
+#	$(TESTOUTPUT)/csu_e2n/e2stest_CSU.meta
 #   output to (these dirs are cleared out that the beginning of test):
-#       $(TESTDIR)/setupCSU/e2n/
-#       $(TESTDIR)/setupCSU/e2s/
-#       $(TESTDIR)/setupCSU/e2t/
+#       $(TESTOUTPUT)/setupCSU/e2n/
+#       $(TESTOUTPUT)/setupCSU/e2s/
+#       $(TESTOUTPUT)/setupCSU/e2t/
 #
 #
 csu_quick :
-	$(RM) $(TESTDIR)/setupCSU/e2n
-	$(MKDIR) $(TESTDIR)/setupCSU/e2n
-	$(RM) $(TESTDIR)/setupCSU/e2s
-	$(MKDIR) $(TESTDIR)/setupCSU/e2s
-	$(RM) $(TESTDIR)/setupCSU/e2t
-	$(MKDIR) $(TESTDIR)/setupCSU/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	$(RM) $(TESTOUTPUT)/setupCSU/e2n
+	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2n
+	$(RM) $(TESTOUTPUT)/setupCSU/e2s
+	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2s
+	$(RM) $(TESTOUTPUT)/setupCSU/e2t
+	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2t
+	($(CD) $(TESTINPUT);		\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2n 	\
 	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
+	($(CD) $(TESTINPUT);		\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2s 	\
 	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
+	($(CD) $(TESTINPUT);		\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2t 	\
 	)
 
 csu_ease :
-	$(RM) $(TESTDIR)/setupCSU/e2n
-	$(MKDIR) $(TESTDIR)/setupCSU/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	$(RM) $(TESTOUTPUT)/setupCSU/e2n
+	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2n
+	($(CD) $(TESTINPUT);		\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2n 	\
 	)
-	$(RM) $(TESTDIR)/setupCSU/e2s
-	$(MKDIR) $(TESTDIR)/setupCSU/e2s
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
+	$(RM) $(TESTOUTPUT)/setupCSU/e2s
+	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2s
+	($(CD) $(TESTINPUT);		\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2s 	\
 	)
-	$(RM) $(TESTDIR)/setupCSU/e2t
-	$(MKDIR) $(TESTDIR)/setupCSU/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
+	$(RM) $(TESTOUTPUT)/setupCSU/e2t
+	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2t
+	($(CD) $(TESTINPUT);		\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2t 	\
 	)

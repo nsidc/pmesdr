@@ -17,7 +17,8 @@ TOPDIR = $(PMESDR_TOP_DIR)
 INCDIR = $(TOPDIR)/include
 LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
-TESTDIR = $(PMESDR_TEST_OUT_DIR)
+
+TESTOUTPUT = $(PMESDR_TEST_OUT_DIR)
 
 COMPAREDIR = $(PMESDR_REGRESS_DIR)
 COMPARE_TOLERANCE = $(PMESDR_COMPARE_TOLERANCE)
@@ -100,17 +101,7 @@ OBJS = meas_meta_sir.o
 HDRS = $(INCDIR)/cetb.h $(INCDIR)/cetb_file.h
 BIN = meas_meta_sir
 
-RSSFILES = $(wildcard $(TESTDIR)/setupRSS/e2*/F*E2*.setup)
-RSSE2NFILES = $(wildcard $(TESTDIR)/setupRSS/e2n/F*E2N*.setup)
-CSUFILES = $(wildcard $(TESTDIR)/setupCSU/e2*/F*E2*.setup)
-CSUE2NFILES = $(wildcard $(TESTDIR)/setupCSU/e2n/F*E2N*.setup)
-AMSREFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2*/A*E2*.setup)
-AMSRE2NFILES = $(wildcard $(TESTDIR)/setupAMSRE/e2n/A*E2N*.setup)
-SSMISFILES = $(wildcard $(TESTDIR)/setupSSMIS/e2*/I*E2*.setup)
-SSMISE2NFILES = $(wildcard $(TESTDIR)/setupSSMIS/e2n/I*E2N*.setup)
-SMMRFILES = $(wildcard $(TESTDIR)/setupSMMR/e2*/R*E2*.setup)
-SMMRE2NFILES = $(wildcard $(TESTDIR)/setupSMMR/e2n/R*E2N*.setup)
-SMAPFILES = $(wildcard $(TESTDIR)/setupSMAP/e2*/S*E2*.setup)
+CSUFILES = $(wildcard $(TESTOUTPUT)/setupCSU/e2*/F*E2*.setup)
 
 all : $(BIN)
 
@@ -133,48 +124,48 @@ clean :
 # 
 # csu_ease:
 #   input
-#       $(TESTDIR)/setupCSU/e2*/F*E2*.setup
+#       $(TESTOUTPUT)/setupCSU/e2*/F*E2*.setup
 #   output to (this directory is wiped at beginning of test):
-#	$(TESTDIR)/sirCSU
+#	$(TESTOUTPUT)/sirCSU
 #	
 # csu_quick_validate:
-#   compares contents of $(TESTDIR)/sirCSU to
+#   compares contents of $(TESTOUTPUT)/sirCSU to
 #   contents of $(COMPAREDIR)/quick/sirCSU
 #
 # csu__validate:
-#   compares contents of $(TESTDIR)/sirCSU to
+#   compares contents of $(TESTOUTPUT)/sirCSU to
 #   contents of $(COMPAREDIR)/daily/sirCSU
 #
 csu_quick :
-	$(RM) $(TESTDIR)/sirCSU
-	$(MKDIR) $(TESTDIR)/sirCSU
+	$(RM) $(TESTOUTPUT)/sirCSU
+	$(MKDIR) $(TESTOUTPUT)/sirCSU
 ifeq ($(CSUFILES),)
 	$(error	No setup files found)
 else
 	for file in $(CSUFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU; \
+	   $(BINDIR)/$(BIN) $$file $(TESTOUTPUT)/sirCSU; \
 	done
 endif
 
 csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/quick/sirCSU $(TESTDIR)/sirCSU
+                $(COMPAREDIR)/quick/sirCSU $(TESTOUTPUT)/sirCSU
 
 csu_ease :
-	$(RM) $(TESTDIR)/sirCSU
-	$(MKDIR) $(TESTDIR)/sirCSU
+	$(RM) $(TESTOUTPUT)/sirCSU
+	$(MKDIR) $(TESTOUTPUT)/sirCSU
 ifeq ($(CSUFILES),)
 	$(error	No setup files found)
 else
 	for file in $(CSUFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU; \
+	   $(BINDIR)/$(BIN) $$file $(TESTOUTPUT)/sirCSU; \
 	done
 endif
 
 csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirCSU $(TESTDIR)/sirCSU
+                $(COMPAREDIR)/daily/sirCSU $(TESTOUTPUT)/sirCSU

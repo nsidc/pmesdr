@@ -14,12 +14,9 @@
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
 INCDIR = $(TOPDIR)/include
-TESTDIR = $(PMESDR_TEST_OUT_DIR)
 
-AMSRE_INPUT_FILES = AMSRE_regress_list_VM
-ifeq ($(LOCALE),ALPINEicc)
-  AMSRE_INPUT_FILES = AMSRE_regress_list_SUMMIT
-endif
+TESTINPUT = $(PMESDR_TOP_DIR)/src/test_inputs
+TESTOUTPUT = $(PMESDR_TEST_OUT_DIR)
 
 #
 #	commands
@@ -83,7 +80,7 @@ clean :
 # Begin test targets section
 #
 # csu_quick
-#   cd to sample_data before anything is run, because list of input
+#   cd to $(TESTINPUT) before anything is run, because list of input
 #   files are defined with paths relative to this location
 #   -r 0 tells it to use base resolution of 25 km
 #   these region def files are 2 regions, M, E at 19H and 12.5 km
@@ -93,13 +90,13 @@ clean :
 #          $(TOPDIR)/ref/EASE2S_test1ch.def
 #          $(TOPDIR)/ref/EASE2T_test1ch.def
 #   gsx list files:
-#          $(TOPDIR)/testing/CSU_regress_list
+#          $(TESTINPUT)/CSU_regress_list
 #   actual input files:
-#          $(TOPDIR)/sample_data/CSU_JD061_1997/ (there are 2 files)
+#          $(TESTINPUT)/CSU_JD061_1997/ (there are 2 files)
 #   output to (these dirs are cleared out at beginning of test):
-#          $(TESTDIR)/csu_e2n/e2ntest_CSU.meta
-#          $(TESTDIR)/csu_e2s/e2stest_CSU.meta
-#          $(TESTDIR)/csu_e2t/e2ttest_CSU.meta
+#          $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta
+#          $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta
+#          $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta
 #
 # csu_ease
 #   csu_full is exactly the same without the -r 0 option (this is the default value)
@@ -111,40 +108,40 @@ clean :
 #          $(TOPDIR)/ref/E2S_test.def
 #          $(TOPDIR)/ref/E2T_test.def
 #   gsx list files:
-#          $(TOPDIR)/testing/CSU_regress_list
+#          $(TESTINPUT)/CSU_regress_list
 #   actual input files:
-#          $(TOPDIR)/sample_data/CSU_JD061_1997/ (there are 2 files)
+#          $(TESTINPUT)/CSU_JD061_1997/ (there are 2 files)
 #   output to (these dirs are cleared out at beginning of test):
-#          $(TESTDIR)/csu_e2n/e2ntest_CSU.meta
-#          $(TESTDIR)/csu_e2s/e2stest_CSU.meta
-#          $(TESTDIR)/csu_e2t/e2ttest_CSU.meta
+#          $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta
+#          $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta
+#          $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta
 
 csu_ease :
-	$(RM) $(TESTDIR)/csu_e2n
-	$(MKDIR) $(TESTDIR)/csu_e2n
-	$(RM) $(TESTDIR)/csu_e2s
-	$(MKDIR) $(TESTDIR)/csu_e2s
-	$(RM) $(TESTDIR)/csu_e2t
-	$(MKDIR) $(TESTDIR)/csu_e2t
-	$(CD) $(TOPDIR)/sample_data
-	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2n/e2ntest_CSU.meta F13 \
-	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2s/e2stest_CSU.meta F13 \
-	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2t/e2ttest_CSU.meta F13 \
-	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TOPDIR)/testing/CSU_regress_list
+	$(RM) $(TESTOUTPUT)/csu_e2n
+	$(MKDIR) $(TESTOUTPUT)/csu_e2n
+	$(RM) $(TESTOUTPUT)/csu_e2s
+	$(MKDIR) $(TESTOUTPUT)/csu_e2s
+	$(RM) $(TESTOUTPUT)/csu_e2t
+	$(MKDIR) $(TESTOUTPUT)/csu_e2t
+	$(CD) $(TESTINPUT)
+	$(BINDIR)/$(BIN)  -r 0 $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2N_test.def $(TESTINPUT)/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 0 $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2S_test.def $(TESTINPUT)/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 0 $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta F13 \
+	         61 61 1997 $(TOPDIR)/ref/E2T_test.def $(TESTINPUT)/CSU_regress_list
 
 csu_quick :
-	$(RM) $(TESTDIR)/csu_e2n
-	$(MKDIR) $(TESTDIR)/csu_e2n
-	$(RM) $(TESTDIR)/csu_e2s
-	$(MKDIR) $(TESTDIR)/csu_e2s
-	$(RM) $(TESTDIR)/csu_e2t
-	$(MKDIR) $(TESTDIR)/csu_e2t
-	$(CD) $(TOPDIR)/sample_data		 
-	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2n/e2ntest_CSU.meta F13 	\
-	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2s/e2stest_CSU.meta F13 	\
-	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TOPDIR)/testing/CSU_regress_list
-	$(BINDIR)/$(BIN)  -r 0 $(TESTDIR)/csu_e2t/e2ttest_CSU.meta F13 	\
-	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TOPDIR)/testing/CSU_regress_list
+	$(RM) $(TESTOUTPUT)/csu_e2n
+	$(MKDIR) $(TESTOUTPUT)/csu_e2n
+	$(RM) $(TESTOUTPUT)/csu_e2s
+	$(MKDIR) $(TESTOUTPUT)/csu_e2s
+	$(RM) $(TESTOUTPUT)/csu_e2t
+	$(MKDIR) $(TESTOUTPUT)/csu_e2t
+	$(CD) $(TESTINPUT)
+	$(BINDIR)/$(BIN)  -r 0 $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2N_test1ch.def $(TESTINPUT)/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 0 $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2S_test1ch.def $(TESTINPUT)/CSU_regress_list
+	$(BINDIR)/$(BIN)  -r 0 $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta F13 	\
+	         61 61 1997 $(TOPDIR)/ref/EASE2T_test1ch.def $(TESTINPUT)/CSU_regress_list
