@@ -101,7 +101,7 @@ OBJS = meas_meta_sir.o
 HDRS = $(INCDIR)/cetb.h $(INCDIR)/cetb_file.h
 BIN = meas_meta_sir
 
-CSUFILES = $(wildcard $(TESTOUTPUT)/setupCSU/e2*/F*E2*.setup)
+CSUFILES = $(wildcard $(TESTOUTPUT)/setupCSU/F*E2*.setup)
 
 all : $(BIN)
 
@@ -119,24 +119,7 @@ clean :
 #------------------------------------------------------------------------
 # Begin test targets section
 #
-# csu_quick is same as csu_ease, they end up running on whatever setup files
-# they find in the input directory, so these targets don't need to be different
-# 
-# csu_ease:
-#   input
-#       $(TESTOUTPUT)/setupCSU/e2*/F*E2*.setup
-#   output to (this directory is wiped at beginning of test):
-#	$(TESTOUTPUT)/sirCSU
-#	
-# csu_quick_validate:
-#   compares contents of $(TESTOUTPUT)/sirCSU to
-#   contents of $(COMPAREDIR)/quick/sirCSU
-#
-# csu__validate:
-#   compares contents of $(TESTOUTPUT)/sirCSU to
-#   contents of $(COMPAREDIR)/daily/sirCSU
-#
-csu_quick :
+csu_quick csu_ease :
 	$(RM) $(TESTOUTPUT)/sirCSU
 	$(MKDIR) $(TESTOUTPUT)/sirCSU
 ifeq ($(CSUFILES),)
@@ -152,18 +135,6 @@ csu_quick_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/sirCSU $(TESTOUTPUT)/sirCSU
-
-csu_ease :
-	$(RM) $(TESTOUTPUT)/sirCSU
-	$(MKDIR) $(TESTOUTPUT)/sirCSU
-ifeq ($(CSUFILES),)
-	$(error	No setup files found)
-else
-	for file in $(CSUFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTOUTPUT)/sirCSU; \
-	done
-endif
 
 csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \

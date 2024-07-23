@@ -148,9 +148,8 @@ matlab/ | matlab viewer routines
 python/ | miscellaneous python utilities
 ref/ | region definition files
 regression_scripts/ | bash scripts to perform regression testing
-sample_data/ | data files for development testing
-src/ | PMESDR system C source code
-testing/ | directory of testing code and data files --TBD clean this up
+src/prod | PMESDR system C source code 
+src/test_inputs | Small set of test inputs to generate regression data
 
 ## Requirements
 

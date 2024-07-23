@@ -126,51 +126,16 @@ clean :
 #------------------------------------------------------------------------
 # Begin test targets section
 #
-# csu_quick or csu_ease (note that .meta files contain different information
-# after meas_meta_make targets by matching names)
-# does this mean we can eliminate one of these and just keep the other?
-#   input gsx files are read with relative pathnames, so we need to cd
-#   to the top input directory before running
-#   input .meta files
-#	$(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta      
-#	$(TESTOUTPUT)/csu_e2n/e2stest_CSU.meta      
-#	$(TESTOUTPUT)/csu_e2n/e2stest_CSU.meta
-#   output to (these dirs are cleared out that the beginning of test):
-#       $(TESTOUTPUT)/setupCSU/e2n/
-#       $(TESTOUTPUT)/setupCSU/e2s/
-#       $(TESTOUTPUT)/setupCSU/e2t/
-#
-#
-csu_quick :
-	$(RM) $(TESTOUTPUT)/setupCSU/e2n
-	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2n
-	$(RM) $(TESTOUTPUT)/setupCSU/e2s
-	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2s
-	$(RM) $(TESTOUTPUT)/setupCSU/e2t
-	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2t
-	($(CD) $(TESTINPUT);		\
-	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2n 	\
-	)
-	($(CD) $(TESTINPUT);		\
-	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2s 	\
-	)
-	($(CD) $(TESTINPUT);		\
-	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2t 	\
-	)
 
-csu_ease :
-	$(RM) $(TESTOUTPUT)/setupCSU/e2n
-	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2n
+csu_quick csu_ease :
+	$(RM) $(TESTOUTPUT)/setupCSU
+	$(MKDIR) $(TESTOUTPUT)/setupCSU
 	($(CD) $(TESTINPUT);		\
-	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2n/e2ntest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2n 	\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/makeCSU/e2ntest_CSU.meta  $(TESTOUTPUT)/setupCSU 	\
 	)
-	$(RM) $(TESTOUTPUT)/setupCSU/e2s
-	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2s
 	($(CD) $(TESTINPUT);		\
-	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2s/e2stest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2s 	\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/makeCSU/e2stest_CSU.meta  $(TESTOUTPUT)/setupCSU 	\
 	)
-	$(RM) $(TESTOUTPUT)/setupCSU/e2t
-	$(MKDIR) $(TESTOUTPUT)/setupCSU/e2t
 	($(CD) $(TESTINPUT);		\
-	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/csu_e2t/e2ttest_CSU.meta  $(TESTOUTPUT)/setupCSU/e2t 	\
+	$(BINDIR)/$(BIN)  $(TESTOUTPUT)/makeCSU/e2ttest_CSU.meta  $(TESTOUTPUT)/setupCSU 	\
 	)
