@@ -145,86 +145,6 @@ clean :
 #   compares contents of $(TESTDIR)/sirCSU to
 #   contents of $(COMPAREDIR)/daily/sirCSU
 #
-rss_ease :
-	$(RM) $(TESTDIR)/sirRSS
-	$(MKDIR) $(TESTDIR)/sirRSS
-ifeq ($(RSSFILES),)
-	$(error	No setup files found)
-else
-	for file in $(RSSFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS; \
-	done
-endif
-
-rss_ease_validate :
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirRSS $(TESTDIR)/sirRSS
-
-rss_quick :
-	$(RM) $(TESTDIR)/sirRSS
-	$(MKDIR) $(TESTDIR)/sirRSS
-ifeq ($(RSSFILES),)
-	$(error	No setup files found)
-else
-	for file in $(RSSFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirRSS; \
-	done
-endif
-
-rss_quick_validate :
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/quick/sirRSS $(TESTDIR)/sirRSS
-
-csu_ease :
-	$(RM) $(TESTDIR)/sirCSU
-	$(MKDIR) $(TESTDIR)/sirCSU
-ifeq ($(CSUFILES),)
-	$(error	No setup files found)
-else
-	for file in $(CSUFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU; \
-	done
-endif
-
-csu_ease_validate :
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirCSU $(TESTDIR)/sirCSU
-
-csu_ease_36 :
-	$(RM) $(TESTDIR)/sirCSU_36
-	$(MKDIR) $(TESTDIR)/sirCSU_36
-ifeq ($(CSUFILES),)
-	$(error	No setup files found)
-else
-	for file in $(CSUFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU_36; \
-	done
-endif
-
-csu_ease_validate_36 :
-	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
-		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/daily/sirCSU_36 $(TESTDIR)/sirCSU_36
-
-csu_ease_24 :
-	$(RM) $(TESTDIR)/sirCSU_24
-	$(MKDIR) $(TESTDIR)/sirCSU_24
-ifeq ($(CSUFILES),)
-	$(error	No setup files found)
-else
-	for file in $(CSUFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU_24; \
-	done
-endif
-
 csu_quick :
 	$(RM) $(TESTDIR)/sirCSU
 	$(MKDIR) $(TESTDIR)/sirCSU
@@ -242,115 +162,19 @@ csu_quick_validate :
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
                 $(COMPAREDIR)/quick/sirCSU $(TESTDIR)/sirCSU
 
-csu_quick_36 :
-	$(RM) $(TESTDIR)/sirCSU_36
-	$(MKDIR) $(TESTDIR)/sirCSU_36
+csu_ease :
+	$(RM) $(TESTDIR)/sirCSU
+	$(MKDIR) $(TESTDIR)/sirCSU
 ifeq ($(CSUFILES),)
 	$(error	No setup files found)
 else
 	for file in $(CSUFILES); do \
 	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU_36; \
+	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU; \
 	done
 endif
 
-csu_quick_validate_36 :
+csu_ease_validate :
 	$(PYTHON) $(TOPDIR)/python/compare_cetb_directories.py \
 		-t $(COMPARE_TOLERANCE) -m $(MAX_DIFF_PIXELS) \
-                $(COMPAREDIR)/quick/sirCSU_36 $(TESTDIR)/sirCSU_36
-
-csu_quick_24 :
-	$(RM) $(TESTDIR)/sirCSU_24
-	$(MKDIR) $(TESTDIR)/sirCSU_24
-ifeq ($(CSUFILES),)
-	$(error	No setup files found)
-else
-	for file in $(CSUFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirCSU_24; \
-	done
-endif
-
-amsre_ease :
-	$(RM) $(TESTDIR)/sirAMSRE
-	$(MKDIR) $(TESTDIR)/sirAMSRE
-ifeq ($(AMSREFILES),)
-	$(error	No setup files found)
-else
-	for file in $(AMSREFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirAMSRE; \
-	done
-endif
-
-amsre_quick :
-	$(RM) $(TESTDIR)/sirAMSRE
-	$(MKDIR) $(TESTDIR)/sirAMSRE
-ifeq ($(AMSREFILES),)
-	$(error	No setup files found)
-else
-	for file in $(AMSREFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirAMSRE; \
-	done
-endif
-
-ssmis_quick :
-	$(RM) $(TESTDIR)/sirSSMIS
-	$(MKDIR) $(TESTDIR)/sirSSMIS
-ifeq ($(SSMISFILES),)
-	$(error	No setup files found)
-else
-	for file in $(SSMISFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSSMIS; \
-	done
-endif
-
-ssmis_cross :
-	$(RM) $(TESTDIR)/sirSSMIS
-	$(MKDIR) $(TESTDIR)/sirSSMIS
-ifeq ($(SSMISE2NFILES),)
-	$(error	No setup files found)
-else
-	for file in $(SSMISE2NFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSSMIS; \
-	done
-endif
-
-ssmis_test :
-	$(RM) $(TESTDIR)/sirSSMIS
-	$(MKDIR) $(TESTDIR)/sirSSMIS
-ifeq ($(SSMISFILES),)
-	$(error	No setup files found)
-else
-	for file in $(SSMISFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSSMIS; \
-	done
-endif
-
-smmr_quick :
-	$(RM) $(TESTDIR)/sirSMMR
-	$(MKDIR) $(TESTDIR)/sirSMMR
-ifeq ($(SMMRFILES),)
-	$(error	No setup files found)
-else
-	for file in $(SMMRFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSMMR; \
-	done
-endif
-
-smap_quick :
-	$(RM) $(TESTDIR)/sirSMAP
-	$(MKDIR) $(TESTDIR)/sirSMAP
-ifeq ($(SMAPFILES),)
-	$(error	No setup files found)
-else
-	for file in $(SMAPFILES); do \
-	   echo "running  $$file"; \
-	   $(BINDIR)/$(BIN) $$file $(TESTDIR)/sirSMAP; \
-	done
-endif
+                $(COMPAREDIR)/daily/sirCSU $(TESTDIR)/sirCSU

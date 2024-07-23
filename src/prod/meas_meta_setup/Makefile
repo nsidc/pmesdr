@@ -137,57 +137,6 @@ clean :
 #       $(TESTDIR)/setupCSU/e2t/
 #
 #
-csu_ease :
-	$(RM) $(TESTDIR)/setupCSU/e2n
-	$(MKDIR) $(TESTDIR)/setupCSU/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
-	)
-	$(RM) $(TESTDIR)/setupCSU/e2s
-	$(MKDIR) $(TESTDIR)/setupCSU/e2s
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
-	)
-	$(RM) $(TESTDIR)/setupCSU/e2t
-	$(MKDIR) $(TESTDIR)/setupCSU/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
-	)
-
-csu_ease_36 :
-	$(RM) $(TESTDIR)/setupCSU/e2n
-	$(MKDIR) $(TESTDIR)/setupCSU/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n_36/e2ntest_36_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
-	)
-	$(RM) $(TESTDIR)/setupCSU/e2s
-	$(MKDIR) $(TESTDIR)/setupCSU/e2s
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s_36/e2stest_36_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
-	)
-	$(RM) $(TESTDIR)/setupCSU/e2t
-	$(MKDIR) $(TESTDIR)/setupCSU/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t_36/e2ttest_36_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
-	)
-
-csu_ease_24 :
-	$(RM) $(TESTDIR)/setupCSU/e2n
-	$(MKDIR) $(TESTDIR)/setupCSU/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n_24/e2ntest_24_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
-	)
-	$(RM) $(TESTDIR)/setupCSU/e2s
-	$(MKDIR) $(TESTDIR)/setupCSU/e2s
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s_24/e2stest_24_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
-	)
-	$(RM) $(TESTDIR)/setupCSU/e2t
-	$(MKDIR) $(TESTDIR)/setupCSU/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t_24/e2ttest_24_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
-	)
-
 csu_quick :
 	$(RM) $(TESTDIR)/setupCSU/e2n
 	$(MKDIR) $(TESTDIR)/setupCSU/e2n
@@ -205,189 +154,19 @@ csu_quick :
 	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
 	)
 
-csu_quick_36 :
-	$(RM) $(TESTDIR)/setupCSU/e2n
-	$(MKDIR) $(TESTDIR)/setupCSU/e2n
-	$(RM) $(TESTDIR)/setupCSU/e2s
-	$(MKDIR) $(TESTDIR)/setupCSU/e2s
-	$(RM) $(TESTDIR)/setupCSU/e2t
-	$(MKDIR) $(TESTDIR)/setupCSU/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n_36/e2ntest_36_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s_36/e2stest_36_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t_36/e2ttest_36_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
-	)
-
-csu_quick_24 :
+csu_ease :
 	$(RM) $(TESTDIR)/setupCSU/e2n
 	$(MKDIR) $(TESTDIR)/setupCSU/e2n
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n_24/e2ntest_24_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2n/e2ntest_CSU.meta  $(TESTDIR)/setupCSU/e2n 	\
 	)
 	$(RM) $(TESTDIR)/setupCSU/e2s
 	$(MKDIR) $(TESTDIR)/setupCSU/e2s
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s_24/e2stest_24_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2s/e2stest_CSU.meta  $(TESTDIR)/setupCSU/e2s 	\
 	)
 	$(RM) $(TESTDIR)/setupCSU/e2t
 	$(MKDIR) $(TESTDIR)/setupCSU/e2t
 	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t_24/e2ttest_24_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
+	$(BINDIR)/$(BIN)  $(TESTDIR)/csu_e2t/e2ttest_CSU.meta  $(TESTDIR)/setupCSU/e2t 	\
 	)
-
-rss_ease :
-	$(RM) $(TESTDIR)/setupRSS/e2n
-	$(MKDIR) $(TESTDIR)/setupRSS/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 	\
-	)
-	$(RM) $(TESTDIR)/setupRSS/e2s
-	$(MKDIR) $(TESTDIR)/setupRSS/e2s
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 	\
-	)
-	$(RM) $(TESTDIR)/setupRSS/e2t
-	$(MKDIR) $(TESTDIR)/setupRSS/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 	\
-	)
-
-# the input file list in the .meta file has pathnames relative to the directory
-# from which the program is called - i.e. cd to the $(TOPDIR)/sample_data directory before invoking
-# the application
-rss_quick :
-	$(RM) $(TESTDIR)/setupRSS/e2n
-	$(MKDIR) $(TESTDIR)/setupRSS/e2n
-	$(RM) $(TESTDIR)/setupRSS/e2s
-	$(MKDIR) $(TESTDIR)/setupRSS/e2s
-	$(RM) $(TESTDIR)/setupRSS/e2t
-	$(MKDIR) $(TESTDIR)/setupRSS/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2n/e2ntest_RSS.meta  $(TESTDIR)/setupRSS/e2n 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2s/e2stest_RSS.meta  $(TESTDIR)/setupRSS/e2s 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/rss_e2t/e2ttest_RSS.meta  $(TESTDIR)/setupRSS/e2t 	\
-	)
-
-amsre_ease :
-	$(RM) $(TESTDIR)/setupAMSRE/e2n
-	$(MKDIR) $(TESTDIR)/setupAMSRE/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2n 	\
-	)
-	$(RM) $(TESTDIR)/setupAMSRE/e2s
-	$(MKDIR) $(TESTDIR)/setupAMSRE/e2s
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2s/e2stest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2s 	\
-	)
-	$(RM) $(TESTDIR)/setupAMSRE/e2t
-	$(MKDIR) $(TESTDIR)/setupAMSRE/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2t/e2ttest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2t 	\
-	)
-
-amsre_quick :
-	$(RM) $(TESTDIR)/setupAMSRE/e2n
-	$(MKDIR) $(TESTDIR)/setupAMSRE/e2n
-	$(RM) $(TESTDIR)/setupAMSRE/e2s
-	$(MKDIR) $(TESTDIR)/setupAMSRE/e2s
-	$(RM) $(TESTDIR)/setupAMSRE/e2t
-	$(MKDIR) $(TESTDIR)/setupAMSRE/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2n/e2ntest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2n 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2s/e2stest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2s 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/amsre_e2t/e2ttest_AMSRE.meta  $(TESTDIR)/setupAMSRE/e2t 	\
-	)
-
-ssmis_quick :
-	$(RM) $(TESTDIR)/setupSSMIS/e2n
-	$(MKDIR) $(TESTDIR)/setupSSMIS/e2n
-	$(RM) $(TESTDIR)/setupSSMIS/e2s
-	$(MKDIR) $(TESTDIR)/setupSSMIS/e2s
-	$(RM) $(TESTDIR)/setuSSMIS/e2t
-	$(MKDIR) $(TESTDIR)/setupSSMIS/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2n 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2s 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2t/e2ttest_SSMIS.meta  $(TESTDIR)/setupSSMIS/e2t 	\
-	)
-
-ssmis_cross :
-	$(RM) $(TESTDIR)/setupSSMIS/e2n
-	$(MKDIR) $(TESTDIR)/setupSSMIS/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_20051231.meta  $(TESTDIR)/setupSSMIS/e2n 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_20060101.meta  $(TESTDIR)/setupSSMIS/e2n 	\
-	)
-
-ssmis_test :
-	$(RM) $(TESTDIR)/setupSSMIS/e2n
-	$(MKDIR) $(TESTDIR)/setupSSMIS/e2n
-	$(RM) $(TESTDIR)/setupSSMIS/e2s
-	$(MKDIR) $(TESTDIR)/setupSSMIS/e2s
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2005.meta $(TESTDIR)/setupSSMIS/e2n)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2005.meta $(TESTDIR)/setupSSMIS/e2s)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2008.meta $(TESTDIR)/setupSSMIS/e2n)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2008.meta $(TESTDIR)/setupSSMIS/e2s)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2010.meta $(TESTDIR)/setupSSMIS/e2n)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2010.meta $(TESTDIR)/setupSSMIS/e2s)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2012.meta $(TESTDIR)/setupSSMIS/e2n)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2012.meta $(TESTDIR)/setupSSMIS/e2s)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2014.meta $(TESTDIR)/setupSSMIS/e2n)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2014.meta $(TESTDIR)/setupSSMIS/e2s)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2n/e2ntest_SSMIS_2015.meta $(TESTDIR)/setupSSMIS/e2n)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/ssmis_e2s/e2stest_SSMIS_2015.meta $(TESTDIR)/setupSSMIS/e2s)
-
-smmr_quick :
-	$(RM) $(TESTDIR)/setupSMMR/e2n
-	$(MKDIR) $(TESTDIR)/setupSMMR/e2n
-	$(RM) $(TESTDIR)/setupSMMR/e2s
-	$(MKDIR) $(TESTDIR)/setupSMMR/e2s
-	$(RM) $(TESTDIR)/setuSMMR/e2t
-	$(MKDIR) $(TESTDIR)/setupSMMR/e2t
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2n/e2ntest_SMMR.meta  $(TESTDIR)/setupSMMR/e2n 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2s/e2stest_SMMR.meta  $(TESTDIR)/setupSMMR/e2s 	\
-	)
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/smmr_e2t/e2ttest_SMMR.meta  $(TESTDIR)/setupSMMR/e2t 	\
-	)
-
-smap_quick :
-	$(RM) $(TESTDIR)/setupSMAP/e2n
-	$(MKDIR) $(TESTDIR)/setupSMAP/e2n
-	($(CD) $(TOPDIR)/sample_data;		\
-	$(BINDIR)/$(BIN)  $(TESTDIR)/smap_e2n/e2ntest_SMAP.meta  $(TESTDIR)/setupSMAP/e2n 	\
-	)
-
