@@ -35,7 +35,7 @@ I then created a spread sheet that showed the percentage of
 pixels that had changed using the smaller box sizes for each
 channel and projection and based on that, in discussion with DL
 and MJB, we came up with a set of box sizes to use in the setup
-code.  I wrote a set_box_size_by_channel function for setup that
+code.  I wrote a box_size_by_channel function for setup that
 will return the correct box size depending on the channel and the
 sensor-type. 
 

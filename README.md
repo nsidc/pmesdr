@@ -187,6 +187,11 @@ from the GitHub repository. The `git-lfs` package is required to properly
 install the regression data. If `git-lfs` is not installed, the regression tests
 will run, but will complain about reading regression .nc file format. 
 
+`gsx`: The system assumes that input swath data have been converted to eXtended
+generic swath format with the python `gsx` utility. `gsx` is available as a
+conda package on anaconda.org, see below for installation instructions. See
+[gsx](#gsx) section for instructions on using gsx.
+
 ## Installation 
 
 Install the the PMESDR system by cloning the repo:
@@ -239,7 +244,8 @@ source ./set_pmesdr_environment.sh
 make conda-env
 ```
 
-This will create a conda environment named ${PMESDR_CONDAENV} with the required packages to test and run the system.
+This will create a conda environment named ${PMESDR_CONDAENV} with the required
+packages to test and run the system.
 		
 Compile and install the system:
 	
@@ -379,6 +385,45 @@ reader](#c-gsx-reader) module (below).
 	downstream processing.</i></figcaption>
 </figure>
 
+***
+
+The usage message for the gsx command-line utility can be produced by calling it
+with the `--help` option:
+
+``` bash
+$ gsx --help
+Usage: gsx [OPTIONS] {SMMR|SSMI-CSU|SSMIS-CSU|SSMIS-CSU-
+           ICDR|RSS|AMSRE|SMAP|SSMIS-L1C|AMSR-L1C|AMSR-JAXA|SSMI-L1C}
+           SOURCE_FILENAME GSX_FILENAME
+
+  Transforms swath brightness temperature datasets to GSX.
+
+  Transforms one of several types of swath dataset into an Extended Generic
+  Swath (GSX) formatted NetCDF file.
+
+  SOURCE_TYPE: The type of input dataset to convert. May be one of:
+           SMMR      -  Nimbus-7 SMMR Pathfinder brightness temperatures
+           SSMI-CSU  -  Colorado State University NETCDF SSM/I brightness temperatures
+           SSMIS-CSU -  Colorado State University NETCDF SSMIS brightness temperatures
+           SSMIS-CSU-ICDR - Colorado State Interim CDR
+           RSS        - Remote Sensing Systems NETCDF SSMI brightness temperatures
+           AMSRE      - Remote Sensing Systems HDF AMSR-E brightness temperatures
+           SMAP       - SMAP L-Band radiometer brightness temperatures
+           SSMIS-L1C  - NRT files from GSFC PPS - use SSMIS template
+           SSMI-L1C   - historical SSM/I files from GSFC PPS - use SSMI template
+           AMSR-L1C   - NRT or archive AMSR2 or AMSRE files from GSFC PPS
+           AMSR-JAXA  - NRT or archive AMSR2 or AMSRE files from JAXA sftp/ftp site
+  SOURCE_FILENAME: The full filename to the dataset to be converted to GSX
+  GSX_FILENAME:    The full filename to the output GSX NetCDF dataset
+
+Options:
+  -q, --quality [low|medium|high]
+                                  low    - accept all Tbs,
+                                  medium - accept Tbs with minor issues,
+                                  high   - accept only good Tbs
+  --help                          Show this message and exit.
+```
+
 #### AMSR sensor gsx differences
 
 For most input swath files, there is a 1-to-1 relationship between the original
@@ -449,8 +494,13 @@ in_list: ASCII file with list of gsx files to include in processing
 
 Options:
 
--t threshold: response threshold to change sensitivity to TBD, default -8. dB;
-increasing/decreasing this value will TBD
+-t threshold: response threshold to change sensitivity to the strength of
+measurements that will contribute to the integrated results at each grid
+location; default -8. dB; decreasing this value (e.g. changing it to -12)
+includes more surrounding measurements in the calculation at each cell,
+increasing this values (e.g. changing it to -6) includes fewer potential
+measurements; TBD: the value used here is encoded in the CETB output variable
+attribute TB:threshold.
 
 -r resolution flag: base spatial resolution, used to determine all
 higher-resolution grids as powers of 2, e.g. `-r 0` sets base resolution to 25
@@ -486,9 +536,11 @@ outpath : output path for .setup files
 
 Options:
 
--b box_size: number of pixels that defines measurement response function, as
-a square box_size X box_size area of the output grid. MRF for pixels outside the
-box_size is defined to be zero. Default 80.
+-b box_size: number of pixels that defines measurement response function, as a
+square box_size X box_size area of the output grid. MRF for pixels outside the
+box_size is defined to be zero. Default 80. See discussion of determining
+optimal values for this parameter in [Box size parameter](#box-size-parameter)
+section.
 
 Outputs:
 
@@ -564,12 +616,13 @@ The C `utils` module is a collection of small methods defined as system
 utilities, including memory allocation routines and several small routines for
 handling gridded data geometry.
 
-## Ancillary Data
+## Notes
 
 ### Region Definition Files
 
-Required by `meas_meta_make`, stored in the `ref/` directory.  These files
-control the processing configuration for a requested batch of processing.
+The region definition files are required inputs to `meas_meta_make`, stored in
+the `ref/` directory.  These files control the processing configuration for a
+requested batch of processing.
 
 `regiondef1.dat` is the general region definition file, containing region ids
 for many regions used in historical development at BYU. The regions ids used for
@@ -608,11 +661,11 @@ with -r 25, setting factor 0 = 25/(2**0) = 25 km, factor 1 = 25/(2**1) = 12.5 km
 factor 2 = 25/(2**2) = 6.25 km, factor 3 = 25/(2**3) = 3.125 km.
 
 `SIR iterations`: Please refer to detailed discussions in [Long,
-2015](#long2015) for optimal number of SIR iterations by sensor and
-channel. This value varies by sensor and channel, and controls the tradeoff
-between image enhancement and noise. Note that the value of this setting is
-saved in CETB output files, in the TB variable attribute,
-`sir_number_of_iterations`.
+2015](#long2015) and [Brodzik et al., 2024](#brodzik2024a) for optimal number of
+SIR iterations by sensor and channel. This value varies by sensor and channel,
+and controls the tradeoff between image enhancement and noise. Note that the
+value of this setting is saved in CETB output files, in the TB variable
+attribute, `sir_number_of_iterations`.
 
 Example files include:
 
@@ -621,6 +674,57 @@ separated by local-time-of-day, this is used for the `make quick-regression`
 target.
 * `E2?_test.def`: For each of N, S, T, all channels, separated by ltod, used for
 the `make daily-regression` target.
+
+### Box size parameter
+
+The box size parameter (`-b`) option to `meas_meta_setup` is used to determine
+the set of measurements that will contribute to a gridded cell
+value. `meas_meta_setup` determines the set of sensor measurements that
+contribute to the brightness temperature at each gridded pixel location by
+traversing the list of input files and identifying all measurements surrounding
+the position of the grid cell. The size of the spatial neighborhood (in grid
+cells) to examine determined by the box size (`-b`) option to `meas_meta_setup`. 
+We note that larger box sizes affect algorithm performance without increasing
+accuracy of the image reconstruction, so determining an optimal box size is a
+valuable exercise for overall performance.
+
+The original implementation, for the SSM/I radiometer, set box size to 160
+pixels for lower 5 SSM/I channels (19H/V, 22V, 37H/V), and to 80 for the 85H/V
+channels. The box size depended on the EFOV "footprint" size for these channels
+and was determined empirically as described below. We determined
+that the initial large box size setting is a good starting value for the
+exercise to determine the optimal box size. From that large value, we reduced
+the box size incrementally, looking for the setting at which the output
+temperatures began to differ significantly from those obtained with the larger
+box size. We calculated both the percentage of the pixels that differed in each
+output image, as well as the mean of the difference images.
+
+To determine optimal box size:
+
+	1. Run a complete day at 3.125km resolution SIR grids for all channels, LTOD
+	   separations and projections using the original box size settings (160 and
+	   80, respectively, for non 85 GHz channels and for 85 GHz channels)
+	2. Run the same set of complete output files for selected iterations of
+		smaller box sizes, for example, 120/60, 100/50, 90/45, 60/30 and 40/20
+	3. Compare the percentage of pixels that changed using the smaller box sizes
+		versus the original 160/80 box sizes
+	4. Choose an optimal box size that produces acceptably small differences in
+		output.
+		
+The function `box_size_by_channel` encapsulates the box sizes that we have
+selected for CETB data production. For the selected box sizes in
+`box_size_by_channel`, the only TB values that changed were in the T
+projections, with percentage different less than 0.5% of all pixels in the
+image. The spreadsheet
+[box_size_sir_bgi_final.xlsm](docs/internal/box_size_sir_bgi_final.xlsm)
+captures computational notes. This spreadsheet includes a worksheet that
+includes the semi-major axis of the EFOV footprint ellipse by channel. We note
+that the ratio of box size (in km) to footprint semi-major axis (in km) for
+channels that have already been analyzed can be used as a rule-of-thumb for
+setting box size on similar channels when new instruments are being addded to
+the system. The user should note that the setting of response threshold (`-t
+threshold` option to `meas_meta_make`) will also affect the box size
+calculations.
 
 ## Development Notes
 
