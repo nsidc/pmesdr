@@ -9,7 +9,7 @@
 #SBATCH --qos normal
 #SBATCH --job-name SMAP_setup
 #SBATCH --partition=amilan
-#SBATCH --time=06:59:00
+#SBATCH --time=04:30:00
 #SBATCH --nodes=6
 #SBATCH --ntasks=120
 #SBATCH --cpus-per-task=1
@@ -69,7 +69,7 @@ module purge
 # Now load any other software modules you need:
 source ${envpath}/set_pmesdr_environment.sh
 
-file=$PMESDR_SCRATCH_DIR/${top_level}/${src}_scripts/${src}_setup_list_${year}${suffix}
+file=${PMESDR_SCRATCH_DIR}/${top_level}/${src}_scripts/${src}_setup_list_${year}${suffix}
 echo "file = ${file}"
 
 # Load the Load Balancer module *first*

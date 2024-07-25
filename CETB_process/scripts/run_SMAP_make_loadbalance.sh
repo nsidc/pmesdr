@@ -20,11 +20,9 @@
 OPTIND=1
 usage() {
     echo "" 1>&2
-    echo "Usage: `basename $0`[-r resolution] [-h] YEAR SRC ENVPATH" 1>&2
+    echo "Usage: `basename $0`[-r resolution] [-h] ENVPATH" 1>&2
     echo "  Creates an sbatch script to run meas_meta_setup for 1 year of data" 1>&2
     echo "Arguments:" 1>&2
-    echo "  YEAR: 4-digit year" 1>&2
-    echo "  SRC: input sensor source of data: F08, F10, etc" 1>&2
     echo "  ENVPATH: path to summit_set_pmesdr_environment.sh script" 1>&2
     echo "  -r 1 and -r 2 use 36 and 24 km base resolutions respectively" 1>&2
     echo "  -r 0 or nothing is the default 25 km base resolution" 1>&2
@@ -43,11 +41,9 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ "$#" -eq 3 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
-year=$1
-src=$2
-envpath=$3
-top_level=$4
+[[ "$#" -lt 1 ]] || error_exit "Line $LINENO: Unexpected number of arguments."
+envpath=$1
+top_level=$2
 
 suffix=""
 if [[ "${base_resolution}" == "1" ]]
@@ -59,13 +55,14 @@ then
     suffix="_24"
 fi
 
-file=/scratch/alpine/${USER}/${top_level}/${src}_scripts/${src}_make_list${suffix}
-echo "file=${file}"
-echo "suffix, year, src, path, ${suffix}, ${year}, ${src} ${envpath} ${top_level}"
 
 module purge 
 # Now load any other software modules you need:
 source ${envpath}/set_pmesdr_environment.sh
+
+file=${PMESDR_SCRATCH_DIR}/${top_level}/SMAP_scripts/SMAP_make_list${suffix}
+echo "file=${file}"
+echo "suffix, src, path, ${suffix}, ${src} ${envpath} ${top_level}"
 
 # Load the Load Balancer module *first*
 module load loadbalance/0.2

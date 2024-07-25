@@ -19,7 +19,7 @@ top_level=$5
 source ${envpath}/set_pmesdr_environment.sh
 TOPDIR=$PMESDR_TOP_DIR
 BINDIR=$TOPDIR/bin
-direc=/scratch/alpine/${USER}/${top_level}/
+direc=${PMESDR_SCRATCH_DIR}/${top_level}/
 if [[ resolution -eq 0 ]]
 then
     suffix=""
