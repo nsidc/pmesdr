@@ -140,7 +140,7 @@ CETB_process/ | operational workflows and scripts used to run this system on NSI
 LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
-docs/ | documentation (TBD: move internal boxsize and ltod notes to README)
+docs/ | documentation
 idl/ | IDL scripts to produce the sensor timeline figures
 include/ | C header files
 ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
@@ -173,7 +173,7 @@ zlib to enable file compression.
 
 `udunits`: The system requires the Unidata
 [`udunits`](https://www.unidata.ucar.edu/software/udunits/) library for handling
-standardized units. Currently requires v2.2.5--see [Known Issues](#known-issues)
+standardized units. Currently requires v2.2.25--see [Known Issues](#known-issues)
 for details.
 
 `bash`:	Operational scripts are written in the `bash` scripting language.
@@ -499,8 +499,8 @@ measurements that will contribute to the integrated results at each grid
 location; default -8. dB; decreasing this value (e.g. changing it to -12)
 includes more surrounding measurements in the calculation at each cell,
 increasing this values (e.g. changing it to -6) includes fewer potential
-measurements; TBD: the value used here is encoded in the CETB output variable
-attribute TB:threshold.
+measurements; the value used here is encoded in the CETB output variable
+attribute `TB:measurement_response_threshold_dB`.
 
 -r resolution flag: base spatial resolution, used to determine all
 higher-resolution grids as powers of 2, e.g. `-r 0` sets base resolution to 25
@@ -538,9 +538,10 @@ Options:
 
 -b box_size: number of pixels that defines measurement response function, as a
 square box_size X box_size area of the output grid. MRF for pixels outside the
-box_size is defined to be zero. Default 80. See discussion of determining
-optimal values for this parameter in [Box size parameter](#box-size-parameter)
-section.
+box_size is defined to be zero. Default 80; the actual value used at run-time is
+encoded in the CETB output variable attribute
+`TB:measurement_search_bounding_box_km`.  See discussion of determining optimal
+values for this parameter in [Box size parameter](#box-size-parameter) section.
 
 Outputs:
 
@@ -683,13 +684,13 @@ value. `meas_meta_setup` determines the set of sensor measurements that
 contribute to the brightness temperature at each gridded pixel location by
 traversing the list of input files and identifying all measurements surrounding
 the position of the grid cell. The size of the spatial neighborhood (in grid
-cells) to examine determined by the box size (`-b`) option to `meas_meta_setup`. 
+cells) to examine is determined by the box size (`-b`) option to `meas_meta_setup`. 
 We note that larger box sizes affect algorithm performance without increasing
 accuracy of the image reconstruction, so determining an optimal box size is a
 valuable exercise for overall performance.
 
-The original implementation, for the SSM/I radiometer, set box size to 160
-pixels for lower 5 SSM/I channels (19H/V, 22V, 37H/V), and to 80 for the 85H/V
+The original implementation (for the SSM/I radiometer) set box size to 160
+pixels for the lower frequency SSM/I channels (19H/V, 22V, 37H/V), and to 80 for the 85H/V
 channels. The box size depended on the EFOV "footprint" size for these channels
 and was determined empirically as described below. We determined
 that the initial large box size setting is a good starting value for the
@@ -701,15 +702,15 @@ output image, as well as the mean of the difference images.
 
 To determine optimal box size:
 
-	1. Run a complete day at 3.125km resolution SIR grids for all channels, LTOD
-	   separations and projections using the original box size settings (160 and
-	   80, respectively, for non 85 GHz channels and for 85 GHz channels)
-	2. Run the same set of complete output files for selected iterations of
+	1. Run a complete day at 3.125km resolution SIR grids for all channels,
+	   LTOD separations and projections, using the original box size
+	   settings (160 for non-85-GHz channels, and 80 for 85 GHz channels)
+	2. Run the same set of complete output files for selected settings of
 		smaller box sizes, for example, 120/60, 100/50, 90/45, 60/30 and 40/20
 	3. Compare the percentage of pixels that changed using the smaller box sizes
 		versus the original 160/80 box sizes
 	4. Choose an optimal box size that produces acceptably small differences in
-		output.
+		output
 		
 The function `box_size_by_channel` encapsulates the box sizes that we have
 selected for CETB data production. For the selected box sizes in
@@ -721,10 +722,11 @@ captures computational notes. This spreadsheet includes a worksheet that
 includes the semi-major axis of the EFOV footprint ellipse by channel. We note
 that the ratio of box size (in km) to footprint semi-major axis (in km) for
 channels that have already been analyzed can be used as a rule-of-thumb for
-setting box size on similar channels when new instruments are being addded to
-the system. The user should note that the setting of response threshold (`-t
+setting box size on similar channels when new instruments are being added to the
+system. The user should note that the value of the response threshold (`-t
 threshold` option to `meas_meta_make`) will also affect the box size
-calculations.
+calculations, because it also controls the set of measurements that are used to
+calculate TB for a given grid cell.
 
 ## Development Notes
 
@@ -732,30 +734,58 @@ calculations.
 
 Boundary settings for local-time-of-day (ltod) settings can vary by sensor,
 hemisphere and date. ltod settings control the morning vs. evening binning that
-is performed for EASE2-N and EASE2-S projections. Appendices in 
-[Brodzik et al. 2024](https://doi.org/10.5281/zenodo.11626219) include the history of ltods
+is performed for EASE2-N and EASE2-S projections. Appendices in [Brodzik et
+al. 2024](https://doi.org/10.5281/zenodo.11626219) include the history of ltods
 shifting due to orbital drift over the lifetimes of the CETB sensors. For
 sensors that continue to produce data in near real-time, NSIDC performs annual
 maintenance of ltod settings, using the ipython notebook,
-`ipython_notebooks/LTOD calculations.ipynb`. Steps to perform annual ltod checks
-include:
+[LTOD calculations.ipynb](ipython_notebooks/LTOD calculations.ipynb). Steps to perform
+annual ltod checks include:
 
-	1. TBD--needs detail from Molly
+	1. Produce a set of gsx files for a selected set of consecutive 5-10 days.
+
+	2. Use the [LTOD calculations.ipynb](ipython_notebooks/LTOD
+	calculations.ipynb) notebook to read in the gsx files, modify the
+	settings to read in the prepared gsx files. Note that gsx files are very
+	large, so depending on the system configuration, you may encounter
+	memory errors if you attempt to read in both Northern and Southern files
+	for this extended time period.
+
+	3. The notebook has 2 functions that will find all measurements between
+	the 1-degree latitude band of +/- 70-71 degrees and calculates the time
+	offset from midnight for each measurements, and creates ltod histogram
+	plots that typically bin the data into two discrete populations
+	measurements. The function, `ltod_split_time` in `meas_meta_setup`
+	records known shifts in LTOD times to date. This function must be
+	updated when the split times shift significantly from year to year.
+	
+	4. See Appendices in [Brodzik et al. 2024](https://doi.org/10.5281/zenodo.11626219)
+	for historical changes in ltod split times.
 
 ### Adding a New Sensor/Producer
 
 Steps to add and process data from a new sensor and/or data producer:
 
-	1. Add or modify one of the gsx Adaptor strategies in `gsx`, to produce`.gsx`-formatted eXtended Generic Swath input files.
+	1. Add or modify one of the Adaptor strategies in `gsx`, to
+	produce`.gsx`-formatted eXtended Generic Swath input files
 	2. Modify `include/cetb.h` with values for new sensor name, platform, NSIDC
 	dataset name, channels etc. Most of these will be easy to recognize once the
 	new sensor data are examined, e.g. there are enums defined for the platform,
 	producer id, etc.
-	3. Modify `meas_meta_make` with a new single letter identifier that is used
-	in the setup files - see the section in the code that compares F_num to the CETB_platform
-	enum (TBD--needs more detail on what actully needs to be modified here)
-	4. Edit the function cetb_template_filename in cetb_file.c to get the correct template file for the platform and provider
-	combination 
+	3. Modify the C `gsx` reader module to handle any new values added for
+	the new sensor/producer. For example, switch in gsx.c function
+	`get_gsx_global_variables` that sets the number of channels for a
+	possibly new sensor, or function `assign_channels` that verifies that
+	the input channel name match the expected channels from `cetb.h`. This
+	may require more changes, depending on how similar a new sensor is to
+	the existing sensors.
+	4. Modify `meas_meta_make` to handle the new single letter identifier that is
+	used in the setup files, this sets the variable `sen` based on the value of
+	F_num (which is the CETB_platform enum)
+	5. Create a new cetb output file template, see [Create CETB file
+	template.ipynb](ipythen_notebooks/Create CETB file template.ipynb)
+	6. Edit the function cetb_template_filename in cetb_file.c to get the
+	correct new template file for the new platform and provider combination
 
 ### Changing Spatial Resolution
 
@@ -809,10 +839,28 @@ degrees).
    value is hardcoded to 0, but the logic should be changed to check the input
    source in the gsx file and set the value accordingly.
    
-4. `udunits` TBD issues related to negative hours v2.2.25 is required, v2.2.28 is
-   broken; and an issue has been opened with Unidata
+4. `meas_meta_setup` uses `udunits` to manipulate times that are calculated as
+   offsets relative to midnight of a given day. Sometimes the offsets are larger
+   than +/- 60 minutes. This calculation was handled properly in function
+   `ut_encode_time`, up to and including udunits v2.2.25. However, when we
+   updated udunits to v2.2.28, our regression testing indicated unexpected
+   changes to the data. The new udunits was not handling the time conversion
+   consistently to the prior behavior. Instead, the value was rounded to the
+   nearest 60 minutes, resulting in incorrect separation of data into the
+   intended LTOD periods. In 2021, we contacted Unidata to report the
+   issue. Unidata has opened issue ID YYJ-824934. We are not aware that they
+   have corrected the problem. Until the issue is corrected, we have frozen our
+   compilations to require udunits v2.2.25.
    
-5. `udunits` TBD issues with 60 seconds vs rolling to next level
+5. `meas_meta_sir` uses `udunits` function `ut_decode_time` to convert an
+   elapsed time into component hours, minutes, seconds to record global metadata
+   time attributes. Occasionally, a time will return output seconds of 60,
+   instead of the expected value of 0 seconds with a rolled value for minutes.
+   This problem is known to occur in `udunits` v2.2.25, which we cannot yet
+   upgrade due to the serious issue described in the previous item. Since this
+   problem only affects global attributes `time_coverage_start` or
+   `time_coverage_end`, we are currently post-processing the global metadata
+   fields before delivering data for ingest at the NSIDC DAAC. 
 
 ## Operational Instructions
 
