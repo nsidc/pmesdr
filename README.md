@@ -140,11 +140,11 @@ CETB_process/ | operational workflows and scripts used to run this system on NSI
 LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
-docs/ | documentation
 idl/ | IDL scripts to produce the sensor timeline figures
 include/ | C header files
 ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
 matlab/ | matlab viewer routines
+notes/ | internal development spreadsheets
 python/ | miscellaneous python utilities
 ref/ | region definition files
 regression_scripts/ | bash scripts to perform regression testing
@@ -721,7 +721,7 @@ selected for CETB data production. For the selected box sizes in
 `box_size_by_channel`, the only TB values that changed were in the T
 projections, with percentage different less than 0.5% of all pixels in the
 image. The spreadsheet
-[box_size_sir_bgi_final.xlsm](docs/internal/box_size_sir_bgi_final.xlsm)
+[box_size_sir_bgi_final.xlsm](notes/box_size_sir_bgi_final.xlsm)
 captures computational notes. This spreadsheet includes a worksheet that
 includes the semi-major axis of the EFOV footprint ellipse by channel. We note
 that the ratio of box size (in km) to footprint semi-major axis (in km) for
