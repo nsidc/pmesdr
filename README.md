@@ -705,12 +705,16 @@ To determine optimal box size:
 	1. Run a complete day at 3.125km resolution SIR grids for all channels,
 	   LTOD separations and projections, using the original box size
 	   settings (160 for non-85-GHz channels, and 80 for 85 GHz channels)
-	2. Run the same set of complete output files for selected settings of
-		smaller box sizes, for example, 120/60, 100/50, 90/45, 60/30 and 40/20
-	3. Compare the percentage of pixels that changed using the smaller box sizes
-		versus the original 160/80 box sizes
+
+        2. Run the same set of complete output files for selected settings of
+	   smaller box sizes, for example, 120/60, 100/50, 90/45, 60/30 and
+	   40/20
+
+	3. Compare the percentage of pixels that changed using the smaller box
+	   sizes versus the original 160/80 box sizes
+
 	4. Choose an optimal box size that produces acceptably small differences in
-		output
+	   output
 		
 The function `box_size_by_channel` encapsulates the box sizes that we have
 selected for CETB data production. For the selected box sizes in
