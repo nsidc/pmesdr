@@ -977,7 +977,7 @@ Enhanced-Resolution Brightness Temperature (CETB) data sets:
 
 ### CETB Data Products
 
-<a id="brodzik2016">Brodzik, M. J., D. G. Long, M. A. Hardman, A. Paget, and R. Armstrong. 2016,
+<a id="brodzik2016"></a>Brodzik, M. J., D. G. Long, M. A. Hardman, A. Paget, and R. Armstrong. 2016,
 updated current year. MEaSUREs Calibrated Enhanced-Resolution Passive Microwave
 Daily EASE-Grid 2.0 Brightness Temperature ESDR, Version 1. Boulder, Colorado
 USA. NASA National Snow and Ice Data Center Distributed Active Archive
@@ -989,7 +989,7 @@ Enhanced-Resolution Passive Microwave Daily EASE-Grid 2.0 Brightness
 Temperatures Derived from Level 1C FCDR (1.1). National Snow and Ice
 Data Center, Boulder, CO, USA. [10.5067/NDQ5ATHFSH57](https://doi.org/10.5067/NDQ5ATHFSH57).
 
-<a id="brodzik2023a">Brodzik, M. J., D. G. Long, M. A. Hardman. 2023,
+<a id="brodzik2023a"></a>Brodzik, M. J., D. G. Long, M. A. Hardman. 2023,
 updated current year. Calibrated Enhanced-Resolution Passive Microwave
 Daily EASE-Grid 2.0 Brightness Temperature ESDR, Version 2. Boulder, Colorado
 USA. NASA National Snow and Ice Data Center Distributed Active Archive
@@ -998,51 +998,56 @@ Center. [nsidc0630](https://nsidc.org/data/nsidc-0630/versions/2)
 
 ### SMAP CETB Data Products
 
-<a id="brodzik2021">Brodzik, M. J., D. G. Long, M. A. Hardman. 2021, updated 2023. SMAP Radiometer
-Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness
+<a id="brodzik2021"></a>Brodzik, M. J., D. G. Long, M. A. Hardman. 2021,
+updated 2023. SMAP Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness
 Temperatures. Version 2. Boulder, Colorado USA: NASA DAAC at the National Snow
 and Ice Data
 Center. [nsidc0738v2](https://nsidc.org/data/nsidc-0738/versions/2). [10.5067/YAMX52BXFL10](https://doi.org/10.5067/YAMX52BXFL10).
 
-<a id="brodzik2024">Brodzik, M. J., D. G. Long, M. A. Hardman. 2024, updated current year. SMAP
-Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness
+<a id="brodzik2024"></a>Brodzik, M. J., D. G. Long, M. A. Hardman. 2024, updated
+current year. SMAP Radiometer Twice-Daily rSIR-Enhanced EASE-Grid 2.0 Brightness
 Temperatures. Version 3. Boulder, Colorado USA: NASA DAAC at the National Snow
 and Ice Data Center.
 [nsidc0738v3](https://nsidc.org/data/nsidc-0738/versions/3). [10.5067/8OULQIU7ZPSX](https://doi.org/10.5067/8OULQIU7ZPSX).
 
 ## References
 
-<a id="brodzik2012">Brodzik, M. J., B. Billingsley, T. Haran, B. Raup, and M. H. Savoie. 2012.
-EASE-Grid 2.0: Incremental but Significant Improvements for Earth-Gridded Data
-Sets. ISPRS Int. J. Geo-Inf. 1,
+<a id="brodzik2012"></a>Brodzik, M. J., B. Billingsley, T. Haran, B. Raup, and
+M. H. Savoie. 2012.  EASE-Grid 2.0: Incremental but Significant Improvements for
+Earth-Gridded Data Sets. ISPRS Int. J. Geo-Inf. 1,
 32–45. [10.3390ijgi1010032](https://doi.org/10.3390/ijgi1010032).
 
-<a id="brodzik2014">Brodzik, M. J., B. Billingsley, T. Haran, B. Raup, and M. H. Savoie. 2014.
-Correction: Brodzik, M.J., et al. EASE-Grid 2.0: Incremental but Significant
-Improvements for Earth-Gridded Data Sets, ISPRS Int. J. Geo-Inf. 2012, 1,
-32–45. ISPRS Int. J. Geo-Inf. 3,
+<a id="brodzik2014"></a>Brodzik, M. J., B. Billingsley, T. Haran, B. Raup, and
+M. H. Savoie. 2014.  Correction: Brodzik, M.J., et al. EASE-Grid 2.0:
+Incremental but Significant Improvements for Earth-Gridded Data Sets, ISPRS
+Int. J. Geo-Inf. 2012, 1, 32–45. ISPRS Int. J. Geo-Inf. 3,
 1154–1156. [10.3390/ijgi3031154](https://doi.org/10.3390/ijgi3031154).
 
-<a id="brodzik2018">Brodzik, M. J. and D. G. Long. 2018. Calibrated Passive Microwave Daily
-EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm Theoretical Basis
-Document, Version 1.0. Boulder, CO, USA. [10.5181/zenodo.7958456](https://doi.org/10.5281/zenodo.7958456).
+<a id="brodzik2018"></a>Brodzik, M. J. and D. G. Long. 2018. Calibrated Passive
+Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm
+Theoretical Basis Document, Version 1.0. Boulder, CO,
+USA. [10.5181/zenodo.7958456](https://doi.org/10.5281/zenodo.7958456).
 
-<a id="brodzik2024a">Brodzik, M. J. and D. G. Long. 2024. Calibrated Passive Microwave Daily
-EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm Theoretical Basis
-Document, Version 2.1. Boulder, CO, USA. [10.5281/zenodo.11626219](https://doi.org/10.5281/zenodo.11626219).
+<a id="brodzik2024a"></a>Brodzik, M. J. and D. G. Long. 2024. Calibrated Passive
+Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm
+Theoretical Basis Document, Version 2.1. Boulder, CO,
+USA. [10.5281/zenodo.11626219](https://doi.org/10.5281/zenodo.11626219).
 
-<a id="brodzik2018a">Brodzik, M. J., D. G. Long, and M. A. Hardman. 2018. Best Practices in Crafting
-the Calibrated, Enhanced–Resolution Passive–Microwave EASE-Grid 2.0 Brightness
-Temperature Earth System Data Record. Remote Sensing,
+<a id="brodzik2018a"></a>Brodzik, M. J., D. G. Long, and
+M. A. Hardman. 2018. Best Practices in Crafting the Calibrated,
+Enhanced–Resolution Passive–Microwave EASE-Grid 2.0 Brightness Temperature Earth
+System Data Record. Remote Sensing,
 10(11), 2018. [10.3390/rs10111793](https://doi.org/10.3390/rs10111793).
 
-<a id="brodzik2021a">Brodzik, M. J., D. G. Long, and M. A. Hardman. 2021. SMAP Twice–Daily
-rSIR–Enhanced EASE-Grid 2.0 Brightness Temperatures Algorithm Theoretical Basis
-Document, Version 2. Boulder, CO, USA. [10.5281/zenodo.11069045](https://doi.org/10.5281/zenodo.11069045).
+<a id="brodzik2021a"></a>Brodzik, M. J., D. G. Long, and
+M. A. Hardman. 2021. SMAP Twice–Daily rSIR–Enhanced EASE-Grid 2.0 Brightness
+Temperatures Algorithm Theoretical Basis Document, Version 2. Boulder, CO,
+USA. [10.5281/zenodo.11069045](https://doi.org/10.5281/zenodo.11069045).
 
-<a id="brodzik2024b">Brodzik, M. J., D. G. Long, and M. A. Hardman. 2024. SMAP Twice–Daily
-rSIR–Enhanced EASE-Grid 2.0 Brightness Temperatures Algorithm Theoretical Basis
-Document, Version 3. Boulder, CO, USA. [10.5281/zenodo.11069054](https://doi.org/10.5281/zenodo.11069054).
+<a id="brodzik2024b"></a>Brodzik, M. J., D. G. Long, and
+M. A. Hardman. 2024. SMAP Twice–Daily rSIR–Enhanced EASE-Grid 2.0 Brightness
+Temperatures Algorithm Theoretical Basis Document, Version 3. Boulder, CO,
+USA. [10.5281/zenodo.11069054](https://doi.org/10.5281/zenodo.11069054).
 
 <a id="long2015"></a>Long, D. G. 2015. Selection of Reconstruction Parameters. NSIDC MEaSUREs
 Project White Paper. [10.5281/zenodo.8035057](https://doi.org/10.5281/zenodo.8035057).
