@@ -143,9 +143,10 @@ LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
 idl/ | IDL scripts to produce the sensor timeline figures
+images/ | images and figures for documentation
 include/ | C header files
 ipython_notebooks/ | various ipython notebooks, includes notebook to examine orbital drift for local-time-of-day boundaries
-matlab/ | matlab viewer routines
+matlab/viewer/ | matlab viewer routines
 notes/ | internal development spreadsheets
 python/ | miscellaneous python utilities
 ref/ | region definition files
@@ -157,9 +158,9 @@ src/test_inputs | Small set of test inputs to generate regression data
 
 The system requires the following:
 
-`python`/`conda`: Python is required to run the extended generic swath utility to convert
-various input swath data formats to gsx-formatted .nc files; python is also
-required to execute some unit test comparisons and to perform regression
+`python`/`conda`: Python is required to run the extended generic swath utility,
+to convert various input swath data formats to gsx-formatted .nc files; python
+is also required to execute some unit test comparisons and to perform regression
 testing; Miniconda is required to build a conda environment; make targets are
 included to build the conda environment with gsx and required packages for
 running the system
@@ -187,7 +188,8 @@ extension of the Ruby Rake build system.
 `git`/`git-lfs`: The system requires git to access and check out the software
 from the GitHub repository. The `git-lfs` package is required to properly
 install the regression data. If `git-lfs` is not installed, the regression tests
-will run, but will complain about reading regression .nc file format. 
+will run, but will fail and complain about errors reading regression .nc file
+format.
 
 `gsx`: The system assumes that input swath data have been converted to eXtended
 generic swath format with the python `gsx` utility. `gsx` is available as a
@@ -275,8 +277,9 @@ This will clone a git repository with regression data for comparison tests in a
 directory named `pmesdr_regression_data` as a sibling to the directory where the
 `pmesdr` clone is located. This step only needs to be done once and then again
 only if the regression data changes. Data in the repository are organized in
-directories by date. The regression date used in the tests is specified by the
-value of `regression_yyyymmdd` that is defined in `set_pmesdr_environment.sh`.
+directories by date that the regression data were created. The regression date
+used in the tests is specified by the value of `regression_yyyymmdd` that is
+defined in `set_pmesdr_environment.sh`.
 
 The regression tests assume that a conda environment named ${PMESDR_CONDAENV}
 has been built as described above. 
@@ -297,9 +300,10 @@ make unit-test
 ### Quick Regression
 
 A "quick" regression, intended for quick development cycles, is fast, but only
-executes tests for the Northern Hemisphere grid and a limited set of pre-defined
-gsx inputs. It assumes that you have re-built the executables (make clean; make
-all; make install) with whatever changes you may be testing. Run a quick
+executes tests for the 19H channel (both ltod splits) for 2 input gsx files
+(which are included in the installation). The quick test runs all thress (N, S,
+and T) projections.  It assumes that you have built the executables (make clean;
+make all; make install) with whatever changes you may be testing. Run a quick
 regression with:
 
 ``` bash
@@ -313,11 +317,10 @@ This test runs in about a minute on a CURC compute node.
 ### Daily Regression
 
 A "daily" regression, intended for more rigorous testing, takes longer to run,
-and executes tests for the N, S and T (Northern and Southern Hemisphere, and
-Temperate Cylindrical Equal-area)  grids and a larger set of pre-defined
-gsx inputs. It assumes that you have re-built the executables (make clean; make
-all; make install) with whatever changes you may be testing. Run a daily
-regression with:
+executes tests for all three (N, S and T) projections, for all channels, using
+the gsx files that are included in the installation. It assumes that you have
+built the executables (make clean; make all; make install) with whatever changes
+you may be testing. Run a daily regression with:
 
 ``` bash
 cd pmesdr/src/prod
@@ -326,8 +329,8 @@ make daily-regression
 ```
 
 This test runs in about five minutes on a CURC compute node. In NSIDC's
-installation on CURC, it is
-configured to run daily at midnight as part of continuous integration.
+installation on CURC, it is configured to run daily at midnight as part of
+continuous integration.
 
 ## Development Cycle
 
@@ -335,7 +338,7 @@ configured to run daily at midnight as part of continuous integration.
 	2. Create and test changes on the feature branch
 		* 'make unit-test' to rebuild executables and run unit tests
 		* 'make quick-regression' for fast regression
-		* 'make daily-regression' for more comprehensive regression
+		* 'make daily-regression' for more comprehensive (all channels) regression
 	3. Push commits on the feature branch
 	4. Create a Pull Request on GitHub
 	5. When the feature PR is merged to the main branch, the patch version and
@@ -368,13 +371,15 @@ action with:
 
 The python package, eXtended generic swath (`gsx`), uses an object-oriented
 Adapter design pattern to encapsulate sensor- or producer-specific
-idiosyncrasies. Running gsx on any of the accepted swath data files (also
-referred to as `Level 1b` or `Level 1c` files) translates the contents into a
-generic version of passive microwave swath data with all required metadata and
-geolocation for the PMESDR system. With a few notable exceptions, all
-differences between input swath files are encapsulated in the `gsx` python
-convertor. This design simplifies the PMESDR system modules by removing most
-special logic for handling data from new sensors or data producers.
+idiosyncrasies that occur in input swath data from multiple input
+sources. Running gsx on any of the accepted swath data files (also referred to
+as `Level 1b` or `Level 1c` files) translates the contents into a generic
+version of passive microwave swath data with all required metadata and
+geolocation for the PMESDR system. With a few notable exceptions (see [Known
+Issues](#known-issues)), all differences between input swath files are
+encapsulated in the `gsx` python convertor. This design simplifies the PMESDR
+system modules by removing most special logic for handling data from new sensors
+or data producers.
 
 Files formatted as `gsx` are NC-compliant, with required geolocation and
 positional metadata in a format that is expected by the [C gsx
@@ -433,29 +438,33 @@ swath file and the corresponding gsx file, with the exception of files derived
 from the NASA PPS system for AMSR-E and AMSR2 sensors. In these cases, the input
 L1C files contain all required metadata and brightness temperatures, except for
 the 6 GHz inputs. In order to access 6 GHz TBs, we created a gsx translator to
-pull 6 GHz TBs from corresponding JAXA L1B files. The L1B files are organized by
-half-orbit and include half-orbit overlaps. For these sensors, the workflow
-required to produce complete gsx files containing all channels requires calls to
-gsx for the original L1C (all channels but 6 GHz), a call to gsx for each potential
-corresponding L1B files (for only 6 GHz data), and finally a call to a python
-function `gsx-merger` to merge the partial gsx files into a single, complete gsx
-file for input to the PMESDR system. 
+extract 6 GHz TBs from corresponding JAXA L1B files. The L1B files are organized
+by half-orbit and include overlaps with adjacent files. For these sensors, the
+workflow is modified to produce the complete gsx files expected by the PMESDR
+software. In these cases, the user must call gsx for the original L1C (all
+channels but 6 GHz), then call gsx for each potential corresponding L1B files
+(for only 6 GHz data), and finally call a python function
+`combine_amsr_l1c_jaxa.py` (or `combine_amsr_l1c_jaxa_archive.py`, to handle
+small differences between near real-time and archive files), to merge the
+partial gsx files into a single, complete gsx file for input to the PMESDR
+system.
 
-The global metadata for CETB output files indicates the names of the respective
-input files used. For example, a CETB 6 GHz file will include the names of both
-JAXA L1B and PPS L1C inputs, because data are derived from both of these input
-sources, 6 GHz TBs are drawn from JAXA L1B and the remaining geolocation and
-positional data are drawn from the PPS L1C. However, for other channels, the
-global metadata will only include the list of input PPS L1C files, since all
-data are derived only from the L1C inputs.
+The global metadata for CETB output files will be populated with the names of
+the respective input files used. For example, a CETB 6 GHz file will include the
+names of both JAXA L1B and PPS L1C inputs, because data are derived from both of
+these input sources: 6 GHz TBs are drawn from JAXA L1B and the remaining
+geolocation and positional data are drawn from the PPS L1C. However, for other
+channels, the global metadata will only include the list of input PPS L1C files,
+since all data are derived only from the L1C inputs.
 
 <figure>
 	<img src="./images/gsx_adapter_for_amsr.png" alt="gsx adapter for AMSR concept" />
 	<figcaption><i>For AMSR2 and AMSR-E inputs, 6 GHz data are
 	obtained from JAXA L1B data and combined with original data and metadata
 	from L1C. For a given orbit, the gsx adapter is called for each (full orbit)
-	L1C file and the corresponding set of (half-orbit) L1B files. A python
-	utility, combine_amsr_l1c_jaxa.py (included in the gsx package) merges the partial gsx files
+	L1C file and the corresponding set of (half-orbit) L1B files. The python
+	utilities, combine_amsr_l1c_jaxa.py or combine_amsr_l1c_jaxa_archive.py 
+	(included in the gsx package) merges the partial gsx files
 	into a single, complete gsx file for the orbit for downstream processing.</i></figcaption>
 </figure>
 
@@ -486,13 +495,13 @@ meas_meta_make.c: usage: meas_meta_make [-t threshold] [-r resolution] meta_name
 
 Required inputs:
 
-meta_name: fully-qualified .meta output file name
-platform: platform to process
-start_day: day of year
-end_day: day of year
-year: 4-digit year
-def: fully-qualified region definition file
-in_list: ASCII file with list of gsx files to include in processing
+ * meta_name: fully-qualified .meta output file name
+ * platform: platform to process
+ * start_day: day of year
+ * end_day: day of year
+ * year: 4-digit year
+ * def: fully-qualified region definition file
+ * in_list: ASCII file with list of gsx files to include in processing
 
 Options:
 
@@ -501,12 +510,12 @@ measurements that will contribute to the integrated results at each grid
 location; default -8. dB; decreasing this value (e.g. changing it to -12)
 includes more surrounding measurements in the calculation at each cell,
 increasing this values (e.g. changing it to -6) includes fewer potential
-measurements; the value used here is encoded in the CETB output variable
-attribute `TB:measurement_response_threshold_dB`.
+measurements; at run-time, the value used here is encoded in the CETB output
+variable attribute `TB:measurement_response_threshold_dB`.
 
 -r resolution flag: base spatial resolution, used to determine all
-higher-resolution grids as powers of 2, e.g. `-r 0` sets base resolution to 25
-km, used for 12.5, 6.25 and 3.125 km enhanced-resolutions
+higher-resolution grids as powers of 2, default is -r 0. For e.g. `-r 0` sets base
+resolution to 25 km, used for 12.5, 6.25 and 3.125 km enhanced-resolutions
 
 Outputs:
 
@@ -533,16 +542,16 @@ usage: meas_meta_setup -b box_size meta_in outpath
 
 Required inputs:
 
-meta_in : fully-qualified .meta file from `meas_meta_make`
-outpath : output path for .setup files
+ * meta_in : fully-qualified .meta file from `meas_meta_make`
+ * outpath : output path for .setup files
 
 Options:
 
--b box_size: number of pixels that defines measurement response function, as a
-square box_size X box_size area of the output grid. MRF for pixels outside the
-box_size is defined to be zero. Default 80; the actual value used at run-time is
-encoded in the CETB output variable attribute
-`TB:measurement_search_bounding_box_km`.  See discussion of determining optimal
+-b box_size: number of pixels that defines measurement response function (MRF),
+as a square box_size-by-box_size area of the output grid. MRF for pixels outside
+the box_size is defined to be zero. Default box_size is 80. At run-time, the
+box_size value is encoded (in units of km) in the CETB output variable attribute
+`TB:measurement_search_bounding_box_km`. See discussion of determining optimal
 values for this parameter in [Box size parameter](#box-size-parameter) section.
 
 Outputs:
@@ -567,12 +576,14 @@ usage: ./meas_meta_sir setup_in outpath
 
 Required inputs:
 
-setup_in : fully-qualified .setup file from `meas_meta_setup`
-outpath : output path for reconstructed CETB GRD and rSIR files
+ * setup_in : fully-qualified .setup file from `meas_meta_setup`
+ * outpath : output path for reconstructed CETB GRD and rSIR files
 
 Options:
 
-There are no options to this utility.
+There are no options to this utility. All configured settings are controlled by
+preceding region definition files and options to `meas_meta_make` and
+`meas_meta_setup`.
 
 Outputs:
 
