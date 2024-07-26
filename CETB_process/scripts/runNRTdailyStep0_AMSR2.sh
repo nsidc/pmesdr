@@ -136,7 +136,7 @@ if [[ $do_ftp ]]; then
 #Go here so that correct secret files are used or SMAP downloaded to correct location
     cd ${run_dir}
     echo "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2_alpine.py"
-    python  "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2_alpine.py" || error_exit "Line $LINENO: ftp error."
+    python  "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_l1c_v2.py . ${PMESDR_SCRATCH_DIR}/${top_level}/" || error_exit "Line $LINENO: ftp error."
     echo "Done with ftp fetch for L1C"
     echo "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_jaxa_v2_alpine.py"
     python "/projects/${USER}/swathfetcher/ftp_nrt_amsr2_jaxa_v2_alpine.py" || error_exit "Line $LINENO: ftp error."
