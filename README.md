@@ -755,17 +755,18 @@ al. 2024](https://doi.org/10.5281/zenodo.11626219) include the history of ltods
 shifting due to orbital drift over the lifetimes of the CETB sensors. For
 sensors that continue to produce data in near real-time, NSIDC performs annual
 maintenance of ltod settings, using the ipython notebook,
-[LTOD calculations.ipynb](ipython_notebooks/LTOD calculations.ipynb). Steps to perform
+[LTOD calculations.ipynb]("ipython_notebooks/LTOD calculations.ipynb"). Steps to perform
 annual ltod checks include:
 
 	1. Produce a set of gsx files for a selected set of consecutive 5-10 days.
 
-	2. Use the [LTOD calculations.ipynb](ipython_notebooks/LTOD
-	calculations.ipynb) notebook to read in the gsx files, modify the
-	settings to read in the prepared gsx files. Note that gsx files are very
+	2. Use the 
+	[LTOD calculations.ipynb]("ipython_notebooks/LTOD calculations.ipynb")
+	notebook to read in the gsx files, modify the settings to read in the 
+	prepared gsx files. Note that gsx files are very
 	large, so depending on the system configuration, you may encounter
-	memory errors if you attempt to read in both Northern and Southern files
-	for this extended time period.
+	memory errors if you attempt to calculate Northern and Southern ltods
+	for this extended time period without restarting the notebook.
 
 	3. The notebook has 2 functions that will find all measurements between
 	the 1-degree latitude band of +/- 70-71 degrees and calculates the time
@@ -805,7 +806,7 @@ Steps to add and process data from a new sensor and/or data producer:
 	5. Create a new cetb output file template, see [Create CETB file
 	template.ipynb](ipythen_notebooks/Create CETB file template.ipynb)
 	
-	6. Edit the function cetb_template_filename in cetb_file.c to get the
+	6. Edit the function `cetb_template_filename` in cetb_file.c to get the
 	correct new template file for the new platform and provider combination
 
 ### Changing Spatial Resolution
@@ -873,15 +874,16 @@ degrees).
    have corrected the problem. Until the issue is corrected, we have frozen our
    compilations to require udunits v2.2.25.
    
-5. `meas_meta_sir` uses `udunits` function `ut_decode_time` to convert an
-   elapsed time into component hours, minutes, seconds to record global metadata
-   time attributes. Occasionally, a time will return output seconds of 60,
-   instead of the expected value of 0 seconds with a rolled value for minutes.
-   This problem is known to occur in `udunits` v2.2.25, which we cannot yet
-   upgrade due to the serious issue described in the previous item. Since this
-   problem only affects global attributes `time_coverage_start` or
-   `time_coverage_end`, we are currently post-processing the global metadata
-   fields before delivering data for ingest at the NSIDC DAAC. 
+5. The function `iso_date_string` in cetb_file.c depends on the `udunits`
+   function `ut_decode_time` to convert an elapsed time into component hours,
+   minutes, seconds to record global metadata time attributes. Occasionally, a
+   time will return output seconds of 60, instead of the expected value of 0
+   seconds with a rolled value for minutes.  This problem is known to occur in
+   `udunits` v2.2.25, which we cannot yet upgrade due to the serious issue
+   described in the previous item. Since this problem only affects global
+   attributes `time_coverage_start` or `time_coverage_end`, we are currently
+   post-processing the global metadata fields before delivering data for ingest
+   at the NSIDC DAAC.
 
 ## Operational Instructions
 
