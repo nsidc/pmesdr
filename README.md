@@ -621,7 +621,7 @@ The C `cetb_file` module is writer for CETB-formatted outputs. The cetb_file
 module assumes that the caller has provided a CETB "template" file, with most of
 the required general CETB metadata defined prior to run time. The cetb_file
 methods determine the specific metadata to use and set the remaining output
-metadata at run-time. The python notebook, `ipython_notebooks/Create CETB file template.ipynb`, is used to create and/or modify CETB template files, which are
+metadata at run-time. The ipython notebook, `ipython_notebooks/Create CETB file template.ipynb`, is used to create and/or modify CETB template files, which are
 saved in the `src/prod/cetb_file/templates/` directory.
 
 #### utils
