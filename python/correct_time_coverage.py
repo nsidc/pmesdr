@@ -1,14 +1,25 @@
 #  Short Python script to calculate the start and end times for the TB_time
-#  variable in a CETB file and wirte out the correct global attributes for
+#  variable in a CETB file and write out the correct global attributes for
 #  time_coverage_start and time_coverage_end
-#
 from datetime import timedelta, datetime
 from netCDF4 import Dataset
 import numpy as np
 import sys
 
+def usage():
+    print("usage: correct_time_coverage.py <file_list>")
+    print("Overwrites the time_coverage_start and time_coverage_end ")
+    print("global variables, with information from the TB_time data contents")
+    print("  <file_list> : list of input CETB files to be corrected")
+    print(" ")
+    print("This script is used to correct the output from ut_decode_time calls")
+    print("that incorrectly includes 60 second values instead of zero seconds")
+    print("with minutes incremented.")
+    print(" ")
+
 if len(sys.argv) < 2:
-    print("Need a file argument\n")
+    usage()
+    print("Error: Needs a file argument\n")
     exit()
 
 input_file_list = str(sys.argv[1])
