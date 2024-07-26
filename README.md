@@ -9,6 +9,7 @@
 
 - [Passive Microwave Earth Science Data Record (PMESDR) System](#passive-microwave-earth-science-data-record-pmesdr-system)
     - [Introduction](#introduction)
+    - [Copyright](#copyright)
     - [License](#license)
     - [Repository Contents](#repository-contents)
     - [Requirements](#requirements)
@@ -31,8 +32,9 @@
             - [calcalcs](#calcalcs)
             - [cetb_file](#cetb_file)
             - [utils](#utils)
-    - [Ancillary Data](#ancillary-data)
+    - [Notes](#notes)
         - [Region Definition Files](#region-definition-files)
+        - [Box size parameter](#box-size-parameter)
     - [Development Notes](#development-notes)
         - [Annual maintenance on local-time-of-day (ltod) boundaries](#annual-maintenance-on-local-time-of-day-ltod-boundaries)
         - [Adding a New Sensor/Producer](#adding-a-new-sensorproducer)
@@ -706,7 +708,7 @@ To determine optimal box size:
 	   LTOD separations and projections, using the original box size
 	   settings (160 for non-85-GHz channels, and 80 for 85 GHz channels)
 
-        2. Run the same set of complete output files for selected settings of
+    2. Run the same set of complete output files for selected settings of
 	   smaller box sizes, for example, 120/60, 100/50, 90/45, 60/30 and
 	   40/20
 
@@ -772,10 +774,12 @@ Steps to add and process data from a new sensor and/or data producer:
 
 	1. Add or modify one of the Adaptor strategies in `gsx`, to
 	produce`.gsx`-formatted eXtended Generic Swath input files
+
 	2. Modify `include/cetb.h` with values for new sensor name, platform, NSIDC
 	dataset name, channels etc. Most of these will be easy to recognize once the
 	new sensor data are examined, e.g. there are enums defined for the platform,
 	producer id, etc.
+	
 	3. Modify the C `gsx` reader module to handle any new values added for
 	the new sensor/producer. For example, switch in gsx.c function
 	`get_gsx_global_variables` that sets the number of channels for a
@@ -783,11 +787,14 @@ Steps to add and process data from a new sensor and/or data producer:
 	the input channel name match the expected channels from `cetb.h`. This
 	may require more changes, depending on how similar a new sensor is to
 	the existing sensors.
+	
 	4. Modify `meas_meta_make` to handle the new single letter identifier that is
 	used in the setup files, this sets the variable `sen` based on the value of
 	F_num (which is the CETB_platform enum)
+	
 	5. Create a new cetb output file template, see [Create CETB file
 	template.ipynb](ipythen_notebooks/Create CETB file template.ipynb)
+	
 	6. Edit the function cetb_template_filename in cetb_file.c to get the
 	correct new template file for the new platform and provider combination
 
