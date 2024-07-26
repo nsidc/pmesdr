@@ -52,8 +52,8 @@ if [[ "$thisHostname"  == *"int.nsidc.org"* ]]; then
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
-  # TODO: This directory should end with the name of the VM that is pulled from $thisHostname
-  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant  
+  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant/$(shell hostname)  
+  export PMESDR_TEST_OUT_DIR=/projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)  
 
 elif [[ "$thisHostname" == *"rc.colorado.edu" \
 	  || "$thisHostname" == *"c3"* ]]; then
@@ -63,6 +63,7 @@ elif [[ "$thisHostname" == *"rc.colorado.edu" \
   export PMESDR_COMPARE_TOLERANCE=0.06
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_SCRATCH_DIR=/scratch/alpine/${USER}
+  export PMESDR_TEST_OUT_DIR=${PMESDR_TOP_DIR}/NSIDCtest
 
   module purge all
   ml intel/2022.1.2
@@ -78,6 +79,7 @@ else
   export PMESDR_COMPARE_TOLERANCE=0.06
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_SCRATCH_DIR=/home/${USER}
+  export PMESDR_TEST_OUT_DIR=/home/${USER}/NSIDCtest
   
 fi                                                                                                                   
 

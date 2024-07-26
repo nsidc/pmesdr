@@ -76,34 +76,3 @@ if [ $? -ne 0 ]; then
   echo "`basename $0`: csu_$maketarget SIR validate failed"
   exit -1
 fi
-
-echo "`basename $0`: running make at 36 km"
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_make
-pwd
-make csu_${maketarget}_36
-if [ $? -ne 0 ]; then
-  echo "`basename $0`: csu_${maketarget}_36 make failed"
-  exit -1
-fi
-echo "`basename $0`: running setup at 36 km"
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
-pwd
-make csu_${maketarget}_36
-if [ $? -ne 0 ]; then
-  echo "`basename $0`: csu_${maketarget}_36 setup failed"
-  exit -1
-fi
-echo "`basename $0`: running sir at 36 km"
-cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_sir
-pwd
-make csu_${maketarget}_36
-if [ $? -ne 0 ]; then
-  echo "`basename $0`: csu_${maketarget}_36 SIR failed"
-  exit -1
-fi
-make csu_${maketarget}_validate_36
-if [ $? -ne 0 ]; then
-  echo "`basename $0`: csu_$maketarget_36 SIR validate failed"
-  exit -1
-fi
-echo "`basename $0`: Finished $regressiontype regression"

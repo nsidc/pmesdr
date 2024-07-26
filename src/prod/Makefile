@@ -21,8 +21,7 @@ BINDIR = $(TOPDIR)/bin
 #
 #	commands
 #
-#SHELL = /bin/sh
-#RDIST = rdist
+SHELL = /bin/sh
 
 #
 #	C compiler options, debug or optimization settings
