@@ -664,9 +664,8 @@ Region Field | Values | Notes
 ------------ | ------ | -----
 region id    | 308, 309, 310 | corresponding to EASE2-N, etc, see `regiondef1.dat`
 resolution factor | 0, 1, 2, 3    | power of 2 divided into base resolution
-asc/des/ltod flag | 0=all, 1=asc, 2=des, 3=morn, 4=eve |
-beam number | 1=19H, 2=19V, 3=22V, 4=37H, 5=37V, 6=85H, 7=85V | these are for
-SSM/I; see channel ibeam enums in [cetb.h]('include/cetb.h')
+asc/des/ltod flag | 0=all, 1=asc, 2=des, 3=morn, 4=eve | asc/dec for T grids, morn/eve for N/S grids
+beam number | 1=19H, 2=19V, 3=22V, 4=37H, 5=37V, 6=85H, 7=85V | these are for SSM/I; see channel ibeam enums in [cetb.h]('include/cetb.h') 
 SIR iterations | number | number of SIR iterations for this channel
 
 `resolution factor`: Note that resolution factor is used together with meas_meta_make -r
@@ -1028,9 +1027,10 @@ Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm
 Theoretical Basis Document, Version 1.0. Boulder, CO,
 USA. [10.5181/zenodo.7958456](https://doi.org/10.5281/zenodo.7958456).
 
-<a id="brodzik2024a"></a>Brodzik, M. J. and D. G. Long. 2024. Calibrated Passive
-Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR (CETB) Algorithm
-Theoretical Basis Document, Version 2.1. Boulder, CO,
+<a id="brodzik2024a"></a>Brodzik, M. J., D. G. Long, and
+M. A. Hardman. 2024. Calibrated Passive Microwave Daily EASE-Grid 2.0 Brightness
+Temperature ESDR (CETB) Algorithm Theoretical Basis Document, Version
+2.1. Boulder, CO,
 USA. [10.5281/zenodo.11626219](https://doi.org/10.5281/zenodo.11626219).
 
 <a id="brodzik2018a"></a>Brodzik, M. J., D. G. Long, and
@@ -1049,14 +1049,18 @@ M. A. Hardman. 2024. SMAP Twice–Daily rSIR–Enhanced EASE-Grid 2.0 Brightness
 Temperatures Algorithm Theoretical Basis Document, Version 3. Boulder, CO,
 USA. [10.5281/zenodo.11069054](https://doi.org/10.5281/zenodo.11069054).
 
-<a id="long2015"></a>Long, D. G. 2015. Selection of Reconstruction Parameters. NSIDC MEaSUREs
-Project White Paper. [10.5281/zenodo.8035057](https://doi.org/10.5281/zenodo.8035057).
+<a id="long2015"></a>Long, D. G. 2015. Selection of Reconstruction
+Parameters. NSIDC MEaSUREs Project White
+Paper. [10.5281/zenodo.8035057](https://doi.org/10.5281/zenodo.8035057).
 
-<a id="long2016"></a>Long, D. G. and M. J. Brodzik. 2016. Optimum Image Formation for Spaceborne Microwave Radiometer Products. IEEE Transactions on Geoscience and Remote Sensing, 54(5):2763–2779. [10.1109/TGRS.2015.2505677](https://doi.org/10.1109/TGRS.2015.2505677).
+<a id="long2016"></a>Long, D. G. and M. J. Brodzik. 2016. Optimum Image
+Formation for Spaceborne Microwave Radiometer Products. IEEE Transactions on
+Geoscience and Remote Sensing,
+54(5):2763–2779. [10.1109/TGRS.2015.2505677](https://doi.org/10.1109/TGRS.2015.2505677).
 
-<a id="long2019"></a>Long, D. G., M. J. Brodzik, and M. A. Hardman. 2019. Enhanced Resolution SMAP
-Brightness Temperature Image Products. IEEE Transactions on Geoscience and
-Remote Sensing,
+<a id="long2019"></a>Long, D. G., M. J. Brodzik, and
+M. A. Hardman. 2019. Enhanced Resolution SMAP Brightness Temperature Image
+Products. IEEE Transactions on Geoscience and Remote Sensing,
 1-13. [10.1109/TGRS.2018.2889427](https://doi.org/10.1109/TGRS.2018.2889427).
 
 <a id="long2023"></a>Long, D. G., M. J. Brodzik, and
