@@ -131,12 +131,12 @@ int main(int argc,char *argv[])
     fprintf( stderr, "   %s: meta_name   = meta file output name\n", __FILE__ );
     fprintf( stderr, "   %s: platform    = name of the platform as "
 	     "cetb_platform_id (from cetb.h)\n", __FILE__ );
-    fprintf( stderr, "   %s: start_day   = start day\n", __FILE__ );
-    fprintf( stderr, "   %s: end_day     = end day\n", __FILE__ );
-    fprintf( stderr, "   %s: year        = year input\n", __FILE__ );
+    fprintf( stderr, "   %s: start_day   = start day of year\n", __FILE__ );
+    fprintf( stderr, "   %s: end_day     = end day of year\n", __FILE__ );
+    fprintf( stderr, "   %s: year        = 4-digit year\n", __FILE__ );
     fprintf( stderr, "   %s: def         = region def file \n", __FILE__ );
     fprintf( stderr, "   %s: in_list     = name of input file containing list "
-	     "of swath files\n\n", __FILE__ );
+	     "of gsx files\n\n", __FILE__ );
     exit (-1);
   }
 

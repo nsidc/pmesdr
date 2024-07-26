@@ -18,7 +18,6 @@ TOPDIR = $(PMESDR_TOP_DIR)
 INCDIR = $(TOPDIR)/include
 LIBDIR = $(TOPDIR)/lib
 BINDIR = $(TOPDIR)/bin
-TESTDIR = $(TOPDIR)/NSIDCtest
 
 #
 #	commands
@@ -33,12 +32,6 @@ RM = rm -fr
 CP = cp
 ARFLAGS = ruv
 ifeq ($(LOCALE),ALPINEicc)
-  $(info Build location: $(LOCALE))
-  CC = icc
-  AR = xiar
-  ARFLAGS = crs
-endif
-ifeq ($(LOCALE),CUMULUSicc)
   $(info Build location: $(LOCALE))
   CC = icc
   AR = xiar
@@ -60,19 +53,13 @@ else ifeq ($(LOCALE),ALPINEicc)
   NETCDF4_LIBDIR = ${CURC_NETCDF_LIB}
   HDF5_LIBDIR = ${CURC_HDF5_LIB}
   UDUNITS_INCDIR = ${CURC_UDUNITS_INC}
-else ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  NETCDF4_INCDIR = /usr/include
-  NETCDF4_LIBDIR = /usr/lib/x86_64-linux-gnu
-  HDF5_INCDIR = /usr/include/hdf5/serial
-  HDF5_LIBDIR = /usr/lib/x86_64-linux-gnu
-  UDUNITS_INCDIR = /usr/local/include
-  UDUNITS_LIBDIR = /usr/local/lib
 else
-  $(info Assuming default LOCALE)
+  $(info Assuming default LOCALE, mileage may vary)
+  NETCDF4_INCDIR = /usr/include
   NETCDF4_LIBDIR = /usr/lib64
   HDF5_LIBDIR = /usr/lib64
   ZLIB_LIBDIR = /usr/lib64
+  UDUNITS_INCDIR = /usr/include
 endif
 
 .SUFFIXES:
@@ -91,12 +78,6 @@ CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
-	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
-	-Wremarks -wd981 -wd869 -wd2415
-endif
-ifeq ($(LOCALE),CUMULUSicc)
-  $(info Build location: $(LOCALE))
-  CFLAGS = -D'CUMULUSicc=1' -I$(INCDIR) -I$(UDUNITS_INCDIR) \
 	$(CONFIG_CFLAGS) -O3 -ipo -xHost -no-prec-div -Wall \
 	-Wremarks -wd981 -wd869 -wd2415
 endif
