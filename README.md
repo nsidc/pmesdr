@@ -755,13 +755,12 @@ al. 2024](https://doi.org/10.5281/zenodo.11626219) include the history of ltods
 shifting due to orbital drift over the lifetimes of the CETB sensors. For
 sensors that continue to produce data in near real-time, NSIDC performs annual
 maintenance of ltod settings, using the ipython notebook,
-[LTOD calculations.ipynb]("ipython_notebooks/LTOD calculations.ipynb"). Steps to perform
+`ipython_notebooks/LTOD calculations.ipynb`. Steps to perform
 annual ltod checks include:
 
 	1. Produce a set of gsx files for a selected set of consecutive 5-10 days.
 
-	2. Use the 
-	[LTOD calculations.ipynb]("ipython_notebooks/LTOD calculations.ipynb")
+	2. Use the `ipython_notebooks/LTOD calculations.ipynb`
 	notebook to read in the gsx files, modify the settings to read in the 
 	prepared gsx files. Note that gsx files are very
 	large, so depending on the system configuration, you may encounter
@@ -803,8 +802,7 @@ Steps to add and process data from a new sensor and/or data producer:
 	used in the setup files, this sets the variable `sen` based on the value of
 	F_num (which is the CETB_platform enum)
 	
-	5. Create a new cetb output file template, see [Create CETB file
-	template.ipynb](ipythen_notebooks/Create CETB file template.ipynb)
+	5. Create a new cetb output file template, see `ipython_notebooks/Create CETB file template.ipynb`
 	
 	6. Edit the function `cetb_template_filename` in cetb_file.c to get the
 	correct new template file for the new platform and provider combination
