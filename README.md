@@ -40,7 +40,6 @@
         - [Adding a New Sensor/Producer](#adding-a-new-sensorproducer)
         - [Changing Spatial Resolution](#changing-spatial-resolution)
         - [Known Issues](#known-issues)
-    - [Operational Instructions](#operational-instructions)
     - [Geolocation Tools](#geolocation-tools)
         - [EASE-Grid 2.0 Geolocation Files](#ease-grid-20-geolocation-files)
         - [Software Supporting EASE-Grid 2.0 ](#software-supporting-ease-grid-20)
