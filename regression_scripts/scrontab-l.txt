@@ -22,11 +22,11 @@
 #SCRON --ntasks=1
 #SCRON --cpus-per-task=1
 #SCRON --account=<accountid>
-#SCRON --output=/scratch/alpine/%u/cron_output/pmesdr-regress-%j.out  
+#SCRON --output=pmesdr-regress-%j.out  
 #SCRON --mail-type=FAIL,INVALID_DEPEND,TIME_LIMIT,REQUEUE,STAGE_OUT,END
-01 00 * * * source /projects/moha2290/PMESDR_regression/src/prod/set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/regression_scripts/git_pull.sh; source $PMESDR_TOP_DIR/regression_scripts/build_pmesdr.sh ${PMESDR_CONDAENV}; source $PMESDR_TOP_DIR/regression_scripts/run_regression.sh daily ${PMESDR_CONDAENV}
+01 00 * * * source ${USER}/pmesdr/src/prod/set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/regression_scripts/git_pull.sh; source $PMESDR_TOP_DIR/regression_scripts/build_pmesdr.sh ${PMESDR_CONDAENV}; source $PMESDR_TOP_DIR/regression_scripts/run_regression.sh daily ${PMESDR_CONDAENV}
 
 #SCRON --job-name Rquick
 #SCRON --time=00:10:00
-#SCRON --output=/scratch/alpine/%u/cron_output/Rquick-%j.out
-03 12 * * * source /projects/moha2290/PMESDR_regression/src/prod/set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/regression_scripts/git_pull.sh; source $PMESDR_TOP_DIR/regression_scripts/build_pmesdr.sh ${PMESDR_CONDAENV}; source $PMESDR_TOP_DIR/regression_scripts/run_regression.sh quick ${PMESDR_CONDAENV}
+#SCRON --output=Rquick-%j.out
+03 12 * * * source ${USER}/pmesdr/src/prod/set_pmesdr_environment.sh; source $PMESDR_TOP_DIR/regression_scripts/git_pull.sh; source $PMESDR_TOP_DIR/regression_scripts/build_pmesdr.sh ${PMESDR_CONDAENV}; source $PMESDR_TOP_DIR/regression_scripts/run_regression.sh quick ${PMESDR_CONDAENV}
