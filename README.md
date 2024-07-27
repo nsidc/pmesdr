@@ -40,7 +40,6 @@
         - [Adding a New Sensor/Producer](#adding-a-new-sensorproducer)
         - [Changing Spatial Resolution](#changing-spatial-resolution)
         - [Known Issues](#known-issues)
-    - [Operational Instructions](#operational-instructions)
     - [Geolocation Tools](#geolocation-tools)
         - [EASE-Grid 2.0 Geolocation Files](#ease-grid-20-geolocation-files)
         - [Software Supporting EASE-Grid 2.0 ](#software-supporting-ease-grid-20)
@@ -138,7 +137,6 @@ This repository contains the following:
 
 Directory | Contents
 --------- | --------
-CETB_process/ | operational workflows and scripts used to run this system on NSIDC resources at CURC
 LICENSE.txt | software license
 README.md | this README file
 VERSION | ascii file with current release version, updated for major/minor/patch releases, used in output CETB files
@@ -882,16 +880,6 @@ degrees).
    attributes `time_coverage_start` or `time_coverage_end`, we are currently
    post-processing the global metadata fields before delivering data for ingest
    at the NSIDC DAAC.
-
-## Operational Instructions
-
-Operational instructions are written for NSIDC operators, for use on CU Research
-Computing resources. The instructions assume that operators have access to these
-systems and access to swath data provider repositories. Mileage may vary for
-non-NSIDC operators. See [nsidc0630 v1
-notes](CETB_process/v1_0630_processing_notes.md) or [nsidc0630 v2
-notes](CETB_process/v2_0630_processing_notes.md) for operational data production
-details.
 
 ## Geolocation Tools
 
