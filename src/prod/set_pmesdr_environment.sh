@@ -39,7 +39,6 @@ regression_yyyymmdd=20230125
 export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression_yyyymmdd}
 export PMESDR_TESTDATA_DIR=$PMESDR_TOP_DIR/sample_data/test_gsx
 export PMESDR_CONDAENV=pmesdrEnv
-export PMESDR_RUN=${PMESDR_TOP_DIR}/CETB_process/scripts
 
 # Determine the LOCALE and set compiler and more environment variables
 thisHostname=`hostname -f`
