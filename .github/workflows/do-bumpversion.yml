@@ -32,5 +32,4 @@ jobs:
           bumpversion --tag --message "[skip actions] bump version {current_version} -> {new_version}" patch
           tagName=$(/usr/bin/git tag -l)
           /usr/bin/git pull
-          /usr/bin/git push
-          /usr/bin/git push origin tag ${tagName}
+          /usr/bin/git push --atomic origin main ${tagName}
