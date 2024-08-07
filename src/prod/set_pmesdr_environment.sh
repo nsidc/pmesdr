@@ -46,13 +46,14 @@ thisHostname=`hostname -f`
 echo "Setting environment..."
 if [[ "$thisHostname"  == *"int.nsidc.org"* ]]; then
 
+  HostName=`hostname`
   export PMESDR_COMPILER=gcc
   export LOCALE=int.nsidc.org
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
-  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant/$(shell hostname)  
-  export PMESDR_TEST_OUT_DIR=/projects/PMESDR/vagrant/NSIDCtest/$(shell hostname)  
+  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant/${HostName}  
+  export PMESDR_TEST_OUT_DIR=/projects/PMESDR/vagrant/NSIDCtest/${HostName}  
 
 elif [[ "$thisHostname" == *"rc.colorado.edu" \
 	  || "$thisHostname" == *"c3"* ]]; then
