@@ -81,17 +81,15 @@ endif
 #
 # end configuration section
 #------------------------------------------------------------------------
-MEAS_INCDIR = ../../sirlib/c/include
-MEAS_LIBDIR = 
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
-	-lgsx -lutils -lcalcalcs -ludunits2 -lcsir \
+	-lgsx -lutils -lcalcalcs -ludunits2 \
 	-lnetcdf -l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS)
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) -I$(UDUNITS_INCDIR) \
-	-I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
+	$(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(HDF5_INCDIR) \
-	-I$(UDUNITS_INCDIR) -I$(MEAS_INCDIR) -ipo -xHost -no-prec-div \
+	-I$(UDUNITS_INCDIR) -ipo -xHost -no-prec-div \
 	-Wall -Wremarks -wd981 -wd2415 -inline-level=0
 endif
 
@@ -99,11 +97,11 @@ endif
 DEPEND_LIBS = $(LIBDIR)/libutils.a \
 	$(LIBDIR)/libcalcalcs.a \
 	$(UDUNITS_LIBDIR)/libudunits2.a \
-	$(LIBDIR)/libgsx.a $(LIBDIR)/libcsir.a
+	$(LIBDIR)/libgsx.a 
 
 SRCS = meas_meta_setup.c
 OBJS = meas_meta_setup.o
-HDRS = $(INCDIR)/gsx.h $(INCDIR)/cetb.h $(MEAS_INCDIR)/sir_geom.h \
+HDRS = $(INCDIR)/gsx.h $(INCDIR)/cetb.h $(INCDIR)/utils.h \
 	$(INCDIR)/utCalendar2_cal.h
 BIN = meas_meta_setup
 

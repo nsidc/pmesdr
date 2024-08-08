@@ -11,15 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef JANUSicc
-#include <mathimf.h>
-#else
 #include <math.h>
-#endif
 #include <time.h>
 
-#include <cetb.h>
-#include <sir_geom.h>
+#include "cetb.h"
+#include "utils.h"
 
 #define prog_version 1.2 /* program version */
 #define prog_name "meas_meta_make"
@@ -31,13 +27,6 @@
 
 #define TRUE 1
 #define FALSE 0
-
-/****************************************************************************/
-/* default location of the SIR standard region definition */
-
-char rname[] = "regiondef1.dat";  /* file defining region codes */
-
-/********************************************************************/
 
 /* function prototypes */
 
@@ -499,7 +488,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
       ind=resolution_ind;  /* standard base resolution */
       fprintf( stderr, "%s: EASE2 parameters: proj=%d  nease=%d  ind=%d\n",
 	       __FUNCTION__, projt, nease, ind);      
-      ease2_map_info(projt, nease, ind, &map_equatorial_radius_m, 
+      utils_ease2_map_info(projt, nease, ind, &map_equatorial_radius_m, 
 		     &map_eccentricity, &e2,
 		     &map_reference_latitude, &map_reference_longitude, 
 		     &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,

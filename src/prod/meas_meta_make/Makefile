@@ -13,6 +13,7 @@
 #
 TOPDIR = $(PMESDR_TOP_DIR)
 BINDIR = $(TOPDIR)/bin
+LIBDIR = $(TOPDIR)/lib
 INCDIR = $(TOPDIR)/include
 
 TESTINPUT = $(PMESDR_TOP_DIR)/src/test_inputs
@@ -47,26 +48,27 @@ SYSLIBS = -lm
 #
 # end configuration section
 #------------------------------------------------------------------------
-MEAS_INCDIR = ../../sirlib/c/include
-MEAS_LIBDIR = ../../sirlib/c
-LIBS = -L$(MEAS_LIBDIR) -lcsir $(SYSLIBS)
-CFLAGS = -I$(INCDIR) -I$(MEAS_INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
+LIBS = -L$(LIBDIR) -lutils $(SYSLIBS)
+CFLAGS = -I$(INCDIR)  -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
-  CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(MEAS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
+  CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -xHost -Wall -Wremarks -wd981 -no-prec-div -wd2415
 endif
 
-DEPEND_LIBS = $(MEAS_LIBDIR)/libcsir.a
+DEPEND_LIBS = $(LIBDIR)/libutils.a
 
 SRCS = meas_meta_make.c
 OBJS = meas_meta_make.o
-HDRS = $(MEAS_INCDIR)/sir_geom.h $(INCDIR)/cetb.h
+HDRS = $(INCDIR)/cetb.h $(INCDIR)/utils.h
 BIN = meas_meta_make
 
 all : $(BIN)
 
 $(BIN) : $(OBJS) $(HDRS) $(DEPEND_LIBS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+
+meas_meta_make.o : $(SRCS) $(HDRS)
+	$(CC) -c $(CFLAGS) -o $@ $(SRCS)
 
 install : 
 	$(MKDIR) $(BINDIR)
