@@ -6,7 +6,7 @@
  */
 #include "cetb.h"
 #include "utils.h"
-#include "math.h"
+#include <math.h>
 
 static int dceil( double r );
 
