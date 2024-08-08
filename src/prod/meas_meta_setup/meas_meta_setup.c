@@ -40,10 +40,6 @@
 #define RESPONSEMULT 1000   /* response multiplier */
 #define HASAZIMUTHANGLE 1   /* include azimuth angle in output setup file if 1, 
 			       set to 0 to not include az ang (smaller file) */
-#define DTR ((2.0*(M_PI))/360.0)       /* degrees to radians */
-#define SIR_GEOM_DTR 0.01745329241994  /* This needs to be redinfed using M_PI after regressions pass */
-#define SIR_GEOM_RTD 57.29577951308232 /* This needs to be redefined using M_PI after regressions pass */
-
 #define AEARTH 6378.1363              /* SEMI-MAJOR AXIS OF EARTH, a, KM */
 #define FLAT 3.3528131778969144e-3    /* = 1/298.257 FLATNESS, f, f=1-sqrt(1-e**2) */
 
@@ -2121,8 +2117,8 @@ float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajo
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 
   /* rotate coordinate system to align with look direction */
-  x=(float) ( ( (cos(theta*DTR) ) * x_rel ) - ( (sin(theta*DTR) ) * y_rel ) );
-  y=(float) ( ( (sin(theta*DTR) ) * x_rel ) + ( (cos(theta*DTR) ) * y_rel ) );
+  x=(float) ( ( (cos(theta*UTILS_DTR) ) * x_rel ) - ( (sin(theta*UTILS_DTR) ) * y_rel ) );
+  y=(float) ( ( (sin(theta*UTILS_DTR) ) * x_rel ) + ( (cos(theta*UTILS_DTR) ) * y_rel ) );
   
   /* compute approximate antenna response
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
@@ -2152,7 +2148,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 
   float r,r2,rel_rlat,rel_rlon;
 
-  r=(float) ( ( 1.0 - ( ( (sin(rlat*DTR) ) * (sin(rlat*DTR) ) ) * FLAT ) ) * AEARTH );
+  r=(float) ( ( 1.0 - ( ( (sin(rlat*UTILS_DTR) ) * (sin(rlat*UTILS_DTR) ) ) * FLAT ) ) * AEARTH );
 
   rel_rlat=alat-rlat;
   rel_rlon=alon-rlon;
@@ -2162,9 +2158,9 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
     else
       rel_rlon=rel_rlon+360.f;
   }
-  r2=r*(float)(cos(rlat*DTR));
-  *x_rel=(float)(r2*(sin(rel_rlon*DTR)));
-  *y_rel=(float)((r*(sin(rel_rlat*DTR)))+((1.-(cos(rel_rlon*DTR)))*(sin(rlat*DTR))*r2));
+  r2=r*(float)(cos(rlat*UTILS_DTR));
+  *x_rel=(float)(r2*(sin(rel_rlon*UTILS_DTR)));
+  *y_rel=(float)((r*(sin(rel_rlat*UTILS_DTR)))+((1.-(cos(rel_rlon*UTILS_DTR)))*(sin(rlat*UTILS_DTR))*r2));
 }
 
 /* *********************************************************************** */
@@ -3400,7 +3396,7 @@ static void ease2grid(int iopt, float alon, float alat,
    int ind = intfix(bscale);
    int isc = intfix(ascale);
    double dlon = alon;
-   double phi = SIR_GEOM_DTR * alat;
+   double phi = UTILS_DTR * alat;
    double lam = dlon;
 
    double sin_phi, q, qp, rho, x, y;
@@ -3413,7 +3409,7 @@ static void ease2grid(int iopt, float alon, float alat,
 
    dlon = dlon - map_reference_longitude;    
    dlon = easeconv_normalize_degrees( dlon );
-   lam = SIR_GEOM_DTR * dlon;
+   lam = UTILS_DTR * dlon;
     
    sin_phi=sin(phi);
    q = ( 1.0 - e2 ) * ( ( sin_phi / ( 1.0 - e2 * sin_phi * sin_phi ) ) 
@@ -3546,8 +3542,8 @@ static void iease2grid(int iopt, float *alon, float *alat,
 	   + ( ( 251.0 / 3780.0 ) * e6 ) ) * sin( 4.0 * beta ) ) 
      + ( ( ( 761.0 / 45360.0 ) * e6 ) * sin( 6.0 * beta ) );
    
-   *alat = (float) (SIR_GEOM_RTD * phi);
-   *alon = (float) (easeconv_normalize_degrees( map_reference_longitude + ( SIR_GEOM_RTD*lam ) ) );
+   *alat = (float) (UTILS_RTD * phi);
+   *alon = (float) (easeconv_normalize_degrees( map_reference_longitude + ( UTILS_RTD*lam ) ) );
 
    return;
 }

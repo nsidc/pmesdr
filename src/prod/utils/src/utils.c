@@ -8,16 +8,7 @@
 #include "utils.h"
 #include "math.h"
 
-/********  REPLACE THESE next few LINES WWTH math.h definitions */
-#define DTR 0.01745329241994
-#define RTD 57.29577951308232
-int dceil(double r)
-{
-  int ret_val = r;
-  if (ret_val - r > 0.0) ret_val++;
-  return(ret_val);
-}
-/********************************check in math.h for the above lines */
+static int dceil( double r );
 
 /*
  * utils_allocate_clean_aligned_memory - allocate aligned memory that is
@@ -153,8 +144,8 @@ void utils_ease2_map_info(int iopt, int isc, int ind,
     case 10:  /* EASE2 cylindrical */
       *map_reference_latitude = 0.0;
       *map_second_reference_latitude = 30.0;
-      *sin_phi1 = sin( DTR * *map_second_reference_latitude );
-      *cos_phi1 = cos( DTR * *map_second_reference_latitude );
+      *sin_phi1 = sin( UTILS_DTR * *map_second_reference_latitude );
+      *cos_phi1 = cos( UTILS_DTR * *map_second_reference_latitude );
       *kz = *cos_phi1 / sqrt( 1.0 - *e2 * *sin_phi1 * *sin_phi1 );
       switch(ind) {
       case CETB_36KM:  /* EASE2_M36km.gpd */
@@ -199,3 +190,9 @@ void utils_ease2_map_info(int iopt, int isc, int ind,
   
 }
 
+static int dceil(double r)
+{
+  int ret_val = (int)r;
+  if (ret_val - r > 0.0) ret_val++;
+  return(ret_val);
+}

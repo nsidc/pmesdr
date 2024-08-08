@@ -69,24 +69,23 @@ endif
 # end configuration section
 #------------------------------------------------------------------------
 CFLAGS = -I$(INCDIR) -m64 $(CONFIG_CFLAGS) -Wall -Wno-unused-variable
+LIBS = $(SYSLIBS)
 ARFLAGS = ruv
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   CFLAGS = -D'ALPINEicc=1' -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) $(CONFIG_CFLAGS) -O3 -ipo -g -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
   ARFLAGS = crs
-endif
-
-DEPEND_LIBS = 
+endif 
 
 SRCS = utils.c
 OBJS = utils.o
 HDRS = utils.h
 
-all : libutils.a $(LIBDIR)/libutils.a
+all : libutils.a $(LIBDIR)/libutils.a 
 
 $(LIBDIR)/libutils.a : libutils.a
 
-libutils.a : $(OBJS) $(DEPEND_LIBS) $(HDRS)
+libutils.a : $(OBJS) $(LIBS) $(HDRS)
 	$(AR) $(ARFLAGS) libutils.a $(OBJS)
 	$(MKDIR) $(LIBDIR) $(INCDIR)
 	$(INSTALL) libutils.a $(LIBDIR)
