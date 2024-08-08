@@ -27,7 +27,6 @@
 #include "utils.h"
 #include "gsx.h"
 #include "utils.h"
-#include "sir_geom.h"
 #include "utCalendar2_cal.h"
 
 #define prog_version 0.3 /* program version */
@@ -41,8 +40,6 @@
 #define RESPONSEMULT 1000   /* response multiplier */
 #define HASAZIMUTHANGLE 1   /* include azimuth angle in output setup file if 1, 
 			       set to 0 to not include az ang (smaller file) */
-#define DTR ((2.0*(M_PI))/360.0)       /* degrees to radians */
-
 #define AEARTH 6378.1363              /* SEMI-MAJOR AXIS OF EARTH, a, KM */
 #define FLAT 3.3528131778969144e-3    /* = 1/298.257 FLATNESS, f, f=1-sqrt(1-e**2) */
 
@@ -80,6 +77,14 @@ static void no_trailing_blanks(char *s)
   }
   if (n<0) s[n]='\0';  
   return;
+}
+
+static int intfix(float r)
+{
+  int ret_val = r;
+  if (ret_val - r > 0.5) ret_val--;
+  if (r - ret_val > 0.5) ret_val++;
+  return(ret_val);
 }
 
 /****************************************************************************/
@@ -166,6 +171,16 @@ static int day_offset_from( int year, int month, int day,
 static int ltod_day_offset( int dstart, int dend, int *midDay,
 			    int *startDayOffset, int *endDayOffset,
 			    int *imageDayOffset );
+static void latlon2pix(float alon, float alat, float *x, float *y, 
+		       int iopt, float ascale, float bscale, float a0, float b0);
+static void pixtolatlon(float x, float y, float *alon, float *alat,
+			int iopt, float ascale, float bscale, float a0, float b0);
+static void ease2grid(int iopt, float alon, float alat, 
+		      float *thelon, float *thelat, float ascale, float bscale);
+static void iease2grid(int iopt, float *alon, float *alat, 
+			      float thelon, float thelat, float ascale, float bscale);
+static double easeconv_normalize_degrees(double b);
+static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy);
 
 /****************************************************************************/
 
@@ -213,7 +228,7 @@ int main(int argc,char *argv[])
   int ibeam,icc,icmax,icmin,nfile;  
   float cx,cy,lath,latl,lonh,lonl;
   int nsx,nsy,projt;
-  float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
+  float ascale,bscale,a0,b0,x,y;
   float tbmin=1.e10,tbmax=-1.e10; 
   
   int iadd1, box_size, box_size_flag=0;;
@@ -1067,12 +1082,10 @@ int main(int argc,char *argv[])
 		bscale=save_area.sav_bscale[iregion];
 		a0=save_area.sav_a0[iregion];
 		b0=save_area.sav_b0[iregion];
-		ydeg=save_area.sav_ydeg[iregion];
-		xdeg=save_area.sav_xdeg[iregion];
 		dscale=save_area.sav_km[iregion];
 
 		/* transform center lat/lon location of measurement to image pixel location */
-		latlon2pix(cx, cy, &x, &y, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+		latlon2pix(cx, cy, &x, &y, projt, ascale, bscale, a0, b0);
 		/* quantize pixel location to 1-based integer pixel indices */
 		f2ipix(x, y, &ix2, &iy2, nsx, nsy);  /* note: ix2,iy2 are 1-based pixel address of center */
 
@@ -1089,7 +1102,7 @@ int main(int argc,char *argv[])
 		   centers to the center of the output pixel */
 		x=(ix2+0.5f);
 		y=(iy2+0.5f);
-		pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+		pixtolatlon(x, y, &clon, &clat, projt, ascale, bscale, a0, b0);
 
 		/* define size of box centered at(ix2,iy2) in which the gain response 
 		   is computed for each pixel in the box and tested to see if
@@ -2047,7 +2060,6 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {
 	  x=(ix+1.5f); /* center of pixel, 1-based */
 	  pixtolatlon(x, y, &clon, &clat, a->sav_projt[iregion], 
-		      a->sav_xdeg[iregion], a->sav_ydeg[iregion],
 		      a->sav_ascale[iregion], a->sav_bscale[iregion],
 		      a->sav_a0[iregion],     a->sav_b0[iregion]);
 	  iadd=a->sav_nsx[iregion]*iy+ix; /* zero-based lexicographic pixel address */
@@ -2100,8 +2112,8 @@ float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajo
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 
   /* rotate coordinate system to align with look direction */
-  x=(float) ( ( (cos(theta*DTR) ) * x_rel ) - ( (sin(theta*DTR) ) * y_rel ) );
-  y=(float) ( ( (sin(theta*DTR) ) * x_rel ) + ( (cos(theta*DTR) ) * y_rel ) );
+  x=(float) ( ( (cos(theta*UTILS_DTR) ) * x_rel ) - ( (sin(theta*UTILS_DTR) ) * y_rel ) );
+  y=(float) ( ( (sin(theta*UTILS_DTR) ) * x_rel ) + ( (cos(theta*UTILS_DTR) ) * y_rel ) );
   
   /* compute approximate antenna response
      Antenna weighting is estimation from SSMI Users Guide 21-27 */
@@ -2131,7 +2143,7 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
 
   float r,r2,rel_rlat,rel_rlon;
 
-  r=(float) ( ( 1.0 - ( ( (sin(rlat*DTR) ) * (sin(rlat*DTR) ) ) * FLAT ) ) * AEARTH );
+  r=(float) ( ( 1.0 - ( ( (sin(rlat*UTILS_DTR) ) * (sin(rlat*UTILS_DTR) ) ) * FLAT ) ) * AEARTH );
 
   rel_rlat=alat-rlat;
   rel_rlon=alon-rlon;
@@ -2141,9 +2153,9 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
     else
       rel_rlon=rel_rlon+360.f;
   }
-  r2=r*(float)(cos(rlat*DTR));
-  *x_rel=(float)(r2*(sin(rel_rlon*DTR)));
-  *y_rel=(float)((r*(sin(rel_rlat*DTR)))+((1.-(cos(rel_rlon*DTR)))*(sin(rlat*DTR))*r2));
+  r2=r*(float)(cos(rlat*UTILS_DTR));
+  *x_rel=(float)(r2*(sin(rel_rlon*UTILS_DTR)));
+  *y_rel=(float)((r*(sin(rel_rlat*UTILS_DTR)))+((1.-(cos(rel_rlon*UTILS_DTR)))*(sin(rlat*UTILS_DTR))*r2));
 }
 
 /* *********************************************************************** */
@@ -2188,7 +2200,7 @@ float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat
   case 10: /* EASE2 T */
     nease=ascale;
     ind=bscale;    
-    ease2_map_info(iopt, nease, ind, &map_equatorial_radius_m, 
+    utils_ease2_map_info(iopt, nease, ind, &map_equatorial_radius_m, 
 		   &map_eccentricity, &e2,
 		   &map_reference_latitude, &map_reference_longitude, 
 		   &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
@@ -3152,7 +3164,7 @@ static int ltod_day_offset( int dstart, int dend, int *midDay,
 			    int *startDayOffset, int *endDayOffset,
 			    int *imageDayOffset ) {
 
-  *midDay = dstart + round((dend-dstart)/2);
+  *midDay = dstart + (int)round((dend-dstart)/2);
   
   if ( dstart == dend ) {
     *startDayOffset = -1;
@@ -3290,3 +3302,265 @@ static int check_for_consistent_regions( region_save *save_area,
   
 }
   
+static void pixtolatlon(float x, float y, float *alon, float *alat,
+			int iopt, float ascale, float bscale, float a0, float b0)
+{
+   /* computes the lat, long position of the lower-left corner of the
+      x,y-th pixel.  pixels indexed [1..nsx,1..nsy] */
+
+   float thelon, thelat;
+   
+   switch(iopt) {
+    case 8:
+    case 9:
+    case 10:
+      thelon = x - (float)1.0 + a0;
+      thelat = y - (float)1.0 + b0;      
+      iease2grid(iopt, alon, alat, thelon, thelat, ascale, bscale);
+      break;
+    default:
+      *alon=0.0;
+      *alat=0.0;
+   }
+   return;
+}
+
+static void latlon2pix(float alon, float alat, float *x, float *y, 
+		       int iopt, float ascale, float bscale, float a0, float b0)
+{
+   /* computes the x,y pixel coordinates given the lat, lon position 
+      x,y are fractional values not limited to within image */
+
+   static float thelon, thelat;
+   
+   switch(iopt) {
+    case 8:
+    case 9:
+    case 10:
+      ease2grid(iopt, alon, alat, &thelon, &thelat, ascale, bscale);
+      *x = thelon + (float)1.0 - a0;
+      *y = thelat + (float)1.0 - b0;
+      break;
+    default:
+      *x=0.0;
+      *y=0.0;
+   }
+   return;
+}
+
+static void ease2grid(int iopt, float alon, float alat, 
+	       float *thelon, float *thelat, float ascale, float bscale)
+{
+/*
+	COMPUTE THE FORWARD "EASE2" GRID TRANSFORMATION
+
+	GIVEN THE IMAGE TRANSFORMATION COORDINATES (THELON,THELAT) AND
+	THE CORRESPONDING LON,LAT (ALON,ALAT) IS COMPUTED
+	USING THE "EASE2 GRID" (VERSION 2.0) TRANSFORMATION GIVEN IN IDL
+	SOURCE CODE SUPPLIED BY MJ BRODZIK
+	RADIUS EARTH=6378.137 KM (WGS 84)
+	MAP ECCENTRICITY=0.081819190843 (WGS84)
+
+	inputs:
+	  iopt: projection type 8=EASE2 N, 9-EASE2 S, 10=EASE2 T/M
+	  alon, alat: lon, lat (deg) to convert (can be outside of image)
+          ascale and bscale should be integer valued)
+	  ascale: grid scale factor (0..5)  pixel size is (bscale/2^ascale)
+	  bscale: base grid scale index (ind=int(bscale))
+
+	outputs:
+	  thelon: X coordinate in pixels (can be outside of image)
+	  thelat: Y coordinate in pixels (can be outside of image)
+
+*/
+   double map_equatorial_radius_m,map_eccentricity, e2,
+     map_reference_latitude, map_reference_longitude, 
+     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
+     map_scale, r0, s0, epsilon;
+   int bcols, brows;
+
+   int ind = intfix(bscale);
+   int isc = intfix(ascale);
+   double dlon = alon;
+   double phi = UTILS_DTR * alat;
+   double lam = dlon;
+
+   double sin_phi, q, qp, rho, x, y;
+    
+   /* get base EASE2 map projection parameters */
+   utils_ease2_map_info(iopt, isc, ind, &map_equatorial_radius_m, &map_eccentricity, 
+		  &e2, &map_reference_latitude, &map_reference_longitude, 
+		  &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
+		  &map_scale, &bcols, &brows, &r0, &s0, &epsilon);
+
+   dlon = dlon - map_reference_longitude;    
+   dlon = easeconv_normalize_degrees( dlon );
+   lam = UTILS_DTR * dlon;
+    
+   sin_phi=sin(phi);
+   q = ( 1.0 - e2 ) * ( ( sin_phi / ( 1.0 - e2 * sin_phi * sin_phi ) ) 
+                        - ( 1.0 / ( 2.0 * map_eccentricity ) ) 
+                        * log( ( 1.0 - map_eccentricity * sin_phi ) 
+                                / ( 1.0 + map_eccentricity * sin_phi ) ) );
+
+   switch (iopt) {
+    case 8:   /* EASE2 grid north */
+      qp = 1.0 - ( ( 1.0 - e2 ) / ( 2.0 * map_eccentricity ) 
+		   * log( ( 1.0 - map_eccentricity ) 
+			  / ( 1.0 + map_eccentricity ) ) );
+      if ( abs( qp - q ) < epsilon ) 
+	rho = 0.0;
+      else
+	rho = map_equatorial_radius_m * sqrt( qp - q );
+      x =  rho * sin( lam );
+      y = -rho * cos( lam );
+      break;
+    case 9:   /* EASE2 grid south */
+      qp = 1.0 - ( ( 1.0 - e2 ) / ( 2.0 * map_eccentricity ) 
+		   * log( ( 1.0 - map_eccentricity ) 
+			  / ( 1.0 + map_eccentricity ) ) );
+      if ( abs( qp + q ) < epsilon ) 
+	rho = 0.0;
+      else
+	rho = map_equatorial_radius_m * sqrt( qp + q );
+      x = rho * sin( lam );
+      y = rho * cos( lam );
+      break;
+    case 10:   /* EASE2 cylindrical */
+      x =   map_equatorial_radius_m * kz * lam;
+      y = ( map_equatorial_radius_m * q ) / ( 2.0 * kz );    
+      break;
+    default:
+      fprintf(stderr,"*** invalid EASE2 projection specificaion %d in ease2grid\n",iopt);      
+      break;      
+   }
+
+   *thelon = (float) (r0 + ( x / map_scale ) + 0.5); 
+   *thelat = (float) (s0 + ( y / map_scale ) + 0.5);  /* 0 at bottom (BYU SIR files) */
+
+   return;
+}
+
+static void iease2grid(int iopt, float *alon, float *alat, 
+		float thelon, float thelat, float ascale, float bscale)
+{
+/*
+	COMPUTE THE INVERSE "EASE2" GRID TRANSFORM
+
+	GIVEN THE IMAGE TRANSFORMATION COORDINATES (THELON,THELAT) AND
+	THE CORRESPONDING LON,LAT (ALON,ALAT) IS COMPUTED
+	USING THE "EASE GRID" (VERSION 2.0) TRANSFORMATION GIVEN IN IDL
+	SOURCE CODE SUPPLIED BY MJ BRODZIK
+
+	inputs:
+	  iopt: projection type 8=EASE2 N, 9-EASE2 S, 10=EASE2 T/M
+	  thelon: X coordinate in pixels (can be outside of image)
+	  thelat: Y coordinate in pixels (can be outside of image)
+          ascale and bscale should be integer valued)
+	  ascale: grid scale factor (0..5)  pixel size is (bscale/2^ascale)
+	  bscale: base grid scale index (ind=int(bscale))
+
+	outputs:
+	  alon, alat: lon, lat location in deg  (can be outside of image)
+*/
+   double map_equatorial_radius_m,map_eccentricity, e2,
+     map_reference_latitude, map_reference_longitude, 
+     map_second_reference_latitude, sin_phi1, cos_phi1, kz,
+     map_scale, r0, s0, epsilon;
+   int bcols, brows;
+
+   int ind = intfix(bscale);
+   int isc = intfix(ascale);
+
+   double lam, arg, phi, beta, qp, rho2, x, y, e4, e6;
+    
+   /* get base EASE2 map projection parameters */
+   utils_ease2_map_info(iopt, isc, ind, &map_equatorial_radius_m, &map_eccentricity, 
+		  &e2, &map_reference_latitude, &map_reference_longitude, 
+		  &map_second_reference_latitude, &sin_phi1, &cos_phi1, &kz,
+		  &map_scale, &bcols, &brows, &r0, &s0, &epsilon);
+   e4 = e2 * e2;
+   e6 = e4 * e2;
+
+   /* qp is the function q evaluated at phi = 90.0 deg */
+   qp = ( 1.0 - e2 ) * ( ( 1.0 / ( 1.0 - e2 ) ) 
+			 - ( 1.0 / ( 2.0 * map_eccentricity ) ) 
+			 * log( ( 1.0 - map_eccentricity ) 
+                                / ( 1.0 + map_eccentricity ) ) );
+
+   x = ((double) thelon - r0 - 0.5) * map_scale;
+   //y = (s0 - (double) thelat + 0.5) * map_scale;  /* 0 at top (NSIDC) */
+   y = ((double) thelat - 0.5 - s0) * map_scale;  /* 0 at bottom (BYU SIR files) */
+
+   switch (iopt) {
+    case 8:   /* EASE2 grid north */
+      rho2 = ( x * x ) + ( y * y );
+      arg=1.0 - ( rho2 / ( map_equatorial_radius_m * map_equatorial_radius_m * qp ) );
+      if (arg >  1.0) arg=1.0;      
+      if (arg < -1.0) arg=-1.0;
+      beta = asin( arg );
+      lam = atan2( x, -y );
+      break;
+    case 9:   /* EASE2 grid south */
+      rho2 = ( x * x ) + ( y * y );
+      arg = 1.0 - ( rho2  / ( map_equatorial_radius_m * map_equatorial_radius_m * qp ) );
+      if (arg >  1.0) arg=1.0;      
+      if (arg < -1.0) arg=-1.0;
+      beta = -asin( arg );
+      lam = atan2( x, y );
+      break;
+    case 10:  /* EASE2 cylindrical */
+      arg = 2.0 * y * kz / ( map_equatorial_radius_m * qp );
+      if (arg >  1.0) arg=1.0;      
+      if (arg < -1.0) arg=-1.0;
+      beta = asin( arg );
+      lam = x / ( map_equatorial_radius_m * kz );
+      break;
+    default:
+      fprintf(stderr,"*** invalid EASE2 projection specification %d in iease2grid\n",iopt);      
+      break;      
+   }
+
+   phi = beta 
+     + ( ( ( e2 / 3.0 ) + ( ( 31.0 / 180.0 ) * e4 ) 
+	   + ( ( 517.0 / 5040.0 ) * e6 ) ) * sin( 2.0 * beta ) ) 
+     + ( ( ( ( 23.0 / 360.0 ) * e4) 
+	   + ( ( 251.0 / 3780.0 ) * e6 ) ) * sin( 4.0 * beta ) ) 
+     + ( ( ( 761.0 / 45360.0 ) * e6 ) * sin( 6.0 * beta ) );
+   
+   *alat = (float) (UTILS_RTD * phi);
+   *alon = (float) (easeconv_normalize_degrees( map_reference_longitude + ( UTILS_RTD*lam ) ) );
+
+   return;
+}
+
+static double easeconv_normalize_degrees(double b)
+{ /* return -180 <= b <= 180.0 */
+  while (b < -180.0)
+    b = b + 360.0;
+  while (b > 180.0)
+    b = b - 360.0;
+  return(b);
+}
+
+/* floating point to integer pixel location quantization routine */
+
+static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy)
+{
+   /* quantizes the floating point pixel location to the actual pixel value
+      returns a zero if location is outside of image limits
+      a small amount (0.002 pixels) of rounding is permitted*/
+
+  if (x+0.0002 >= 1.0 && x+0.0002 <= (float) (nsx+1))
+    *ix = (int)floor(x+0.0002);
+  else
+    *ix = 0;
+
+  if (y+0.0002 >= 1.0 && y+0.0002 <= (float) (nsy+1))
+    *iy = (int)floor(y+0.0002);
+  else
+    *iy = 0;
+
+  return;
+}
+

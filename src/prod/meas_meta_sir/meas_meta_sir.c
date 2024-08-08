@@ -11,11 +11,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef JANUSicc
-#include <mathimf.h>
-#else
 #include <math.h>
-#endif
 #include <float.h>
 #include <libgen.h>
 #include <string.h>
@@ -147,8 +143,6 @@ int main(int argc, char **argv)
   cetb_sensor_id sensor_id;
   cetb_direction_id direction_id=CETB_NO_DIRECTION;
   unsigned short tb_fill_value=CETB_NCATTS_TB_FILL_VALUE;
-  unsigned short stokes_fill_value=CETB_NCATTS_STOKES_FILL_VALUE;
-  unsigned short tb_or_stokes_fill_value;
   unsigned short tb_valid_range[ 2 ] = { CETB_NCATTS_TB_MIN, CETB_NCATTS_TB_MAX };
   unsigned short stokes_valid_range[ 2 ] = { CETB_NCATTS_STOKES_MIN, CETB_NCATTS_STOKES_MAX };
   unsigned short tb_or_stokes_valid_range[ 2 ];
@@ -161,7 +155,6 @@ int main(int argc, char **argv)
 						    CETB_NCATTS_TB_NUM_SAMPLES_MAX };
   short theta_fill_value=CETB_NCATTS_THETA_FILL_VALUE;
   short theta_valid_range[ 2 ] = { CETB_NCATTS_THETA_MIN, CETB_NCATTS_THETA_MAX };
-  float error_valid_range[ 2 ] = { 0.0, NC_MAX_FLOAT };
   float tb_or_stokes_scaled_min, tb_or_stokes_scaled_max, tb_or_stokes_scale_factor;
   float tb_or_stokes_stddev_scale_factor, tb_or_stokes_SIR_offset;
   int tb_or_stokes_add_offset, tb_or_stokes_stddev_add_offset;
@@ -174,7 +167,7 @@ int main(int argc, char **argv)
   int median_flag = 0;  /* default: no median filter in SIRF algorithm */
   int ibeam = 0;
   int resolution;
-  cetb_resolution_id base_resolution = 0;
+  cetb_resolution_id base_resolution = (cetb_resolution_id)0;
 
   /* begin program */
 

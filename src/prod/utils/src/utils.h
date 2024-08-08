@@ -7,6 +7,19 @@
 #ifndef utils_H
 #define utils_H
 
+#include <math.h>
+
+#define UTILS_DTR ((2.0*(M_PI))/360.0)       /* degrees to radians */
+#define UTILS_RTD (360.0/(2.0*(M_PI)))       /* radians to degrees */
+
 int utils_allocate_clean_aligned_memory( void **this, size_t size );
+void utils_ease2_map_info(int iopt, int isc, int ind, 
+		    double *map_equatorial_radius_m, double *map_eccentricity, 
+		    double *e2, double *map_reference_latitude, 
+		    double *map_reference_longitude, 
+		    double *map_second_reference_latitude,double * sin_phi1, 
+		    double *cos_phi1, double *kz,
+		    double *map_scale, int *bcols, int *brows, 
+		    double *r0, double *s0, double *epsilon);
 
 #endif // utils_H

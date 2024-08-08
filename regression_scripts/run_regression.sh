@@ -13,7 +13,7 @@
 regressiontype=$1
 condaenv=$2
 
-if [ "$1" == "-h" ] || [ "$#" -ne 2 ] ; then
+if  [[ $1 == -h ]] || [[ $# != 2 ]] ; then
     echo ""
     echo "Usage: `basename $0` [-h] REGRESSIONTYPE CONDAENV"
     echo "  Runs quick (fast, does less) or "
@@ -25,16 +25,16 @@ if [ "$1" == "-h" ] || [ "$#" -ne 2 ] ; then
     echo "  REGRESSIONTYPE: quick or daily"
     echo "  CONDENV: name of conda env with python2 and nose"
     echo ""
-    exit 1
+    return 1
 fi
 
-if [ "$regressiontype" != "quick" ] && [ "$regressiontype" != "daily" ] ; then
+if [[ $regressiontype != quick ]] && [[ $regressiontype != daily ]] ; then
     echo "`basename $0`: invalid regressiontype, should be quick or daily"
-    exit 1
+    return 1
 fi    
 
 maketarget=${regressiontype}
-if [ "$regressiontype" == "daily" ] ; then
+if [[ $regressiontype == daily ]] ; then
     maketarget="ease"
 fi
 
@@ -53,7 +53,7 @@ pwd
 make csu_${maketarget}
 if [ $? -ne 0 ]; then
   echo "`basename $0`: csu_${maketarget} make failed"
-  exit -1
+  return -1
 fi
 echo "`basename $0`: running setup"
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_setup
@@ -61,7 +61,7 @@ pwd
 make csu_${maketarget}
 if [ $? -ne 0 ]; then
   echo "`basename $0`: csu_$maketarget setup failed"
-  exit -1
+  return -1
 fi
 echo "`basename $0`: running sir"
 cd ${PMESDR_TOP_DIR}/src/prod/meas_meta_sir
@@ -69,10 +69,10 @@ pwd
 make csu_${maketarget}
 if [ $? -ne 0 ]; then
   echo "`basename $0`: csu_${maketarget} SIR failed"
-  exit -1
+  return -1
 fi
 make csu_${maketarget}_validate
 if [ $? -ne 0 ]; then
   echo "`basename $0`: csu_$maketarget SIR validate failed"
-  exit -1
+  return -1
 fi
