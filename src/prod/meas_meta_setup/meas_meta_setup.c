@@ -172,11 +172,9 @@ static int ltod_day_offset( int dstart, int dend, int *midDay,
 			    int *startDayOffset, int *endDayOffset,
 			    int *imageDayOffset );
 static void latlon2pix(float alon, float alat, float *x, float *y, 
-		       int iopt, float xdeg, float ydeg,
-		       float ascale, float bscale, float a0, float b0);
+		       int iopt, float ascale, float bscale, float a0, float b0);
 static void pixtolatlon(float x, float y, float *alon, float *alat,
-			int iopt, float xdeg, float ydeg,
-			float ascale, float bscale, float a0, float b0);
+			int iopt, float ascale, float bscale, float a0, float b0);
 static void ease2grid(int iopt, float alon, float alat, 
 		      float *thelon, float *thelat, float ascale, float bscale);
 static void iease2grid(int iopt, float *alon, float *alat, 
@@ -230,7 +228,7 @@ int main(int argc,char *argv[])
   int ibeam,icc,icmax,icmin,nfile;  
   float cx,cy,lath,latl,lonh,lonl;
   int nsx,nsy,projt;
-  float ascale,bscale,a0,b0,xdeg,ydeg,x,y;
+  float ascale,bscale,a0,b0,x,y;
   float tbmin=1.e10,tbmax=-1.e10; 
   
   int iadd1, box_size, box_size_flag=0;;
@@ -1084,12 +1082,10 @@ int main(int argc,char *argv[])
 		bscale=save_area.sav_bscale[iregion];
 		a0=save_area.sav_a0[iregion];
 		b0=save_area.sav_b0[iregion];
-		ydeg=save_area.sav_ydeg[iregion];
-		xdeg=save_area.sav_xdeg[iregion];
 		dscale=save_area.sav_km[iregion];
 
 		/* transform center lat/lon location of measurement to image pixel location */
-		latlon2pix(cx, cy, &x, &y, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+		latlon2pix(cx, cy, &x, &y, projt, ascale, bscale, a0, b0);
 		/* quantize pixel location to 1-based integer pixel indices */
 		f2ipix(x, y, &ix2, &iy2, nsx, nsy);  /* note: ix2,iy2 are 1-based pixel address of center */
 
@@ -1106,7 +1102,7 @@ int main(int argc,char *argv[])
 		   centers to the center of the output pixel */
 		x=(ix2+0.5f);
 		y=(iy2+0.5f);
-		pixtolatlon(x, y, &clon, &clat, projt, xdeg, ydeg, ascale, bscale, a0, b0);
+		pixtolatlon(x, y, &clon, &clat, projt, ascale, bscale, a0, b0);
 
 		/* define size of box centered at(ix2,iy2) in which the gain response 
 		   is computed for each pixel in the box and tested to see if
@@ -2064,7 +2060,6 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {
 	  x=(ix+1.5f); /* center of pixel, 1-based */
 	  pixtolatlon(x, y, &clon, &clat, a->sav_projt[iregion], 
-		      a->sav_xdeg[iregion], a->sav_ydeg[iregion],
 		      a->sav_ascale[iregion], a->sav_bscale[iregion],
 		      a->sav_a0[iregion],     a->sav_b0[iregion]);
 	  iadd=a->sav_nsx[iregion]*iy+ix; /* zero-based lexicographic pixel address */
@@ -3169,7 +3164,7 @@ static int ltod_day_offset( int dstart, int dend, int *midDay,
 			    int *startDayOffset, int *endDayOffset,
 			    int *imageDayOffset ) {
 
-  *midDay = dstart + round((dend-dstart)/2);
+  *midDay = dstart + (int)round((dend-dstart)/2);
   
   if ( dstart == dend ) {
     *startDayOffset = -1;
@@ -3308,8 +3303,7 @@ static int check_for_consistent_regions( region_save *save_area,
 }
   
 static void pixtolatlon(float x, float y, float *alon, float *alat,
-		 int iopt, float xdeg, float ydeg,
-		 float ascale, float bscale, float a0, float b0)
+			int iopt, float ascale, float bscale, float a0, float b0)
 {
    /* computes the lat, long position of the lower-left corner of the
       x,y-th pixel.  pixels indexed [1..nsx,1..nsy] */
@@ -3320,17 +3314,10 @@ static void pixtolatlon(float x, float y, float *alon, float *alat,
     case 8:
     case 9:
     case 10:
-      thelon = x - 1.0 + a0;
-      thelat = y - 1.0 + b0;      
+      thelon = x - (float)1.0 + a0;
+      thelat = y - (float)1.0 + b0;      
       iease2grid(iopt, alon, alat, thelon, thelat, ascale, bscale);
       break;
-    /* case 11: */
-    /* case 12: */
-    /* case 13: */
-    /*   thelon = x - 1.0 + a0; */
-    /*   thelat = y - 1.0 + b0; */
-    /*   ieasegrid(iopt, alon, alat, thelon, thelat, ascale); */
-    /*   break; */
     default:
       *alon=0.0;
       *alat=0.0;
@@ -3339,8 +3326,7 @@ static void pixtolatlon(float x, float y, float *alon, float *alat,
 }
 
 static void latlon2pix(float alon, float alat, float *x, float *y, 
-		 int iopt, float xdeg, float ydeg,
-		 float ascale, float bscale, float a0, float b0)
+		       int iopt, float ascale, float bscale, float a0, float b0)
 {
    /* computes the x,y pixel coordinates given the lat, lon position 
       x,y are fractional values not limited to within image */
@@ -3352,8 +3338,8 @@ static void latlon2pix(float alon, float alat, float *x, float *y,
     case 9:
     case 10:
       ease2grid(iopt, alon, alat, &thelon, &thelat, ascale, bscale);
-      *x = thelon + 1.0 - a0;
-      *y = thelat + 1.0 - b0;
+      *x = thelon + (float)1.0 - a0;
+      *y = thelat + (float)1.0 - b0;
       break;
     default:
       *x=0.0;
@@ -3566,12 +3552,12 @@ static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy)
       a small amount (0.002 pixels) of rounding is permitted*/
 
   if (x+0.0002 >= 1.0 && x+0.0002 <= (float) (nsx+1))
-    *ix = floor(x+0.0002);
+    *ix = (int)floor(x+0.0002);
   else
     *ix = 0;
 
   if (y+0.0002 >= 1.0 && y+0.0002 <= (float) (nsy+1))
-    *iy = floor(y+0.0002);
+    *iy = (int)floor(y+0.0002);
   else
     *iy = 0;
 

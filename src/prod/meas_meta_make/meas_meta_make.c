@@ -35,7 +35,7 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
 
 static int get_file_names(FILE *mout, int *argn, char *argv[]);
 
-static void get_region_data(int regnum, int resolution_ind, int *iproj, int *dateline, float *latl,
+static void get_region_data(int regnum, int resolution_ind, int *iproj, float *latl,
 			    float *lonl, float *lath, float *lonh, char *regname);
 
 /****************************************************************************/
@@ -243,7 +243,6 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
  *
  *   output:
  *         int *iproj - short version of region id (i.e. 8 rather than 308 etc)
- *         int dateline - this is always zero for our projections - might not be needed
  *         float *latl, *lonl - latitude and longitude of lower left corner
  *                              of lower left corner pixel
  *         float *lath, *lonh - latitude and longitude of upper right corner
@@ -251,7 +250,7 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
  *         char *regname - EASE2_N etc.
  */
 static void get_region_data(int regnum, int resolution_ind, int *iproj,
-			    int *dateline, float *latl, float *lonl,
+			    float *latl, float *lonl,
 			    float *lath, float *lonh, char *regname)
 {
   cetb_region_id cetb_region;
@@ -260,14 +259,13 @@ static void get_region_data(int regnum, int resolution_ind, int *iproj,
   projection_offset = regnum - CETB_PROJECTION_BASE_NUMBER;
   cetb_region = (cetb_region_id)( projection_offset +
 				  (CETB_NUMBER_BASE_RESOLUTIONS * resolution_ind) );
-  dateline = 0;
 
   strncpy( regname, cetb_region_id_name[ resolution_ind ][ projection_offset ],
 	   CETB_MAX_LEN_REGION_ID_NAME );
-  *latl = cetb_latitude_extent[ resolution_ind ][ projection_offset ][0];
-  *lath = cetb_latitude_extent[ resolution_ind ][ projection_offset ][1];
-  *lonl = cetb_longitude_extent[ resolution_ind ][ projection_offset ][0];
-  *lonh = cetb_longitude_extent[ resolution_ind ][ projection_offset ][1];
+  *latl = (float)cetb_latitude_extent[ resolution_ind ][ projection_offset ][0];
+  *lath = (float)cetb_latitude_extent[ resolution_ind ][ projection_offset ][1];
+  *lonl = (float)cetb_longitude_extent[ resolution_ind ][ projection_offset ][0];
+  *lonh = (float)cetb_longitude_extent[ resolution_ind ][ projection_offset ][1];
   
   switch ( cetb_region ) {
   case CETB_EASE2_N:
@@ -327,11 +325,10 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
   char rfile[250];  
   int pfile;
   FILE *pid;
-  int nregions, poleflag, dateline, iproj, regnum, iregion, ircnt;
+  int nregions, poleflag, iproj, regnum, iregion, ircnt;
   float latl, lonl, lath, lonh;
   int projt, nsx, nsy, xdim, ydim, nease;
   float ascale, bscale, xdeg, ydeg, a0, b0, aorglon, aorglat;
-  float maplxlon, maprxlon;
   int iasc, ibeam, ipolar;
   int non_size;
   int nsect, nsx2, nsy2;
@@ -415,7 +412,6 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
 
   ircnt=0;  /* count total regions */
   for (iregion=0; iregion<nregions; iregion++) {
-    dateline=FALSE;
     
     /* region ID number */ 
 
@@ -425,11 +421,11 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     /* define region, using auto definition if possible */
     strncpy( regname, "Custom", 10);
     if (regnum > 0) { /* get region definition from contents of cetb.h */
-      get_region_data( regnum, resolution_ind, &iproj, &dateline, &latl, &lonl,
+      get_region_data( regnum, resolution_ind, &iproj, &latl, &lonl,
 		  &lath, &lonh, regname );
       if (((regnum >= 0) && (regnum < 100)) || (regnum >= 120)) poleflag=0; /* non-polar area */
-      fprintf( stderr, "%s: Region name: '%s'  Def Proj %d  Dateline %d\n",
-	       __FUNCTION__, regname, iproj, dateline );
+      fprintf( stderr, "%s: Region name: '%s'  Def Proj %d \n",
+	       __FUNCTION__, regname, iproj );
     } else {
       fprintf( stderr, "%s: Region is not defined and out of bounds\n", __FUNCTION__ );
       exit(-1);
@@ -441,15 +437,6 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     fprintf( stderr, "%s:  Longitude range: %f %f\n", __FUNCTION__, lonl, lonh );
     fprintf( stderr, "%s:  Region polar code (0=arbitrary, 1=N pol, 2=S pole: %d\n",
 	     __FUNCTION__, poleflag );
-    if (dateline) {
-      fprintf( stderr, "%s:  Region crosses dateline\n", __FUNCTION__ );
-      maplxlon=min(lonh,lonl);
-      maprxlon=max(lonh,lonl);
-      lonl=maplxlon;
-      lonh=maprxlon;
-      fprintf( stderr, "%s:  Corrected longitude range: %f %f\n",
-	       __FUNCTION__, lonl, lonh );
-    }
      
     /* write region ID number and bound box info to meta file */
     fprintf(mout," Begin_region_description\n");
@@ -458,7 +445,6 @@ static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,
     fprintf(mout,"  Latitude_high=%16.9f\n", lath);
     fprintf(mout,"  Longitude_low=%16.9f\n", lonl);
     fprintf(mout,"  Longitude_high=%16.9f\n", lonh);
-    fprintf(mout,"  Dateline_crossing=%c\n", TF[dateline]);
     fprintf(mout,"  Polar_flag=%c\n", TF[poleflag]);
     fprintf(mout,"  Region_name=%s\n", regname);
     
