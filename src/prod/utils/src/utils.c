@@ -34,56 +34,58 @@ int utils_allocate_clean_aligned_memory( void **this, size_t size ) {
 
 }
 
-void utils_ease2_map_info(int iopt, int isc, int ind, 
-		    double *map_equatorial_radius_m, double *map_eccentricity, 
-		    double *e2, double *map_reference_latitude, 
-		    double *map_reference_longitude, 
-		    double *map_second_reference_latitude,double * sin_phi1, 
-		    double *cos_phi1, double *kz,
-		    double *map_scale, int *bcols, int *brows, 
-		    double *r0, double *s0, double *epsilon)
-{ /* define key EASE2 grid information 
-
-  inputs
-    iopt: projection type 8=EASE2 N, 9-EASE2 S, 10=EASE2 T/M
-    isc:  scale factor 0..5 grid size is (basesize(ind))/2^isc
-    ind:  base grid size index   (map units per cell in m
- 
-          NSIDC .grd file for isc=0
-           project type    ind=0     ind=1         ind=2
-	      N         EASE2_N25km EASE2_N36km EASE2_N24km  
-              S         EASE2_S25km EASE2_S36km EASE2_S24km 
-              T/M       EASE2_T25km EASE2_M36km EASE2_M24km 
-
-          cell size (m) for isc=0 (scale is reduced by 2^isc)
-           project type    ind=0     ind=1            ind=2
-	      N          25000.0     36000.0         24000.0
-              S          25000.0     36000.0         24000.0
-              T/M       T25025.26  M36032.220840584  M24021.4805603
-	      
-	  for a given base cell size isc is related to NSIDC .grd file names
-	     isc        N .grd name   S .grd name   T .grd name
-	      0	      EASE2_N25km     EASE2_S25km     EASE2_T25km  
-	      1	      EASE2_N12.5km   EASE2_S12.5km   EASE2_T12.5km  
-	      2	      EASE2_N6.25km   EASE2_S6.25km   EASE2_T6.25km  
-	      3	      EASE2_N3.125km  EASE2_S3.125km  EASE2_T3.125km  
-	      4	      EASE2_N1.5625km EASE2_S1.5625km EASE2_T1.5625km  
-
-  outputs
-    map_equatorial_radius_m  EASE2 Earth equitorial radius (km) [WGS84]
-    map_eccentricity         EASE2 Earth eccentricity [WGS84]
-    map_reference_latitude   Reference latitude (deg) 
-    map_reference_longitude  Reference longitude (deg)
-    map_second_reference_latitude Secondary reference longitude* (deg)
-    sin_phi1, cos_phi1 kz    EASE2 Cylin parameters*
-    map_scale                EASE2 map projection pixel size (km)
-    bcols, brows,            EASE2 grid size in pixels
-    r0, s0                   EASE2 base projection size in pixels
-    epsilon                  EASE2 near-polar test factor
-
-    *these parameters only assigned values if projection is T
-
-  */
+/*
+ * utils_ease2_map_info - defines EASE2 grid information 
+ *
+ * input:
+ *   iopt: int, projection type 8=EASE2 N, 9-EASE2 S, 10=EASE2 T/M
+ *   isc: int, scale factor 0..5 grid size is (basesize(ind))/2^isc
+ *   ind: int,  base grid size index   (map units per cell in NSIDC .grd file for isc=0
+ *         project type    ind=0     ind=1         ind=2
+ *            N         EASE2_N25km EASE2_N36km EASE2_N24km  
+ *            S         EASE2_S25km EASE2_S36km EASE2_S24km 
+ *            T/M       EASE2_T25km EASE2_M36km EASE2_M24km 
+ *
+ *        cell size (m) for isc=0 (scale is reduced by 2^isc)
+ *         project type    ind=0     ind=1            ind=2
+ *	      N          25000.0     36000.0         24000.0
+ *            S          25000.0     36000.0         24000.0
+ *            T/M       T25025.26  M36032.220840584  M24021.4805603
+ *	      
+ *	  for a given base cell size isc is related to NSIDC .grd file names
+ *	     isc        N .grd name   S .grd name   T .grd name
+ *	      0	      EASE2_N25km     EASE2_S25km     EASE2_T25km  
+ *	      1	      EASE2_N12.5km   EASE2_S12.5km   EASE2_T12.5km  
+ *	      2	      EASE2_N6.25km   EASE2_S6.25km   EASE2_T6.25km  
+ *	      3	      EASE2_N3.125km  EASE2_S3.125km  EASE2_T3.125km  
+ *	      4	      EASE2_N1.5625km EASE2_S1.5625km EASE2_T1.5625km  
+ *
+ *  outputs:
+ *    map_equatorial_radius_m  EASE2 Earth equitorial radius (km) [WGS84]
+ *    map_eccentricity         EASE2 Earth eccentricity [WGS84]
+ *    e2                       square of eccentricity
+ *    map_reference_latitude   Reference latitude (deg) 
+ *    map_reference_longitude  Reference longitude (deg)
+ *    map_second_reference_latitude Secondary reference longitude* (deg)
+ *    sin_phi1, cos_phi1, kz   EASE2 Cylin parameters*
+ *    map_scale                EASE2 map projection pixel size (km)
+ *    bcols, brows,            EASE2 grid size in pixels
+ *    r0, s0                   EASE2 base projection size in pixels
+ *    epsilon                  EASE2 near-polar test factor
+ *
+ *  *these parameters only assigned values if projection is T
+ *
+ * returns : n/a
+ *
+ */
+void utils_ease2_map_info(int iopt, int isc, int ind,
+			  double *map_equatorial_radius_m, double *map_eccentricity, 
+			  double *e2, double *map_reference_latitude, 
+			  double *map_reference_longitude, 
+			  double *map_second_reference_latitude,double * sin_phi1, 
+			  double *cos_phi1, double *kz,
+			  double *map_scale, int *bcols, int *brows, 
+			  double *r0, double *s0, double *epsilon) {
 
   double base;  
   int m, nx, ny;
@@ -167,7 +169,6 @@ void utils_ease2_map_info(int iopt, int isc, int ind,
 	ny=cetb_grid_rows[region_index][0]; //540;  /* originally was 538 */	
       }
    }
-
   
   /* grid info */
   if (isc>=0) {    
@@ -190,6 +191,17 @@ void utils_ease2_map_info(int iopt, int isc, int ind,
   
 }
 
+/*
+ * dceil - calculates numeric ceiling for double value
+ *
+ * input :
+ *  r : double value to find ceiling for, works for negative or positive values
+ *
+ * output : n/a
+ *
+ * returns : nearest integer ceiling of r
+ *
+ */
 static int dceil(double r)
 {
   int ret_val = (int)r;
