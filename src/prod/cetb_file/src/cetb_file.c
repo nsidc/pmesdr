@@ -258,10 +258,10 @@ cetb_file_class *cetb_file_init( char *dirname,
  *
  * output : n/a
  *
- *  result : 0 on success
- *           1 if an error occurs; error message will be written to stderr
- *           The CETB file is created and populated with required
- *           global attributes
+ * result : 0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The CETB file is created and populated with required
+ *          global attributes
   *
  */
 int cetb_file_open( cetb_file_class *this ) {
@@ -318,6 +318,7 @@ int cetb_file_open( cetb_file_class *this ) {
   if ( ( status = nc_close( template_fid ) ) ) {
     fprintf( stderr, "%s: Error closing template filename=%s: %s.\n",
 	     __FUNCTION__, filename, nc_strerror( status ) );
+    return 1;
   }
 
   free( filename );
@@ -372,14 +373,13 @@ int cetb_file_add_filenames( cetb_file_class *this, int input_file_number,
   return status;
   
 }
+
 /*
  * cetb_file_add_var - Add a new variable to the output file
- *                     Float data will be packed as ushorts,
- *                     integer data will not be packed
  *                     CETB standard variable attributes will be included.
  *                     meas_meta_ processing convention puts beginning of
- *                     data in lower-left corner.  So input data will
- *                     flipped top-to-bottom as it is stored
+ *                     data in lower-left corner. So data will be
+ *                     flipped top-to-bottom as it is stored.
  *
  * input :
  *    this : pointer to initialized/opened cetb_file_class object
@@ -387,27 +387,31 @@ int cetb_file_add_filenames( cetb_file_class *this, int input_file_number,
  *               For CETB data:
  *               "TB"
  *               "TB_std_dev"
- *               (other names from SIR/BGI processing)
+ *               (other names from SIR processing)
+ *    xtype : netcdf4 nc_type of the data to be stored
  *    data : pointer to beginning of float data array
+ *    cols : integer number of columns in data
+ *    rows : integer number of rows in data
  *    standard_name : CF standard_names
  *                    http://cfconventions.org/standard-names.html
  *                    or NULL if a standard_name does not exist.
- *                    For CETB data, only "brightness_temperature"
- *                    variables should have a standard_name
  *    long_name : free-text field to describe the variable, may
  *                be used by application programs for plot/image titles
  *                e.g. "SIR TB" or "SIR TB Std Dev"
- *    units : CF unit name
- *    cols, rows : number of columns/rows (must match expected dimensions
- *                 in the cetb_file)
- *    fill_value : data fill_value
- *    min_value, max_value : data valid_range
+ *    units : string, udunits unit name
+ *    fill_value_p : data fill_value
+ *    valid_range_p : data min/max valid range
+ *    do_pack : integer (0 or 1) flag to pack the data
+ *    scale_factor, add_offset : float factor/offset to use for scaling
+ *    calendar : when data are time data, this will be used to set
+ *               the variable "calendar" attribute value
  *
- * output :
+ * output : n/a
  *
- *  result : 0 on success
- *           1 if an error occurs; error message will be written to stderr
- *           The data array is packed and added to the CETB file
+ * result:  0 on success
+ *          1 if an error occurs; error message will be written to stderr
+ *          The data array is packed (if requested) and added to the CETB file
+ *          as the requested nc_type, with required variable attributes.
  *
  * Refs:
  * Special thanks to the authors of:
@@ -796,7 +800,7 @@ int cetb_file_add_var( cetb_file_class *this,
  * input :
  *    this : pointer to initialized cetb_file_class object
  *    gamma : double, BGI "noise-tuning" parameter gamma
- *            gamma rangins from 0 to pi/2
+ *            gamma ranges from 0 to pi/2
  *    dimensional_tuning_parameter : float, BGI dimensional tuning parameter value
  *            ATBD says dimensional-tuning parameter should be 0.001
  *    noise_variance : float, BGI noise variance parameter value, in K^2
@@ -811,7 +815,7 @@ int cetb_file_add_var( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with BGI-specific TB variaable attributes
+ *          The CETB file is populated with BGI-specific TB variable attributes
  *
  * Reference : See definitions for tuning parameters at
  *
@@ -819,7 +823,7 @@ int cetb_file_add_var( cetb_file_class *this,
  * Microwave Daily EASE-Grid 2.0 Brightness Temperature ESDR
  * (CETB) Algorithm Theoretical Basis Document. MEaSUREs Project
  * White Paper.  NSIDC.  Boulder, CO.
- * http://nsidc.org/pmesdr/files/2015/09/MEaSUREs_CETB_ATBD_v0.10.pdf
+ * https://doi.org/10.5281/zenodo.7958456
  *
  */
 int cetb_file_add_bgi_parameters( cetb_file_class *this,
@@ -899,12 +903,12 @@ int cetb_file_add_bgi_parameters( cetb_file_class *this,
 }
 
 /*
- * cetb_file_add_sir_parameters - Add SIR-specific global file attributes
+ * cetb_file_add_sir_parameters - Add SIR-specific TB variable attributes 
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
- *    number_of_iterations : integer SIR nits
- *    median_filter : integer median_filtering flag: 0=off, 1=on
+ *    number_of_iterations : integer, SIR number of iterations
+ *    median_filter : integer, median_filtering flag: 0=off, 1=on
  *
  * output : n/a
  *
@@ -956,7 +960,7 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
 }
 
 /*
- * cetb_file_add_grd_parameters - Add GRD-specific global file attributes
+ * cetb_file_add_grd_parameters - Add GRD-specific TB variable attributes
  *
  * input :
  *    this : pointer to initialized cetb_file_class object
@@ -966,7 +970,7 @@ int cetb_file_add_sir_parameters( cetb_file_class *this,
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
- *          The CETB file is populated with SIR-specific TB variable attributes
+ *          The CETB file is populated with GRD-specific TB variable attributes
  *
  */
 int cetb_file_add_grd_parameters( cetb_file_class *this,
@@ -1013,17 +1017,25 @@ int cetb_file_add_grd_parameters( cetb_file_class *this,
  *    rthreshold : response threshold in dB
  *    box_size_km : size of box in km in which to search for measurements that
  *                  meet the response threshold
- *
- * operation : the function writes out the input parameters as attributes
- *             of the TB variable and then uses the information in the cetb_file_class
- *             pointer to retrieve the appropriate frequency and polarization as well as
- *             LTOD information from cetb.h and writes all of this out as TB attributes
+ *    ltod_morning : float, hour of day relative to 0 (midnight)
+ *                   that begins the morning ltod interval
+ *                   e.g. for 6am morning overpasses, this would be 0 (midnight)
+ *                   this value can be negative
+ *                   ignored for cylindrical projections
+ *    ltod_evening : float, hour of day relative to 0 (midnight)
+ *                   that begins the evening ltod interval
+ *                   e.g. for 6pm evening overpasses, this would be 12 (noon)
+ *                   ignored for cylindrical projections
  *
  * output : n/a
  *
  * result : 0 on success
  *          1 if an error occurs; error message will be written to stderr
  *          The CETB file is populated with TB variable attributes
+ *          This function writes out the input parameters as attributes
+ *          of the TB variable and then uses the information in the cetb_file_class
+ *          pointer to retrieve the appropriate frequency and polarization as well as
+ *          LTOD information from cetb.h and writes all of this out as TB attributes
  *
  */
 int cetb_file_add_TB_parameters( cetb_file_class *this,
@@ -1162,15 +1174,16 @@ void cetb_file_close( cetb_file_class *this ) {
  *
  *  input: NETCDF file name
  *
- *  output: status variable
+ *  output : n/a
  *
- *  result: OOR values are set to fill value 
- *
- *  this function retrieves the TB values from the file and
- *  checks them all to make sure they are within the required
- *  range.  Any values outside the required range are set to the
- *  fill value.  IFF any TB values are changed, then the corresponding
- *  TB_std_dev value should be set to fill.
+ *  result : 0 on success
+ *           -1 if an error occurs; error message will be written to stderr
+ *          Out of range values are set to fill value.
+ *          This function retrieves the TB values from the file and
+ *          checks them all to make sure they are within the required
+ *          range.  Any values outside the required range are set to the
+ *          fill value.  IFF any TB values are changed, then the corresponding
+ *          TB_std_dev value should be set to fill.
  *
  */
 int cetb_file_check_consistency( char *file_name ) {
@@ -1305,16 +1318,16 @@ int cetb_file_check_consistency( char *file_name ) {
  *    cetb_file_pointer : pointer to the cetb file object
  *    tb_time_data      : pointer to the recently calculated tb_time_data
  *    xdim              : x dimension of the data
- *    ydim              : y dimension
+ *    ydim              : y dimension of the data
  *
- *  output :
- *    status variable
+ *  output : n/a
  *
- *  result :
- *    values are calculated for 3 ACDD required attributes, viz.
- *                     time_coverage_start
- *                     time_coverage_end
- *                     time_coverage_duration
+ *  result : 0 on success
+ *           1 if an error occurs; error message will be written to stderr
+ *    Values are determined and set for 3 ACDD required global attributes, viz.
+ *      time_coverage_start
+ *      time_coverage_end
+ *      time_coverage_duration
  *
  */
 int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
@@ -1381,13 +1394,17 @@ int cetb_file_set_time_coverage( cetb_file_class *this, float *tb_time_data,
 
 /*
  * cetb_template_filename - Return the file template to use, based on sensor_id
- *                          and producer_id - also return the Dataset ID
+ *                          and producer_id - also returns the Dataset ID
  *
  *  input :
  *    sensor_id : sensor_id (determines which template to use)
  *    producer_id : producer_id (determines which template to use)
  *
- *  result : (newly-allocated) template_filename string (includes absolute path)
+ *  output :
+ *    cetb_dataset_id_index : enum cetb_dataset_id, corresponds to NSIDC
+ *           authID for the requested template data
+ *
+ *  result : (newly-allocated) string with template_filename (includes absolute path)
  *           or NULL on error
  */
 char *cetb_template_filename( cetb_sensor_id sensor_id,
@@ -1488,6 +1505,8 @@ char *cetb_template_filename( cetb_sensor_id sensor_id,
  *    beam_id : beam_id - integer id for channels, e.g. for SSM/I,
  *              beam_id = 1 (19H), 2 (19V), etc.
  *
+ *  output : n/a
+ *
  *  result : (newly-allocated) channel string, with frequency and polarization,
  *           e.g. "19H", or NULL on error
  */
@@ -1551,11 +1570,13 @@ char *channel_name( cetb_sensor_id sensor_id, int beam_id ) {
   return channel_str;
 
 }
+
 /*
  * current_time_stamp - Formats a string with the current date and time.
  *
- *  input : 0 for creation date/time for metadata
- *          1 for string yymmddhhmm in filename
+ *  input :
+ *    flag : 0 to format as creation date/time (for global metadata)
+ *           1 to format as yymmddhhmm (for filename)
  *
  *  output : n/a
  *
@@ -1598,7 +1619,8 @@ char *current_time_stamp( int flag ) {
   
 /*
  * fetch_global_atts - Fetches the global file attributes
- *                     from the template file to the output file.
+ *                     from the template file to the output file
+ *                     in the cetb_file_class object.
  *
  *  input : 
  *    this : pointer to initialized cetb_file_class object
@@ -1606,7 +1628,8 @@ char *current_time_stamp( int flag ) {
  *
  *  output : n/a
  *
- *  result : 0 success, otherwise error
+ *  result : 0 on success
+ *           1 if an error occurs; error message will be written to stderr
  *           Upon successful completion, the global file attributes
  *           will be populated in the output file
  *
@@ -1750,7 +1773,8 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
 
 /*
  * fetch_crs - Fetches the coordinate reference system (crs)
- *             projection information from the template file to the output file.
+ *             projection information from the template file to the output file
+ *             in the cetb_file_class object.
  *
  *  input : 
  *    this : pointer to initialized cetb_file_class object
@@ -1758,11 +1782,12 @@ int fetch_global_atts( cetb_file_class *this, int template_fid ) {
  *
  *  output : n/a
  *
- *  result : 0 success, otherwise error
+ *  result : 0 on success
+ *           1 if an error occurs; error message will be written to stderr
  *           Upon successful completion, the projection metadata
  *           in variable crs will be populated in the output file
  *           Additionally the GLOBAL attributes related to the projection
- *           are set in the function rather than in fetch_global_attributes
+ *           are set.
  *
  */
 int fetch_crs( cetb_file_class *this, int template_fid ) {
@@ -1901,13 +1926,12 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
 
 /*
  * pmesdr_release_version - Fetches the PMESDR software project release version id
- #                          from the project VERSION file.
+ *                          from the project VERSION file.
  *
  *  input : n/a
  *
- *  output : n/a
- *
- *  result : ptr to newly-allocated string with system software version,
+ *  output : ptr to newly-allocated string with system software version,
+ *           which is read from pmesdr_top_dir/VERSION file
  *           like "v0.0.1" or NULL on error
  *           Any errors that occur will be written to stderr
  *
@@ -1960,9 +1984,7 @@ char *pmesdr_release_version( void ) {
  *
  *  input : n/a
  *
- *  output : n/a
- *
- *  result : ptr to string with value of PMESDR_TOP_DIR
+ *  output : ptr to string with value of environment PMESDR_TOP_DIR
  *           if not set or set to "", returns NULL
  *           Any errors that occur will be written to stderr
  *
@@ -1985,7 +2007,7 @@ char *pmesdr_top_dir( void ) {
 /*
  * set_all_dimensions - Sets dimension variables (time, y, x) in the output file
  *                      to the expected size for the grid that will be stored here
- *                      grid is determined by region_id,init and factor
+ *                      grid is determined by region_id and factor
  *
  *  input : 
  *    this : pointer to initialized/opened cetb_file_class object
@@ -2117,7 +2139,7 @@ int set_all_dimensions( cetb_file_class *this ) {
  *
  *  input : 
  *    this : pointer to initialized/opened cetb_file_class object
- *    name : name of new dimension variable
+ *    name : pointer to name of new dimension variable
  *    size : size of dimension variable
  *    vals : pointer to values for this variable
  *    standard_name : CF standard name
@@ -2128,7 +2150,7 @@ int set_all_dimensions( cetb_file_class *this ) {
  *    valid_range : 2-element array with dimension valid_range
  *
  *  output :
- *    dim_id : the NC dimension id for the newly created variable
+ *    *dim_id : the NC dimension id for the newly created variable
  *
  *  result : STATUS_OK on success, otherwise STATUS_FAILURE and
  *           reason written to stderr
@@ -2246,9 +2268,9 @@ int set_dimension( cetb_file_class *this,
  *
  *  output : n/a
  *
- *  result :
  *  result : STATUS_OK on success, or STATUS_FAILURE with error message to stderr
- *           the epoch string in the object is set to match year, doy
+ *           the epoch string in the object is set to match year, doy stored
+ *           in the cetb_file_class object
  *
  */
 int set_epoch_string( cetb_file_class *this ) {
@@ -2281,7 +2303,8 @@ int set_epoch_string( cetb_file_class *this ) {
 
 /*
  * valid_date - checks for valid years (1978 or later) and
- *                   valid doy range (1-365 or 366 for leap years)
+ *              valid doy range (1-365 or 366 for leap years, works for
+ *              years through 2099)
  *
  *  input :
  *    year : integer year
@@ -2317,7 +2340,7 @@ int valid_date( int year, int doy ) {
 
 /*
  * valid_pass_direction - checks for NS regions with both or morning/evening
- *                             and T region with both or asc/des
+ *                        and TM regions with both or asc/des
  *
  *  input :
  *    resolution_id : resolution index (25, 36, 24 km eg)
@@ -2634,7 +2657,10 @@ int yyyydoy_to_yyyymmdd( int year, int doy, int *month, int *day ) {
  *    doy  : day of year
  *    tb_minutes : offset in minutes from midnight on doy
  *
- *  result : character string encoded with the ISO date string
+ *  output : n/a
+ *
+ *  result : (newly-allocated) character string encoded with the ISO date string,
+ *           or NULL on error
  *
  */
 static char *iso_date_string( int year, int doy, float tb_minutes ) {
@@ -2668,7 +2694,10 @@ static char *iso_date_string( int year, int doy, float tb_minutes ) {
  *    tb_time_min : minimum minute value in array
  *    tb_time_max : maximum minute value in array
  *
- *  result : character string encoded with the ISO time duration string
+ *  output : n/a
+ *
+ *  result : newly allocated character string encoded with the ISO time
+ *           duration string, or NULL on error
  *
  */
 static char *duration_time_string( float tb_time_min, float tb_time_max ) {
@@ -2709,7 +2738,10 @@ static char *duration_time_string( float tb_time_min, float tb_time_max ) {
  *
  *   input:  pointer to cetb_file structure
  *
- *   return:  pointer to string that will be written into the source variable
+ *   output: n/a
+ *
+ *   return:  pointer to (newly allocated) string that will be written into the source
+ *            variable or NULL on error
  *
  */
 static char *set_source_value( cetb_file_class *this ) {
