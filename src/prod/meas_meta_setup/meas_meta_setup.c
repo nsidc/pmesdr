@@ -6,7 +6,6 @@
   MEaSURES processing
 
   written by DGL at BYU  02/22/2014 + based on oscat_meta_setup_slice.c and ssmi_meta_setup_v7RSS.f
-  further revision are tracked in bitbucket and not via this comment list MAH 05/15/15
 
 ******************************************************************/
 #include <stdio.h>
@@ -56,38 +55,6 @@
 #define dmod(a,b) ((a)-floor((a)/(b))*(b))
 #define abs(x) (((x) >= 0 ) ? (x) : -(x))
 
-/****************************************************************************/
-
-static int nint(float r)
-{
-  int ret_val = r;  if (ret_val - r > 0.5) ret_val--;
-  if (r - ret_val > 0.5) ret_val++;
-  return(ret_val);
-}
-
-static void no_trailing_blanks(char *s)
-{  /* remove trailing blanks (spaces) and line feeds from string */
-  int n=strlen(s);
-  
-  while (n > 0) {
-    if (s[n] == 10) s[n] = '\0';
-    if (s[n] != ' ' && s[n] != '\0') return;
-    if (s[n] == ' ') s[n] = '\0';
-    n--;
-  }
-  if (n<0) s[n]='\0';  
-  return;
-}
-
-static int intfix(float r)
-{
-  int ret_val = r;
-  if (ret_val - r > 0.5) ret_val--;
-  if (r - ret_val > 0.5) ret_val++;
-  return(ret_val);
-}
-
-/****************************************************************************/
 typedef enum {
   UNKNOWN_LTOD=-1,
   ASCDES,
@@ -115,19 +82,6 @@ typedef struct { /* BYU region information storage */
 /********************************************************************/
 
 /* function prototypes */
-
-/* BYU SSM/I approximate spatial response computation */
-
-static float gsx_antenna_response(float x_rel, float y_rel, float theta,
-				  float semimajor, float semiminor);
-static int write_blanklines_to_header( region_save *save_area );
-static int write_filenames_to_header( gsx_class *gsx,
-				      region_save *save_area, int *file_flag,
-				      unsigned long *position_filename,
-				      unsigned long *position_data );
-static int write_end_header( region_save *save_area );
-static int write_header_info( gsx_class *gsx, region_save *save_area,
-			      int year );
 static FILE * get_meta(char *mname, char *outpath, int *dstart,
 		       int *dend, int *mstart, int *mend, 
 		       int *year, char *prog_n, float prog_v,
@@ -135,22 +89,30 @@ static FILE * get_meta(char *mname, char *outpath, int *dstart,
 		       int *median_flag, int *inc_correct, float *b_correct,
 		       float *angle_ref, int *base_resolution,
 		       region_save *save_area, cetb_platform_id *cetb_platform);
-static int check_for_consistent_regions( region_save *save_area,
-					 setup_ltod_flag *ltdflag );
 static void compute_locations(region_save *a, int *nregions, int **noffset,
 			      short int **latlon_store);
-static int timedecode( double epochTime,
-		       ut_unit *epochUnits, calcalcs_cal *calendar,
-		       int *year, int *doy, int *month, int *day,
-		       int *hour, int *minute, double *second );
+static float gsx_antenna_response(float x_rel, float y_rel, float theta,
+				  float semimajor, float semiminor);
 static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat,
 		       float rlon, float rlat);
 static float km2pix(float *x, float *y, int iopt, float ascale, float bscale,
 		    int *stat);
 static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
 			     float ascale, float bscale, float a0, float b0);
+static int timedecode( double epochTime,
+		       ut_unit *epochUnits, calcalcs_cal *calendar,
+		       int *year, int *doy, int *month, int *day,
+		       int *hour, int *minute, double *second );
 static int box_size_by_channel( int ibeam, cetb_sensor_id id,
 				int base_resolution, int *box_size );
+static int write_header_info( gsx_class *gsx, region_save *save_area,
+			      int year );
+static int write_filenames_to_header( gsx_class *gsx,
+				      region_save *save_area, int *file_flag,
+				      unsigned long *position_filename,
+				      unsigned long *position_data );
+static int write_blanklines_to_header( region_save *save_area );
+static int write_end_header( region_save *save_area );
 static void combine_setup_files( char *outpath, region_save *a, int execution_flag,
 				 int list_of_channels[], int chanA, int chanB );
 static int ltod_split_time( cetb_platform_id platform_id,
@@ -161,6 +123,9 @@ static int get_search_period( int year, int dstart, int dend, int mstart,
 			      ut_unit *epochUnits, calcalcs_cal *calendar,
 			      double *startEpochTime, double *imageEpochTime,
 			      double *endEpochTime );
+static int ltod_day_offset( int dstart, int dend, int *midDay,
+			    int *startDayOffset, int *endDayOffset,
+			    int *imageDayOffset );
 static int day_offset_from( int year, int month, int day, 
 			    int hour, int minute, double second,
 			    int dayOffset, ut_unit *epochUnits,
@@ -168,19 +133,21 @@ static int day_offset_from( int year, int month, int day,
 			    int *offsetYear, int *offsetMonth,
 			    int *offsetDay,
 			    double *offsetEpochTime );
-static int ltod_day_offset( int dstart, int dend, int *midDay,
-			    int *startDayOffset, int *endDayOffset,
-			    int *imageDayOffset );
-static void latlon2pix(float alon, float alat, float *x, float *y, 
-		       int iopt, float ascale, float bscale, float a0, float b0);
+static int check_for_consistent_regions( region_save *save_area,
+					 setup_ltod_flag *ltdflag );
 static void pixtolatlon(float x, float y, float *alon, float *alat,
 			int iopt, float ascale, float bscale, float a0, float b0);
+static void latlon2pix(float alon, float alat, float *x, float *y, 
+		       int iopt, float ascale, float bscale, float a0, float b0);
 static void ease2grid(int iopt, float alon, float alat, 
 		      float *thelon, float *thelat, float ascale, float bscale);
 static void iease2grid(int iopt, float *alon, float *alat, 
-			      float thelon, float thelat, float ascale, float bscale);
+		       float thelon, float thelat, float ascale, float bscale);
 static double easeconv_normalize_degrees(double b);
 static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy);
+static int nint(float r);
+static void no_trailing_blanks(char *s);
+static int intfix(float r);
 
 /****************************************************************************/
 
@@ -304,14 +271,6 @@ int main(int argc,char *argv[])
   strcpy( prog_name, argv[0] );
   fprintf( stderr, "MEaSUREs Setup Program\nProgram: %s \n\n",prog_name);
 
-  /*
-   * optionally get the box size of pixels to use for calculating MRF for each 
-   * box size is determined by a function that sets the value based on the channel
-   * and the EFOV and the base_resolution for SMAP processing
-   * unless the box size is passed in as a cmd line argument
-   *
-   * NOTE: specifying -b overrides box size setting in the code
-   */ 
   while (--argc > 0 && (*++argv)[0] == '-') {
     for (option = argv[0]+1; *option != '\0'; option++) {
       switch (*option) {
@@ -332,12 +291,13 @@ int main(int argc,char *argv[])
   } /* end loop while still input arguments */
 
   if (argc < 2) {
-    printf( "\nusage: meas_meta_setup -b box_size meta_in outpath\n\n");
+    printf( "\nusage: meas_meta_setup [-b box_size] meta_in outpath\n\n");
     printf( " input parameters:\n");
-    printf( "   -b box_size is optional input argument to specify box_size for MRF\n");
-    printf( "      default box_size is 80 for early regression testing\n");
     printf( "   meta_in     = input meta file\n");
     printf( "   outpath     = output path\n\n");
+    printf( " options:\n");
+    printf( "   -b box_size (km), overrides default box_size for MRF\n");
+    printf( "      default box_size is determined by channel and sensor\n");
     exit (-1);
   }
 
@@ -1317,17 +1277,43 @@ int main(int argc,char *argv[])
   return(0); /* successful termination */
 }
 
-/* *********************************************************************** */
+/* ********************local function definitions ************************** */
 
-FILE * get_meta(char *mname, char *outpath, 
-		int *dstart, int *dend, int *mstart, int *mend, int *year, 
-		char *prog_n, float prog_v,
-		float *response_threshold, int *flatten, int *median_flag,
-		int *inc_correct, float *b_correct, float *angle_ref, 
-		int *base_resolution, region_save *a, cetb_platform_id *cetb_platform)
-{
-  /* read meta file, open output .setup files, write .setup file headers, and 
-     store key parameters in memory */
+/*
+ * get_meta - reads input .meta file, opens output .setup files, writes
+ *   .setup file headers and stores important parameters in memory
+ *
+ * input :
+ *   mname : char *, the .meta filename
+ *   outpath : char *, the directory where .setup files will be created
+ *
+ * output : the following information is returned from the .meta file:
+ *   dstart : int *, start doy
+ *   dend : int *, end doy
+ *   mstart : int *, start minutes
+ *   mend : int *, end minutes
+ *   year  : int *, year
+ *   prog_n : char *, program name
+ *   prog_v : float, program version (should be float * to be used by caller)
+ *   response_threshold : float, response threshold in dB
+ *   flatten : int *, flat response
+ *   median_flag : int *, flag for median filtering
+ *   inc_correct : int *, flag to include incidence angle correction
+ *   b_correct : float *, used in incidence angle correction
+ *   angle_ref : float *, used in incidence angle correction
+ *   base_resolution : int *, base spatial resolution
+ *   a : region_save *, structure with remaining region information
+ *   cetb_platform : cetb_platform_id *, platform ID   
+ *
+ * returns : the fileID of the opened .meta file, or NULL in case of error
+ *
+ */
+static FILE * get_meta(char *mname, char *outpath, 
+		       int *dstart, int *dend, int *mstart, int *mend, int *year, 
+		       char *prog_n, float prog_v,
+		       float *response_threshold, int *flatten, int *median_flag,
+		       int *inc_correct, float *b_correct, float *angle_ref, 
+		       int *base_resolution, region_save *a, cetb_platform_id *cetb_platform) {
  
   FILE *file_id, *ftemp;  
 
@@ -1976,16 +1962,23 @@ FILE * get_meta(char *mname, char *outpath,
   return(file_id);
 }
 
-void compute_locations(region_save *a, int *nregions, int **noffset, short int **latlon_store) 
-{  
-  /*
-   *   compute the lat,lon of each pixel in the image regions and store in
-   *  global arrays.  This reduces the computational load
-   *  Additionally save the value of the previous projection and resolution
-   *  which will save recalculating them if they're the same
-   *  eg if 3 of the projections are N2ES at 6.25 km then you only need
-   *  to calculate those positions once
-   */
+/*
+ * compute_locations - computes the lat,lon of each pixel in the image regions and
+ *   stores in global arrays to reduce the computational load later
+ *
+ * input :
+ *  a : region_save *, ptr to region info from .meta file
+ *
+ * output : 
+ *  nregions : int *, number of regions
+ *  noffset : int **, ptr array to each region
+ *  latlon_store : short int **, lat/lon locations of each pixel
+ *
+ * returns : n/a
+ *
+ */
+static void compute_locations(region_save *a, int *nregions, int **noffset,
+			      short int **latlon_store) {  
 
   int iregion, nspace;
   char *p, local[]="./";
@@ -2007,13 +2000,11 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
     nspace=nspace+2*a->sav_nsx[iregion]*a->sav_nsy[iregion];
 
   /* allocate memory for storage of location arrays */
-  //  *noffset=malloc(sizeof(int)*(a->nregions+1));
   dumb = utils_allocate_clean_aligned_memory( (void**)&(*noffset), sizeof(int)*(a->nregions+1) );
   if ( 0 != dumb ) {
     fprintf( stderr, "*** Inadequate memory for data file storage 'noffset' \n" );
     exit ( -1 );
   }
-  //*latlon_store=malloc(sizeof(short int)*nspace);
   dumb = utils_allocate_clean_aligned_memory( (void**)&(*latlon_store), sizeof(short int)*nspace );
   if ( 0 != dumb ) {
     fprintf(stderr, "*** pixel location buffer allocation error  %d %d\n",*nregions,nspace);
@@ -2075,23 +2066,23 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
   }
 }
 
-/* *********************************************************************** */
-
-/* *********************************************************************** 
- * Compute an estimate of the ssmi beam response (weight) in normal space
- *     given a location (in km, N-E=(x,y)), azimuth angle (theta),
+/*
+ * gsx_antenna_response - computes approximate spatial response
+ *   Compute an estimate of the beam response (weight) in normal space
+ *   given a location (in km, N-E=(x,y)), azimuth angle (theta),
  *   3dB antenna pattern scale factor (bigang), and the footprint
- *   sizes in cross track and along track.  
+ *   sizes in cross track and along track 
  *
- *   inputs:
- *     x_rel,y_rel : relative offset from beam center in km
- *     theta : pattern rotation in deg
- *     thetai : incidence angle in deg (not used)
- *     semimajor : semi major axis in km
- *     semiminor : semi minor axis in km
+ * input:
+ *   x_rel, y_rel : float, relative offset from beam center in km
+ *   theta : float, pattern rotation in deg
+ *   semimajor : float, semi major axis in km
+ *   semiminor : float, semi minor axis in km
  *
- *   Convert km location to coordinate system with axis
- *   lined up with the elliptical antenna pattern
+ * result: float, computed spatial response
+ 
+ * Convert km location to coordinate system with axis
+ * lined up with the elliptical antenna pattern
  *
  *              The rotation matrix looks like this where theta is a
  *		CCW rotation of the input coordinates x,y
@@ -2104,10 +2095,9 @@ void compute_locations(region_save *a, int *nregions, int **noffset, short int *
  *		|    |   |                          |  |     |
  *		-- --    ---                      ---  --   --
  *
- ************************************************************************/
-
-float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajor, float semiminor)
-{
+ */
+static float gsx_antenna_response(float x_rel, float y_rel, float theta,
+				  float semimajor, float semiminor) {
   static float lnonehalf=-0.6931471;  /* ln(0.5) */
   float x, y, cross_beam_size, along_beam_size, t1, t2, weight;
 
@@ -2127,19 +2117,23 @@ float gsx_antenna_response(float x_rel, float y_rel, float theta, float semimajo
   return(weight);
 }
 
-/* *********************************************************************** */
-
-void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat)
-{
-  /*  compute relative x,y in km of alat,alon with respect to rlat,rlon
-      using a locally-tangent plane approximation
-      x is aligned East while y is aligned North
-
-      a fancier map projection could be used, but high precision is 
-      not really required for this calculation
-
-      written: DGL  1/12/99
-  */
+/*
+ * rel_latlon - computes relative x,y in km of alat,alon with respect to rlat,rlon
+ *   using a locally-tangent plane approximation; x is aligned East while y is aligned North
+ *   a fancier map projection could be used, but high precision is not really
+ *   required for this calculation (DGL  1/12/99)
+ *
+ * input :
+ *   alon, alat : float, input location longitude/latitude
+ *   rlon, rlat : float, input relative location
+ *
+ * output :
+ *   x_rel, y_rel : float *, approximate distance (km) from point a to point r
+ *
+ * returns : n/a
+ *
+ */
+static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, float rlat) {
 
   float r,r2,rel_rlat,rel_rlon;
 
@@ -2158,31 +2152,39 @@ void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float rlon, 
   *y_rel=(float)((r*(sin(rel_rlat*UTILS_DTR)))+((1.-(cos(rel_rlon*UTILS_DTR)))*(sin(rlat*UTILS_DTR))*r2));
 }
 
-/* *********************************************************************** */
-
-float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat)
-{ 
-  /*
-    determine the approximate "nominal" conversion coefficients for
-    converting a distance in km to pixels.  since this is typically
-    variable over the projection, the returned scale factors r,x,y
-    correspond to the reference point/plane (or center) of the
-    transformation and are only approximate.  This approximate
-    computation is useful primarily for defining a bounding box
-    in which to do more precise computation.
-    
-    written by:	dgl 6 feb 1995
-    revised by: dgl 2 Feb 2014 + converted to c
-    revised by: dgl 7 Mar 2014 + added EASE2
-
-    given the projection parameters (xdeg..iopt) returns the (approximate)
-    nominal scale factors x,y in pixels/km where x is horizontal and
-    y is vertical.  function output r is the rms of x and y.
-
-    stat is a returned status variable - set to 1 upon success and to 0 upon failure
-    a failure will terminate the application upon returning to the main{}
-
-  */
+/*
+ * km2pix - determines the approximate "nominal" conversion coefficients for
+ *   converting a distance in km to pixels. Since this is typically
+ *   variable over the projection, the returned scale factors r,x,y
+ *   correspond to the reference point/plane (or center) of the
+ *   transformation and are only approximate.  This approximate
+ *   computation is useful primarily for defining a bounding box
+ *   in which to do more precise computation.
+ *    
+ * written by:	dgl 6 feb 1995
+ * revised by: dgl 2 Feb 2014 + converted to c
+ * revised by: dgl 7 Mar 2014 + added EASE2
+ *
+ * given the projection parameters (xdeg..iopt) returns the (approximate)
+ * nominal scale factors x,y in pixels/km where x is horizontal and
+ * y is vertical.  function output r is the rms of x and y.
+ *
+ * stat is a returned status variable - set to 1 upon success and to 0 upon failure
+ *
+ * input :
+ *   iopt : int, projection id
+ *   ascale : float, grid scale factor (powers of 2)
+ *   bscale : float, base resolution index
+ *
+ * output :
+ *   x, y : float *, approximate nominal conversion coefficients 
+ *   stat : int *, returned status variable, 1 for success, 0 for failure
+ *          a failure will terminate the application upon returning to the main{}
+ *
+ * returns : inverse of the map_scale, (1/meters)
+ *
+ */
+static float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat) {
 
   float r=0.0;
 
@@ -2218,9 +2220,18 @@ float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat
   return(r);
 }
 
-void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
-		      float ascale, float bscale, float a0, float b0)
-{ 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+static void print_projection(FILE *omf, int iopt, float xdeg, float ydeg, 
+		      float ascale, float bscale, float a0, float b0) { 
   /* print standard projection information */
 
   switch(iopt) {
@@ -2250,8 +2261,16 @@ void print_projection(FILE *omf, int iopt, float xdeg, float ydeg,
   return;
 }
 
-/* *********************************************************************** */
-
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* ***********************************************************************
  * timedecode - convert an epoch time value to Gregorian and day-of-year
  *    equivalent
@@ -2303,6 +2322,16 @@ static int timedecode(double epochTime,
  
 
 /*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+/*
  * box_size_by_channel - returns the box size to use based on the channel and sensor
  *
  * input :
@@ -2324,7 +2353,8 @@ static int timedecode(double epochTime,
  * box size determination are located there
  *
  */
-int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int *box_size ) {
+static int box_size_by_channel( int ibeam, cetb_sensor_id id,
+				int base_resolution, int *box_size ) {
 
   if ( CETB_SSMI == id ) {
     
@@ -2479,6 +2509,16 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
 }
 
 /*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+/*
  * write_header_info - writes out the info required for CETB files
  *
  * Input:
@@ -2490,7 +2530,7 @@ int box_size_by_channel( int ibeam, cetb_sensor_id id, int base_resolution, int 
  *   none
  *
  */
-int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
+static int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
   int cnt=CETB_SETUP_LINE_LENGTH;
   char lin[CETB_SETUP_LINE_LENGTH];
   int z;
@@ -2564,6 +2604,16 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
   return (0);
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* write_filenames_to_header - writes out the input data files that were used to
  * create the setup files as well as the GSX version used in the processing
  *
@@ -2577,7 +2627,7 @@ int write_header_info( gsx_class *gsx, region_save *save_area, int year ) {
  * Return:
  *   status - 0 on success
  */
-int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
+static int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file_flag,
 			       unsigned long *position_filename, unsigned long *position_data ) {
   int cnt=CETB_SETUP_LINE_LENGTH;
   char lin[CETB_SETUP_LINE_LENGTH];
@@ -2601,6 +2651,16 @@ int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file
   return (0);
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* write_blanklines_to_header - writes a blank line for each filename in the metafile
  * during processing we loop through each file and each output region and only then go back
  * to write out the filename if we use measurements from the file.
@@ -2612,7 +2672,7 @@ int write_filenames_to_header( gsx_class *gsx, region_save *save_area, int *file
  * Return:
  *   0 on success, 1 on failure
  */
-int write_blanklines_to_header( region_save *save_area ) {
+static int write_blanklines_to_header( region_save *save_area ) {
   int cnt=CETB_SETUP_LINE_LENGTH;
   char lin[CETB_SETUP_LINE_LENGTH];
   int z;
@@ -2626,6 +2686,17 @@ int write_blanklines_to_header( region_save *save_area ) {
    }
   return (0);
 }
+
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /*
  * write_end_header - writes out the End_file line that is used in sir and bgi
  *
@@ -2636,7 +2707,7 @@ int write_blanklines_to_header( region_save *save_area ) {
  *   none
  *
  */
-int write_end_header( region_save *save_area ){
+static int write_end_header( region_save *save_area ) {
   int cnt=CETB_SETUP_LINE_LENGTH;
   char lin[CETB_SETUP_LINE_LENGTH];
   int z;
@@ -2653,6 +2724,16 @@ int write_end_header( region_save *save_area ){
 }
 
 /*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+/*
  * combine_setup_files - called if we have to combine channels into a single output setup file
  *
  * Input:
@@ -2663,7 +2744,8 @@ int write_end_header( region_save *save_area ){
  *   The enum for the channels to be checked - cast to int
  *
  */
-void combine_setup_files( char *outpath, region_save *a, int execution_flag, int *ibeam_channel, int chanA, int chanB ) {
+static void combine_setup_files( char *outpath, region_save *a, int execution_flag,
+				 int *ibeam_channel, int chanA, int chanB ) {
 
   int count;
   int sub_count;
@@ -2715,6 +2797,16 @@ void combine_setup_files( char *outpath, region_save *a, int execution_flag, int
     }
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* *********************************************************************** */
 /* ltod_split_time - used to look up the ltod split times by platform,
  * hemisphere and year
@@ -3044,6 +3136,16 @@ static int ltod_split_time( cetb_platform_id platform_id, cetb_region_id region_
 
 } 
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* ***********************************************************************
  * get_search_period - get the search period window we are looking for,
  *    relative to the start year, day-of-year and minutes-of-day
@@ -3144,6 +3246,16 @@ static int get_search_period( int year, int dstart, int dend, int mstart,
   
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* ***********************************************************************
  * ltod_day_offset - given the start and end days, calculates the search
  *    offset days - used in determining the range for input scans and
@@ -3178,6 +3290,16 @@ static int ltod_day_offset( int dstart, int dend, int *midDay,
   return 0;
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* ***********************************************************************
  * day_offset_from - given a starting date/time and an integer day offset,
  *    calculates the offset time relative to the requested epoch
@@ -3232,6 +3354,16 @@ static int day_offset_from( int year, int month, int day,
 
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* ***********************************************************************
  * check_for_consistent_regions - setup logic depends on processing
  * all regions of the same LTOD-type (so NS regions or T regions, but
@@ -3302,9 +3434,18 @@ static int check_for_consistent_regions( region_save *save_area,
   
 }
   
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 static void pixtolatlon(float x, float y, float *alon, float *alat,
-			int iopt, float ascale, float bscale, float a0, float b0)
-{
+			int iopt, float ascale, float bscale, float a0, float b0) {
    /* computes the lat, long position of the lower-left corner of the
       x,y-th pixel.  pixels indexed [1..nsx,1..nsy] */
 
@@ -3325,9 +3466,18 @@ static void pixtolatlon(float x, float y, float *alon, float *alat,
    return;
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 static void latlon2pix(float alon, float alat, float *x, float *y, 
-		       int iopt, float ascale, float bscale, float a0, float b0)
-{
+		       int iopt, float ascale, float bscale, float a0, float b0) {
    /* computes the x,y pixel coordinates given the lat, lon position 
       x,y are fractional values not limited to within image */
 
@@ -3348,9 +3498,18 @@ static void latlon2pix(float alon, float alat, float *x, float *y,
    return;
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 static void ease2grid(int iopt, float alon, float alat, 
-	       float *thelon, float *thelat, float ascale, float bscale)
-{
+		      float *thelon, float *thelat, float ascale, float bscale) {
 /*
 	COMPUTE THE FORWARD "EASE2" GRID TRANSFORMATION
 
@@ -3441,9 +3600,18 @@ static void ease2grid(int iopt, float alon, float alat,
    return;
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 static void iease2grid(int iopt, float *alon, float *alat, 
-		float thelon, float thelat, float ascale, float bscale)
-{
+		       float thelon, float thelat, float ascale, float bscale) {
 /*
 	COMPUTE THE INVERSE "EASE2" GRID TRANSFORM
 
@@ -3534,8 +3702,18 @@ static void iease2grid(int iopt, float *alon, float *alat,
    return;
 }
 
-static double easeconv_normalize_degrees(double b)
-{ /* return -180 <= b <= 180.0 */
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+static double easeconv_normalize_degrees(double b) {
+  /* return -180 <= b <= 180.0 */
   while (b < -180.0)
     b = b + 360.0;
   while (b > 180.0)
@@ -3543,10 +3721,19 @@ static double easeconv_normalize_degrees(double b)
   return(b);
 }
 
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
 /* floating point to integer pixel location quantization routine */
 
-static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy)
-{
+static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy) {
    /* quantizes the floating point pixel location to the actual pixel value
       returns a zero if location is outside of image limits
       a small amount (0.002 pixels) of rounding is permitted*/
@@ -3562,5 +3749,62 @@ static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy)
     *iy = 0;
 
   return;
+}
+
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+static int nint(float r) {
+  int ret_val = r;  if (ret_val - r > 0.5) ret_val--;
+  if (r - ret_val > 0.5) ret_val++;
+  return(ret_val);
+}
+
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+static void no_trailing_blanks(char *s) {
+  /* remove trailing blanks (spaces) and line feeds from string */
+  int n=strlen(s);
+  
+  while (n > 0) {
+    if (s[n] == 10) s[n] = '\0';
+    if (s[n] != ' ' && s[n] != '\0') return;
+    if (s[n] == ' ') s[n] = '\0';
+    n--;
+  }
+  if (n<0) s[n]='\0';  
+  return;
+}
+
+/*
+ * func_name -
+ *
+ * input :
+ *
+ * output : 
+ *
+ * returns : 
+ *
+ */
+static int intfix(float r) {
+  int ret_val = r;
+  if (ret_val - r > 0.5) ret_val--;
+  if (r - ret_val > 0.5) ret_val++;
+  return(ret_val);
 }
 
