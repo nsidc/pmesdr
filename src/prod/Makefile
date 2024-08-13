@@ -89,7 +89,9 @@ regression-setup:
 	git clone git@github.com:nsidc/pmesdr_regression_data.git
 
 conda-env:
-	conda create -y -n $(CONDAENV) gsx nose
+	conda create -y -n $(CONDAENV) gsx; \
+	conda activate $(CONDAENV); \
+	pip install pynose
 
 unit-test:
 	${PMESDR_TOP_DIR}/regression_scripts/build_pmesdr.sh $(CONDAENV)
