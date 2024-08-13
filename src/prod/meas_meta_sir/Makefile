@@ -81,14 +81,14 @@ endif
 # end configuration section
 #------------------------------------------------------------------------
 LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) \
-	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
+	-lutils -lcetb -lcalcalcs -ludunits2 -lnetcdf \
 	-l$(HDFLIB1) -l$(HDFLIB2) -lz $(SYSLIBS) 
 CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) $(CONFIG_CFLAGS) \
 	-Wall -Wno-unused-variable -Wno-unused-but-set-variable
 ifeq ($(LOCALE),ALPINEicc)
   $(info Build location: $(LOCALE))
   LIBS = -L$(LIBDIR) -L$(NETCDF4_LIBDIR) -L$(HDF5_LIBDIR) -L$(UDUNITS_LIBDIR) \
-	-lutils -lcetb -lcalcalcs -ludunits2 -lcsir -lnetcdf \
+	-lutils -lcetb -lcalcalcs -ludunits2 -lnetcdf \
 	-lhdf5_hl -lhdf5 -lz $(SYSLIBS) 
   CFLAGS = -I$(INCDIR) -I$(NETCDF4_INCDIR) -I$(UDUNITS_INCDIR) \
 	-O3 -ipo -xHost -no-prec-div -Wall -Wremarks -wd981 -wd2415
