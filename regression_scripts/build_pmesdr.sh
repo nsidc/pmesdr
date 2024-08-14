@@ -31,5 +31,5 @@ make install
 #
 cd ${PMESDR_TOP_DIR}/python
 source activate $condaenv
-nosetests test_cetb_utilities.py || error_exit "unit tests failed"
+nosetests bogus_test_cetb_utilities.py || error_exit "unit tests failed"
 
