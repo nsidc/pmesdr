@@ -9,7 +9,11 @@
 #
 # It is assumed that the caller has set the system location to
 # $PMESDR_TOP_DIR
-# 
+#
+
+# If any simple step or pipeline fails, this script will fail
+set -eo pipefail
+
 regressiontype=$1
 condaenv=$2
 
@@ -42,7 +46,6 @@ echo "`basename $0`: Regression type is $regressiontype"
 echo "`basename $0`: Conda env is       $condaenv"
 echo "`basename $0`: Make target is     $maketarget"
 
-source ${PMESDR_TOP_DIR}/src/prod/set_pmesdr_environment.sh
 eval "$(conda shell.bash hook)"
 conda activate ${condaenv}
 date
