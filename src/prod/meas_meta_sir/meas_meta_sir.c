@@ -27,8 +27,6 @@
 #define file_savings 1.00     /* measurement file savings ratio */
 #define REL_EOF   2           /* fseek relative to end of file */
 
-#define CREATE_NON 1          /* set to 1 to create NON images, 0 to not create */
-
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 
@@ -46,35 +44,25 @@ int   AVE_INIT=1;             /* use AVE to start SIR iteration if set to 1 */
 
 /****************************************************************************/
 
-static void Ferror(int i)
-{
-  fprintf( stderr, "*** Error reading input file at %d ***\n", i );
-  fflush( stderr );
-  return;
-}
 
-
-/* function prototypes */
-
-static void get_updates(float tbval, int count, int *fill_array,
-		 short int *response_array, int its );
-
-static void compute_ave(float tbval, float ang, int count, int *fill_array,
-			short int *response_array);
-
-static void time_updates(float ktime, int count, int *fill_array);
-
-static void stat_updates(float tbval, int count, int *fill_array,
-		  short int *response_array);
-
-static void filter(float *val, int size, int opt, int nsx, int nsy, float *temp,
-		   float thres);
-
+/*********** function prototypes ******************/
+static void Ferror(int i);
 static void get_vars_from_store( char *store, float *tbval, float *ang,
 				 int *count, float tb_or_stokes_offset,
 				 int *ktime, int *add, int HASAZANG, float *azang );
+static void get_updates(float tbval, int count, int *fill_array,
+			short int *response_array, int its );
+static void compute_ave(float tbval, float ang, int count, int *fill_array,
+			short int *response_array);
+static float median(float *array, int count);
+static float cmedian(float *array, int count, float center);
+static void filter(float *val, int size, int opt, int nsx, int nsy, float *temp,
+		   float thres);
+static void stat_updates(float tbval, int count, int *fill_array,
+			 short int *response_array);
+static void time_updates(float ktime, int count, int *fill_array);
 
-/****************************************************************************/
+/***************************************************/
 
 /* global array variables used for storing images*/
 
@@ -1384,14 +1372,47 @@ int main(int argc, char **argv)
   return(errors);
 }
 
+/*********** Function definitions ***************/
+
 /*
- * Function to get tbval, ang and count from store array - this happens 4 times in the code
+ * Ferror - prints file read error to stderr and returns
+ *
+ * input :
+ *   i : int, (byte?) location of read error
+ *
+ * output : n/a
+ *
+ * result : error message is printed to stderr
+ *
+ */
+static void Ferror(int i) {
+  fprintf( stderr, "*** Error reading input file at %d ***\n", i );
+  fflush( stderr );
+  return;
+}
+
+/*
+ * get_vars_from_store - retrieves several values from store location
+ *
+ * input :
+ *   store : char *, storage to read
+ *   tb_or_stokes_offset : float, offset value to subtract from stored tbval
+ *   hasazang : int, if true, retrieve the stored azimuth angle
+ *
+ * output :
+ *   tbval : float *, TB read from store
+ *   ang : float *, ang read from store
+ *   count : int *, count read from store
+ *   ktime : int *, ktime read from store
+ *   iadd : int *, iadd read from store
+ *   azang : float *, azang read from store, if hasazang is true
+ *
+ * result : n/a
  */
 
-void get_vars_from_store( char *store, float *tbval, float *ang, int *count,
-			  float tb_or_stokes_offset, int *ktime, int *iadd,
-			  int hasazang, float *azang )
-{
+static void get_vars_from_store( char *store, float *tbval, float *ang,
+				 int *count, float tb_or_stokes_offset,
+				 int *ktime, int *iadd, int hasazang, float *azang ) {
 
   *tbval = *((float *) (store+0));
   *ang   = *((float *) (store+4));
@@ -1404,10 +1425,26 @@ void get_vars_from_store( char *store, float *tbval, float *ang, int *count,
 
 }
 
-/* SIR algorithm update step */
-
-void get_updates(float tbval, int count, int fill_array[], short int response_array[], int its)
-{
+/*
+ * get_updates - for each measurement hitting a pixel, calculate updates
+ *   for this iteration
+ *
+ * input :
+ *   tbval : float, tb value to update
+ *   count : int, number of values in fill_array and response_array
+ *   fill_array : int *, fill_array to use for update
+ *   response_array : short int *, response_array to use for update
+ *   its : int, iteration number
+ *
+ * output : n/a
+ *
+ * result : updates global variables at *tot, *a_temp and *num_samples
+ *   with results of calculations
+ *
+ * FIXME: syntax of integer arrays don't match prototype
+ */
+static void get_updates(float tbval, int count, int fill_array[],
+			short int response_array[], int its) {
   float total = 0.0, num=0.0;
   float ave, scale, update;
   int i, n, m;
@@ -1457,11 +1494,26 @@ void get_updates(float tbval, int count, int fill_array[], short int response_ar
   return;
 }
 
-/* compute contribution of measurement to AVE image */ 
-
-void compute_ave(float tbval, float ang, int count, int fill_array[],
-		 short int response_array[])
-{
+/*
+ * compute_ave - compute contribution of measurement to the AVE image
+ *
+ * input :
+ *   tbval : float, tb value to work with
+ *   ang : float, ang to work with
+ *   count : int, number of values in fill_array and response_array
+ *   fill_array : int *, fill_array to use for update
+ *   response_array : short int *, response_array to use for update
+ *
+ * output : n/a
+ *
+ * result : updates global variables at *b_val, *sy, *sx and *sx2
+ *   with results of calculations
+ *
+ * FIXME: syntax of integer arrays don't match prototype
+ */
+static void compute_ave(float tbval, float ang, int count, int fill_array[],
+			short int response_array[]) {
+  
   int i, n, m;
 
   for (i=0; i < count; i++) {
@@ -1475,14 +1527,111 @@ void compute_ave(float tbval, float ang, int count, int fill_array[],
   return;
 }
 
-/* modified median, circular median, or smoothing filter routine */
+/*
+ * median - calculates the median of the input array
+ *
+ * input :
+ *   array : float *, array to process
+ *   count : int, number of values in array
+ *
+ * output : n/a
+ *
+ * result : float, median value of array
+ *
+ * FIXME: syntax of float arrays don't match prototype
+ *
+ */
+static float median(float array[], int count) {
+  
+  int i,j;
+  float temp;
 
-static float median(float *array, int count);
-static float cmedian(float *array, int count, float center);
+  for (i=count; i >= 2; i--)
+    for (j=1; j <= i-1; j++)
+      if (array[i-1] < array[i-j-1]) {
+	temp=array[i-1];
+	array[i-1]=array[i-j-1];
+	array[i-j-1]=temp;
+      };
+  temp=array[count/2];
 
-void filter(float *val, int size, int mode, int nsx, int nsy, 
-	    float *temp, float thres)
-{
+  if (array[count-2]-array[1] < 0.25 && count > 5) {
+    temp=0.0;
+    for (i=count/2-1; i <= count/2+3; i++)
+      temp=temp+array[i-1];
+    temp=temp/5;
+  }
+  return(temp);
+}
+
+/*
+ * cmediean - compute circular median of an array of directions (0..360)
+ *   i.e., find the angle which has the smallest average distance
+ *   from the others
+ *
+ * input :
+ *   array : float *, array of values (angles)
+ *   count : int, number of values in array
+ *   center : float, center value to return for edge cases
+ *
+ * output : n/a
+ *
+ * result : float, circular median, or center when count < 3
+ *   or when k = -1??
+ *
+ * FIXME: function prototype syntax is different
+ *
+ */
+static float cmedian(float array[], int count, float center) {
+  
+  int i,j,k;
+  float temp,sum;
+
+  if (count < 3)
+    return(center);
+  
+  temp = 1.e25;
+  k=-1;
+  for (i=0; i < count; i++) {
+    sum = 0.0;
+    for (j=0; j < count; j++)
+      if (i != j)
+	sum=sum+(180-abs(180-abs(array[i]-array[j])));
+    if (sum < temp) {
+      temp = sum;
+      k = i;
+    }
+  }
+  if (k > -1)
+    return(array[k]);
+  else
+    return(center);
+}
+
+/*
+ * filter - compute modified median of an array of values
+ *
+ * input :
+ *   val : float *, 2-D value array
+ *   size : int,
+ *   mode : int, flag to control behavior,
+ *          0 : do median
+ *          2 : do circular median
+ *          else : do average value
+ *   nsx, nsy : int, dimensions of val array
+ *   temp : float *, address of output location to modify
+ *   thres : float, threshold (nodata value) above which output must
+ *     fall to be used
+ *
+ * output :
+ *   temp : float *, address of memory to store output
+ *
+ * result : data at *temp is modified with median
+ *
+ */
+static void filter(float *val, int size, int mode, int nsx, int nsy, 
+		   float *temp, float thres) {
+  
   float array[100], total;
   int i,j,x,y,size2,count,x1,x2,y1,y2;
   
@@ -1525,66 +1674,25 @@ void filter(float *val, int size, int mode, int nsx, int nsy,
   return;
 }
 
-/* compute circular median of an array of directions (0..360)
-   i.e., find the angle which has the smallest average distance
-   from the others */
-
-float cmedian(float array[], int count, float center)
-{
-  int i,j,k;
-  float temp,sum;
-
-  if (count < 3)
-    return(center);
-  
-  temp = 1.e25;
-  k=-1;
-  for (i=0; i < count; i++) {
-    sum = 0.0;
-    for (j=0; j < count; j++)
-      if (i != j)
-	sum=sum+(180-abs(180-abs(array[i]-array[j])));
-    if (sum < temp) {
-      temp = sum;
-      k = i;
-    }
-  }
-  if (k > -1)
-    return(array[k]);
-  else
-    return(center);
-}
-
-/* compute modified median of an array of values */
-
-float median(float array[], int count)
-{
-  int i,j;
-  float temp;
-
-  for (i=count; i >= 2; i--)
-    for (j=1; j <= i-1; j++)
-      if (array[i-1] < array[i-j-1]) {
-	temp=array[i-1];
-	array[i-1]=array[i-j-1];
-	array[i-j-1]=temp;
-      };
-  temp=array[count/2];
-
-  if (array[count-2]-array[1] < 0.25 && count > 5) {
-    temp=0.0;
-    for (i=count/2-1; i <= count/2+3; i++)
-      temp=temp+array[i-1];
-    temp=temp/5;
-  }
-  return(temp);
-}
-
-/* routine to compute the spatial response function weighted variance and error from measurements */
-
-void stat_updates(float tbval, int count, int fill_array[],
-		  short int response_array[])
-{
+/*
+ * stat_updates - computes spatial response function weighted variance
+ *   and error from measurements
+ *
+ * input :
+ *   tbval : float, tb value to work with
+ *   count : int, number of values in fill_array and response_array
+ *   fill_array : int *, fill_array to use for update
+ *   response_array : short int *, response_array to use for update
+ *
+ * output : n/a
+ *
+ * result : updates global variables at *tot, *sy and *sx
+ *   with results of calculations
+ *
+ * FIXME: syntax of float arrays don't match prototype
+ */
+static void stat_updates(float tbval, int count, int fill_array[],
+			 short int response_array[]) {
   float ave, sigv;
   float total=0.0, num=0.0;
   int i, n, m;
@@ -1614,10 +1722,23 @@ void stat_updates(float tbval, int count, int fill_array[],
   return;
 }
 
-/* routine to compute time estimates from measurements */
+/*
+ * time_updates - computes time estimates from measurements
+ *
+ * input :
+ *   ktime : float, ktime value
+ *   count : int number of elements in fill_array
+ *   fill_array : int *, fill_array to use for update
+ *
+ * output : n/a
+ *   
+ * result : updates global variables at *tot, *sy and *sx
+ *   with results of calculations
+ 
+ * FIXME: syntax of float arrays don't match prototype
+ */
 
-void time_updates(float ktime, int count, int fill_array[])
-{
+static void time_updates(float ktime, int count, int fill_array[]) {
   int i, n;
   
   for (i=0; i < count; i++) {
