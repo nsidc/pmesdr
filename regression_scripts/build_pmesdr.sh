@@ -33,5 +33,3 @@ cd ${PMESDR_TOP_DIR}/python
 source activate $condaenv
 nosetests test_cetb_utilities.py || error_exit "unit tests failed"
 
-error_exit "stub to fail"
-
