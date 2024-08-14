@@ -12,7 +12,7 @@ error_exit() {
     # Assumes user has done set_pmesdr_environment.sh
 
     echo "${PROGNAME}: ERROR: ${1:-"Unknown Error"}" 1>&2
-    exit -1
+    return -1
 }
 
 printf "%s: On %s, fetching latest software changes...\n" ${PROGNAME} $(hostname)

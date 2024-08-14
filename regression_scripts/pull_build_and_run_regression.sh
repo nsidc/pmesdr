@@ -7,6 +7,8 @@
 #
 
 # If any simple step or pipeline fails, this script will fail
+# thanks to this page for this tip:
+# https://stackoverflow.com/questions/821396/aborting-a-shell-script-if-any-command-returns-a-non-zero-value
 set -eo pipefail
 
 error_exit() {
