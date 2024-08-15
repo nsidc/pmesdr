@@ -109,7 +109,7 @@ int main(int argc,char *argv[])
 	     __FILE__);
     fprintf( stderr,
 	     "\n%s: usage: meas_meta_make [-t threshold] [-r resolution] "
-	     "meta_name platform start_day stop_day year def in_list\n\n",
+	     "meta_name platform start_doy stop_doy year def in_list\n\n",
 	     __FILE__);
     fprintf( stderr, " %s: options:\n", __FILE__ );
     fprintf( stderr, "   %s: -t threshold = response threshold, dB, "
@@ -120,12 +120,12 @@ int main(int argc,char *argv[])
     fprintf( stderr, "   %s: meta_name   = meta file output name\n", __FILE__ );
     fprintf( stderr, "   %s: platform    = name of the platform as "
 	     "cetb_platform_id (from cetb.h)\n", __FILE__ );
-    fprintf( stderr, "   %s: start_day   = start day of year\n", __FILE__ );
-    fprintf( stderr, "   %s: end_day     = end day of year\n", __FILE__ );
+    fprintf( stderr, "   %s: start_doy   = start day of year\n", __FILE__ );
+    fprintf( stderr, "   %s: end_doy     = end day of year\n", __FILE__ );
     fprintf( stderr, "   %s: year        = 4-digit year\n", __FILE__ );
     fprintf( stderr, "   %s: def         = region def file \n", __FILE__ );
     fprintf( stderr, "   %s: in_list     = name of input file containing list "
-	     "of gsx files\n\n", __FILE__ );
+	     "of input gsx files\n\n", __FILE__ );
     exit (-1);
   }
 
@@ -187,8 +187,22 @@ int main(int argc,char *argv[])
 
 /****************************************************************************/
 
+/*
+ * get_file_names - reads the list of input gsx files to process from
+ *                the last command-line argument  
+ *
+ * input :
+ *  mout : FILE * - pointer to the .meta file that is being populated
+ *  argn : int * number of arguments in argv
+ *  argv : char * list of main's input arguments
+ *
+ * output : n/a
+ *
+ * returns : writes the list of input gsx filenames to the .meta file
+ *
+ */
 static int get_file_names(FILE *mout, int *argn, char *argv[])
-{  /* read swath data files from list file and write to meta file */
+{ 
 
   char lname[1000], line[1000];
   FILE *Lfile;
@@ -233,21 +247,24 @@ static int get_file_names(FILE *mout, int *argn, char *argv[])
 }
 
 /*
- * get_region_data
- *   given the regnum this function replaces the original getregdata by retrieving the info
- *   on the regions from cetb.h
+ * get_region_data - given the regnum, retrieves the region information from cetb.h
  *
- *   input:
- *         int region number from def file
- *         int resolution_ind from command line
+ * input:
+ *   regnum : int, region number from input region definition file
+ *   resolution_ind : int, base resolution index from the -r command line option
  *
- *   output:
- *         int *iproj - short version of region id (i.e. 8 rather than 308 etc)
- *         float *latl, *lonl - latitude and longitude of lower left corner
- *                              of lower left corner pixel
- *         float *lath, *lonh - latitude and longitude of upper right corner
- *                              of upper right corner pixel
- *         char *regname - EASE2_N etc.
+ * output:
+ *   iproj : int *, short version of region id (i.e. 8 rather than 308 etc)
+ *   latl, lonl : float *, latitude and longitude of lower left corner
+ *         of lower left corner pixel
+ *   lath, lonh : float *, latitude and longitude of upper right corner
+ *         of upper right corner pixel
+ *   regname : char *, region name, e.g. EASE2_N, etc
+ *
+ * result:
+ *   for regnum and resolution_ind, looks up all the region information from
+ *   cetb.h
+ * 
  */
 static void get_region_data(int regnum, int resolution_ind, int *iproj,
 			    float *latl, float *lonl,
@@ -290,25 +307,22 @@ static void get_region_data(int regnum, int resolution_ind, int *iproj,
   fprintf( stderr, "%s: regname=%s, latl=%f, lath=%f, lonl=%f, lonh=%f, proj=%d\n",
 	   __FUNCTION__, regname, *latl, *lath, *lonl, *lonh, *iproj );
 }
-/* utility routines */
 
 /* ***********************************************************************
- * get_region_parms - generates region parameters section of .meta file.
+ * get_region_parms - generates region parameters section of .meta file
  * 
- *  Input:
- *    mout - FILE pointer to write to
- *    argn - integer pointer index to next argument to use (dstart)
- *    argv - char pointer array with command-line arguments
- *    F_num - integer with platform_id
- *    threshold_response_dB - float, response pattern minimum threshold, in dB
- *    resolution_ind - int, resolution index 0, 1 or 2 for 25, 30 or 36 km base res
+ * input:
+ *   mout : FILE *, .meta file to write region parameters
+ *   argn : int *, pointer index to next argument to use (dstart)
+ *   argv : char *, pointer array with command-line arguments
+ *   F_num : integer, platform_id
+ *   response_threshold_dB : float, response pattern minimum threshold, in dB
+ *   resolution_ind : int, base resolution index 0, 1 or 2 for (25, 36 or 24 km)
  *
- *  Output: n/a
+ * output: n/a
  *    
- *  Result:
- *    status variable indicates success (0) or failure (1)
- *
- *  All output is written to file pointed to by mout
+ * result: status variable indicates success (0) or failure (1)
+ *         All output is written to file pointed to by mout
  * 
  */
 static int get_region_parms( FILE *mout, int *argn, char *argv[], int F_num,

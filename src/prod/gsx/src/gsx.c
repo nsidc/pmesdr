@@ -40,16 +40,17 @@ static int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int m
 static int get_gsx_byscan_variables( gsx_class *this, int count, int scans );
 
 /*
- * this function takes a gsx file name and opens it as a netCDF4
+ * gsx_init - takes a gsx file name and opens it as a netCDF4
  * file and returns a pointer to a structure that is populated with
  * the information in the input gsx file
-
  *
- *  Input:
+ *  input:
  *    GSX file name
  *
- *  Return:
- *    pointer to gsx_struct
+ *  output: n/a
+ *
+ *  result:
+ *    pointer to gsx_class object
  *    NULL on failure
  */
 gsx_class *gsx_init ( char *filename ) {
@@ -94,14 +95,15 @@ gsx_class *gsx_init ( char *filename ) {
 }
 
 /*
- * this function takes a gsx structure and frees the memory
- * associated with any pointers and then then frees the entire struct
+ * gsx_close - takes a gsx structure and frees the memory
+ * associated with any pointers and frees the entire struct
  *
- *  Input:
- *    pointer to gsx_struct
+ *  input:
+ *    pointer to gsx_class to close
  *
- *  Return:
- *    void function
+ *  output: n/a
+ *
+ *  result: n/a
  */
 void gsx_close ( gsx_class *this ) {
   int status;
@@ -139,7 +141,7 @@ void gsx_close ( gsx_class *this ) {
 }
 
 /*
- * this function takes a gsx_class structure pointer and populates
+ * get_gsx_dims - takes a gsx_class pointer and populates
  * some of the dimension variables from the netcdf file
  *
  * Note - this function is only looking for the dimension vars that give the
@@ -147,11 +149,13 @@ void gsx_close ( gsx_class *this ) {
  *
  * All other dimensions are ignored
  *
- *  Input:
- *    gsx_class struct
+ *  input:
+ *    gsx_class : ptr to object
  *
- *  Return:
- *    status variable returned 0 on success
+ *  output: n/a
+ *
+ *  result:
+ *    status variable returns 0 on success, -1 on error
  *    
  */
 int get_gsx_dims( gsx_class *this ) {
@@ -208,12 +212,14 @@ int get_gsx_dims( gsx_class *this ) {
 }
 
 /*
- * this function takes a gsx_class struct and populates the global attributes
+ * get_gsx_global_attributes - takes a gsx_class object and populates the global attributes
  *
- *  Input:
- *    gsx_class structure
+ *  input:
+ *    gsx_class : ptr to object
  *
- *  Return:
+ *  output: n/a
+ *
+ *  result:
  *    status variable returns 0 for success and non-zero on failure
  *    
  */
@@ -307,14 +313,16 @@ int get_gsx_global_attributes( gsx_class *this ) {
 }
       
 /*
- * this function takes a gsx_class struct and gets the names of the channels
- * in the file and populates the structure with the list
- * Also counts the number of channels in the file
+ * get_gsx_global_variables - takes a gsx_class struct and gets the names of the
+ * channels in the file and populates the structure with the list. Also counts
+ * the number of channels in the file
  *
- *  Input:
- *    gsx_class structure
+ *  input:
+ *    gsx_class : ptr to object
  *
- *  Return:
+ *  output: n/a
+ *
+ *  result:
  *    status variable 0 on success and !=0 on failure
  *    
  */
@@ -375,13 +383,15 @@ int get_gsx_global_variables( gsx_class *this ) {
 }
 
 /*
- * this function takes a gsx_class structure and fills it with data for
- * each channel in the file
+ * get_gsx_variable_attributes - takes a gsx_class structure and fills it with
+ * data for each channel in the file
  *
- *  Input:
- *    gsx_class struct
+ *  input:
+ *    gsx_class : ptr to object
  *
- *  Return:
+ *  output: n/a
+ *
+ *  result:
  *    status is returned 0 on success and !=0 on failure
  *    
  */
@@ -491,14 +501,16 @@ int get_gsx_variable_attributes( gsx_class *this ) {
 }
 
 /*
- * this function takes a gsx_class struct and gets the position variables
+ * get_gsx_positions - takes a gsx_class struct and gets the position variables
  * file and returns a pointer to a structure that is populated with the
  * lat and lons as well and the angles along the scan lines
  *
- *  Input:
- *    gsx_class structure
+ *  input:
+ *    gsx_class : ptr to object
  *
- *  Return:
+ *  output: n/a
+ *
+ *  result:
  *    returns 0 on success and !=0 on failures
  *    
  */
@@ -567,14 +579,16 @@ int get_gsx_positions( gsx_class *this ) {
 /*
  * get_gsx_temperatures - retrieves a channel's worth of tb's from GSX file
  *
- *  Input:
+ *  input:
  *    this - gsx_class pointer
  *    varid - the NCDF variable id for the channel
- *    count - the entry into the list of channels in the file
+ *    count - the index into the list of channels in the file
  *    scans - number of scans for this channel
  *    measurements - number of measurements across the scan line
  *
- *  Return:
+ *  output: n/a
+ *
+ *  result:
  *    status variable 0 == success, !=0 failure
  *
  */
@@ -600,14 +614,16 @@ int get_gsx_temperatures( gsx_class *this, int varid, int count, int scans, int 
 /*
  * get_gsx_latitudes - returns latitude values for loc1, loc2 or loc3 depending on input
  *
- *  Input:
+ *  input:
  *    this - pointer to gsx_class struct
  *    varid - netcdf variable id to be retrieved
- *    count - entry into the list of sets of positions in file
+ *    count - index into the list of sets of positions in file
  *    scans - number of scans for this variable
  *    measurements - number of measurements across a scan line
  *
- *  Result:
+ *  output: n/a
+ *
+ *  result:
  *    status == 0 on success, != 0 on failure
  *
  */
@@ -637,14 +653,16 @@ int get_gsx_latitudes( gsx_class *this, int varid, int count, int scans, int mea
 /*
  * get_gsx_longitudes - returns longitude values for loc1, loc2 or loc3 depending on input
  *
- *  Input:
- *    this - pointer to gsx_class struct
+ *  input:
+ *    this - pointer to gsx_class object
  *    varid - netcdf variable id to be retrieved
- *    count - entry into the list of sets of positions in file
+ *    count - index into the list of sets of positions in file
  *    scans - number of scans for this variable
  *    measurements - number of measurements across a scan line
  *
- *  Result:
+ *  output: n/a
+ *
+ *  result:
  *    status == 0 on success, != 0 on failure
  *
  */
@@ -676,14 +694,16 @@ int get_gsx_longitudes( gsx_class *this, int varid, int count, int scans, int me
 /*
  * get_gsx_eias - returns eia values for loc1, loc2 or loc3 depending on input
  *
- *  Input:
- *    this - pointer to gsx_class struct
+ *  input:
+ *    this - pointer to gsx_class object
  *    varid - netcdf variable id to be retrieved
- *    count - entry into the list of sets of positions in file
+ *    count - index into the list of sets of positions in file
  *    scans - number of scans for this variable
  *    measurements - number of measurements across a scan line
  *
- *  Result:
+ *  output: n/a
+ *
+ *  result:
  *    status == 0 on success, != 0 on failure
  *
  */
@@ -715,14 +735,16 @@ int get_gsx_eias( gsx_class *this, int varid, int count, int scans, int measurem
 /*
  * get_gsx_eazs - returns eaz values for loc1, loc2 or loc3 depending on input
  *
- *  Input:
- *    this - pointer to gsx_class struct
+ *  input:
+ *    this - pointer to gsx_class object
  *    varid - netcdf variable id to be retrieved
- *    count - entry into the list of sets of positions in file
+ *    count - index into the list of sets of positions in file
  *    scans - number of scans for this variable
  *    measurements - number of measurements across a scan line
  *
- *  Result:
+ *  output: n/a
+ *
+ *  result:
  *    status == 0 on success, != 0 on failure
  *
  */
@@ -753,17 +775,19 @@ int get_gsx_eazs( gsx_class *this, int varid, int count, int scans, int measurem
 }
  
 /*
- * this function takes a gsx_class structure and sets all pointers
+ * init_gsx_pointers - takes a gsx_class structure and sets all pointers
  * EXCEPT for gsx_version to NULL
  * 
  * Note that the gsx_version is pulled from the file when it is first opened
  * as a way to check that this is a valid gsx file so this pointer should NOT
  * be nulled in this function
  *
- *  Input:
- *    pointer to gsx_struct
+ *  input:
+ *    pointer to gsx_class object
  *
- *  Return:
+ *  output: n/a
+ *
+ *  result:
  *    status = 0 on success !=0 on failure
  *    
  */
@@ -793,14 +817,17 @@ int init_gsx_pointers( gsx_class *this ) {
 }
 
 /*
- * function get_gsx_file
+ * get_gsx_file - opens the input netcdf file and ensures that it is a gsx file
+ *  by verifying it has a global attribute "gsx_version" 
  *
- *  Input:
- *    filename to be opened and checked
+ *  input:
+ *    filename : netcdf file to be opened and checked
  *
- *  Return:
- *    pointer to gsx_class struct upon 
- *    NULL if not a gsx file or file not found
+ *  output: n/a
+ *
+ *  result:
+ *    pointer to newly allocated gsx_class object, with gsx_version set from value
+ *       in the file. NULL on error ( not a gsx file or file not found, not a netcdf file)
  *
  */
 gsx_class *get_gsx_file( char *filename ){
@@ -846,12 +873,14 @@ gsx_class *get_gsx_file( char *filename ){
 /*
  * get_att_text - utility function to pull attribute text from a netcdf file
  *
- *  Input:
+ *  input:
  *    fileid - netcdf file id
  *    varid - the variable id of the attribute to be retrieved (cound be NC_GLOBAL)
  *    varname - the attribute name
  *
- *  Result:
+ *  output: n/a
+ *
+ *  result:
  *    returns a pointer to the string returned from the file
  *    NULL is returned on failure
  *
@@ -882,15 +911,15 @@ char *get_att_text( int fileid, int varid, const char* varname ) {
 
 /*
  * get_att_source_file - utility function to pull source file from a netcdf file
+ *  This does special handling when gsx file was derived from jaxa L1B inputs
  *
- *  Input:
+ *  input:
  *    fileid - netcdf file id
- *    varid - the variable id of the attribute to be retrieved (cound be NC_GLOBAL)
- *    source_name1 - the source file attribute name
- *    source_name2 - the source file attribute name
  *
- *  Result:
- *    returns a pointer to the string returned from the file
+ *  output: n/a
+ *
+ *  result:
+ *    returns a pointer to source_file string determined from the input file
  *    NULL is returned on failure
  *
  */
@@ -953,16 +982,17 @@ char *get_att_source_file( int fileid ) {
 }
 
 /*
- * assign_channels
- *  - this function assigns the channels read in from the gsx file into the beam order
- *    that is expected by setup - this order is used across the system to correctly identify
- *    channels from each other
+ * assign_channels - this function assigns the channels read in from the gsx
+ *    file into the beam order that is expected by setup. This order is used
+ *    across the system to correctly identify channels from each other.
  *
- *  Input:
- *    gsx_class *this
- *    channel name read from the gsx_variables global attribute
+ *  input:
+ *    this : gsx_class pointer
+ *    channel : name read from the gsx_variables global attribute
  *
- *  Result:
+ *  output: n/a
+ *
+ *  result:
  *    id number of the channel in cetb.h
  *
  */
@@ -1043,16 +1073,17 @@ int assign_channels( gsx_class *this, char *channel ) {
 }
 
 /*
- * function to get dimension values for a variable
+ * get_gsx_dimensions - get dimension values for a variable
  *
- *  Input:
- *    gsx_class *this - pointer to gsx structure
- *    int varid - the ncdf id of the variable whose dimensions are needed
+ *  input:
+ *    this : gsx_class pointer
+ *    varid : int, ncdf id of the variable whose dimensions are needed
  *
- *  Output:
- *    number of rows (scans) and columns (measurements)
+ *  output:
+ *    dim1 : integer number of rows (scans)
+ *    dim2 : integer number of columns (measurements)
  *
- *  Result:
+ *  result:
  *    status is 0 upon success and != 0 upon failure
  *
  */
@@ -1093,19 +1124,21 @@ int get_gsx_dimensions( gsx_class *this, int varid, int *dim1, int *dim2 ) {
 }
 
 /*
- * function to retrieve the variables that are one per scan line
+ * get_gsx_byscan_variables - retrieves the variables that are one per scan line
  *
- *  Input:
- *    gsx_class *this - pointer to gsx structure
- *    int count - 0, 1, 2 corresponding to loc1, loc2 or loc3
- *    int scans - number of scan lines in the file
+ *  input:
+ *    this : gsx_class pointer
+ *    count : int, 0, 1, 2 corresponding to loc1, loc2 or loc3
+ *    scans : int, number of scan lines in the file
  *
  *  Note that the SSMIS sensor only has 1 set of byscn variables, even though
  *  it has 3 different sets of location parameters - therefore the use of the
  *  location variable in this function allows you to fill a set of byscn arrays
  *  whether they are present for multiple locations or not
  *
- *  Result:
+ *  output: n/a
+ *
+ *  result:
  *    status == 0 on success, != 0 on failure
  *
  */
