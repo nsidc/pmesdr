@@ -74,7 +74,7 @@ typedef struct { /* BYU region information storage */
   int   sav_ipolar[NSAVE];
   int   sav_ibeam[NSAVE],   sav_regnum[NSAVE];
   char  sav_regname[NSAVE][11], sav_fname2[NSAVE][180];
-  int   sav_dateline[NSAVE],sav_ascdes[NSAVE];
+  int   sav_ascdes[NSAVE];
   float sav_tsplit1[NSAVE], sav_tsplit2[NSAVE];
   float sav_km[NSAVE];  
 } region_save;  
@@ -179,7 +179,6 @@ int main(int argc,char *argv[])
   short int response_array[MAXFILL+1];  
 
   int jrec2[NSAVE];  /* measurement counter for each region */
-  int dateline;      /* when 1, region crosses dateline */
 
   FILE *file_id;
 
@@ -964,7 +963,6 @@ int main(int argc,char *argv[])
 		latl=save_area.sav_latl[iregion];
 		lonh=save_area.sav_lonh[iregion];
 		lonl=save_area.sav_lonl[iregion];
-		dateline=save_area.sav_dateline[iregion];
 
 		/*
 		 * Apply LTOD considerations: if a
@@ -1021,14 +1019,10 @@ int main(int argc,char *argv[])
 		  }
 		}
 
-		if (dateline) { /* convert lon to ascending order */
-		  if (lonl < 0.0) lonl=(lonl+360.f);
-		  if (cx < -180.0) cx=(cx+360.f);
-		} else {	/* convert lon to -180 to 180 range */
-		  if (cx > 180.0) cx=(cx-360.f);
-		  if (cx < -180.0) cx=(cx+360.f);
-		  if (cx > 180.0) cx=(cx-360.f);
-		}
+		/* convert lon to -180 to 180 range */
+		if (cx > 180.0) cx=(cx-360.f);
+		if (cx < -180.0) cx=(cx+360.f);
+		if (cx > 180.0) cx=(cx-360.f);
 
 		/* check to see if center is within region */
 		if (!((cx > lonl) && (cx < lonh) &&
@@ -1329,7 +1323,6 @@ static FILE * get_meta(char *mname, char *outpath,
   float ascale2,bscale2,a02,b02,ydeg2,xdeg2;
   int iregion=0,ipolar=0;
   char regname[11];
-  int dateline;
   char fname2[180];
   char outname[500];
   char sensor[40]="SSMI something";
@@ -1506,12 +1499,6 @@ static FILE * get_meta(char *mname, char *outpath,
 	    if (strstr(line,"Longitude_high") != NULL) {
 	      x = strchr(line,'=');
 	      lonh=(float)atof(++x);
-	    }
-
-	    if (strstr(line,"Dateline_crossing") != NULL) {
-	      x = strchr(line,'='); x++;	
-	      if (*x== 'F' || *x== 'f') dateline=0;
-	      else dateline=1;	
 	    }
 
 	    if (strstr(line,"AscDesc_flag") != NULL) {
@@ -1941,7 +1928,6 @@ static FILE * get_meta(char *mname, char *outpath,
 		      strncpy(a->sav_fname2[iregion-1],fname2,180);
 		      a->sav_regnum[iregion-1]=regnum;
 		      strncpy(a->sav_regname[iregion-1],regname,10);
-		      a->sav_dateline[iregion-1]=dateline;
 		      a->sav_ascdes[iregion-1]=asc_des;
 		      a->sav_tsplit1[iregion-1]=tsplit1;
 		      a->sav_tsplit2[iregion-1]=tsplit2;

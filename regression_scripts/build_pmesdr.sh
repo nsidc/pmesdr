@@ -8,6 +8,20 @@
 # This script requires the name of a conda env to use to run the unit tests for CETB
 # comparison utilities.
 
+# If any simple step or pipeline fails, this script will fail
+set -eo pipefail
+
+error_exit() {
+    # Use for fatal program error
+    # Argument:
+    #   optional string containing descriptive error message
+    #   if no error message, prints "Unknown Error"
+    # Assumes caller has done set_pmesdr_environment.sh
+
+    echo "build_pmesdr.sh: ERROR: ${1:-"Unknown Error"}" 1>&2
+    return -1
+}
+
 condaenv=$1
 
 cd ${PMESDR_TOP_DIR}/src/prod
@@ -17,6 +31,5 @@ make install
 #
 cd ${PMESDR_TOP_DIR}/python
 source activate $condaenv
-nosetests test_cetb_utilities.py
-# End of example job shell script
-# 
+nosetests test_cetb_utilities.py || error_exit "unit tests failed"
+
