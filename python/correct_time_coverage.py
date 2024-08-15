@@ -39,8 +39,8 @@ with open(input_file_list) as fp:
                 endmin = np.max(tb_time)
                 time_units = ds.variables['TB_time'].units
                 dd = datetime.strptime(time_units, "minutes since %Y-%m-%d %H:%M:%S")
-                startdd = dd + timedelta(minutes=np.int(startmin))
-                enddd = dd + timedelta(minutes=np.int(endmin))
+                startdd = dd + timedelta(minutes=int(startmin))
+                enddd = dd + timedelta(minutes=int(endmin))
                 start_string="%d-%02d-%02dT%02d:%02d:%02d.00Z" % (startdd.year, startdd.month, startdd.day, startdd.hour, startdd.minute, startdd.second)
                 end_string="%d-%02d-%02dT%02d:%02d:%02d.00Z" % (enddd.year, enddd.month, enddd.day, enddd.hour, enddd.minute, enddd.second)
                 ds.setncattr('time_coverage_start', start_string)
