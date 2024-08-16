@@ -147,7 +147,6 @@ static double easeconv_normalize_degrees(double b);
 static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy);
 static int nint(float r);
 static void no_trailing_blanks(char *s);
-static int intfix(float r);
 
 /****************************************************************************/
 
@@ -3443,8 +3442,8 @@ static void ease2grid(int iopt, float alon, float alat,
     map_scale, r0, s0, epsilon;
   int bcols, brows;
 
-  int ind = intfix(bscale);
-  int isc = intfix(ascale);
+  int ind = nint(bscale);
+  int isc = nint(ascale);
   double dlon = alon;
   double phi = UTILS_DTR * alat;
   double lam = dlon;
@@ -3540,8 +3539,8 @@ static void iease2grid(int iopt, float *alon, float *alat,
     map_scale, r0, s0, epsilon;
   int bcols, brows;
 
-  int ind = intfix(bscale);
-  int isc = intfix(ascale);
+  int ind = nint(bscale);
+  int isc = nint(ascale);
 
   double lam, arg, phi, beta, qp, rho2, x, y, e4, e6;
     
@@ -3701,24 +3700,4 @@ static void no_trailing_blanks(char *s) {
   return;
 }
 
-/*
- * intfix - returns nearest integer to value
- *
- * input :
- *   r : float, value to examine
- *
- * output : n/a
- *
- * result : nearest integer to r
- *
- * FIXME: this function is identical to nint, one of these should be replaced
- *  with the other
- *
- */
-static int intfix(float r) {
-  int ret_val = r;
-  if (ret_val - r > 0.5) ret_val--;
-  if (r - ret_val > 0.5) ret_val++;
-  return(ret_val);
-}
 
