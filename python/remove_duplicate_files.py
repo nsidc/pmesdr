@@ -45,10 +45,19 @@ def remove_files(prefix, projections, ltods, channels, satellite, date, file_reg
 
 
 def datetime_to_date(_ctx, _param, value: dt.datetime) -> dt.date:
-    """Click callback that converts a `dt.datetime` to `dt.date`."""
+    """
+    Click callback that converts a `dt.datetime` to `dt.date`
+    """
     return value.date()
 
 def daterange(start_date, end_date):
+    """
+    Generator to efficiently return the span of dates by day
+
+    start_date : dt.datetime, begin date
+    end_date : dt.datetime, end date
+    
+    """
     for n in range(int((end_date - start_date).days)):
         yield start_date + dt.timedelta(n)
 
