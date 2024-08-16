@@ -10,6 +10,22 @@ from nsidc0630_params import resolutions
 
 
 def remove_files(prefix, projections, ltods, channels, satellite, date, file_regex):
+    """
+    Deletes all but the most recent duplicates of files with requested
+    characteristics.  This function relies on the processing date part of the
+    filenames to be sorted so that the most recent file will be last in the
+    sorted list. Should be called separately clean up sets of data, premet or
+    spatial metadata files.
+
+    prefix : string, NSIDC authID used as filename prefix in the data files
+    projections : list of projection strings, e.g. 'N25'
+    ltods : list of ltod letters, any of 'E', 'M', 'A', 'D'
+    channels : list of channel ids (including polarization)
+    satellite : list of platform/sensors, any of 'F16', 'F17', 'F18', 'AMSR2', 'SMAP'
+    date : string, date to search for, yyyymmdd
+    file_regex : full path and filename regex to look for
+
+    """
     for projection in projections:
         for ltod in ltods:
             for channel in channels:
