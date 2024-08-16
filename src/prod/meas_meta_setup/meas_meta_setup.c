@@ -89,7 +89,7 @@ static FILE * get_meta(char *mname, char *outpath, int *dstart,
 		       int *median_flag, int *inc_correct, float *b_correct,
 		       float *angle_ref, int *base_resolution,
 		       region_save *save_area, cetb_platform_id *cetb_platform);
-static void compute_locations(region_save *a, int *nregions, int **noffset,
+static int compute_locations(region_save *a, int *nregions, int **noffset,
 			      short int **latlon_store);
 static float gsx_antenna_response(float x_rel, float y_rel, float theta,
 				  float semimajor, float semiminor);
@@ -362,7 +362,10 @@ int main(int argc,char *argv[])
   }
   
   /* pre-compute pixel locations for each region */
-  compute_locations(&save_area, &nregions, &noffset, &latlon_store);
+  if ( 0 != compute_locations(&save_area, &nregions, &noffset, &latlon_store) ) {
+    fprintf( stderr, "%s: Error calling compute_locations\n", __FILE__);
+    exit (-1);
+  }
   fprintf( stderr, "\n");
 
   /* initialize some pixel counters */
@@ -1968,8 +1971,8 @@ static FILE * get_meta(char *mname, char *outpath,
  * result : 0 on success, 1 on failure with error written to stderr
  *
  */
-static void compute_locations(region_save *a, int *nregions, int **noffset,
-			      short int **latlon_store) {  
+static int compute_locations(region_save *a, int *nregions, int **noffset,
+			     short int **latlon_store) {  
 
   int iregion, nspace;
   char *p, local[]="./";
