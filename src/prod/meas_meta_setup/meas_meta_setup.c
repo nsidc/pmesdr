@@ -89,7 +89,7 @@ static FILE * get_meta(char *mname, char *outpath, int *dstart,
 		       int *median_flag, int *inc_correct, float *b_correct,
 		       float *angle_ref, int *base_resolution,
 		       region_save *save_area, cetb_platform_id *cetb_platform);
-static void compute_locations(region_save *a, int *nregions, int **noffset,
+static int compute_locations(region_save *a, int *nregions, int **noffset,
 			      short int **latlon_store);
 static float gsx_antenna_response(float x_rel, float y_rel, float theta,
 				  float semimajor, float semiminor);
@@ -135,19 +135,18 @@ static int day_offset_from( int year, int month, int day,
 			    double *offsetEpochTime );
 static int check_for_consistent_regions( region_save *save_area,
 					 setup_ltod_flag *ltdflag );
-static void pixtolatlon(float x, float y, float *alon, float *alat,
-			int iopt, float ascale, float bscale, float a0, float b0);
-static void latlon2pix(float alon, float alat, float *x, float *y, 
+static int pixtolatlon(float x, float y, float *alon, float *alat,
 		       int iopt, float ascale, float bscale, float a0, float b0);
-static void ease2grid(int iopt, float alon, float alat, 
-		      float *thelon, float *thelat, float ascale, float bscale);
-static void iease2grid(int iopt, float *alon, float *alat, 
-		       float thelon, float thelat, float ascale, float bscale);
+static int latlon2pix(float alon, float alat, float *x, float *y, 
+		      int iopt, float ascale, float bscale, float a0, float b0);
+static int ease2grid(int iopt, float alon, float alat, 
+		     float *thelon, float *thelat, float ascale, float bscale);
+static int iease2grid(int iopt, float *alon, float *alat, 
+		      float thelon, float thelat, float ascale, float bscale);
 static double easeconv_normalize_degrees(double b);
 static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy);
 static int nint(float r);
 static void no_trailing_blanks(char *s);
-static int intfix(float r);
 
 /****************************************************************************/
 
@@ -363,7 +362,10 @@ int main(int argc,char *argv[])
   }
   
   /* pre-compute pixel locations for each region */
-  compute_locations(&save_area, &nregions, &noffset, &latlon_store);
+  if ( 0 != compute_locations(&save_area, &nregions, &noffset, &latlon_store) ) {
+    fprintf( stderr, "%s: Error calling compute_locations\n", __FILE__);
+    exit (-1);
+  }
   fprintf( stderr, "\n");
 
   /* initialize some pixel counters */
@@ -1039,7 +1041,11 @@ int main(int argc,char *argv[])
 		dscale=save_area.sav_km[iregion];
 
 		/* transform center lat/lon location of measurement to image pixel location */
-		latlon2pix(cx, cy, &x, &y, projt, ascale, bscale, a0, b0);
+		if ( 0 != latlon2pix(cx, cy, &x, &y, projt, ascale, bscale, a0, b0) ) {
+		  fprintf( stderr, "%s: fatal error in latlon2pix\n", __FILE__ );
+		  exit ( -1 );
+		}
+
 		/* quantize pixel location to 1-based integer pixel indices */
 		f2ipix(x, y, &ix2, &iy2, nsx, nsy);  /* note: ix2,iy2 are 1-based pixel address of center */
 
@@ -1056,12 +1062,14 @@ int main(int argc,char *argv[])
 		   centers to the center of the output pixel */
 		x=(ix2+0.5f);
 		y=(iy2+0.5f);
-		pixtolatlon(x, y, &clon, &clat, projt, ascale, bscale, a0, b0);
+		if ( 0 != pixtolatlon(x, y, &clon, &clat, projt, ascale, bscale, a0, b0) ) {
+		  fprintf( stderr, "%s: fatal error in pixtolatlon\n", __FILE__ );
+		  exit ( -1 );
+		}
 
 		/* define size of box centered at(ix2,iy2) in which the gain response 
 		   is computed for each pixel in the box and tested to see if
 		   the response exceeds a threshold.  if so, it is used */
-
 		status = box_size_by_channel( ibeam, gsx->short_sensor,
 					      base_resolution, &box_size ); 
 		if ( status != 0 ) {
@@ -1960,11 +1968,11 @@ static FILE * get_meta(char *mname, char *outpath,
  *  noffset : int **, ptr array to each region's section
  *  latlon_store : short int **, lat/lon locations of each pixel
  *
- * result : n/a
+ * result : 0 on success, 1 on failure with error written to stderr
  *
  */
-static void compute_locations(region_save *a, int *nregions, int **noffset,
-			      short int **latlon_store) {  
+static int compute_locations(region_save *a, int *nregions, int **noffset,
+			     short int **latlon_store) {  
 
   int iregion, nspace;
   char *p, local[]="./";
@@ -2036,9 +2044,13 @@ static void compute_locations(region_save *a, int *nregions, int **noffset,
 	y=(iy+1.5f); /* center of pixel, 1-based */
 	for (ix=0; ix<a->sav_nsx[iregion]; ix++) {
 	  x=(ix+1.5f); /* center of pixel, 1-based */
-	  pixtolatlon(x, y, &clon, &clat, a->sav_projt[iregion], 
-		      a->sav_ascale[iregion], a->sav_bscale[iregion],
-		      a->sav_a0[iregion],     a->sav_b0[iregion]);
+	  if ( 0 != pixtolatlon(x, y, &clon, &clat, a->sav_projt[iregion], 
+				a->sav_ascale[iregion], a->sav_bscale[iregion],
+				a->sav_a0[iregion],     a->sav_b0[iregion]) ) {
+	    fprintf( stderr, "%s: fatal error in pixtolatlon\n", __FILE__ );
+	    return 1;
+	  }
+
 	  iadd=a->sav_nsx[iregion]*iy+ix; /* zero-based lexicographic pixel address */
 	  if (iadd<0) iadd=0;
 	  if (iadd>=nsize) iadd=0;
@@ -2050,6 +2062,9 @@ static void compute_locations(region_save *a, int *nregions, int **noffset,
       }
     }    
   }
+
+  return 0;
+  
 }
 
 /*
@@ -2166,6 +2181,7 @@ static void rel_latlon(float *x_rel, float *y_rel, float alon, float alat, float
  *          a failure will terminate the application upon returning to the main{}
  *
  * result : r, nominal km/pixel
+ *
  */
 static float km2pix(float *x, float *y, int iopt, float ascale, float bscale, int *stat) {
 
@@ -2198,9 +2214,11 @@ static float km2pix(float *x, float *y, int iopt, float ascale, float bscale, in
     *x=0.0;
     *y=0.0;
     *stat = 0;
-    fprintf( stderr, "%s: Unknown transformation type - %d region id\n", __FUNCTION__, iopt );
+    fprintf( stderr, "%s: Invalid projection iopt=%d\n", __FUNCTION__, iopt );
   }
+
   return(r);
+  
 }
 
 /*
@@ -3346,12 +3364,10 @@ static int check_for_consistent_regions( region_save *save_area,
  *   alon, alat : float, (longitude, latitude) of lower-left corner of
  *     pixel (x, y)
  *
- * result : n/a
+ * result : 0 on success or 1 on failure, with error message to stderr
  *
- * FIXME: default action should exit with error message, it should not returen
- * bogus coordinates
  */
-static void pixtolatlon(float x, float y, float *alon, float *alat,
+static int pixtolatlon(float x, float y, float *alon, float *alat,
 			int iopt, float ascale, float bscale, float a0, float b0) {
 
    float thelon, thelat;
@@ -3362,13 +3378,18 @@ static void pixtolatlon(float x, float y, float *alon, float *alat,
     case 10:
       thelon = x - (float)1.0 + a0;
       thelat = y - (float)1.0 + b0;      
-      iease2grid(iopt, alon, alat, thelon, thelat, ascale, bscale);
+      if ( 0 != iease2grid(iopt, alon, alat, thelon, thelat, ascale, bscale) ) {
+	fprintf( stderr, "%s: Error calling iease2grid\n", __FUNCTION__);
+	return 1;
+      }
       break;
     default:
-      *alon=0.0;
-      *alat=0.0;
+      fprintf( stderr, "%s: Invalid projection iopt=%d\n", __FUNCTION__, iopt );
+      return 1;
    }
-   return;
+
+   return 0;
+   
 }
 
 /*
@@ -3386,11 +3407,11 @@ static void pixtolatlon(float x, float y, float *alon, float *alat,
  * output :
  *   x, y : float, (col, row) pixel coordinates corresponding to (lat,lon)
  *
- * result : n/a
+ * result : 0 on success or 1 on failure with error message written to stderr
  *
  */
-static void latlon2pix(float alon, float alat, float *x, float *y, 
-		       int iopt, float ascale, float bscale, float a0, float b0) {
+static int latlon2pix(float alon, float alat, float *x, float *y, 
+		      int iopt, float ascale, float bscale, float a0, float b0) {
 
    static float thelon, thelat;
    
@@ -3398,15 +3419,20 @@ static void latlon2pix(float alon, float alat, float *x, float *y,
     case 8:
     case 9:
     case 10:
-      ease2grid(iopt, alon, alat, &thelon, &thelat, ascale, bscale);
+      if ( 0 != ease2grid(iopt, alon, alat, &thelon, &thelat, ascale, bscale) ) {
+	fprintf( stderr, "%s: Error calling ease2grid\n", __FUNCTION__);
+	return 1;
+      }
       *x = thelon + (float)1.0 - a0;
       *y = thelat + (float)1.0 - b0;
       break;
     default:
-      *x=0.0;
-      *y=0.0;
+      fprintf( stderr, "%s: Invalid projection iopt=%d\n", __FUNCTION__, iopt );
+      return 1;
    }
-   return;
+
+   return 0;
+   
 }
 
 /*
@@ -3426,16 +3452,14 @@ static void latlon2pix(float alon, float alat, float *x, float *y,
  *   thelon, thelat : float *, (col, row) pixel coordinates (can be outside of
  *     image)
  *
- * result : n/a
+ * result : 0 on success or 1 on failure with error written to stderr
  *
  * Implementation derived from NSIDC (MJ Brodzik) reference implementation
  * "easeconv" written in IDL
  *
- * FIXME: default action should exit with error message, it should not return
- * bogus coordinates
  */
-static void ease2grid(int iopt, float alon, float alat, 
-		      float *thelon, float *thelat, float ascale, float bscale) {
+static int ease2grid(int iopt, float alon, float alat, 
+		     float *thelon, float *thelat, float ascale, float bscale) {
 
   double map_equatorial_radius_m,map_eccentricity, e2,
     map_reference_latitude, map_reference_longitude, 
@@ -3443,8 +3467,8 @@ static void ease2grid(int iopt, float alon, float alat,
     map_scale, r0, s0, epsilon;
   int bcols, brows;
 
-  int ind = intfix(bscale);
-  int isc = intfix(ascale);
+  int ind = nint(bscale);
+  int isc = nint(ascale);
   double dlon = alon;
   double phi = UTILS_DTR * alat;
   double lam = dlon;
@@ -3495,14 +3519,14 @@ static void ease2grid(int iopt, float alon, float alat,
      y = ( map_equatorial_radius_m * q ) / ( 2.0 * kz );    
      break;
    default:
-     fprintf(stderr,"*** invalid EASE2 projection specificaion %d in ease2grid\n",iopt);      
-     break;      
+     fprintf(stderr,"%s: invalid projection iopt=%d\n", __FUNCTION__, iopt);
+     return 1;
    }
 
    *thelon = (float) (r0 + ( x / map_scale ) + 0.5); 
    *thelat = (float) (s0 + ( y / map_scale ) + 0.5);  /* 0 at bottom (BYU SIR files) */
 
-   return;
+   return 0;
 }
 
 /*
@@ -3522,17 +3546,14 @@ static void ease2grid(int iopt, float alon, float alat,
  *   alon, alat: float *, converted (lon, lat) (degrees) coordinates
  *     (can be outside of image)
  *
- * result : n/a
+ * result : 0 on success or 1 on failure, with error to stderr
  *
  * Implementation derived from NSIDC (MJ Brodzik) reference implementation
  * "easeconv" written in IDL
  *
- * FIXME: default action should exit with error message, it should not return
- * bogus coordinates
- *
  */
-static void iease2grid(int iopt, float *alon, float *alat, 
-		       float thelon, float thelat, float ascale, float bscale) {
+static int iease2grid(int iopt, float *alon, float *alat, 
+		      float thelon, float thelat, float ascale, float bscale) {
 
   double map_equatorial_radius_m,map_eccentricity, e2,
     map_reference_latitude, map_reference_longitude, 
@@ -3540,8 +3561,8 @@ static void iease2grid(int iopt, float *alon, float *alat,
     map_scale, r0, s0, epsilon;
   int bcols, brows;
 
-  int ind = intfix(bscale);
-  int isc = intfix(ascale);
+  int ind = nint(bscale);
+  int isc = nint(ascale);
 
   double lam, arg, phi, beta, qp, rho2, x, y, e4, e6;
     
@@ -3588,8 +3609,8 @@ static void iease2grid(int iopt, float *alon, float *alat,
     lam = x / ( map_equatorial_radius_m * kz );
     break;
   default:
-    fprintf(stderr,"*** invalid EASE2 projection specification %d in iease2grid\n",iopt);      
-    break;      
+    fprintf(stderr,"%s: invalid projection iopt=%d\n", __FUNCTION__, iopt);
+    return 1;
   }
 
   phi = beta 
@@ -3602,7 +3623,7 @@ static void iease2grid(int iopt, float *alon, float *alat,
   *alat = (float) (UTILS_RTD * phi);
   *alon = (float) (easeconv_normalize_degrees( map_reference_longitude + ( UTILS_RTD*lam ) ) );
 
-   return;
+   return 0;
 }
 
 /*
@@ -3665,8 +3686,6 @@ static void f2ipix(float x, float y, int *ix, int *iy, int nsx, int nsy) {
  *
  * result : nearest integer to r
  *
- * FIXME: this function is identical to nint, one of these should be replaced
- *  with the other
  */
 static int nint(float r) {
   int ret_val = r;
@@ -3701,24 +3720,4 @@ static void no_trailing_blanks(char *s) {
   return;
 }
 
-/*
- * intfix - returns nearest integer to value
- *
- * input :
- *   r : float, value to examine
- *
- * output : n/a
- *
- * result : nearest integer to r
- *
- * FIXME: this function is identical to nint, one of these should be replaced
- *  with the other
- *
- */
-static int intfix(float r) {
-  int ret_val = r;
-  if (ret_val - r > 0.5) ret_val--;
-  if (r - ret_val > 0.5) ret_val++;
-  return(ret_val);
-}
 

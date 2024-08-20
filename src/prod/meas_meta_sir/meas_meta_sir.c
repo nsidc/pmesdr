@@ -50,17 +50,17 @@ static void Ferror(int i);
 static void get_vars_from_store( char *store, float *tbval, float *ang,
 				 int *count, float tb_or_stokes_offset,
 				 int *ktime, int *add, int HASAZANG, float *azang );
-static void get_updates(float tbval, int count, int *fill_array,
-			short int *response_array, int its );
-static void compute_ave(float tbval, float ang, int count, int *fill_array,
-			short int *response_array);
-static float median(float *array, int count);
-static float cmedian(float *array, int count, float center);
+static void get_updates(float tbval, int count, int fill_array[],
+			short int response_array[], int its );
+static void compute_ave(float tbval, float ang, int count, int fill_array[],
+			short int response_array[]);
+static float median(float array[], int count);
+static float cmedian(float array[], int count, float center);
 static void filter(float *val, int size, int opt, int nsx, int nsy, float *temp,
 		   float thres);
-static void stat_updates(float tbval, int count, int *fill_array,
-			 short int *response_array);
-static void time_updates(float ktime, int count, int *fill_array);
+static void stat_updates(float tbval, int count, int fill_array[],
+			 short int response_array[]);
+static void time_updates(float ktime, int count, int fill_array[]);
 
 /***************************************************/
 
@@ -1441,7 +1441,6 @@ static void get_vars_from_store( char *store, float *tbval, float *ang,
  * result : updates global variables at *tot, *a_temp and *num_samples
  *   with results of calculations
  *
- * FIXME: syntax of integer arrays don't match prototype
  */
 static void get_updates(float tbval, int count, int fill_array[],
 			short int response_array[], int its) {
@@ -1509,7 +1508,6 @@ static void get_updates(float tbval, int count, int fill_array[],
  * result : updates global variables at *b_val, *sy, *sx and *sx2
  *   with results of calculations
  *
- * FIXME: syntax of integer arrays don't match prototype
  */
 static void compute_ave(float tbval, float ang, int count, int fill_array[],
 			short int response_array[]) {
@@ -1537,8 +1535,6 @@ static void compute_ave(float tbval, float ang, int count, int fill_array[],
  * output : n/a
  *
  * result : float, median value of array
- *
- * FIXME: syntax of float arrays don't match prototype
  *
  */
 static float median(float array[], int count) {
@@ -1578,8 +1574,6 @@ static float median(float array[], int count) {
  *
  * result : float, circular median, or center when count < 3
  *   or when k = -1??
- *
- * FIXME: function prototype syntax is different
  *
  */
 static float cmedian(float array[], int count, float center) {
@@ -1689,7 +1683,6 @@ static void filter(float *val, int size, int mode, int nsx, int nsy,
  * result : updates global variables at *tot, *sy and *sx
  *   with results of calculations
  *
- * FIXME: syntax of float arrays don't match prototype
  */
 static void stat_updates(float tbval, int count, int fill_array[],
 			 short int response_array[]) {
@@ -1734,8 +1727,7 @@ static void stat_updates(float tbval, int count, int fill_array[],
  *   
  * result : updates global variables at *tot, *sy and *sx
  *   with results of calculations
- 
- * FIXME: syntax of float arrays don't match prototype
+ *
  */
 
 static void time_updates(float ktime, int count, int fill_array[]) {
