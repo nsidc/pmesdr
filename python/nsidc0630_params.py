@@ -1,3 +1,4 @@
+# Grid information used by remove_duplicate_files
 resolutions = {
     'NS25': {
         'projections': ['N25', 'S25'],
