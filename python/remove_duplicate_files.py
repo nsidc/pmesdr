@@ -88,7 +88,7 @@ def daterange(start_date, end_date):
         file_okay=False, dir_okay=True, exists=False, path_type=Path
     ),
     required=True,
-    help='Absolute directory to existing NSIDC0630 files ',
+    help='Absolute directory to existing NSIDC0630 or NSIDC0738 files ',
 )
 @click.option(
     '-p',
