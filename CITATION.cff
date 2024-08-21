@@ -1,0 +1,37 @@
+abstract: <p>First public release of the pmesdr system, used to create data sets nsidc0630
+  and nsidc0738 at the National Snow and Ice Data Center. These data sets are enhanced-resolution
+  passive microwave gridded data from Earth-observing passive microwave radiometers,
+  beginning in 1978 and continuing to the present for instruments that are currently
+  operational.</p>
+authors:
+- affiliation: University of Colorado Boulder
+  family-names: Brodzik
+  given-names: Mary J.
+  orcid: 0000-0002-2544-659X
+- affiliation: Brigham Young University
+  family-names: Long
+  given-names: David G.
+  orcid: 0000-0002-1852-3972
+- affiliation: University of Colorado Boulder
+  family-names: Hardman
+  given-names: Molly A.
+  orcid: 0000-0003-2043-5215
+cff-version: 1.2.0
+date-released: '2024-08-21'
+doi: 10.5281/zenodo.13357476
+keywords:
+- EASE-Grid 2.0
+- passive microwave
+- radiometer version of Scatterometer Image Reconstruction
+- rSIR
+- SSM/I
+- SSMIS
+- AMSR2
+- SMMR
+license:
+- gpl-3.0-or-later
+repository-code: https://github.com/nsidc/pmesdr/tree/v2.1.12
+title: 'Passive Microwave Earth Science Data Record (PMESDR) Software: Initial public
+  release'
+type: software
+version: v2.1.12
