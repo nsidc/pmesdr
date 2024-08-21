@@ -1,5 +1,7 @@
 # Passive Microwave Earth Science Data Record (PMESDR) System
 
+[![DOI](https://zenodo.org/badge/650816222.svg)](https://zenodo.org/doi/10.5281/zenodo.13357476)
+
 <figure>
 	<img src="./images/cetb_banner.1920x1080.png" alt="CETB banner montage" />
 </figure>
