@@ -13,6 +13,7 @@
     - [Introduction](#introduction)
     - [Copyright](#copyright)
     - [License](#license)
+    - [Citation](#citation)
     - [Repository Contents](#repository-contents)
     - [Requirements](#requirements)
     - [Installation ](#installation)
@@ -132,6 +133,11 @@ Young University.
 
 This project software is licensed under the GNU General Public License v3.0.
 Please refer to the LICENSE.txt file for details.
+
+## Citation
+
+If you use this software in your work, please cite it using the metadata in the 
+CITATION.cff file.
 
 ## Repository Contents
 
