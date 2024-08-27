@@ -9,7 +9,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep0
-#SBATCH --account=ucb286_asc2
+#SBATCH --account=ucb544_peak1
 #SBATCH --partition=amilan
 # SBATCH --constraint=ib
 #SBATCH --time=01:00:00

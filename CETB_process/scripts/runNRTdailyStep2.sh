@@ -6,7 +6,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep2
-#SBATCH --account=ucb286_asc2
+#SBATCH --account=ucb544_peak1
 #SBATCH --partition=amilan
 #SBATCH --constraint=ib
 #SBATCH --time=01:50:00
@@ -176,9 +176,9 @@ parallel -j $SLURM_NTASKS -a $outfile || error_exit "Line $LINENO: parallel cp *
 parallel -j $SLURM_NTASKS -a $setup_rm_file || \
     error_exit "Line $LINENO: parallel remove setup and scratch output files"
 
-echo "${PROGNAME}: Step2 for ${pl_top} ${res_string} ${src} completed" | \
-	mailx -s "NRT Step2 Completed jobid ${SLURM_JOB_ID}" \
-	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
+# echo "${PROGNAME}: Step2 for ${pl_top} ${res_string} ${src} completed" | \
+#	mailx -s "NRT Step2 Completed jobid ${SLURM_JOB_ID}" \
+#	      -r "molly\.hardman\@colorado\.edu" ${list_of_emails}
 echo "${PROGNAME}: Step2 jobid=${SLURM_JOB_ID} for ${pl_top} ${res_string} ${src} completed" 
 
 date
