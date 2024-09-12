@@ -62,7 +62,7 @@ elif [[ "$thisHostname" == *"rc.colorado.edu" \
   export LOCALE=ALPINEicc
   export PMESDR_COMPARE_TOLERANCE=0.06
   export PMESDR_MAX_DIFF_PIXELS=100
-  export PMESDR_SCRATCH_DIR=/scratch/alpine/${USER}
+  export PMESDR_SCRATCH_DIR=/gpfs/alpine1/nsidc/${USER}
   export PMESDR_TEST_OUT_DIR=${PMESDR_TOP_DIR}/NSIDCtest
 
   module purge all
