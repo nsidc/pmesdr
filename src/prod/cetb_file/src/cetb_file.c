@@ -1855,10 +1855,10 @@ int fetch_crs( cetb_file_class *this, int template_fid ) {
   }
   
   if ( ( status = nc_put_att_text( this->fid, crs_id, "GeoTransform",
-				   strlen( cetb_geotransform[this->region_id][this->resolution_id] ),
-				   cetb_geotransform[this->region_id][this->resolution_id] ) ) ) {
+				   strlen( cetb_geotransform[this->region_id][this->factor] ),
+				   cetb_geotransform[this->region_id][this->factor] ) ) ) {
     fprintf( stderr, "%s: Error setting %s to %s: %s.\n",
-  	     __FUNCTION__, "GeoTransform", cetb_geotransform[this->region_id][this->resolution_id],
+  	     __FUNCTION__, "GeoTransform", cetb_geotransform[this->region_id][this->factor],
 	     nc_strerror( status ) );
     return 1;
   }
