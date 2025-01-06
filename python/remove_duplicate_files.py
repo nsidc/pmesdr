@@ -126,6 +126,10 @@ def remove_duplicate_files(start_date, end_date, input_dir, platforms):
                 remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
                 file_regex = os.path.join(input_dir, resolution['spatial_file_regex'])
                 remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
+                file_regex = os.path.join(input_dir, resolution['met_file_regex'])
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
+                file_regex = os.path.join(input_dir, resolution['PDR_file_regex'])
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
 
 
 if __name__ == "__main__":
