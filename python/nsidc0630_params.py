@@ -5,7 +5,9 @@ resolutions = {
         'ltods': ['E', 'M'],
         'file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
-        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial'
+        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'NS36': {
@@ -13,7 +15,9 @@ resolutions = {
         'ltods': ['E', 'M'],
         'file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
-        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial'
+        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'T25': {
@@ -21,7 +25,9 @@ resolutions = {
         'ltods': ['A', 'D'],
         'file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
-        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial'
+        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'M36': {
@@ -29,7 +35,9 @@ resolutions = {
         'ltods': ['A', 'D'],
         'file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
-        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial'
+        'spatial_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_GRD_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'NS12.5': {
@@ -38,6 +46,8 @@ resolutions = {
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
         'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'NS09': {
@@ -46,6 +56,8 @@ resolutions = {
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
         'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'T12.5': {
@@ -53,7 +65,9 @@ resolutions = {
         'ltods': ['A', 'D'],
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
-        'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial'
+        'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'M09': {
@@ -61,7 +75,9 @@ resolutions = {
         'ltods': ['A', 'D'],
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
-        'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial'
+        'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'NS6.25': {
@@ -70,6 +86,8 @@ resolutions = {
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
         'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'T6.25': {
@@ -77,7 +95,9 @@ resolutions = {
         'ltods': ['A', 'D'],
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
-        'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial'
+        'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'NS3.125': {
@@ -86,6 +106,8 @@ resolutions = {
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
         'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'NS03': {
@@ -94,6 +116,8 @@ resolutions = {
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
         'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'T3.125': {
@@ -102,6 +126,8 @@ resolutions = {
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
         'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     },
 
     'M03': {
@@ -110,5 +136,7 @@ resolutions = {
         'file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc',
         'premet_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.premet',
         'spatial_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.spatial',
+        'met_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.met',
+        'PDR_file_regex': '%s_SIR_EASE2_%skm_%s_%s_%s_%s_*.nc.PDR'
     }
 }
