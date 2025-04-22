@@ -9,7 +9,7 @@ from pathlib import Path
 from nsidc0630_params import resolutions
 
 
-def remove_files(prefix, projections, ltods, channels, satellite, date, file_regex):
+def remove_files(prefix, projections, ltods, channels, satellite, date, file_regex, nc_files=[]):
     """
     Deletes all but the most recent duplicates of files with requested
     characteristics.  This function relies on the processing date part of the
@@ -38,10 +38,21 @@ def remove_files(prefix, projections, ltods, channels, satellite, date, file_reg
                     date
                 )
                 files = np.sort(glob.glob(cur_regex))
-                if (len(files)) > 1:
-                    for cur_regex in files[0:-1]:
-                        print('Removing file: ', cur_regex)
-                        os.remove(cur_regex)
+                if (len(files)) == 1:
+                    if cur_regex.endswith('.nc'):
+                        file_root = files[0].split('.nc')[0]
+                        nc_files.append(file_root)
+
+                elif (len(files)) > 1:
+                    if cur_regex.endswith('.nc'):
+                        file_root = files[-1].split('.nc')[0]
+                        nc_files.append(file_root)
+                for cur_file in files:
+                    file_root = cur_file.split('.nc')[0]
+                    if file_root not in nc_files:
+                        print('Removing file: ', cur_file)
+                        os.remove(cur_file)
+    return nc_files
 
 
 def datetime_to_date(_ctx, _param, value: dt.datetime) -> dt.date:
@@ -50,13 +61,14 @@ def datetime_to_date(_ctx, _param, value: dt.datetime) -> dt.date:
     """
     return value.date()
 
+
 def daterange(start_date, end_date):
     """
     Generator to efficiently return the span of dates by day
 
     start_date : dt.datetime, begin date
     end_date : dt.datetime, end date
-    
+
     """
     for n in range(int((end_date - start_date).days)):
         yield start_date + dt.timedelta(n)
@@ -76,7 +88,7 @@ def daterange(start_date, end_date):
     '-e',
     '--end-date',
     type=click.DateTime(formats=['%Y%m%d', '%Y-%m-%d']),
-    default=str(dt.datetime.today().date() - timedelta(days = 0)),
+    default=str(dt.datetime.today().date() - timedelta(days=0)),
     show_default=True,
     help='End date of files to process.',
     callback=datetime_to_date,
@@ -117,19 +129,20 @@ def remove_duplicate_files(start_date, end_date, input_dir, platforms):
             else:
                 raise ValueError('Unknown platform: ' + platform)
             for resolution in resolutions.values():
+                actual_nc_files = []
                 projections = resolution['projections']
                 ltods = resolution.get('ltods')
                 day_str = day.strftime('%Y%m%d')
                 file_regex = os.path.join(input_dir, resolution['file_regex'])
-                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
+                actual_nc_files = remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex, nc_files=actual_nc_files)
                 file_regex = os.path.join(input_dir, resolution['premet_file_regex'])
-                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex, nc_files=actual_nc_files)
                 file_regex = os.path.join(input_dir, resolution['spatial_file_regex'])
-                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex, nc_files=actual_nc_files)
                 file_regex = os.path.join(input_dir, resolution['met_file_regex'])
-                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex, nc_files=actual_nc_files)
                 file_regex = os.path.join(input_dir, resolution['PDR_file_regex'])
-                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex)
+                remove_files(prefix, projections, ltods, channels, platform, day_str, file_regex, nc_files=actual_nc_files)
 
 
 if __name__ == "__main__":
