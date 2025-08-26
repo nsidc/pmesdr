@@ -7,7 +7,7 @@
 
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep3
-#SBATCH --account=ucb544_peak1
+#SBATCH --account=ucb544_peak2
 #SBATCH --constraint=ib
 #SBATCH --partition=amilan
 #SBATCH --time=01:50:00
@@ -98,7 +98,7 @@ if [[ -d ${direc}/${src}_sir ]]; then
 	echo " no old chmod file to remove for ${src}"
     fi
 
-    for file in `find ${direc}//${src}_sir/NSIDC-0630-EASE2_[NS]*.nc -mtime 0`
+    for file in `find ${direc}//${src}_sir/NSIDC-0630-EASE2_[N]*.nc -mtime 0`
     do
 	basen=`basename $file`
 	year=`echo $basen | grep -o ${src}_SSMIS-.... | sed 's/^.*-//'`

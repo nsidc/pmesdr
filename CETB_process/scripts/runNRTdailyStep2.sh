@@ -6,7 +6,7 @@
 #
 #SBATCH --qos normal
 #SBATCH --job-name runNRTdailyStep2
-#SBATCH --account=ucb544_peak1
+#SBATCH --account=ucb544_peak2
 #SBATCH --partition=amilan
 #SBATCH --constraint=ib
 #SBATCH --time=01:50:00
@@ -95,7 +95,7 @@ then
 else
     suffix=SSMIS
     sat_top=${src}_${suffix}
-    pl_top=nsidc0763_v1
+    pl_top=nsidc0630_v1
 fi
 
 resolution_suffix=""
@@ -106,6 +106,18 @@ elif [[ resolution -eq 2 ]]
 then
     resolution_suffix="_24"
 fi
+
+ml intel/2022.1.2
+#ml python/3
+ml gnu_parallel
+
+echo "source /projects/${USER}/miniconda3/bin/activate"
+echo "source activate /projects/${USER}/miniconda3/envs/cetb3"
+source /projects/${USER}/miniconda3/bin/activate
+#source activate /projects/${USER}/miniconda3/envs/cetb3
+echo "conda activate cetb3"
+conda activate cetb3
+conda info --envs
 
 direc=/scratch/alpine/${USER}/${top_level}/
 SETUPDIR=${direc}/${src}_setup${resolution_suffix}/
@@ -154,13 +166,10 @@ do
     echo "rm $file" >> ${setup_rm_file}
 done
 
-ml intel/2022.1.2
-ml python/3
-ml gnu_parallel
 ml
 date
 if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
-    source activate /projects/jeca4282/miniconda3/envs/cetb3
+#    source activate /projects/jeca4282/miniconda3/envs/cetb3
     parallel -j $SLURM_NTASKS -a ${outfile_ps} || error_exit "Line $LINENO: parallel premetandspatial"
     grep :60 ${direc}/${src}_sir${resolution_suffix}/*.premet > ${outfile_premet_fix}
     sed -i '/CSU-v1/d' ${outfile_premet_fix}
@@ -173,8 +182,10 @@ if [[ $SLURM_JOB_USER == "jeca4282" ]]; then
 fi
 
 parallel -j $SLURM_NTASKS -a $outfile || error_exit "Line $LINENO: parallel cp *.nc files"
-parallel -j $SLURM_NTASKS -a $setup_rm_file || \
+if [[ -f $setup_rm_file ]]; then
+    parallel -j $SLURM_NTASKS -a $setup_rm_file || \
     error_exit "Line $LINENO: parallel remove setup and scratch output files"
+fi
 
 # echo "${PROGNAME}: Step2 for ${pl_top} ${res_string} ${src} completed" | \
 #	mailx -s "NRT Step2 Completed jobid ${SLURM_JOB_ID}" \
