@@ -71,7 +71,7 @@ res_string=""
 base_resolution=0
 do_ftp=
 ftp_string=""
-start_string="now+24hour"
+start_string="04:30"
 
 while getopts "fr:t:s:h" opt; do
     case $opt in
