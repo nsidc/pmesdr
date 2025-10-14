@@ -40,6 +40,7 @@
         - [Box size parameter](#box-size-parameter)
     - [Development Notes](#development-notes)
         - [Annual maintenance on local-time-of-day (ltod) boundaries](#annual-maintenance-on-local-time-of-day-ltod-boundaries)
+        - [Annual maintenance of Alpine allocation](#annual-maintenance-of-Alpine-allocation)
         - [Adding a New Sensor/Producer](#adding-a-new-sensorproducer)
         - [Changing Spatial Resolution](#changing-spatial-resolution)
         - [Known Issues](#known-issues)
@@ -783,6 +784,14 @@ annual ltod checks include:
 	
 	4. See Appendices in [Brodzik et al. 2024](https://doi.org/10.5281/zenodo.11626219)
 	for historical changes in ltod split times.
+
+### Annual maintenance of Alpine allocation
+In order to be able to run in the Slurm job scheduling system on the Alpine
+supercomputer with a higher priority and more reliably, the Data Production Team
+(DPT, Molly Hardman specifically), applied for and was granted a PEAK allocation
+from Research Computing. This allocation grants DPT and any collaborators specified
+in the request up to 1,250,000 SUs for a year. This allocation must be re-requested
+and approved every year. The current peak allocation will expire August 7, 2026.
 
 ### Adding a New Sensor/Producer
 
