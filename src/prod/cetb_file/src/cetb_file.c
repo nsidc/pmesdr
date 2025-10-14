@@ -2761,7 +2761,7 @@ static char *set_source_value( cetb_file_class *this ) {
       if ( AMSRE_06H == this->beam_id || AMSRE_06V == this->beam_id ) {
 	strcat( source_value, "JAXA" );
       } else {
-	strcat( source_value, "https://doi.org/10.5067/GPM/AQUA/AMSRE/1C/07" );
+	strcat( source_value, "https://doi.org/10.5067/GPM/AMSRE/AQUA/1C/07" );
       }
     } else {
       valid_flag = 0;
@@ -2819,7 +2819,7 @@ static char *set_source_value( cetb_file_class *this ) {
       if ( AMSR2_06H == this->beam_id || AMSR2_06V == this->beam_id ) {
 	strcat( source_value, "JAXA" );
       } else {
-	strcat( source_value, "https://doi.org/10.5067/GPM/GCOMW1/AMSR2/1C/07/" );
+	strcat( source_value, "https://doi.org/10.5067/GPM/AMSR2/GCOMW1/1C/07/" );
       }
     } else {
       valid_flag = 0;
