@@ -117,8 +117,11 @@ def remove_duplicate_files(start_date, end_date, input_dir, platforms):
                          end_date.strftime('%m/%d/%Y'))
     for day in daterange(start_date, end_date + dt.timedelta(days=1)):
         for platform in platforms:
-            if platform in ['F16_SSMIS', 'F17_SSMIS', 'F18_SSMIS', 'F15_SSMI', 'F13_SSMI', 'F14_SSMI', 'F11_SSMI', 'F10_SSMI', 'F08_SSMI']:
+            if platform in ['F16_SSMIS', 'F17_SSMIS', 'F18_SSMIS']:
                 channels = ['19H', '19V', '22V', '37H', '37V', '91H', '91V']
+                prefix = 'NSIDC0630'
+            elif platform in ['F15_SSMI', 'F13_SSMI', 'F14_SSMI', 'F11_SSMI', 'F10_SSMI', 'F08_SSMI']:
+                channels = ['19H', '19V', '22V', '37H', '37V', '85H', '85V']
                 prefix = 'NSIDC0630'
             elif platform in ['GCOMW1_AMSR2']:
                 channels = ['6.9H', '6.9V', '10.7H', '10.7V', '18H', '18V', '23H', '23V', '36H', '36V', '89H', '89V']
