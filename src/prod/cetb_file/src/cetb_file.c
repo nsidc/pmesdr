@@ -2759,7 +2759,7 @@ static char *set_source_value( cetb_file_class *this ) {
       strcat( source_value, "10.5067/AMSR-E/AMSREL1A.003\n10.5067/AMSR-E/AE_L2A.003" );
     } else if ( CETB_PPS_XCAL == this->producer_id ) {
       if ( AMSRE_06H == this->beam_id || AMSRE_06V == this->beam_id ) {
-	strcat( source_value, "JAXA" );
+	strcat( source_value, "https://doi.org/10.57746/EO.01gs73awy8vecp337vqpym10w3" );
       } else {
 	strcat( source_value, "https://doi.org/10.5067/GPM/AMSRE/AQUA/1C/07" );
       }
@@ -2817,7 +2817,7 @@ static char *set_source_value( cetb_file_class *this ) {
   if ( ( CETB_AMSR2 == this->sensor_id ) ) {
     if ( CETB_PPS_XCAL == this->producer_id ) {
       if ( AMSR2_06H == this->beam_id || AMSR2_06V == this->beam_id ) {
-	strcat( source_value, "JAXA" );
+	strcat( source_value, "https://doi.org/10.57746/EO.01gs73ans548qghaknzdjyxd2h" );
       } else {
 	strcat( source_value, "https://doi.org/10.5067/GPM/AMSR2/GCOMW1/1C/07/" );
       }
