@@ -2800,7 +2800,7 @@ static char *set_source_value( cetb_file_class *this ) {
 
   if ( ( CETB_SMMR == this->sensor_id ) ) {
     if ( CETB_JPL == this->producer_id ) {
-      strcat( source_value, "JPL SMMR " );
+      strcat( source_value, "https://doi.org/10.5067/7Y1XWXT07HH8" );
     } else {
       valid_flag = 0;
     }
