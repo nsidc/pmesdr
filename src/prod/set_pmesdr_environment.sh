@@ -40,6 +40,17 @@ export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression
 export PMESDR_TESTDATA_DIR=$PMESDR_TOP_DIR/sample_data/test_gsx
 export PMESDR_CONDAENV=pmesdrEnv
 
+# Environment variable to point to DPT metgenc code area
+# Currently /projects/jeca4282/dpt-metgenc
+export DPT_METGENC_RUN=$PMESDR_TOP_DIR/../dpt-metgenc
+echo "DPT_METGENC_RUN is" $DPT_METGENC_RUN
+# Environment variables to run properly in DPT NSIDC-0630v2 code area
+# Currently /projects/jeca4282/nsidc0630v2
+export PMESDR_RUN=$PMESDR_TOP_DIR/CETB_process/scripts
+echo "PMESDR_RUN is" $PMESDR_RUN
+export SLURM_JOB_ACCOUNT=ucb544_peak1
+export SLURM_NTASKS=6
+
 # Determine the LOCALE and set compiler and more environment variables
 thisHostname=`hostname -f`
 
