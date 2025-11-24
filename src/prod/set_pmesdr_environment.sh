@@ -63,8 +63,8 @@ if [[ "$thisHostname"  == *"int.nsidc.org"* ]]; then
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
-  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant/${HostName}  
-  export PMESDR_TEST_OUT_DIR=/projects/PMESDR/vagrant/NSIDCtest/${HostName}  
+  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant/${HostName}
+  export PMESDR_TEST_OUT_DIR=/projects/PMESDR/vagrant/NSIDCtest/${HostName}
 
 elif [[ "$thisHostname" == *"rc.colorado.edu" \
 	  || "$thisHostname" == *"c3"* ]]; then
@@ -91,8 +91,8 @@ else
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_SCRATCH_DIR=/home/${USER}
   export PMESDR_TEST_OUT_DIR=/home/${USER}/NSIDCtest
-  
-fi                                                                                                                   
+
+fi
 
 if [[ -z $LOCALE ]]; then
   echo "Unrecognized locale, please define a new block with this locale's environment"
