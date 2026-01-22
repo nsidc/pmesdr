@@ -40,6 +40,17 @@ export PMESDR_REGRESS_DIR=$PMESDR_TOP_DIR/../pmesdr_regression_data/${regression
 export PMESDR_TESTDATA_DIR=$PMESDR_TOP_DIR/sample_data/test_gsx
 export PMESDR_CONDAENV=pmesdrEnv
 
+# Environment variable to point to DPT metgenc code area
+# Currently /projects/jeca4282/dpt-metgenc
+export DPT_METGENC_RUN=$PMESDR_TOP_DIR/../dpt-metgenc
+echo "DPT_METGENC_RUN is" $DPT_METGENC_RUN
+# Environment variables to run properly in DPT NSIDC-0630v2 code area
+# Currently /projects/jeca4282/nsidc0630v2
+export PMESDR_RUN=$PMESDR_TOP_DIR/CETB_process/scripts
+echo "PMESDR_RUN is" $PMESDR_RUN
+export SLURM_JOB_ACCOUNT=ucb544_peak2
+export SLURM_NTASKS=6
+
 # Determine the LOCALE and set compiler and more environment variables
 thisHostname=`hostname -f`
 
@@ -52,8 +63,8 @@ if [[ "$thisHostname"  == *"int.nsidc.org"* ]]; then
   export PATH=/opt/anaconda/bin:$PATH
   export PMESDR_COMPARE_TOLERANCE=0.01
   export PMESDR_MAX_DIFF_PIXELS=100
-  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant/${HostName}  
-  export PMESDR_TEST_OUT_DIR=/projects/PMESDR/vagrant/NSIDCtest/${HostName}  
+  export PMESDR_SCRATCH_DIR=/projects/PMESDR/vagrant/${HostName}
+  export PMESDR_TEST_OUT_DIR=/projects/PMESDR/vagrant/NSIDCtest/${HostName}
 
 elif [[ "$thisHostname" == *"rc.colorado.edu" \
 	  || "$thisHostname" == *"c3"* ]]; then
@@ -62,7 +73,7 @@ elif [[ "$thisHostname" == *"rc.colorado.edu" \
   export LOCALE=ALPINEicc
   export PMESDR_COMPARE_TOLERANCE=0.06
   export PMESDR_MAX_DIFF_PIXELS=100
-  export PMESDR_SCRATCH_DIR=/gpfs/alpine1/nsidc/${USER}
+  export PMESDR_SCRATCH_DIR=/scratch/alpine/${USER}
   export PMESDR_TEST_OUT_DIR=${PMESDR_TOP_DIR}/NSIDCtest
 
   module purge all
@@ -80,8 +91,8 @@ else
   export PMESDR_MAX_DIFF_PIXELS=100
   export PMESDR_SCRATCH_DIR=/home/${USER}
   export PMESDR_TEST_OUT_DIR=/home/${USER}/NSIDCtest
-  
-fi                                                                                                                   
+
+fi
 
 if [[ -z $LOCALE ]]; then
   echo "Unrecognized locale, please define a new block with this locale's environment"
