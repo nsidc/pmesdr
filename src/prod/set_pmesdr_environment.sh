@@ -48,7 +48,7 @@ echo "DPT_METGENC_RUN is" $DPT_METGENC_RUN
 # Currently /projects/jeca4282/nsidc0630v2
 export PMESDR_RUN=$PMESDR_TOP_DIR/CETB_process/scripts
 echo "PMESDR_RUN is" $PMESDR_RUN
-export SLURM_JOB_ACCOUNT=ucb544_peak2
+export SLURM_JOB_ACCOUNT=ucb544_asc1
 export SLURM_NTASKS=6
 
 # Determine the LOCALE and set compiler and more environment variables
